@@ -1,0 +1,31 @@
+@layer utilities {
+  .modal-fade-in {
+    animation: modalFadeIn 300ms ease-out forwards;
+  }
+
+  .modal-fade-out {
+    animation: modalFadeOut 200ms ease-in forwards;
+  }
+
+  @keyframes modalFadeIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes modalFadeOut {
+    0% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+  }
+}

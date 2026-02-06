@@ -1,0 +1,98 @@
+package usecase
+
+import "context"
+
+type Factory struct {
+	User           *UserUsecase
+	Auth           *AuthUsecase
+	Company        *CompanyUsecase
+	Address        *AddressUsecase
+	Customer       *CustomerUsecase
+	Vehicle        *VehicleUsecase
+	Driver         *DriverUsecase
+	PricingMatrix  *PricingMatrixUsecase
+	Order          *OrderUsecase
+	OrderWaypoint  *OrderWaypointUsecase
+	Waypoint       *WaypointUsecase
+	WaypointImage  *WaypointImageUsecase
+	Trip           *TripUsecase
+	Exception      *ExceptionUsecase
+	Notification   *NotificationUsecase
+	Dashboard      *DashboardUsecase
+	Report         *ReportUsecase
+	I18n           *I18nUsecase
+	Tracking       *TrackingUsecase
+	Onboarding     *OnboardingUsecase
+	Geo            *GeoUsecase
+	Upload         *UploadUsecase
+}
+
+func NewFactory() *Factory {
+	upload, _ := NewUploadUsecase()
+	driverUsecase := NewDriverUsecase()
+	userUsecase := NewUserUsecase()
+
+	// Wire up circular dependencies
+	driverUsecase.UserUsecase = userUsecase
+	userUsecase.DriverUsecase = driverUsecase
+
+	return &Factory{
+		User:           userUsecase,
+		Auth:           NewAuthUsecase(),
+		Company:        NewCompanyUsecase(),
+		Address:        NewAddressUsecase(),
+		Customer:       NewCustomerUsecase(),
+		Vehicle:        NewVehicleUsecase(),
+		Driver:         driverUsecase,
+		PricingMatrix:  NewPricingMatrixUsecase(),
+		Order:          NewOrderUsecase(),
+		OrderWaypoint:  NewOrderWaypointUsecase(),
+		Waypoint:       NewWaypointUsecase(),
+		WaypointImage:  NewWaypointImageUsecase(),
+		Trip:           NewTripUsecase(),
+		Exception:      NewExceptionUsecase(),
+		Notification:   NewNotificationUsecase(),
+		Dashboard:      NewDashboardUsecase(),
+		Report:         NewReportUsecase(),
+		I18n:           NewI18nUsecase(),
+		Tracking:       NewTrackingUsecase(),
+		Onboarding:     NewOnboardingUsecase(),
+		Geo:            NewGeoUsecase(),
+		Upload:         upload,
+	}
+}
+
+func (f *Factory) WithContext(ctx context.Context) *Factory {
+	user := f.User.WithContext(ctx)
+	driver := f.Driver.WithContext(ctx)
+
+	// Re-wire circular dependencies after WithContext
+	// This ensures the new instances have references to each other with proper context
+	user.DriverUsecase = driver
+	driver.UserUsecase = user
+
+	return &Factory{
+		User:           user,
+		Auth:           f.Auth.WithContext(ctx),
+		Company:        f.Company.WithContext(ctx),
+		Address:        f.Address.WithContext(ctx),
+		Customer:       f.Customer.WithContext(ctx),
+		Vehicle:        f.Vehicle.WithContext(ctx),
+		Driver:         driver,
+		PricingMatrix:  f.PricingMatrix.WithContext(ctx),
+		Order:          f.Order.WithContext(ctx),
+		OrderWaypoint:  f.OrderWaypoint.WithContext(ctx),
+		Waypoint:       f.Waypoint.WithContext(ctx),
+		WaypointImage:  f.WaypointImage.WithContext(ctx),
+		Trip:           f.Trip.WithContext(ctx),
+		Exception:      f.Exception.WithContext(ctx),
+		Notification:   f.Notification.WithContext(ctx),
+		Dashboard:      f.Dashboard,
+		Report:         f.Report,
+		I18n:           f.I18n,
+		Tracking:       f.Tracking,
+		Onboarding:     f.Onboarding.WithContext(ctx),
+		Geo:            f.Geo.WithContext(ctx),
+		Upload:         f.Upload.WithContext(ctx),
+	}
+}

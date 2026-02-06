@@ -1,0 +1,256 @@
+/* ============================================
+   TMS Onward - Modern Button Styling
+
+   Consistent button styles with smooth transitions,
+   proper states, and accessibility.
+   Uses DaisyUI base classes with custom enhancements.
+   ============================================ */
+
+/* Base Button Styles */
+.btn {
+  @apply relative inline-flex items-center justify-center gap-2;
+  @apply font-medium text-nowrap;
+  @apply transition-all duration-200 ease-in-out;
+  @apply focus:outline-none focus-visible:outline-none;
+  @apply disabled:pointer-events-none disabled:opacity-50;
+  @apply rounded-[var(--radius-field)];
+}
+
+/* Focus Ring for Accessibility */
+.btn:focus-visible {
+  @apply ring-2 ring-offset-2 ring-primary ring-offset-base-100;
+}
+
+/* Size Variants */
+.btn-xs {
+  @apply h-7 px-2.5 text-[12px] leading-tight;
+  @apply gap-1.5;
+}
+
+.btn-sm {
+  @apply h-8.5 px-3 text-[13px] leading-tight;
+  @apply gap-1.5;
+}
+
+.btn-md {
+  @apply h-10 px-4 text-[14px] leading-tight;
+}
+
+.btn-lg {
+  @apply h-11.5 px-5 text-[15px] leading-tight;
+  @apply gap-2.5;
+}
+
+.btn-xl {
+  @apply h-13 px-6 text-[16px] leading-tight;
+  @apply gap-3;
+}
+
+/* Shape Variants */
+.btn-wide {
+  @apply w-full min-w-48;
+}
+
+.btn-block {
+  @apply w-full;
+}
+
+.btn-square {
+  @apply aspect-square p-0;
+}
+
+.btn-circle {
+  @apply aspect-square p-0 rounded-full;
+}
+
+/* ============================================
+   Primary Button - Main CTA
+   Solid blue background with proper hover/active states
+   ============================================ */
+.btn-primary {
+  @apply bg-primary text-primary-content;
+  @apply border border-primary;
+  @apply hover:bg-primary/90 hover:border-primary/90;
+  @apply active:bg-primary/80 active:border-primary/80;
+  @apply shadow-sm hover:shadow-md;
+}
+
+/* ============================================
+   Secondary Button - Alternative action
+   Navy blue background
+   ============================================ */
+.btn-secondary {
+  @apply bg-secondary text-secondary-content;
+  @apply border border-secondary;
+  @apply hover:bg-secondary/90 hover:border-secondary/90;
+  @apply active:bg-secondary/80 active:border-secondary/80;
+  @apply shadow-sm hover:shadow-md;
+}
+
+/* ============================================
+   Accent Button - Highlight/Featured action
+   Vibrant blue-indigo background
+   ============================================ */
+.btn-accent {
+  @apply bg-accent text-accent-content;
+  @apply border border-accent;
+  @apply hover:bg-accent/90 hover:border-accent/90;
+  @apply active:bg-accent/80 active:border-accent/80;
+  @apply shadow-sm hover:shadow-md;
+}
+
+/* ============================================
+   Info Button - Information action
+   Clear blue background
+   ============================================ */
+.btn-info {
+  @apply bg-info text-info-content;
+  @apply border border-info;
+  @apply hover:bg-info/90 hover:border-info/90;
+  @apply active:bg-info/80 active:border-info/80;
+  @apply shadow-sm hover:shadow-md;
+}
+
+/* ============================================
+   Success Button - Success/Confirm action
+   Green background
+   ============================================ */
+.btn-success {
+  @apply bg-success text-success-content;
+  @apply border border-success;
+  @apply hover:bg-success/90 hover:border-success/90;
+  @apply active:bg-success/80 active:border-success/80;
+  @apply shadow-sm hover:shadow-md;
+}
+
+/* ============================================
+   Warning Button - Warning action
+   Amber/Orange background
+   ============================================ */
+.btn-warning {
+  @apply bg-warning text-warning-content;
+  @apply border border-warning;
+  @apply hover:bg-warning/90 hover:border-warning/90;
+  @apply active:bg-warning/80 active:border-warning/80;
+  @apply shadow-sm hover:shadow-md;
+}
+
+/* ============================================
+   Error Button - Destructive action
+   Red background for destructive actions
+   ============================================ */
+.btn-error {
+  @apply bg-error text-error-content;
+  @apply border border-error;
+  @apply hover:bg-error/90 hover:border-error/90;
+  @apply active:bg-error/80 active:border-error/80;
+  @apply shadow-sm hover:shadow-md;
+}
+
+/* ============================================
+   Ghost Button - Minimal action
+   Transparent with hover background
+   ============================================ */
+.btn-ghost {
+  @apply bg-transparent text-base-content;
+  @apply border border-transparent;
+  @apply hover:bg-base-200/80 hover:border-base-200/80;
+  @apply active:bg-base-300 active:border-base-300;
+}
+
+/* ============================================
+   Outline Button - Bordered without background
+   ============================================ */
+.btn-outline {
+  @apply bg-transparent text-base-content;
+  @apply border border-base-300;
+  @apply hover:bg-base-100;
+  @apply active:bg-base-200;
+}
+
+/* ============================================
+   Soft Button - Subtle background
+   ============================================ */
+.btn-soft {
+  @apply bg-base-200 text-base-content;
+  @apply border border-transparent;
+  @apply hover:bg-base-300;
+  @apply active:bg-base-300/80;
+}
+
+/* ============================================
+   Link Button - Text-only action
+   ============================================ */
+.btn-link {
+  @apply bg-transparent text-primary;
+  @apply border border-transparent;
+  @apply hover:underline;
+  @apply hover:text-primary/80;
+  @apply p-0 h-auto shadow-none;
+}
+
+/* ============================================
+   Dash Button - Dashed border
+   ============================================ */
+.btn-dash {
+  @apply bg-transparent text-base-content;
+  @apply border border-dashed border-base-300;
+  @apply hover:bg-base-100 hover:border-solid;
+  @apply active:bg-base-200;
+}
+
+/* ============================================
+   Disabled State
+   Enhanced disabled styling
+   ============================================ */
+.btn:disabled,
+.btn-disabled {
+  @apply opacity-50 cursor-not-allowed;
+  @apply pointer-events-none;
+}
+
+/* ============================================
+   Loading State
+   ============================================ */
+.btn .loading {
+  @apply animate-spin;
+}
+
+.btn:has(.loading) {
+  @apply pointer-events-none;
+}
+
+/* ============================================
+   Icon-only Buttons
+   ============================================ */
+.btn-circle span,
+.btn-square span {
+  @apply flex items-center justify-center;
+}
+
+/* ============================================
+   Button Group Styles
+   For when buttons are used together
+   ============================================ */
+.btn-group .btn:not(:first-child):not(:last-child) {
+  @apply rounded-none;
+  @apply -ml-px;
+}
+
+.btn-group .btn:first-child {
+  @apply rounded-tr-none rounded-br-none;
+}
+
+.btn-group .btn:last-child {
+  @apply rounded-tl-none rounded-bl-none;
+  @apply -ml-px;
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+@media (max-width: 640px) {
+  .btn-wide {
+    @apply w-full min-w-0;
+  }
+}

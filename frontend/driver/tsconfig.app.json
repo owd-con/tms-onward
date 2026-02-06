@@ -1,0 +1,46 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "types": ["vite/client"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+    "include": ["src", "src/utils/i18n.ts", "src/global.d.ts"],
+    "exclude": [
+      "src/platforms/app/screen/dashboard",
+      "src/platforms/app/screen/inventory",
+      "src/platforms/app/screen/management",
+      "src/platforms/app/screen/operation",
+      "src/platforms/app/screen/warehouse",
+      "src/components/guards/RequireWarehouse.tsx",
+      "src/hooks/usePermission.ts",
+      "src/platforms/auth/screen/login.tsx",
+      "src/services/auth/hooks.tsx",
+      "src/services/auth/slice.tsx",
+      "src/services/baseQuery.tsx",
+      "vite.config.ts"
+    ]
+}

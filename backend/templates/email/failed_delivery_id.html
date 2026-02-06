@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengiriman Gagal - {{.OrderNumber}}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e74c3c;
+        }
+        .header h1 {
+            color: #e74c3c;
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .detail-row {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-label {
+            font-weight: bold;
+            width: 150px;
+            color: #555;
+        }
+        .detail-value {
+            flex: 1;
+        }
+        .alert-box {
+            background-color: #fee;
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .alert-box strong {
+            color: #e74c3c;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            color: #777;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #e74c3c;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1> Pengiriman Gagal</h1>
+        </div>
+
+        <div class="content">
+            <div class="alert-box">
+                <strong>Perhatian:</strong> Pengiriman untuk order <strong>{{.OrderNumber}}</strong> mengalami kegagalan pada lokasi tujuan.
+            </div>
+
+            <h3>Detail Pengiriman</h3>
+
+            <div class="detail-row">
+                <div class="detail-label">Nomor Order:</div>
+                <div class="detail-value">{{.OrderNumber}}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Nomor Trip:</div>
+                <div class="detail-value">{{.TripNumber}}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Lokasi Gagal:</div>
+                <div class="detail-value">{{.LocationName}}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Alamat:</div>
+                <div class="detail-value">{{.Address}}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Waktu:</div>
+                <div class="detail-value">{{.Timestamp}}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Catatan:</div>
+                <div class="detail-value">{{.Notes}}</div>
+            </div>
+
+            <p style="margin-top: 20px;">
+                Silakan login ke sistem untuk melihat detail lebih lanjut dan melakukan tindakan yang diperlukan.
+            </p>
+
+            <div style="text-align: center;">
+                <a href="{{.DashboardURL}}" class="btn">Lihat Detail di Dashboard</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Email ini dikirim secara otomatis oleh TMS Onward System.</p>
+            <p>&copy; {{.Year}} TMS Onward. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

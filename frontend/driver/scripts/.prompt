@@ -1,0 +1,5 @@
+# generate-page
+⚠️ Note: Only for the onward project. Using it outside requires customizing the script.
+
+## usage example
+npm run generate:page -- --path about/index --name AboutUsScreen --platform landing --route about

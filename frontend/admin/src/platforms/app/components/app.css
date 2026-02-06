@@ -1,0 +1,15 @@
+html {
+  font-family: Inter, sans-serif;
+}
+
+@layer utilities {
+    /* hide scrollbar but keep scrolling */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+
+    .scrollbar-hide {
+        -ms-overflow-style: none;  /* IE & Edge */
+        scrollbar-width: none;     /* Firefox */
+    }
+}

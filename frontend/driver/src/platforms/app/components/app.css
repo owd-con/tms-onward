@@ -1,0 +1,40 @@
+html {
+  font-family: Inter, sans-serif;
+}
+
+@layer utilities {
+    /* hide scrollbar but keep scrolling */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+
+    .scrollbar-hide {
+        -ms-overflow-style: none;  /* IE & Edge */
+        scrollbar-width: none;     /* Firefox */
+    }
+
+    /* Safe Area Utilities for iOS Notched Devices */
+    .safe-top {
+        padding-top: env(safe-area-inset-top);
+    }
+
+    .safe-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .safe-left {
+        padding-left: env(safe-area-inset-left);
+    }
+
+    .safe-right {
+        padding-right: env(safe-area-inset-right);
+    }
+
+    .safe-area-inset-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .safe-area-inset-top {
+        padding-top: env(safe-area-inset-top);
+    }
+}

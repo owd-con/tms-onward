@@ -1,0 +1,36 @@
+.file-input {
+    @apply hover:border-(--input-color) focus:outline-none focus:border-(--input-color) focus:shadow-[0_0_0_4px]
+}
+
+.file-input-neutral {
+    --input-color: var(--color-neutral);
+    --tw-shadow-color: var(--color-neutral-shadow);
+}
+.file-input-primary {
+    --input-color: var(--color-primary);
+    --tw-shadow-color: var(--color-primary-shadow);
+}
+.file-input-secondary {
+    --input-color: var(--color-secondary);
+    --tw-shadow-color: var(--color-secondary-shadow);
+}
+.file-input-accent {
+    --input-color: var(--color-accent);
+    --tw-shadow-color: var(--color-accent-shadow);
+}
+.file-input-info {
+    --input-color: var(--color-info);
+    --tw-shadow-color: var(--color-info-shadow);
+}
+.file-input-success {
+    --input-color: var(--color-success);
+    --tw-shadow-color: var(--color-success-shadow);
+}
+.file-input-warning {
+    --input-color: var(--color-warning);
+    --tw-shadow-color: var(--color-warning-shadow);
+}
+.file-input-error {
+    --input-color: var(--color-error);
+    --tw-shadow-color: var(--color-error-shadow);
+}

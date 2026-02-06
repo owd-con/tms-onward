@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Successful - {{.OrderNumber}}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #27ae60;
+        }
+        .header h1 {
+            color: #27ae60;
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .detail-row {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-label {
+            font-weight: bold;
+            width: 150px;
+            color: #555;
+        }
+        .detail-value {
+            flex: 1;
+        }
+        .success-box {
+            background-color: #efe;
+            border-left: 4px solid #27ae60;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .success-box strong {
+            color: #27ae60;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            color: #777;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #27ae60;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+        .checkmark {
+            text-align: center;
+            font-size: 48px;
+            color: #27ae60;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Delivery Successful</h1>
+        </div>
+
+        <div class="content">
+            <div class="checkmark"></div>
+
+            <div class="success-box">
+                <strong>Congratulations!</strong> Delivery for order <strong>{{.OrderNumber}}</strong> has been successfully completed.
+            </div>
+
+            <h3>Delivery Details</h3>
+
+            <div class="detail-row">
+                <div class="detail-label">Order Number:</div>
+                <div class="detail-value">{{.OrderNumber}}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Trip Number:</div>
+                <div class="detail-value">{{.TripNumber}}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Destination:</div>
+                <div class="detail-value">{{.LocationName}}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Address:</div>
+                <div class="detail-value">{{.Address}}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Recipient Name:</div>
+                <div class="detail-value">{{.RecipientName}}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Delivery Time:</div>
+                <div class="detail-value">{{.Timestamp}}</div>
+            </div>
+
+            {{if .PodImageURL}}
+            <div class="detail-row">
+                <div class="detail-label">Proof of Delivery:</div>
+                <div class="detail-value">
+                    <a href="{{.PodImageURL}}">View POD Photo</a>
+                </div>
+            </div>
+            {{end}}
+
+            <p style="margin-top: 20px;">
+                Thank you for using our service. Please login to the system for more details.
+            </p>
+
+            <div style="text-align: center;">
+                <a href="{{.DashboardURL}}" class="btn">View Details in Dashboard</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>This email was sent automatically by TMS Onward System.</p>
+            <p>&copy; {{.Year}} TMS Onward. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

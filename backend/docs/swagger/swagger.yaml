@@ -1,0 +1,4134 @@
+basePath: /api
+definitions:
+  address.createRequest:
+    properties:
+      address:
+        type: string
+      contact_name:
+        type: string
+      contact_phone:
+        type: string
+      customer_id:
+        type: string
+      name:
+        type: string
+      village_id:
+        type: string
+    type: object
+  address.updateRequest:
+    properties:
+      address:
+        type: string
+      contact_name:
+        type: string
+      contact_phone:
+        type: string
+      customer_id:
+        type: string
+      id:
+        description: From path parameter
+        type: string
+      name:
+        type: string
+      village_id:
+        type: string
+    type: object
+  auth.changePasswordRequest:
+    properties:
+      confirm_new_password:
+        type: string
+      new_password:
+        type: string
+      old_password:
+        type: string
+    type: object
+  auth.loginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  auth.signupRequest:
+    properties:
+      company_name:
+        description: Company data
+        type: string
+      company_type:
+        type: string
+      confirm_password:
+        type: string
+      currency:
+        type: string
+      email:
+        type: string
+      language:
+        type: string
+      name:
+        description: User data
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      timezone:
+        type: string
+    type: object
+  company.updateRequest:
+    properties:
+      currency:
+        type: string
+      language:
+        type: string
+      logo_url:
+        type: string
+      name:
+        type: string
+      timezone:
+        type: string
+      type:
+        type: string
+    type: object
+  customer.createRequest:
+    properties:
+      address:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  customer.updateRequest:
+    properties:
+      address:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  driver.createRequest:
+    properties:
+      avatar_url:
+        type: string
+      confirm_password:
+        type: string
+      email:
+        type: string
+      has_login:
+        description: User creation fields (for has_login)
+        type: boolean
+      is_active:
+        type: boolean
+      license_expiry:
+        type: string
+      license_number:
+        type: string
+      license_type:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+    type: object
+  driver.updateRequest:
+    properties:
+      avatar_url:
+        type: string
+      confirm_password:
+        type: string
+      email:
+        type: string
+      has_login:
+        description: 'Add login account fields (one-way: no login → has login)'
+        type: boolean
+      id:
+        type: string
+      license_expiry:
+        type: string
+      license_number:
+        type: string
+      license_type:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+    type: object
+  exception.batchRescheduleWaypointsRequest:
+    properties:
+      driver_id:
+        type: string
+      vehicle_id:
+        type: string
+      waypoint_ids:
+        description: Array of failed waypoint IDs
+        items:
+          type: string
+        type: array
+    type: object
+  onboarding.driverRequest:
+    properties:
+      id:
+        type: string
+      license_number:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  onboarding.pricingRequest:
+    properties:
+      customer_id:
+        type: string
+      dest_city_id:
+        type: string
+      id:
+        type: string
+      origin_city_id:
+        type: string
+      price:
+        type: number
+    type: object
+  onboarding.step1Request:
+    properties:
+      company_name:
+        type: string
+      company_type:
+        type: string
+    required:
+    - company_name
+    - company_type
+    type: object
+  onboarding.step2Request:
+    properties:
+      users:
+        items:
+          $ref: '#/definitions/onboarding.userRequest'
+        type: array
+    type: object
+  onboarding.step3Request:
+    properties:
+      vehicles:
+        items:
+          $ref: '#/definitions/onboarding.vehicleRequest'
+        type: array
+    type: object
+  onboarding.step4Request:
+    properties:
+      drivers:
+        items:
+          $ref: '#/definitions/onboarding.driverRequest'
+        type: array
+    type: object
+  onboarding.step5Request:
+    properties:
+      pricing:
+        items:
+          $ref: '#/definitions/onboarding.pricingRequest'
+        type: array
+    type: object
+  onboarding.userRequest:
+    properties:
+      confirm_password:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+    type: object
+  onboarding.vehicleRequest:
+    properties:
+      capacity_volume:
+        type: number
+      capacity_weight:
+        type: number
+      id:
+        type: string
+      plate_number:
+        type: string
+      vehicle_type:
+        type: string
+    type: object
+  order.WaypointItem:
+    properties:
+      name:
+        type: string
+      quantity:
+        type: integer
+      weight:
+        type: number
+    type: object
+  order.WaypointRequest:
+    properties:
+      address_id:
+        type: string
+      contact_name:
+        type: string
+      contact_phone:
+        type: string
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/order.WaypointItem'
+        type: array
+      location_address:
+        type: string
+      location_name:
+        description: Snapshot fields (read-only, populated from selected address)
+        type: string
+      price:
+        type: number
+      scheduled_date:
+        type: string
+      scheduled_time:
+        type: string
+      sequence_number:
+        type: integer
+      type:
+        type: string
+    type: object
+  order.createRequest:
+    properties:
+      customer_id:
+        type: string
+      manual_override_price:
+        type: number
+      order_type:
+        type: string
+      reference_code:
+        type: string
+      special_instructions:
+        type: string
+      waypoints:
+        items:
+          $ref: '#/definitions/order.WaypointRequest'
+        type: array
+    type: object
+  order.updateRequest:
+    properties:
+      customer_id:
+        type: string
+      id:
+        type: string
+      manual_override_price:
+        type: number
+      reference_code:
+        type: string
+      special_instructions:
+        type: string
+      waypoints:
+        items:
+          $ref: '#/definitions/order.WaypointRequest'
+        type: array
+    type: object
+  pricing_matrix.createRequest:
+    properties:
+      customer_id:
+        type: string
+      destination_city_id:
+        type: string
+      origin_city_id:
+        type: string
+      price:
+        type: number
+    type: object
+  pricing_matrix.updateRequest:
+    properties:
+      customer_id:
+        type: string
+      destination_city_id:
+        type: string
+      id:
+        type: string
+      origin_city_id:
+        type: string
+      price:
+        type: number
+    type: object
+  profile.updateRequest:
+    properties:
+      avatar_url:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  rest.HTTPError:
+    properties:
+      code:
+        type: integer
+      message:
+        $ref: '#/definitions/rest.Message'
+    type: object
+  rest.Message:
+    enum:
+    - success
+    - resource created
+    - resource updated
+    - resource deleted
+    - invalid request body
+    - missing required fields
+    - invalid field value
+    - validation failed
+    - unauthorized
+    - forbidden
+    - resource not found
+    - conflict
+    - internal server error
+    - service unavailable
+    - invalid request body. please check your input format
+    - method not allowed
+    type: string
+    x-enum-varnames:
+    - MsgSuccess
+    - MsgCreated
+    - MsgUpdated
+    - MsgDeleted
+    - MsgInvalidJSON
+    - MsgMissingField
+    - MsgInvalidField
+    - MsgValidationError
+    - MsgUnauthorized
+    - MsgForbidden
+    - MsgNotFound
+    - MsgConflict
+    - MsgInternalError
+    - MsgServiceUnavailable
+    - MsgBadRequest
+    - MsgNotAllowed
+  rest.Meta:
+    properties:
+      has_next:
+        type: boolean
+      has_prev:
+        type: boolean
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  rest.ResponseBody:
+    properties:
+      data: {}
+      errors: {}
+      message:
+        type: string
+      meta:
+        $ref: '#/definitions/rest.Meta'
+      success:
+        type: boolean
+    type: object
+  trip.WaypointRequest:
+    properties:
+      order_waypoint_id:
+        type: string
+      sequence_number:
+        type: integer
+    type: object
+  trip.createRequest:
+    properties:
+      driver_id:
+        type: string
+      notes:
+        type: string
+      order_id:
+        type: string
+      vehicle_id:
+        type: string
+      waypoints:
+        description: 'LTL: required, FTL: optional (use order waypoints)'
+        items:
+          $ref: '#/definitions/trip.WaypointRequest'
+        type: array
+    type: object
+  trip.updateRequest:
+    properties:
+      id:
+        type: string
+      notes:
+        type: string
+      waypoints:
+        description: Untuk sequence update (LTL only)
+        items:
+          $ref: '#/definitions/trip.WaypointRequest'
+        type: array
+    type: object
+  upload.presignedURLRequest:
+    properties:
+      contentType:
+        description: 'Content type (misal: "image/jpeg")'
+        type: string
+      filename:
+        description: 'Nama file (misal: "signature.jpg")'
+        type: string
+    type: object
+  user.createRequest:
+    properties:
+      company_id:
+        type: string
+      confirm_password:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+    type: object
+  user.updateRequest:
+    properties:
+      company_id:
+        type: string
+      confirm_password:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+    type: object
+  vehicle.createRequest:
+    properties:
+      capacity_volume:
+        type: number
+      capacity_weight:
+        type: number
+      make:
+        type: string
+      model:
+        type: string
+      plate_number:
+        type: string
+      type:
+        type: string
+      year:
+        type: integer
+    type: object
+  vehicle.updateRequest:
+    properties:
+      capacity_volume:
+        type: number
+      capacity_weight:
+        type: number
+      id:
+        type: string
+      make:
+        type: string
+      model:
+        type: string
+      plate_number:
+        type: string
+      type:
+        type: string
+      year:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+    url: http://www.example.com/support
+  description: Transportation Management System API for logistics companies
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: TMS Onward API
+  version: "1.0"
+paths:
+  /addresses:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of addresses. Can filter by customer_id to get
+        customer-specific addresses, or return all company addresses if not provided.
+      parameters:
+      - description: Customer ID to filter addresses by customer (optional - if not
+          provided, returns all company addresses)
+        in: query
+        name: customer_id
+        type: string
+      - description: Filter by address name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Filter by village ID
+        in: query
+        name: village_id
+        type: string
+      - description: Filter by active status
+        in: query
+        name: is_active
+        type: boolean
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: List addresses
+      tags:
+      - address
+    post:
+      consumes:
+      - application/json
+      description: Create a new address. Can be associated with a specific customer
+        (optional) or created as a company-level address.
+      parameters:
+      - description: Create address request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/address.createRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Create new address
+      tags:
+      - address
+  /addresses/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete an address
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Delete address
+      tags:
+      - address
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific address
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get address by ID
+      tags:
+      - address
+    put:
+      consumes:
+      - application/json
+      description: Update an existing address
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update address request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/address.updateRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Update address
+      tags:
+      - address
+  /addresses/{id}/activate:
+    put:
+      consumes:
+      - application/json
+      description: Activate an address
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Activate address
+      tags:
+      - address
+  /addresses/{id}/deactivate:
+    put:
+      consumes:
+      - application/json
+      description: Deactivate an address
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Deactivate address
+      tags:
+      - address
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return tokens
+      parameters:
+      - description: Login request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+      summary: Login
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Invalidate current session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+      summary: Logout
+      tags:
+      - auth
+  /auth/password:
+    put:
+      consumes:
+      - application/json
+      description: Change user password
+      parameters:
+      - description: Change password request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.changePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+      summary: Change Password
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register new company and admin user
+      parameters:
+      - description: Signup request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.signupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+      summary: Register
+      tags:
+      - auth
+  /companies:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's company (for non-admin) or list companies with
+        filters (for admin)
+      parameters:
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      - description: 'Filter by status: active or inactive (default: all)'
+        in: query
+        name: status
+        type: string
+      - description: Page number for pagination (admin only)
+        in: query
+        name: page
+        type: integer
+      - description: Items per page (admin only)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get companies
+      tags:
+      - company
+    put:
+      consumes:
+      - application/json
+      description: Update company information
+      parameters:
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      - description: Company data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/company.updateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Update company info
+      tags:
+      - company
+  /companies/{id}/activate:
+    put:
+      consumes:
+      - application/json
+      description: Activate a company
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Activate company
+      tags:
+      - company
+  /companies/{id}/deactivate:
+    put:
+      consumes:
+      - application/json
+      description: Deactivate a company
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Deactivate company
+      tags:
+      - company
+  /companies/onboarding:
+    post:
+      consumes:
+      - application/json
+      description: Mark company onboarding as completed
+      parameters:
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Complete onboarding
+      tags:
+      - company
+  /customers:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: active / inactive
+        in: query
+        name: status
+        type: string
+      - description: pagination
+        format: int64
+        in: query
+        name: limit
+        type: integer
+      - description: pagination
+        format: int64
+        in: query
+        name: page
+        type: integer
+      - description: name
+        in: query
+        name: search
+        type: string
+      - description: id / -id
+        in: query
+        name: order_by
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: get list customers
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: customer data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/customer.createRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: create customer
+  /customers/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: customer id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: delete customer
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: customer id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: get detail customer
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: customer id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: customer data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/customer.updateRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: update customer
+  /customers/{id}/activate:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: customer id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: activate customer
+  /customers/{id}/deactivate:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: customer id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: deactivate customer
+  /dashboard:
+    get:
+      consumes:
+      - application/json
+      description: Get dashboard summary statistics including active orders, trips,
+        drivers, vehicles
+      parameters:
+      - description: Start date filter (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: End date filter (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get dashboard summary
+      tags:
+      - dashboard
+  /docs/info:
+    get:
+      description: Get basic information about the TMS Onward API
+      produces:
+      - application/json
+      responses: {}
+      summary: Get API Information
+      tags:
+      - docs
+  /docs/swagger.json:
+    get:
+      description: Get Swagger API documentation in JSON format
+      produces:
+      - application/json
+      responses: {}
+      summary: Get API documentation (Swagger JSON)
+      tags:
+      - docs
+  /driver/trips:
+    get:
+      consumes:
+      - application/json
+      description: Get active trips for the authenticated driver (Planned, Dispatched,
+        In Transit only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get my active trips
+      tags:
+      - driver_web
+  /driver/trips/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed trip information with waypoints
+      parameters:
+      - description: Trip ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get trip detail
+      tags:
+      - driver_web
+  /driver/trips/{id}/start:
+    put:
+      consumes:
+      - application/json
+      description: Start a dispatched trip (Dispatched → In Transit)
+      parameters:
+      - description: Trip ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Start trip
+      tags:
+      - driver_web
+  /driver/trips/history:
+    get:
+      consumes:
+      - application/json
+      description: Get all trips for the authenticated driver (all statuses)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get my trip history
+      tags:
+      - driver_web
+  /driver/trips/waypoint/{id}/arrive:
+    put:
+      consumes:
+      - application/json
+      description: Complete pickup waypoint (In Transit → Completed)
+      parameters:
+      - description: Trip Waypoint ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Arrive at pickup waypoint
+      tags:
+      - driver_web
+  /driver/trips/waypoint/{id}/complete:
+    put:
+      consumes:
+      - application/json
+      description: Complete delivery waypoint with POD (In Transit → Completed). Only
+        for delivery type waypoints.
+      parameters:
+      - description: Trip Waypoint ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Name of person who received the delivery
+        example: John Doe
+        in: body
+        name: received_by
+        required: true
+        schema:
+          type: string
+      - description: Presigned S3 URL for customer signature image
+        in: body
+        name: signature_url
+        required: true
+        schema:
+          type: string
+      - description: Array of presigned S3 URLs for delivery photos
+        in: body
+        minLength: 1
+        name: images
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      - description: Optional note about the delivery
+        in: body
+        name: note
+        schema:
+          type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Complete delivery waypoint
+      tags:
+      - driver_web
+  /driver/trips/waypoint/{id}/failed:
+    put:
+      consumes:
+      - application/json
+      description: Mark waypoint as failed with reason and images (In Transit → Completed/Failed).
+        Provide a descriptive reason for the failure.
+      parameters:
+      - description: Trip Waypoint ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Reason for failure
+        in: body
+        name: failed_reason
+        required: true
+        schema:
+          type: string
+      - description: Array of presigned S3 URLs for failure documentation photos
+        in: body
+        minLength: 1
+        name: images
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Fail waypoint
+      tags:
+      - driver_web
+  /driver/trips/waypoint/{id}/start:
+    put:
+      consumes:
+      - application/json
+      description: Start a waypoint (Pending → In Transit)
+      parameters:
+      - description: Trip Waypoint ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Start waypoint
+      tags:
+      - driver_web
+  /drivers:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: active / inactive
+        in: query
+        name: status
+        type: string
+      - description: SIM_A / SIM_B1 / SIM_B2 / SIM_C
+        in: query
+        name: license_type
+        type: string
+      - description: pagination
+        format: int64
+        in: query
+        name: limit
+        type: integer
+      - description: pagination
+        format: int64
+        in: query
+        name: page
+        type: integer
+      - description: name / license_number
+        in: query
+        name: search
+        type: string
+      - description: id / -id
+        in: query
+        name: order_by
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: get list drivers
+    post:
+      consumes:
+      - application/json
+      description: Create driver (standalone or with user login). Use has_login=true
+        to create driver with user account. Role will be set to "driver" automatically.
+      parameters:
+      - description: Create driver with user login access
+        in: body
+        name: has_login
+        schema:
+          type: boolean
+      - description: User email (required if has_login=true)
+        in: body
+        name: email
+        schema:
+          type: string
+      - description: User password (required if has_login=true)
+        in: body
+        name: password
+        schema:
+          type: string
+      - description: Password confirmation (required if has_login=true)
+        in: body
+        name: confirm_password
+        schema:
+          type: string
+      - description: driver data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/driver.createRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Create a new driver
+  /drivers/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete driver. If driver has associated user (user_id != NULL),
+        user will also be soft deleted (cascade).
+      parameters:
+      - description: driver id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Delete driver by ID
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: driver id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: get detail driver
+    put:
+      consumes:
+      - application/json
+      description: Update driver data. If driver has associated user (user_id != NULL),
+        name and phone will be synced to user automatically.
+      parameters:
+      - description: driver id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: driver data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/driver.updateRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Update driver by ID
+  /drivers/{id}/activate:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: driver id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: activate driver
+  /drivers/{id}/deactivate:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: driver id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: deactivate driver
+  /exceptions/orders:
+    get:
+      consumes:
+      - application/json
+      description: Get list of orders with failed deliveries
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Start date filter (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: End date filter (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get failed orders
+      tags:
+      - exception
+  /exceptions/waypoints:
+    get:
+      consumes:
+      - application/json
+      description: Get list of waypoints with failed deliveries
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by order ID
+        in: query
+        name: order_id
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get failed waypoints
+      tags:
+      - exception
+  /exceptions/waypoints/batch-reschedule:
+    post:
+      consumes:
+      - application/json
+      description: Reschedule multiple failed waypoints to a single new trip
+      parameters:
+      - description: Batch reschedule request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/exception.batchRescheduleWaypointsRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Batch reschedule failed waypoints
+      tags:
+      - exception
+  /geo/cities:
+    get:
+      consumes:
+      - application/json
+      description: Get list of cities by province code
+      parameters:
+      - description: Province code
+        in: query
+        name: province_code
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get cities
+      tags:
+      - geo
+  /geo/countries:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all countries
+      parameters:
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get countries
+      tags:
+      - geo
+  /geo/districts:
+    get:
+      consumes:
+      - application/json
+      description: Get list of districts by city code
+      parameters:
+      - description: City code
+        in: query
+        name: city_code
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get districts
+      tags:
+      - geo
+  /geo/lookup:
+    get:
+      consumes:
+      - application/json
+      description: Search for locations by keyword
+      parameters:
+      - description: Search keyword
+        in: query
+        name: keyword
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Lookup location
+      tags:
+      - geo
+  /geo/provinces:
+    get:
+      consumes:
+      - application/json
+      description: Get list of provinces by country code
+      parameters:
+      - description: Country code (e.g., ID)
+        in: query
+        name: country_code
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get provinces
+      tags:
+      - geo
+  /geo/villages:
+    get:
+      consumes:
+      - application/json
+      description: Get list of villages by district code
+      parameters:
+      - description: District code
+        in: query
+        name: district_code
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get villages
+      tags:
+      - geo
+  /i18n/{lang}:
+    get:
+      consumes:
+      - application/json
+      description: Get translations for a specific language (public endpoint, no authentication
+        required)
+      parameters:
+      - description: Language code (id, en)
+        in: path
+        name: lang
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get translations
+      tags:
+      - i18n
+  /me:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the authenticated user's profile information
+      parameters:
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get Current User Profile
+      tags:
+      - profile
+    put:
+      consumes:
+      - application/json
+      description: Update the authenticated user's profile information
+      parameters:
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      - description: Update profile request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/profile.updateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Update Current User Profile
+      tags:
+      - profile
+  /onboarding/status:
+    get:
+      consumes:
+      - application/json
+      description: Get current onboarding progress status
+      parameters:
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get onboarding status
+      tags:
+      - onboarding
+  /onboarding/step1:
+    post:
+      consumes:
+      - application/json
+      description: Update company profile information
+      parameters:
+      - description: Company profile update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/onboarding.step1Request'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: 'Onboarding Step 1: Update company profile'
+      tags:
+      - onboarding
+  /onboarding/step2:
+    post:
+      consumes:
+      - application/json
+      description: Create or update multiple users for the company in a single request
+      parameters:
+      - description: Create/update users request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/onboarding.step2Request'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: 'Onboarding Step 2: Create/update users'
+      tags:
+      - onboarding
+  /onboarding/step3:
+    post:
+      consumes:
+      - application/json
+      description: Create or update multiple vehicles for the company in a single
+        request
+      parameters:
+      - description: Create/update vehicles request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/onboarding.step3Request'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: 'Onboarding Step 3: Create/update vehicles'
+      tags:
+      - onboarding
+  /onboarding/step4:
+    post:
+      consumes:
+      - application/json
+      description: Create or update multiple drivers for the company in a single request
+      parameters:
+      - description: Create/update drivers request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/onboarding.step4Request'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: 'Onboarding Step 4: Create/update drivers'
+      tags:
+      - onboarding
+  /onboarding/step5:
+    post:
+      consumes:
+      - application/json
+      description: Create initial pricing matrix
+      parameters:
+      - description: Create pricing matrix request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/onboarding.step5Request'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: 'Onboarding Step 5: Create pricing matrix'
+      tags:
+      - onboarding
+  /orders:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of orders with optional filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Filter by customer ID
+        in: query
+        name: customer_id
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: List orders
+      tags:
+      - order
+    post:
+      consumes:
+      - application/json
+      description: Create a new order with waypoints
+      parameters:
+      - description: Create order request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/order.createRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Create new order
+      tags:
+      - order
+  /orders/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete an order
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Delete order
+      tags:
+      - order
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific order
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get order by ID
+      tags:
+      - order
+    put:
+      consumes:
+      - application/json
+      description: Update an existing order
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update order request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/order.updateRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Update order
+      tags:
+      - order
+  /orders/{id}/cancel:
+    put:
+      consumes:
+      - application/json
+      description: Cancel an order (change status to Cancelled)
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Cancel order
+      tags:
+      - order
+  /orders/{number}/by-number:
+    get:
+      consumes:
+      - application/json
+      description: Get order by order number
+      parameters:
+      - description: Order number
+        in: path
+        name: number
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get order by number
+      tags:
+      - order
+  /pricing-matrices:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of pricing matrices with optional filters for
+        customer, origin city, destination city, and status
+      parameters:
+      - description: Filter by customer ID
+        in: query
+        name: customer_id
+        type: string
+      - description: Filter by origin city ID
+        in: query
+        name: origin_city_id
+        type: string
+      - description: Filter by destination city ID
+        in: query
+        name: destination_city_id
+        type: string
+      - description: Filter by status (active/inactive)
+        in: query
+        name: status
+        type: string
+      - description: Number of items per page
+        format: int64
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        format: int64
+        in: query
+        name: page
+        type: integer
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      - description: Order by field (id/-id)
+        in: query
+        name: order_by
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get list of pricing matrices
+      tags:
+      - pricing_matrix
+    post:
+      consumes:
+      - application/json
+      description: Create a new pricing matrix with customer, route, vehicle type,
+        and pricing details
+      parameters:
+      - description: Pricing matrix data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/pricing_matrix.createRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Create a new pricing matrix
+      tags:
+      - pricing_matrix
+  /pricing-matrices/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a pricing matrix by ID (marks as deleted without removing
+        from database)
+      parameters:
+      - description: Pricing matrix ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Delete a pricing matrix
+      tags:
+      - pricing_matrix
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific pricing matrix by ID
+      parameters:
+      - description: Pricing matrix ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get pricing matrix details
+      tags:
+      - pricing_matrix
+    put:
+      consumes:
+      - application/json
+      description: Update an existing pricing matrix with new customer, route, vehicle
+        type, or pricing details
+      parameters:
+      - description: Pricing matrix ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Pricing matrix data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/pricing_matrix.updateRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Update a pricing matrix
+      tags:
+      - pricing_matrix
+  /pricing-matrices/{id}/activate:
+    put:
+      consumes:
+      - application/json
+      description: Activate a pricing matrix to make it available for use in pricing
+        calculations
+      parameters:
+      - description: Pricing matrix ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Activate a pricing matrix
+      tags:
+      - pricing_matrix
+  /pricing-matrices/{id}/deactivate:
+    put:
+      consumes:
+      - application/json
+      description: Deactivate a pricing matrix to prevent it from being used in pricing
+        calculations
+      parameters:
+      - description: Pricing matrix ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Deactivate a pricing matrix
+      tags:
+      - pricing_matrix
+  /public/tracking/{orderNumber}:
+    get:
+      consumes:
+      - application/json
+      description: Public endpoint to track order status by order number (no authentication
+        required)
+      parameters:
+      - description: Order number
+        in: path
+        name: orderNumber
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Track order
+      tags:
+      - tracking
+  /reports/drivers:
+    get:
+      consumes:
+      - application/json
+      description: Generate driver performance report
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        required: true
+        type: string
+      - description: Filter by driver ID
+        in: query
+        name: driver_id
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get driver performance report
+      tags:
+      - report
+  /reports/exceptions:
+    get:
+      consumes:
+      - application/json
+      description: Generate delivery exception report
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get exception report
+      tags:
+      - report
+  /reports/orders:
+    get:
+      consumes:
+      - application/json
+      description: Generate order summary report
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        required: true
+        type: string
+      - description: Filter by customer ID
+        in: query
+        name: customer_id
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get order report
+      tags:
+      - report
+  /reports/revenue:
+    get:
+      consumes:
+      - application/json
+      description: Generate revenue report
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        required: true
+        type: string
+      - description: Filter by customer ID
+        in: query
+        name: customer_id
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get revenue report
+      tags:
+      - report
+  /reports/trips:
+    get:
+      consumes:
+      - application/json
+      description: Generate trip summary report
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        required: true
+        type: string
+      - description: Filter by driver ID
+        in: query
+        name: driver_id
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get trip report
+      tags:
+      - report
+  /trips:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of trips with optional filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Filter by driver ID
+        in: query
+        name: driver_id
+        type: string
+      - description: Filter by vehicle ID
+        in: query
+        name: vehicle_id
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: List trips
+      tags:
+      - trip
+    post:
+      consumes:
+      - application/json
+      description: Create a new trip
+      parameters:
+      - description: Create trip request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/trip.createRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Create new trip
+      tags:
+      - trip
+  /trips/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a trip (only Planned, Dispatched, or Cancelled status)
+      parameters:
+      - description: Trip ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Delete trip
+      tags:
+      - trip
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific trip
+      parameters:
+      - description: Trip ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get trip by ID
+      tags:
+      - trip
+    put:
+      consumes:
+      - application/json
+      description: Update an existing trip
+      parameters:
+      - description: Trip ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update trip request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/trip.updateRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Update trip
+      tags:
+      - trip
+  /trips/{id}/dispatch:
+    put:
+      consumes:
+      - application/json
+      description: Dispatch a planned trip (Planned → Dispatched). Signals the driver
+        and updates order/waypoint status.
+      parameters:
+      - description: Trip ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Dispatch trip
+      tags:
+      - trip
+  /upload/presigned-url:
+    post:
+      consumes:
+      - application/json
+      description: Generate a presigned URL untuk upload file langsung ke S3 tanpa
+        melalui backend
+      parameters:
+      - description: Presigned URL request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/upload.presignedURLRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Generate presigned URL for S3 upload
+      tags:
+      - upload
+  /user:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of users
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: List users
+      tags:
+      - user
+    post:
+      consumes:
+      - application/json
+      description: Create a new user
+      parameters:
+      - description: Create user request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.createRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Create new user
+      tags:
+      - user
+  /user/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete user. If user role is "driver", associated driver will
+        also be soft deleted (cascade).
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Delete user by ID
+      tags:
+      - user
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get user by ID
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      description: Update user data. If user role is "driver", name and phone will
+        be synced to associated driver automatically. Driver role cannot be changed.
+        Password update should be done from user page.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update user request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.updateRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Update user by ID
+      tags:
+      - user
+  /user/{id}/activate:
+    put:
+      consumes:
+      - application/json
+      description: Activate a deactivated user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Activate user
+      tags:
+      - user
+  /user/{id}/deactivate:
+    put:
+      consumes:
+      - application/json
+      description: Deactivate a user (soft delete)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Deactivate user
+      tags:
+      - user
+  /vehicles:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: active / inactive
+        in: query
+        name: status
+        type: string
+      - description: Truck / Van / Pickup / Container Truck / Trailer
+        in: query
+        name: vehicle_type
+        type: string
+      - description: pagination
+        format: int64
+        in: query
+        name: limit
+        type: integer
+      - description: pagination
+        format: int64
+        in: query
+        name: page
+        type: integer
+      - description: plate_number
+        in: query
+        name: search
+        type: string
+      - description: id / -id
+        in: query
+        name: order_by
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: get list vehicles
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: vehicle data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/vehicle.createRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: create vehicle
+  /vehicles/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: vehicle id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: delete vehicle
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: vehicle id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: get detail vehicle
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: vehicle id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: vehicle data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/vehicle.updateRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: update vehicle
+  /vehicles/{id}/activate:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: vehicle id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: activate vehicle
+  /vehicles/{id}/deactivate:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: vehicle id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: deactivate vehicle
+  /waypoint/images:
+    get:
+      consumes:
+      - application/json
+      description: Get waypoint images (POD & failed images). Filter by trip_id OR
+        trip_waypoint_id.
+      parameters:
+      - description: Filter by trip ID
+        in: query
+        name: trip_id
+        type: string
+      - description: Filter by trip waypoint ID
+        in: query
+        name: trip_waypoint_id
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get waypoint images
+      tags:
+      - waypoint
+  /waypoint/logs:
+    get:
+      consumes:
+      - application/json
+      description: Get waypoint logs for tracking history. Filter by order_id OR trip_waypoint_id.
+      parameters:
+      - description: Filter by order ID
+        in: query
+        name: order_id
+        type: string
+      - description: Filter by trip waypoint ID
+        in: query
+        name: trip_waypoint_id
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get waypoint logs
+      tags:
+      - waypoint
+schemes:
+- http
+- https
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
