@@ -132,9 +132,10 @@ func (u *TripUsecase) Update(trip *entity.Trip, fields ...string) error {
 
 // Delete soft deletes a trip
 func (u *TripUsecase) Delete(trip *entity.Trip) error {
-	// Reset order to "pending"
-	if err := u.OrderUsecase.UpdateStatus(trip.OrderID.String(), "pending"); err != nil {
-		return fmt.Errorf("failed to reset order status: %w", err)
+	// Update order status based on its waypoints dispatch status
+	// Uses raw SQL UPDATE with CASE for efficiency
+	if err := u.OrderUsecase.UpdateStatusBasedOnWaypoints(trip.OrderID.String()); err != nil {
+		return fmt.Errorf("failed to update order status: %w", err)
 	}
 
 	// Soft delete all trip waypoints

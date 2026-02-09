@@ -50,8 +50,8 @@ export const TripDetail = () => {
   if (showResult.isLoading) {
     return (
       <Page>
-        <Page.Body className="flex items-center justify-center">
-          <Loading size="lg" variant="spinner" />
+        <Page.Body className='flex items-center justify-center'>
+          <Loading size='lg' variant='spinner' />
         </Page.Body>
       </Page>
     );
@@ -61,11 +61,11 @@ export const TripDetail = () => {
   if (showResult.isError || !trip) {
     return (
       <Page>
-        <Page.Header title="Trip Detail" withBack onBack={handleBack} />
-        <Page.Body className="flex items-center justify-center px-4">
+        <Page.Header title='Trip Detail' withBack onBack={handleBack} />
+        <Page.Body className='flex items-center justify-center px-4'>
           <ErrorState
             error={showResult.error}
-            title="Failed to Load Trip"
+            title='Failed to Load Trip'
             message={
               showResult.error instanceof Error
                 ? showResult.error.message
@@ -89,9 +89,9 @@ export const TripDetail = () => {
       <Page.Header
         title={trip?.trip_number || "Trip Detail"}
         withBack
-        onBack={() => navigate("/a")}
+        onBack={handleBack}
       />
-      <Page.Body className="px-4 py-4 max-w-screen-md mx-auto">
+      <Page.Body className='px-4 py-4 max-w-screen-md mx-auto'>
         {/* Trip Stats Card */}
         <TripStatsCard trip={trip} />
 

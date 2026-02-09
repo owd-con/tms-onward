@@ -232,7 +232,7 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
                 value={manualOverridePrice}
                 onChange={(e) => setManualOverridePrice(e.target.value)}
                 error={FormState?.errors?.manual_override_price as string}
-                hint='Leave empty to use calculated pricing'
+                hint='Auto-filled from pricing matrix. Edit to override.'
               />
             )}
 

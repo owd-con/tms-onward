@@ -19,7 +19,7 @@ func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 	s.GET("/exceptions/orders", h.getFailedOrders, middleware.WithActiveCheck(s))
 	s.GET("/exceptions/waypoints", h.getFailedWaypoints, middleware.WithActiveCheck(s))
 	s.POST("/exceptions/waypoints/batch-reschedule", h.batchRescheduleWaypoints, middleware.WithActiveCheck(s))
-	s.PUT("/exceptions/waypoints/:id/return", h.returnWaypoint, middleware.WithActiveCheck(s))
+	s.PUT("/exceptions/waypoints/{id}/return", h.returnWaypoint, middleware.WithActiveCheck(s))
 }
 
 // getFailedOrders handles GET /exceptions/orders

@@ -73,7 +73,7 @@ func (r *batchRescheduleWaypointsRequest) Validate() *validate.Response {
 			} else if driver.CompanyID.String() != r.session.CompanyID {
 				v.SetError("driver_id.invalid", "driver must belong to the same company.")
 			} else {
-				r.driver = driver // Save for toEntity()
+				r.driver = driver
 			}
 		}
 
@@ -85,7 +85,7 @@ func (r *batchRescheduleWaypointsRequest) Validate() *validate.Response {
 			} else if vehicle.CompanyID.String() != r.session.CompanyID {
 				v.SetError("vehicle_id.invalid", "vehicle must belong to the same company.")
 			} else {
-				r.vehicle = vehicle // Save for toEntity()
+				r.vehicle = vehicle
 			}
 		}
 	}
@@ -117,26 +117,6 @@ func (r *batchRescheduleWaypointsRequest) Messages() map[string]string {
 	return map[string]string{}
 }
 
-func (r *batchRescheduleWaypointsRequest) toEntity() *entity.Trip {
-	// Get OrderID from first waypoint (all waypoints belong to same order)
-	var orderID uuid.UUID
-	if len(r.waypoints) > 0 && r.waypoints[0].Order != nil {
-		orderID = r.waypoints[0].Order.ID
-	} else {
-		orderID = r.orderID // Fallback ke orderID yang diset di Validate
-	}
-
-	return &entity.Trip{
-		CompanyID:  r.driver.CompanyID,
-		OrderID:    orderID,
-		TripNumber: r.uc.Trip.GenerateTripNumber(),
-		DriverID:   r.driver.ID,
-		VehicleID:  r.vehicle.ID,
-		Status:     "planned",
-		CreatedBy:  r.session.DisplayName,
-	}
-}
-
 func (r *batchRescheduleWaypointsRequest) execute() (*rest.ResponseBody, error) {
 	// Gunakan toEntity() untuk convert request ke entity
 	trip := r.toEntity()
@@ -162,6 +142,26 @@ func (r *batchRescheduleWaypointsRequest) execute() (*rest.ResponseBody, error) 
 	trip.TripWaypoints = tripWaypoints
 
 	return rest.NewResponseBody(trip), nil
+}
+
+func (r *batchRescheduleWaypointsRequest) toEntity() *entity.Trip {
+	// Get OrderID from first waypoint (all waypoints belong to same order)
+	var orderID uuid.UUID
+	if len(r.waypoints) > 0 && r.waypoints[0].Order != nil {
+		orderID = r.waypoints[0].Order.ID
+	} else {
+		orderID = r.orderID // Fallback ke orderID yang diset di Validate
+	}
+
+	return &entity.Trip{
+		CompanyID:  r.driver.CompanyID,
+		OrderID:    orderID,
+		TripNumber: r.uc.Trip.GenerateTripNumber(),
+		DriverID:   r.driver.ID,
+		VehicleID:  r.vehicle.ID,
+		Status:     "planned",
+		CreatedBy:  r.session.DisplayName,
+	}
 }
 
 func (r *batchRescheduleWaypointsRequest) with(ctx context.Context, uc *usecase.Factory) *batchRescheduleWaypointsRequest {

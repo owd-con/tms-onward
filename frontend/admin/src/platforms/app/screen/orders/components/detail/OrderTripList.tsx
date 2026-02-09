@@ -6,6 +6,7 @@
  */
 
 import { memo, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import clsx from "clsx";
 import { dateFormat, statusBadge } from "@/shared/helper";
 import type { Trip } from "@/services/types";
@@ -18,8 +19,14 @@ interface OrderTripListProps {
 
 export const OrderTripList = memo<OrderTripListProps>(
   ({ orderId, className }) => {
+    const navigate = useNavigate();
     const [getTrips, { data: tripsData, isLoading }] = useLazyGetTripsQuery();
     const [trips, setTrips] = useState<Trip[]>([]);
+
+    // Handle trip card click
+    const handleTripClick = (tripId: string) => {
+      navigate(`/a/trips/${tripId}`);
+    };
 
     // Fetch trips by order_id
     useEffect(() => {
@@ -74,7 +81,8 @@ export const OrderTripList = memo<OrderTripListProps>(
           {sortedTrips.map((trip, index) => (
             <div
               key={trip.id}
-              className='border border-base-200 rounded-lg p-4 hover:bg-base-50 transition-colors'
+              onClick={() => handleTripClick(trip.id)}
+              className='border border-base-200 rounded-lg p-4 hover:bg-base-50 hover:shadow-sm transition-all cursor-pointer'
             >
               {/* Header */}
               <div className='flex items-start justify-between mb-3'>

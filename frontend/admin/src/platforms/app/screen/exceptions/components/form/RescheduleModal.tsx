@@ -83,9 +83,15 @@ export const RescheduleModal = ({
   // Close modal on success
   useEffect(() => {
     if (batchRescheduleResult?.isSuccess && batchRescheduleResult?.data) {
-      const newTripId = batchRescheduleResult.data.id;
-      onSuccess?.(newTripId);
-      onClose();
+      // Handle both response structures: { id: ... } or { data: { id: ... } }
+      const responseData = batchRescheduleResult.data as any;
+      const newTripId = responseData?.id || responseData?.data?.id;
+      console.log("batchRescheduleResult.data:", batchRescheduleResult.data);
+      console.log("Extracted newTripId:", newTripId);
+      if (newTripId) {
+        onSuccess?.(newTripId);
+        onClose();
+      }
     }
   }, [batchRescheduleResult?.isSuccess, batchRescheduleResult?.data, onSuccess, onClose]);
 

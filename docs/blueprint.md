@@ -732,7 +732,7 @@ THEN Order.status = "Completed"
 | **Driver arrives at pickup** via `PUT /driver/trips/waypoint/:id/arrive` | 1. `trip_waypoints.status` → "Completed"<br>2. `trip_waypoints.actual_completion_time` → NOW()<br>3. `order_waypoints.dispatch_status` → "Completed"<br>4. Create `waypoint_log`<br>5. **Auto-complete trip if all waypoints done** |
 | **Driver completes delivery** via `PUT /driver/trips/waypoint/:id/complete` | 1. `trip_waypoints.status` → "Completed"<br>2. `trip_waypoints.actual_completion_time` → NOW()<br>3. `trip_waypoints.received_by` → input<br>4. `order_waypoints.dispatch_status` → "Completed"<br>5. Create `waypoint_image` (POD)<br>6. Create `waypoint_log`<br>7. **Auto-complete trip if all waypoints done** |
 | **Driver reports failed** via `PUT /driver/trips/waypoint/:id/failed` | 1. `trip_waypoints.status` → "Completed"<br>2. `trip_waypoints.actual_completion_time` → NOW()<br>3. `trip_waypoints.failed_reason` → input<br>4. `order_waypoints.dispatch_status` → "Failed"<br>5. Create `waypoint_image` (failed)<br>6. Create `waypoint_log`<br>7. **Auto-complete trip if all waypoints done** |
-| **Admin returns waypoint** via `PUT /exceptions/waypoints/:id/return` | 1. `order_waypoints.dispatch_status` → "returned"<br>2. `order_waypoints.returned_note` → input<br>3. Create `waypoint_log` |
+| **Admin returns waypoint** via `PUT /exceptions/waypoints/:id/return` | 1. `order_waypoints.dispatch_status` → "returned"<br>2. `order_waypoints.returned_note` → input<br>3. Create `waypoint_log`<br>4. **Auto-complete order if all waypoints are completed/returned** |
 
 ### 2.2.5 Exception Reschedule Rules
 
@@ -1649,13 +1649,11 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 **Validation Rules:**
 - Waypoint must exist
 - Waypoint `dispatch_status` must be "failed"
-- Trip must be "completed"
 
 **Request Body:**
 ```json
 {
-  "reason": "Customer requested cancellation",  // required - alasan return
-  "returned_note": "Barang dikembalikan ke gudang"  // required - keterangan tambahan
+  "returned_note": "Barang dikembalikan ke gudang karena customer tidak dapat dihubungi"  // required - alasan barang dikembalikan ke origin
 }
 ```
 
@@ -1672,6 +1670,35 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
   "message": "Waypoint marked as returned"
 }
 ```
+
+---
+
+#### Frontend UI - Return Waypoint
+
+**Component Location:** `WaypointTimeline.tsx` (Order Detail Page)
+
+**Return Button:**
+- **Display Condition:** `waypoint.dispatch_status === "failed"`
+- **Button Style:** Warning style (matches "returned" status color)
+- **Action:** Opens `ReturnWaypointModal` with waypoint data
+
+**ReturnWaypointModal:**
+- **Modal Title:** "Mark Waypoint as Returned"
+- **Fields:**
+  - `returned_note` (textarea, required) - Alasan barang dikembalikan ke origin
+- **Buttons:** Cancel, Return
+- **Success Action:** Close modal, refresh order data (WaypointTimeline auto-updates via order detail refetch)
+
+**Display Returned Note:**
+- When `waypoint.dispatch_status === "returned"`:
+  - Show `returned_note` in WaypointTimeline card
+  - Display below waypoint status with info icon
+
+**Validation Notes:**
+- Frontend only validates waypoint is "failed" status
+- Trip status validation will be handled by backend
+
+---
 
 **Request Body (POST /exceptions/waypoints/batch-reschedule):**
 ```json

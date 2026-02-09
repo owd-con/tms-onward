@@ -9,7 +9,7 @@ import type { Address } from "@/services/types";
 interface AddressSelectorProps {
   label: string;
   value?: string;
-  onChange: (addressId: string, address: Address) => void;
+  onChange: (addressId: string, address: Address, cityId?: string) => void;
   error?: string;
   required?: boolean;
   disabled?: boolean;
@@ -72,7 +72,8 @@ export const AddressSelector = ({
 
   const handleAddressChange = (address: Address) => {
     setSelectedAddress(address);
-    onChange(address.id, address);
+    const cityId = address?.village?.district?.city?.id;
+    onChange(address.id, address, cityId);
   };
 
   const handleCreateNewAddress = () => {
@@ -86,7 +87,8 @@ export const AddressSelector = ({
     // Select the newly created address
     setTimeout(() => {
       setSelectedAddress(newAddress);
-      onChange(newAddress.id, newAddress);
+      const cityId = newAddress?.village?.district?.city?.id;
+      onChange(newAddress.id, newAddress, cityId);
     }, 300);
   };
 

@@ -207,9 +207,9 @@ func (u *OrderUsecase) UpdateStatus(orderID, status string) error {
 	// Validate status transition
 	validTransitions := map[string][]string{
 		"pending":    {"planned", "cancelled"},
-		"planned":    {"dispatched", "pending", "cancelled"},
+		"planned":    {"dispatched", "pending", "cancelled", "in_transit"},
 		"dispatched": {"in_transit", "pending", "cancelled"},
-		"in_transit": {"completed", "cancelled"},
+		"in_transit": {"completed", "cancelled", "planned"},
 	}
 
 	allowedStatuses, ok := validTransitions[order.Status]
@@ -231,6 +231,14 @@ func (u *OrderUsecase) UpdateStatus(orderID, status string) error {
 
 	order.Status = status
 	return u.Repo.Update(order)
+}
+
+// UpdateStatusBasedOnWaypoints updates order status based on its waypoints dispatch status
+// Uses raw SQL UPDATE with INNER JOIN for efficiency
+// - If ALL waypoints are "pending" → order status = "pending"
+// - Otherwise (has any non-pending waypoints) → order status = "in_transit"
+func (u *OrderUsecase) UpdateStatusBasedOnWaypoints(orderID string) error {
+	return u.Repo.UpdateStatusBasedOnWaypoints(orderID)
 }
 
 // GetByID retrieves an order by ID

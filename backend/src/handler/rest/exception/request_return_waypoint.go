@@ -12,12 +12,10 @@ import (
 )
 
 type returnWaypointRequest struct {
-	ID            string `json:"-" valid:"required|uuid"`          // From URL parameter
-	Reason        string `json:"reason" valid:"required"`          // required - alasan return
-	ReturnedNote  string `json:"returned_note" valid:"required"`   // required - keterangan tambahan
+	ID           string `json:"-" valid:"required|uuid"`        // From URL parameter
+	ReturnedNote string `json:"returned_note" valid:"required"` // required - alasan barang dikembalikan ke origin
 
 	waypoint *entity.OrderWaypoint
-	trip     *entity.Trip
 
 	uc      *usecase.Factory
 	ctx     context.Context
@@ -39,18 +37,6 @@ func (r *returnWaypointRequest) Validate() *validate.Response {
 	// Validate waypoint status must be "failed"
 	if r.waypoint != nil && r.waypoint.DispatchStatus != "failed" {
 		v.SetError("id.invalid", "waypoint must be in failed status to be marked as returned.")
-	}
-
-	// Fetch trip to validate status
-	if r.waypoint != nil {
-		trip, err := r.uc.Trip.GetByOrderID(r.waypoint.OrderID.String())
-		if err != nil {
-			v.SetError("id.invalid", "trip not found for this waypoint.")
-		} else if trip.Status != "completed" {
-			v.SetError("id.invalid", "trip must be completed before waypoint can be returned.")
-		} else {
-			r.trip = trip
-		}
 	}
 
 	return v

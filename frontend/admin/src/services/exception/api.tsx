@@ -20,10 +20,23 @@ export const exceptionApi = createApi({
         body: payload,
       }),
     }),
+
+    /**
+     * PUT /exceptions/waypoints/:id/return
+     * Return a failed waypoint to origin
+     */
+    returnWaypoint: builder.mutation({
+      query: ({ id, ...payload }) => ({
+        url: `/exceptions/waypoints/${id}/return`,
+        method: "PUT",
+        body: payload,
+      }),
+    }),
   }),
 });
 
 // Export RTK Query hooks
 export const {
   useBatchRescheduleWaypointsMutation,
+  useReturnWaypointMutation,
 } = exceptionApi;

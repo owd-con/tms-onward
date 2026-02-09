@@ -1,1 +1,1 @@
-export { RescheduleModal } from "./RescheduleModal";
+export { RescheduleModal } from "./form/RescheduleModal";

@@ -36,6 +36,10 @@ func (r *cancelRequest) Validate() *validate.Response {
 		if r.order.Status == "cancelled" {
 			v.SetError("id.invalid", "order is already cancelled.")
 		}
+
+		if r.order.Status != "pending" {
+			v.SetError("id.invalid", "order is already process.")
+		}
 	}
 
 	return v

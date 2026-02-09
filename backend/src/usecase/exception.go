@@ -21,6 +21,7 @@ type ExceptionUsecase struct {
 	TripRepo         *repository.TripRepository
 	TripWaypointRepo *repository.TripWaypointRepository
 	WaypointLogRepo  *repository.WaypointLogRepository
+	WaypointUsecase  *WaypointUsecase
 
 	ctx context.Context
 }
@@ -118,13 +119,10 @@ func (u *ExceptionUsecase) GetFailedOrders(req *ExceptionQueryOptions) ([]*Excep
 					'id', x.id,
 					'type', x.type,
 					'location_name', x.location_name,
-					'location_address', x.location_address,
-					'failed_at', x.actual_completion_time,
-					'failure_reason', COALESCE(x.failure_reason, '')
+					'location_address', x.location_address
 				)
 			) FILTER (WHERE x.id IS NOT NULL), '[]'::jsonb) as failed_waypoints,
-			COUNT(x.id) FILTER (WHERE x.id IS NOT NULL) as failure_count,
-			MAX(x.actual_completion_time) as last_failed_at
+			COUNT(x.id) FILTER (WHERE x.id IS NOT NULL) as failure_count
 		FROM orders o
 		INNER JOIN customers c ON c.id = o.customer_id
 		INNER JOIN (
@@ -133,17 +131,13 @@ func (u *ExceptionUsecase) GetFailedOrders(req *ExceptionQueryOptions) ([]*Excep
 				ow.id,
 				ow.type,
 				addr.name as location_name,
-				addr.address as location_address,
-				tw.actual_completion_time,
-				tw.failed_reason as failure_reason
+				addr.address as location_address
 			FROM order_waypoints ow
-			INNER JOIN trip_waypoints tw ON tw.order_waypoint_id = ow.id
 			INNER JOIN addresses addr ON addr.id = ow.address_id
 			WHERE ow.dispatch_status = 'failed'
 		) as x ON x.order_id = o.id
 		WHERE o.company_id = ?
 		GROUP BY o.id, o.order_number, o.reference_code, c.id, c.name
-		ORDER BY MAX(x.actual_completion_time) DESC NULLS LAST
 		LIMIT ? OFFSET ?
 	`
 
@@ -183,7 +177,7 @@ func (u *ExceptionUsecase) GetFailedWaypoints(req *ExceptionQueryOptions) ([]*en
 		}
 
 		// Only failed or returned waypoints
-		q.Where("order_waypoints.dispatch_status IN ('failed', 'returned')")
+		q.Where("order_waypoints.dispatch_status IN = 'failed'")
 
 		// Filter by order_id if provided
 		if req.OrderID != "" {
@@ -304,6 +298,7 @@ func (u *ExceptionUsecase) BatchRescheduleWaypoints(waypoints []*entity.OrderWay
 // 2. Update order_waypoint.returned_note → input
 // 3. Create waypoint_log (event_type: waypoint_returned)
 // 4. Trip waypoint tetap failed (tidak diubah)
+// 5. Auto-complete order if all waypoints are now completed/returned
 func (u *ExceptionUsecase) ReturnWaypoint(ctx context.Context, waypoint *entity.OrderWaypoint, returnedNote, createdBy string) error {
 	// Store old status for logging
 	oldStatus := waypoint.DispatchStatus
@@ -328,6 +323,7 @@ func (u *ExceptionUsecase) ReturnWaypoint(ctx context.Context, waypoint *entity.
 
 		// Create waypoint log for audit trail
 		log := &entity.WaypointLog{
+			OrderID:         &waypoint.OrderID,
 			OrderWaypointID: &waypoint.ID,
 			EventType:       "waypoint_returned",
 			Message:         fmt.Sprintf("Waypoint %s (%s) returned to origin", waypoint.Type, waypoint.LocationName),
@@ -345,6 +341,11 @@ func (u *ExceptionUsecase) ReturnWaypoint(ctx context.Context, waypoint *entity.
 		return err
 	}
 
+	// Auto-complete order if all waypoints are now completed/returned
+	if err := u.WaypointUsecase.CheckAndUpdateOrderStatus(waypoint.OrderID); err != nil {
+		return fmt.Errorf("failed to check and update order status: %w", err)
+	}
+
 	return nil
 }
 
@@ -356,5 +357,6 @@ func NewExceptionUsecase() *ExceptionUsecase {
 		TripRepo:         repository.NewTripRepository(),
 		TripWaypointRepo: repository.NewTripWaypointRepository(),
 		WaypointLogRepo:  repository.NewWaypointLogRepository(),
+		WaypointUsecase:  NewWaypointUsecase(),
 	}
 }

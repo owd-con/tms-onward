@@ -12,6 +12,7 @@ import { useSelector } from "react-redux";
 import { AddressSelector } from "../AddressSelector";
 import type { Address } from "@/services/types";
 import dayjs from "dayjs";
+import { usePricingMatrix } from "@/services/pricingMatrix/hooks";
 
 export interface WaypointFormData {
   id: string;
@@ -19,6 +20,7 @@ export interface WaypointFormData {
   type: "pickup" | "delivery";
   address_id?: string;
   address?: Address;
+  city_id?: string; // City ID extracted from address.village?.district?.city?.id for pricing
   scheduled_date: string;
   scheduled_time?: string;
   price?: number;
@@ -63,6 +65,15 @@ export const FormWaypoint = forwardRef<FormWaypointRef, FormWaypointProps>(
     });
 
     const FormState = useSelector((state: RootState) => state.form);
+
+    // Pricing hook
+    const { getPricingMatrices } = usePricingMatrix();
+
+    // Track loading state for pricing fetches
+    const [loadingPricing, setLoadingPricing] = useState<Record<string, boolean>>({});
+
+    // Track which waypoints we've already fetched pricing for to avoid duplicates
+    const fetchedPricingRef = useRef<Set<string>>(new Set());
 
     // Waypoints state (managed internally)
     const [waypoints, setWaypoints] = useState<WaypointFormData[]>(() => {
@@ -163,6 +174,9 @@ export const FormWaypoint = forwardRef<FormWaypointRef, FormWaypointProps>(
           ];
           console.log("Reset waypoints to default:", defaultWaypoints);
           setWaypoints(defaultWaypoints);
+
+          // Clear fetched pricing cache when customer changes
+          fetchedPricingRef.current.clear();
         }
         prevCustomerIdRef.current = selectedCustomerId;
       }
@@ -282,6 +296,107 @@ export const FormWaypoint = forwardRef<FormWaypointRef, FormWaypointProps>(
       );
     };
 
+    // Helper function to get the last pickup before a given waypoint
+    const getLastPickupBefore = (waypointsList: WaypointFormData[], index: number): WaypointFormData | null => {
+      for (let i = index - 1; i >= 0; i--) {
+        if (waypointsList[i].type === 'pickup' && waypointsList[i].city_id) {
+          return waypointsList[i];
+        }
+      }
+      return null;
+    };
+
+    // Helper function to fetch pricing for a waypoint
+    const fetchPricingForWaypoint = async (
+      waypointId: string,
+      originCityId: string,
+      destCityId: string,
+      customerId: string,
+    ): Promise<number | null> => {
+      try {
+        // Try customer-specific pricing first
+        const customerResult = await getPricingMatrices({
+          customer_id: customerId,
+          origin_city_id: originCityId,
+          destination_city_id: destCityId,
+          status: 'active',
+          limit: 1,
+        });
+
+        if (customerResult?.data?.data?.length > 0) {
+          return customerResult.data.data[0].price;
+        }
+
+        // Fallback to default pricing
+        const defaultResult = await getPricingMatrices({
+          origin_city_id: originCityId,
+          destination_city_id: destCityId,
+          status: 'active',
+          limit: 1,
+        });
+
+        return defaultResult?.data?.data?.[0]?.price || null;
+      } catch (error) {
+        console.error(`Failed to fetch pricing for waypoint ${waypointId}:`, error);
+        return null;
+      }
+    };
+
+    // Auto-fetch pricing for LTL delivery waypoints when addresses are selected
+    useEffect(() => {
+      // Only fetch for LTL orders with a selected customer
+      if (orderType !== 'LTL' || !selectedCustomerId) {
+        return;
+      }
+
+      // For each delivery waypoint with city_id
+      waypoints.forEach((waypoint, index) => {
+        // Only fetch if:
+        // 1. It's a delivery waypoint
+        // 2. Has city_id
+        // 3. No price set yet
+        // 4. Haven't already fetched for this waypoint (avoid duplicate API calls)
+        const fetchKey = `${waypoint.city_id}-${waypoint.id}`;
+        if (
+          waypoint.type === 'delivery' &&
+          waypoint.city_id &&
+          !waypoint.price &&
+          !fetchedPricingRef.current.has(fetchKey)
+        ) {
+          // Find last pickup before this delivery
+          const originPickup = getLastPickupBefore(waypoints, index);
+
+          if (originPickup?.city_id) {
+            // Mark as fetched to avoid duplicate calls
+            fetchedPricingRef.current.add(fetchKey);
+
+            // Set loading state
+            setLoadingPricing((prev) => ({ ...prev, [waypoint.id]: true }));
+
+            // Fetch pricing
+            fetchPricingForWaypoint(
+              waypoint.id,
+              originPickup.city_id,
+              waypoint.city_id,
+              selectedCustomerId,
+            )
+              .then((price) => {
+                if (price) {
+                  setWaypoints((prev) =>
+                    prev.map((wp) =>
+                      wp.id === waypoint.id ? { ...wp, price } : wp
+                    )
+                  );
+                }
+              })
+              .finally(() => {
+                setLoadingPricing((prev) => ({ ...prev, [waypoint.id]: false }));
+              });
+          }
+        }
+      });
+    }, [waypoints, selectedCustomerId, orderType]);
+
     return (
       <div className='lg:col-span-2'>
         <div className='bg-white rounded-xl p-6 shadow-sm'>
@@ -353,10 +468,11 @@ export const FormWaypoint = forwardRef<FormWaypointRef, FormWaypointProps>(
                     label={`${waypoint.type} Address`}
                     value={waypoint.address_id}
                     address={waypoint.address}
-                    onChange={(addressId, address) =>
+                    onChange={(addressId, address, cityId) =>
                       updateWaypoint(waypoint.id, {
                         address_id: addressId,
                         address,
+                        city_id: cityId,
                       })
                     }
                     customerId={selectedCustomerId}
@@ -419,13 +535,14 @@ export const FormWaypoint = forwardRef<FormWaypointRef, FormWaypointProps>(
                       label='Delivery Price'
                       type='number'
                       prefix='Rp'
-                      placeholder='Enter price'
+                      placeholder={loadingPricing[waypoint.id] ? 'Fetching price...' : 'Enter price'}
                       value={waypoint.price || ""}
                       onChange={(e) =>
                         updateWaypoint(waypoint.id, {
                           price: parseFloat(e.target.value) || undefined,
                         })
                       }
+                      disabled={loadingPricing[waypoint.id]}
                     />
                   )}
 

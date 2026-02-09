@@ -252,7 +252,7 @@ func (u *WaypointUsecase) CompleteWaypoint(
 			OrderWaypointID: &tripWaypoint.OrderWaypoint.ID,
 			TripWaypointID:  &tripWaypoint.ID,
 			EventType:       "waypoint_completed",
-			Message:         fmt.Sprintf("Pengiriman telah selesai, diterima oleh %s", receivedBy),
+			Message:         fmt.Sprintf("Pengiriman telah selesai, diterima oleh (%s)", receivedBy),
 			OldStatus:       "in_transit",
 			NewStatus:       "completed",
 			Notes:           fmt.Sprintf("Diterima oleh: (%s)", receivedBy),
@@ -323,7 +323,7 @@ func (u *WaypointUsecase) FailWaypoint(
 			OrderWaypointID: &tripWaypoint.OrderWaypoint.ID,
 			TripWaypointID:  &tripWaypoint.ID,
 			EventType:       "waypoint_failed",
-			Message:         fmt.Sprintf("Pengiriman gagal. %s", failedReason),
+			Message:         fmt.Sprintf("Pengiriman gagal, dikarenakan (%s)", failedReason),
 			OldStatus:       "in_transit",
 			NewStatus:       "failed",
 			Notes:           fmt.Sprintf("Alasan gagal: (%s)", failedReason),
@@ -364,6 +364,8 @@ func (u *WaypointUsecase) UpdateStatusWithCascade(waypoint *entity.OrderWaypoint
 		"pending":    {"dispatched", "in_transit", "cancelled"},
 		"dispatched": {"in_transit", "failed", "cancelled"},
 		"in_transit": {"completed", "failed"},
+		"failed":     {"dispatched", "returned"}, // Can be rescheduled (new trip) or returned to origin
+		"returned":   {"dispatched"},             // Can be rescheduled (new trip)
 	}
 
 	allowedStatuses, ok := validTransitions[oldStatus]

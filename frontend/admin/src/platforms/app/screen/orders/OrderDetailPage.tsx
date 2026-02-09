@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FaEdit, FaTrash, FaTimes, FaArrowLeft } from "react-icons/fa";
+import { FaEdit, FaTrash, FaTimes } from "react-icons/fa";
 
 import { Button, useEnigmaUI, Modal } from "@/components";
-import { dateFormat, statusBadge } from "@/shared/helper";
 import { useOrder } from "@/services/order/hooks";
 import type { Order } from "@/services/types";
 
@@ -14,6 +13,7 @@ import WaypointTimeline from "@/platforms/app/components/order/WaypointTimeline"
 import { WaypointLogsTimeline } from "./components/detail/WaypointLogsTimeline";
 import { OrderTripList } from "./components/detail/OrderTripList";
 import { OrderInformation } from "./components/detail/OrderInformation";
+import ReturnWaypointModal from "./components/ReturnWaypointModal";
 
 /**
  * TMS Onward - Order Detail Page
@@ -36,6 +36,12 @@ const OrderDetailPage = () => {
   } = useOrder();
 
   const [order, setOrder] = useState<Order | null>(null);
+
+  // State for ReturnWaypointModal
+  const [returnWaypointModal, setReturnWaypointModal] = useState<{
+    open: boolean;
+    waypoint: any;
+  }>({ open: false, waypoint: null });
 
   // Load order detail
   useEffect(() => {
@@ -173,6 +179,18 @@ const OrderDetailPage = () => {
     }
   };
 
+  const handleReturnWaypoint = (waypoint: any) => {
+    setReturnWaypointModal({ open: true, waypoint });
+  };
+
+  const handleReturnWaypointSuccess = () => {
+    setReturnWaypointModal({ open: false, waypoint: null });
+    // Refetch order data to update the UI
+    if (orderId) {
+      showOrder({ id: orderId });
+    }
+  };
+
   if (!order) {
     return (
       <Page>
@@ -254,7 +272,10 @@ const OrderDetailPage = () => {
             <h3 className='text-base lg:text-lg font-semibold mb-4'>
               Waypoints
             </h3>
-            <WaypointTimeline waypoints={order.order_waypoints || []} />
+            <WaypointTimeline
+              waypoints={order.order_waypoints || []}
+              onReturn={handleReturnWaypoint}
+            />
           </div>
 
           {/* Trip History (v2.10) */}
@@ -263,6 +284,14 @@ const OrderDetailPage = () => {
           )}
         </div>
       </Page.Body>
+
+      {/* ReturnWaypointModal */}
+      <ReturnWaypointModal
+        open={returnWaypointModal.open}
+        waypoint={returnWaypointModal.waypoint}
+        onClose={() => setReturnWaypointModal({ open: false, waypoint: null })}
+        onSuccess={handleReturnWaypointSuccess}
+      />
     </Page>
   );
 };

@@ -8,10 +8,14 @@ import { exceptionApi } from "./api";
 export const useException = () => {
   const [batchRescheduleWaypoints, batchRescheduleResult] =
     exceptionApi.useBatchRescheduleWaypointsMutation();
+  const [returnWaypoint, returnWaypointResult] =
+    exceptionApi.useReturnWaypointMutation();
 
   return {
     batchRescheduleWaypoints,
     batchRescheduleResult,
+    returnWaypoint,
+    returnWaypointResult,
   };
 };
 

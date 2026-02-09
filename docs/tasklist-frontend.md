@@ -1125,6 +1125,143 @@ Sebelum melanjutkan ke phase berikutnya, pastikan:
 
 ---
 
+## Phase 26: Return Waypoint Feature (v3.11) ✅ COMPLETED (2026-02-07)
+
+> **Catatan:** Module ini untuk menambahkan fitur Return Waypoint - menandai failed waypoint sebagai returned to origin. **Backend Dependency:** Backend endpoint sudah ada di `PUT /exceptions/waypoints/:id/return`.
+
+### Blueprint Reference
+- Blueprint 3.11: Exception Endpoints - `PUT /exceptions/waypoints/:id/return`
+- Blueprint Section: Frontend UI - Return Waypoint
+
+### Tasks
+
+### 26.1 API Service Update ✅ COMPLETED
+- [x] Update `src/services/exception/api.tsx`:
+  - [ ] Add `returnWaypoint` mutation:
+    ```typescript
+    returnWaypoint: builder.mutation({
+      query: ({ id, ...payload }) => ({
+        url: `/exceptions/waypoints/${id}/return`,
+        method: "PUT",
+        body: payload,
+      }),
+    }),
+    ```
+
+### 26.2 Custom Hook Update ✅ COMPLETED
+- [x] Update `src/services/exception/hooks.tsx`:
+  - [ ] Add `returnWaypoint` customOperation in `useException` hook
+
+### 26.3 Return Waypoint Modal ✅ COMPLETED
+- [x] Create `src/platforms/app/screen/orders/components/ReturnWaypointModal.tsx`:
+  - [ ] Modal title: "Mark Waypoint as Returned"
+  - [ ] Fields:
+    - [ ] `reason` (Textarea, required) - Alasan return
+    - [ ] `returned_note` (Textarea, required) - Keterangan tambahan
+  - [ ] Buttons: Cancel, Return
+  - [ ] Success action: Close modal, trigger parent refresh
+  - [ ] Uses `forwardRef` modal form pattern from FONTEND_GUIDE.md
+  - [ ] FormState pattern with snake_case keys for error handling
+
+### 26.4 WaypointTimeline Update ✅ COMPLETED
+- [x] Update `src/components/order/WaypointTimeline.tsx`:
+  - [ ] Add Return button for failed waypoints:
+    - [ ] Display condition: `waypoint.dispatch_status === "failed"`
+    - [ ] Button style: Warning style (matches "returned" status color)
+    - [ ] Action: Opens `ReturnWaypointModal` with waypoint data
+  - [ ] Add display of `returned_note` for returned status:
+    - [ ] Show below waypoint status with info icon
+    - [ ] Only display when `dispatch_status === "returned"`
+
+### 26.5 Order Detail Page Integration ✅ COMPLETED
+- [x] Update `src/platforms/app/screen/orders/OrderDetailPage.tsx`:
+  - [ ] Add `ReturnWaypointModal` component with ref
+  - [ ] Integrate Return button action with modal open
+  - [ ] Handle success callback to refetch order data
+
+### Implementation Notes:
+- **Backend Dependency**: Endpoint sudah ada, belum perlu perubahan backend
+- **Validation**: Frontend hanya validasi status "failed", trip status validation ditangani backend
+- **Pattern Compliance**: Mengikuti FONTEND_GUIDE.md pattern (Modal Form with forwardRef, FormState error handling)
+- **Auto-refresh**: WaypointTimeline akan auto-update melalui order detail refetch setelah return success
+- **Status Color**: Return button menggunakan warning style untuk match dengan "returned" status
+
+---
+
+## Phase 27: Auto-Fetch Customer Pricing in Order Create ✅ COMPLETED (2026-02-07)
+
+> **Catatan:** Module ini untuk auto-fetch pricing dari pricing matrix saat create order. **Backend Dependency:** Backend API sudah ada (`GET /pricing-matrices` dengan query params filter).
+
+### Blueprint Reference
+- Blueprint 2.3: Pricing Matrix Per-Customer (origin → destination pricing)
+- Blueprint 3.8: Pricing Matrix Endpoints - `GET /pricing-matrices`
+- Requirements Line 96: "Total Order Price: Auto-sum dari semua harga delivery waypoint"
+- Requirements Line 187: "Kalkulasi Harga: Auto-calculate dari pricing matrix"
+
+### Tasks
+
+### 27.1 Type Definitions Update ✅ COMPLETED
+- [x] Update `src/services/types.ts`:
+  - [ ] Add `city_id?: string` to `WaypointFormData` interface
+  - [ ] Used for storing origin/destination city_id from address selection
+
+### 27.2 AddressSelector Update ✅ COMPLETED
+- [x] Update `src/platforms/app/screen/orders/components/AddressSelector.tsx`:
+  - [ ] Extract `city_id` from selected address: `address.village?.district?.city?.id`
+  - [ ] Pass `city_id` to onChange callback along with address object
+
+### 27.3 FormWaypoint Update ✅ COMPLETED
+- [x] Update `src/platforms/app/screen/orders/components/form/formWaypoint.tsx`:
+  - [ ] Store `city_id` in waypoint state when address is selected
+  - [ ] Add `getLastPickupBefore()` function to find origin pickup for each delivery
+  - [ ] Add `fetchPricingForWaypoint()` function with fallback logic:
+    - Try customer-specific pricing first (`customer_id` + `origin_city_id` + `destination_city_id`)
+    - Fallback to default pricing (`origin_city_id` + `destination_city_id` without customer_id)
+  - [ ] Add useEffect to auto-fetch pricing when pickup & delivery addresses are selected
+  - [ ] Auto-fill price field when pricing is found
+  - [ ] Keep field editable for manual input/override
+  - [ ] Handle edge cases: no pickup before delivery, missing city_id, pricing not found
+
+### 27.4 FormGeneral Update (Optional) ✅ COMPLETED
+- [x] Update `src/platforms/app/screen/orders/components/form/formGeneral.tsx`:
+  - [ ] Remove or update "Manual Override Price" hint to mention auto-fetch feature
+  - [ ] Keep field functional for FTL manual override
+
+### 27.5 OrderCreatePage Integration ✅ COMPLETED
+- [x] Update `src/platforms/app/screen/orders/OrderCreatePage.tsx`:
+  - [ ] Ensure customer ID is passed to FormWaypoint for pricing lookup
+  - [ ] Test pricing fetch with real customer data
+
+### Implementation Notes:
+- **Backend Dependency**: API endpoint sudah ada, query params sudah didukung
+- **Pricing Logic**: Previous Pickup Rule - Origin untuk delivery = Pickup waypoint terakhir sebelumnya
+- **Fallback**: Customer-specific pricing → Default pricing → Manual input
+- **Simple UI**: Harga langsung muncul jika ada, kosong jika tidak ada (selalu editable)
+- **LTL Only**: Pricing per delivery waypoint (FTL uses manual override at order level)
+- **Auto-sum**: Total order price = sum semua delivery waypoint prices (backend calculation)
+- **Pattern Compliance**: Simple, clean UI without complex badges or hints
+
+### Pricing Lookup Flow:
+```
+1. User selects Pickup Address → Extract city_id from address.village.district.city.id
+2. User selects Delivery Address → Extract city_id
+3. Find last pickup before current delivery (origin city)
+4. Fetch pricing: GET /pricing-matrices?customer_id=X&origin_city_id=Y&destination_city_id=Z&status=active
+5. If found → Auto-fill price field
+6. If not found → Try default pricing (without customer_id)
+7. If still not found → Leave empty for manual input
+8. User can always edit/override the price
+```
+
+### Files to Modify:
+- `frontend/admin/src/services/types.ts` (add city_id to WaypointFormData)
+- `frontend/admin/src/platforms/app/screen/orders/components/AddressSelector.tsx` (extract city_id)
+- `frontend/admin/src/platforms/app/screen/orders/components/form/formWaypoint.tsx` (fetch pricing logic)
+- `frontend/admin/src/platforms/app/screen/orders/components/form/formGeneral.tsx` (optional: update hint)
+- `frontend/admin/src/platforms/app/screen/orders/OrderCreatePage.tsx` (integration)
+
+---
+
 ## Reference Files
 
 **Backend Entity References** (for type definitions):
@@ -1161,10 +1298,67 @@ Selalu ikuti pattern dari `example/apps/` dan dokumentasi di `docs/FONTEND_GUIDE
 
 ---
 
-**Versi Dokumen**: 3.9
-**Terakhir Diupdate**: 2026-02-06
+**Versi Dokumen**: 4.2
+**Terakhir Diupdate**: 2026-02-07
 
 **Changelog:**
+- v4.2 (2026-02-07):
+  - **COMPLETED: Phase 26 - Return Waypoint Feature (v3.11)** ✅
+  - **COMPLETED: Phase 27 - Auto-Fetch Customer Pricing in Order Create** ✅
+  - **Files Modified/Created**:
+    - `exception/api.tsx` - Added returnWaypoint mutation
+    - `exception/hooks.tsx` - Added returnWaypoint customOperation
+    - `ReturnWaypointModal.tsx` - New modal component created
+    - `WaypointTimeline.tsx` - Added Return button + returned_note display
+    - `OrderDetailPage.tsx` - Integrated ReturnWaypointModal
+    - `formWaypoint.tsx` - Added city_id field, auto-fetch pricing logic
+    - `AddressSelector.tsx` - Extract and pass city_id
+    - `formGeneral.tsx` - Updated hint text
+  - **Phase 26 - Return Waypoint Feature**:
+    | Task | Status |
+    |------|--------|
+    | API Service Update | ✅ returnWaypoint mutation |
+    | Custom Hook Update | ✅ returnWaypoint customOperation |
+    | Return Waypoint Modal | ✅ Modal with 2 fields (reason, returned_note) |
+    | WaypointTimeline Update | ✅ Return button + returned_note display |
+    | Order Detail Page Integration | ✅ Modal integrated with state management |
+  - **Phase 27 - Auto-Fetch Customer Pricing**:
+    | Task | Status |
+    |------|--------|
+    | Type Definitions Update | ✅ city_id added to WaypointFormData |
+    | AddressSelector Update | ✅ Extract city_id from address |
+    | FormWaypoint Update | ✅ Previous Pickup Rule + fallback logic |
+    | FormGeneral Update | ✅ Updated hint text |
+    | OrderCreatePage Integration | ✅ Customer ID verified |
+  - **Completion Status Update**:
+    | Status | Phase Count | Percentage |
+    |--------|-------------|------------|
+    | Sudah Selesai (Implementation) | 27 phase | 100% ✅ |
+    | Belum Dikerjakan | 0 phase | 0% |
+    | **TOTAL (Admin)** | **27 phase** | **100%** ✅ |
+  - **🎉 FINAL MILESTONE**: TMS Frontend Admin/Dispatcher Portal - **100% COMPLETE!**
+
+- v4.1 (2026-02-07):
+  - **NEW: Phase 27 - Auto-Fetch Customer Pricing in Order Create** ⏳ PENDING
+  - **Backend Dependency**: Backend API sudah ada (`GET /pricing-matrices` with query params)
+  - **Pricing Logic**: Previous Pickup Rule - Origin untuk delivery = Pickup waypoint terakhir sebelumnya
+  - **Fallback**: Customer-specific pricing → Default pricing → Manual input
+  - **Type Definitions**: Add `city_id` to WaypointFormData interface
+  - **AddressSelector**: Extract city_id from address.village.district.city.id
+  - **FormWaypoint**: Auto-fetch pricing when pickup & delivery addresses selected
+  - **Simple UI**: Price auto-fills if found, empty for manual input if not found (always editable)
+  - **LTL Focus**: Pricing per delivery waypoint (FTL uses manual override at order level)
+
+- v4.0 (2026-02-07):
+  - **NEW: Phase 26 - Return Waypoint Feature (v3.11)** ⏳ PENDING
+  - **Backend Dependency**: Backend endpoint sudah ada (`PUT /exceptions/waypoints/:id/return`)
+  - **API Service**: Add returnWaypoint mutation to exception API
+  - **Custom Hook**: Add returnWaypoint customOperation to useException hook
+  - **Modal Form**: Create ReturnWaypointModal with 2 fields (reason, returned_note)
+  - **WaypointTimeline**: Add Return button for failed waypoints, display returned_note
+  - **Order Detail Page**: Integrate ReturnWaypointModal with parent refresh
+  - **Pattern Compliance**: Modal form with forwardRef, FormState error handling (FONTEND_GUIDE.md)
+
 - v3.9 (2026-02-06):
   - **COMPLETED: Phase 25 - Waypoint Management Enhancement (v2.10)** ✅
   - **Backend Dependency**: Backend Tasklist 3.22 COMPLETED ✅

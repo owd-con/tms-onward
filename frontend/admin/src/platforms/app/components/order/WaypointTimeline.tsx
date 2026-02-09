@@ -6,6 +6,8 @@ import type {
 import { formatStatus } from "@/utils/status";
 import { dateFormat, statusBadge } from "@/shared/helper";
 import { formatCurrency } from "@/shared/utils/formatter";
+import { Button } from "@/components";
+import { HiArrowUturnLeft } from "react-icons/hi2";
 
 interface WaypointTimelineProps {
   waypoints: OrderWaypoint[] | TripWaypoint[];
@@ -18,6 +20,10 @@ interface WaypointTimelineProps {
    * Trip status badge (e.g., "Failed" for old trips, "Pending" for new trips)
    */
   tripStatus?: string;
+  /**
+   * Callback for Return action on failed waypoints
+   */
+  onReturn?: (waypoint: OrderWaypoint | TripWaypoint) => void;
 }
 
 const statusConfig: Record<string, { color: string; bgColor: string }> = {
@@ -73,6 +79,7 @@ const WaypointTimeline = ({
   waypoints,
   tripNumber,
   tripStatus,
+  onReturn,
 }: WaypointTimelineProps) => {
   if (!waypoints || waypoints.length === 0) {
     return (
@@ -161,7 +168,7 @@ const WaypointTimeline = ({
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold ${config.bgColor} ${config.color}`}
                 >
-                  {waypoint.sequence_number !== undefined
+                  {waypoint.sequence_number !== 0
                     ? waypoint.sequence_number
                     : isPickup
                       ? "P"
@@ -202,10 +209,12 @@ const WaypointTimeline = ({
                       {wpData.address.village &&
                         `, ${wpData.address.village.alias_name || wpData.address.village.name}`}
                     </div>
-                  ) : wpData?.location_address && (
-                    <div className='text-base-content/70'>
-                      {wpData.location_address}
-                    </div>
+                  ) : (
+                    wpData?.location_address && (
+                      <div className='text-base-content/70'>
+                        {wpData.location_address}
+                      </div>
+                    )
                   )}
                 </div>
 
@@ -240,27 +249,32 @@ const WaypointTimeline = ({
                 </div>
 
                 {/* Execution timestamps (only for TripWaypoint) */}
-                {isTripWp && (waypoint.actual_arrival_time || waypoint.actual_completion_time) && (
-                  <div className='mt-2 pt-2 border-t border-base-300/50'>
-                    <div className='text-xs text-base-content/60 space-y-1'>
-                      {waypoint.actual_arrival_time && (
-                        <div>
-                          <span className='font-medium'>Arrived:</span>{" "}
-                          {dateFormat(waypoint.actual_arrival_time, "DD/MM/YYYY, HH:mm")}
-                        </div>
-                      )}
-                      {waypoint.actual_completion_time && (
-                        <div>
-                          <span className='font-medium'>Completed:</span>{" "}
-                          {dateFormat(
-                            waypoint.actual_completion_time,
-                            "DD/MM/YYYY, HH:mm",
-                          )}
-                        </div>
-                      )}
+                {isTripWp &&
+                  (waypoint.actual_arrival_time ||
+                    waypoint.actual_completion_time) && (
+                    <div className='mt-2 pt-2 border-t border-base-300/50'>
+                      <div className='text-xs text-base-content/60 space-y-1'>
+                        {waypoint.actual_arrival_time && (
+                          <div>
+                            <span className='font-medium'>Arrived:</span>{" "}
+                            {dateFormat(
+                              waypoint.actual_arrival_time,
+                              "DD/MM/YYYY, HH:mm",
+                            )}
+                          </div>
+                        )}
+                        {waypoint.actual_completion_time && (
+                          <div>
+                            <span className='font-medium'>Completed:</span>{" "}
+                            {dateFormat(
+                              waypoint.actual_completion_time,
+                              "DD/MM/YYYY, HH:mm",
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Received by (v2.10) - for completed delivery waypoints */}
                 {isTripWp && waypoint.received_by && (
@@ -286,8 +300,40 @@ const WaypointTimeline = ({
                   </div>
                 )}
 
+                {/* Returned note - for returned waypoints */}
+                {status === "returned" && (waypoint as any).returned_note && (
+                  <div className='mt-2 text-sm p-2 bg-warning/10 border border-warning/30 rounded-lg'>
+                    <div className='flex items-start gap-2'>
+                      <HiArrowUturnLeft className='w-4 h-4 text-warning flex-shrink-0 mt-0.5' />
+                      <div className='flex-1'>
+                        <span className='font-medium text-warning'>
+                          Returned note:{" "}
+                        </span>
+                        <span className='text-base-content'>
+                          {(waypoint as any).returned_note}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Return button - for failed waypoints */}
+                {status === "failed" && onReturn && (
+                  <div className='mt-3 pt-3 border-t border-base-300/50'>
+                    <Button
+                      variant='warning'
+                      size='sm'
+                      onClick={() => onReturn(waypoint)}
+                      className='gap-2'
+                    >
+                      <HiArrowUturnLeft className='w-4 h-4' />
+                      Return to Origin
+                    </Button>
+                  </div>
+                )}
+
                 {/* Price for Delivery - only for OrderWaypoint (not TripWaypoint) */}
-                {(!isTripWp && wpData.price > 0) && (
+                {!isTripWp && wpData.price > 0 && (
                   <div className='mt-2 text-sm'>
                     <span className='font-medium text-base-content/70'>
                       Price:{" "}
