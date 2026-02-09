@@ -71,6 +71,12 @@ export const AddressSelector = ({
   }, [value, getResult?.data?.data, address]);
 
   const handleAddressChange = (address: Address) => {
+    console.log("📍 AddressSelector.handleAddressChange called:", {
+      addressId: address.id,
+      addressName: address.name,
+      cityId: address?.village?.district?.city?.id,
+      fullAddress: address,
+    });
     setSelectedAddress(address);
     const cityId = address?.village?.district?.city?.id;
     onChange(address.id, address, cityId);

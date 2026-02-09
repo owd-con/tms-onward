@@ -67,7 +67,7 @@ export const FormWaypoint = forwardRef<FormWaypointRef, FormWaypointProps>(
     const FormState = useSelector((state: RootState) => state.form);
 
     // Pricing hook
-    const { getPricingMatrices } = usePricingMatrix();
+    const { get: getPricingMatrices } = usePricingMatrix();
 
     // Track loading state for pricing fetches
     const [loadingPricing, setLoadingPricing] = useState<Record<string, boolean>>({});
@@ -242,6 +242,7 @@ export const FormWaypoint = forwardRef<FormWaypointRef, FormWaypointProps>(
     };
 
     const updateWaypoint = (id: string, updates: Partial<WaypointFormData>) => {
+      console.log(`🔄 updateWaypoint called for ${id}:`, updates);
       setWaypoints((prev) =>
         prev.map((wp) => (wp.id === id ? { ...wp, ...updates } : wp)),
       );
@@ -313,8 +314,15 @@ export const FormWaypoint = forwardRef<FormWaypointRef, FormWaypointProps>(
       destCityId: string,
       customerId: string,
     ): Promise<number | null> => {
+      console.log("📋 fetchPricingForWaypoint called:", {
+        waypointId,
+        originCityId,
+        destCityId,
+        customerId,
+      });
       try {
-        // Try customer-specific pricing first
+        // Fetch customer-specific pricing
+        console.log("🔍 Fetching customer-specific pricing...");
         const customerResult = await getPricingMatrices({
           customer_id: customerId,
           origin_city_id: originCityId,
@@ -322,32 +330,41 @@ export const FormWaypoint = forwardRef<FormWaypointRef, FormWaypointProps>(
           status: 'active',
           limit: 1,
         });
+        console.log("📦 Customer pricing result:", customerResult);
 
-        if (customerResult?.data?.data?.length > 0) {
-          return customerResult.data.data[0].price;
+        // Response structure: { data: [...], meta: {...} }
+        if (customerResult?.data && Array.isArray(customerResult.data) && customerResult.data.length > 0) {
+          const price = (customerResult.data[0] as any).price;
+          console.log("✅ Using customer pricing:", price);
+          return price || null;
         }
 
-        // Fallback to default pricing
-        const defaultResult = await getPricingMatrices({
-          origin_city_id: originCityId,
-          destination_city_id: destCityId,
-          status: 'active',
-          limit: 1,
-        });
-
-        return defaultResult?.data?.data?.[0]?.price || null;
+        console.log("⚠️ No pricing found for this route");
+        return null;
       } catch (error) {
-        console.error(`Failed to fetch pricing for waypoint ${waypointId}:`, error);
+        console.error(`❌ Failed to fetch pricing for waypoint ${waypointId}:`, error);
         return null;
       }
     };
 
     // Auto-fetch pricing for LTL delivery waypoints when addresses are selected
     useEffect(() => {
+      console.log("=== Auto-fetch Pricing Effect Triggered ===");
+      console.log("orderType:", orderType);
+      console.log("selectedCustomerId:", selectedCustomerId);
+
       // Only fetch for LTL orders with a selected customer
-      if (orderType !== 'LTL' || !selectedCustomerId) {
+      if (orderType !== 'LTL') {
+        console.log("❌ Not LTL, skipping");
         return;
       }
+
+      if (!selectedCustomerId) {
+        console.log("❌ No customer selected, skipping");
+        return;
+      }
+
+      console.log("✅ Conditions met, checking waypoints:", waypoints);
 
       // For each delivery waypoint with city_id
       waypoints.forEach((waypoint, index) => {
@@ -357,6 +374,15 @@ export const FormWaypoint = forwardRef<FormWaypointRef, FormWaypointProps>(
         // 3. No price set yet
         // 4. Haven't already fetched for this waypoint (avoid duplicate API calls)
         const fetchKey = `${waypoint.city_id}-${waypoint.id}`;
+
+        console.log(`Waypoint ${index} (${waypoint.id}):`, {
+          type: waypoint.type,
+          city_id: waypoint.city_id,
+          price: waypoint.price,
+          fetchKey,
+          alreadyFetched: fetchedPricingRef.current.has(fetchKey),
+        });
+
         if (
           waypoint.type === 'delivery' &&
           waypoint.city_id &&
@@ -366,12 +392,20 @@ export const FormWaypoint = forwardRef<FormWaypointRef, FormWaypointProps>(
           // Find last pickup before this delivery
           const originPickup = getLastPickupBefore(waypoints, index);
 
+          console.log("🎯 Delivery waypoint ready for pricing fetch:", {
+            waypointId: waypoint.id,
+            originPickup: originPickup?.city_id,
+            destCity: waypoint.city_id,
+          });
+
           if (originPickup?.city_id) {
             // Mark as fetched to avoid duplicate calls
             fetchedPricingRef.current.add(fetchKey);
 
             // Set loading state
             setLoadingPricing((prev) => ({ ...prev, [waypoint.id]: true }));
+
+            console.log("🚀 Fetching pricing...");
 
             // Fetch pricing
             fetchPricingForWaypoint(
@@ -381,6 +415,7 @@ export const FormWaypoint = forwardRef<FormWaypointRef, FormWaypointProps>(
               selectedCustomerId,
             )
               .then((price) => {
+                console.log(`✅ Pricing fetched for ${waypoint.id}:`, price);
                 if (price) {
                   setWaypoints((prev) =>
                     prev.map((wp) =>
@@ -389,12 +424,19 @@ export const FormWaypoint = forwardRef<FormWaypointRef, FormWaypointProps>(
                   );
                 }
               })
+              .catch((error) => {
+                console.error(`❌ Failed to fetch pricing for ${waypoint.id}:`, error);
+              })
               .finally(() => {
                 setLoadingPricing((prev) => ({ ...prev, [waypoint.id]: false }));
               });
+          } else {
+            console.log("⚠️ No origin pickup found with city_id");
           }
         }
       });
+
+      console.log("=== Auto-fetch Pricing Effect Complete ===");
     }, [waypoints, selectedCustomerId, orderType]);
 
     return (

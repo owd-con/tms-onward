@@ -222,17 +222,17 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
               error={FormState?.errors?.special_instructions as string}
             />
 
-            {/* Manual Override Price (FTL only) */}
+            {/* Manual Price (FTL only) */}
             {orderType === "FTL" && (
               <Input
-                label='Manual Override Price'
+                label='Price'
                 placeholder='Enter price'
                 type='number'
                 prefix='Rp'
                 value={manualOverridePrice}
                 onChange={(e) => setManualOverridePrice(e.target.value)}
                 error={FormState?.errors?.manual_override_price as string}
-                hint='Auto-filled from pricing matrix. Edit to override.'
+                hint='Enter the delivery price for this FTL order'
               />
             )}
 
