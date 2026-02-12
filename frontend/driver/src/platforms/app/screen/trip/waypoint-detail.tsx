@@ -61,7 +61,7 @@ export const WaypointDetail = () => {
       toast.success("Waypoint started");
       navigate(`/a/trips/${id}`);
     }
-  }, [startWaypointResult?.isSuccess, id, navigate]);
+  }, [startWaypointResult?.isSuccess, id]);
 
   // Success handling for arrive waypoint
   useEffect(() => {
@@ -69,7 +69,7 @@ export const WaypointDetail = () => {
       toast.success("Pickup completed");
       navigate(`/a/trips/${id}`);
     }
-  }, [arriveWaypointResult?.isSuccess, id, navigate]);
+  }, [arriveWaypointResult?.isSuccess, id]);
 
   // Success handling for complete waypoint
   useEffect(() => {
@@ -77,7 +77,7 @@ export const WaypointDetail = () => {
       toast.success("Delivery completed");
       navigate(`/a/trips/${id}`);
     }
-  }, [completeWaypointResult?.isSuccess, id, navigate]);
+  }, [completeWaypointResult?.isSuccess, id]);
 
   // Success handling for fail waypoint
   useEffect(() => {
@@ -85,7 +85,7 @@ export const WaypointDetail = () => {
       toast.success("Waypoint failed reported");
       navigate(`/a/trips/${id}`);
     }
-  }, [failWaypointResult?.isSuccess, id, navigate]);
+  }, [failWaypointResult?.isSuccess, id]);
 
   // Handle start waypoint (Pending -> In Transit) - v2.10
   const handleStartWaypoint = async () => {
@@ -195,7 +195,7 @@ export const WaypointDetail = () => {
             retryText={showResult.isLoading ? "Retrying..." : "Try Again"}
             secondaryAction={{
               label: "Back to Trip",
-              onClick: () => navigate(`/a/trips/${id}`),
+              onClick: () => navigate(`/a/trips/${id}`, { replace: true }),
             }}
           />
         </Page.Body>

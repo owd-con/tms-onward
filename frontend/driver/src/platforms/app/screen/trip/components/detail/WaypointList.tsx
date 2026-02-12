@@ -16,10 +16,14 @@ interface WaypointListProps {
  *
  * Features:
  * - Manages start waypoint operation internally
+ * - Start Waypoint button ONLY shown for the FIRST pending waypoint (no in_transit/dispatch after it)
  * - Section header with empty state
  * - Sorted waypoint cards by sequence_number
  * - Auto-refetch after successful start waypoint
  * - View Details button navigates to waypoint detail page for full actions
+ *
+ * Logic: Waypoints must be started in sequence. Only the first pending waypoint
+ * that has no in_transit/dispatch waypoints after it can be started.
  *
  * @example
  * ```tsx
@@ -32,7 +36,6 @@ interface WaypointListProps {
  * ```
  */
 export const WaypointList = ({
-  tripId,
   trip,
   onRefetch,
   onViewDetails,
@@ -44,6 +47,20 @@ export const WaypointList = ({
   const sortedWaypoints = [...(trip?.trip_waypoints || [])].sort(
     (a, b) => a.sequence_number - b.sequence_number
   );
+
+  // Check if there are any in_transit or dispatch waypoints
+  // If yes, no new waypoints can be started
+  const hasAnyInProgress = sortedWaypoints.some(
+    (w) => w.status === "in_transit" || w.status === "dispatch"
+  );
+
+  const getCanStartWaypoint = (index: number) => {
+    // Must be a pending waypoint
+    if (sortedWaypoints[index].status !== "pending") return false;
+
+    // Only allow starting if NO waypoints are in_transit/dispatch
+    return !hasAnyInProgress;
+  };
 
   // Auto-refetch after successful start waypoint
   useEffect(() => {
@@ -82,11 +99,12 @@ export const WaypointList = ({
       ) : (
         /* Waypoint List */
         <div className="space-y-4 mb-4">
-          {sortedWaypoints.map((waypoint) => (
+          {sortedWaypoints.map((waypoint, index) => (
             <WaypointCard
               key={waypoint.id}
               waypoint={waypoint}
               tripStatus={trip?.status || ""}
+              canStartWaypoint={getCanStartWaypoint(index)}
               onStartWaypoint={handleStartWaypoint}
               onViewDetails={onViewDetails}
               isLoading={isLoading}

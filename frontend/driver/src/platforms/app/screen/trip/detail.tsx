@@ -38,7 +38,7 @@ export const TripDetail = () => {
 
   // Handle back navigation
   const handleBack = () => {
-    navigate(-1);
+    navigate(`/a/trips`);
   };
 
   // Handle waypoint click (for navigation to detail page)
