@@ -74,6 +74,9 @@ const AppRouter = () => {
   const matchTrips = useMatch("/a/trips");
   const matchExceptions = useMatch("/a/exceptions");
   const matchReports = useMatch("/a/reports");
+  const matchReportOrderTrip = useMatch("/a/reports/order-trip");
+  const matchReportDriverPerformance = useMatch("/a/reports/driver-performance");
+  const matchReportCustomer = useMatch("/a/reports/customer");
   const matchManagement = useMatch("/a/management/*");
   const matchCompany = useMatch("/a/management/company");
   const matchTeam = useMatch("/a/management/team");
@@ -173,9 +176,19 @@ const AppRouter = () => {
       collapsible: true,
       children: [
         {
-          label: "All Reports",
-          onClick: () => navigate("/a/reports"),
-          active: !!matchReports,
+          label: "Order Trip",
+          onClick: () => navigate("/a/reports/order-trip"),
+          active: !!matchReportOrderTrip,
+        },
+        {
+          label: "Driver Performance",
+          onClick: () => navigate("/a/reports/driver-performance"),
+          active: !!matchReportDriverPerformance,
+        },
+        {
+          label: "Customer",
+          onClick: () => navigate("/a/reports/customer"),
+          active: !!matchReportCustomer,
         },
       ],
     },

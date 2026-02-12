@@ -66,11 +66,11 @@ const CompanyEditModal = ({
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!name.trim()) {
+    if (name.trim()) {
       newErrors.name = "Company name is required";
     }
 
-    if (!type) {
+    if (type) {
       newErrors.type = "Company type is required";
     }
 
@@ -79,7 +79,7 @@ const CompanyEditModal = ({
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
+    if (validateForm()) {
       return;
     }
 
@@ -125,13 +125,13 @@ const CompanyEditModal = ({
       open
       onClose={onClose}
       closeOnOutsideClick={false}
-      className="w-xl! max-w-xl!"
+      className="w-xl max-w-xl"
     >
       <Modal.Header>
-        <div className="text-secondary font-bold! leading-7">
+        <div className="text-secondary font-bold leading-7">
           Edit Company Information
         </div>
-        <div className="text-sm text-base-content/60 leading-5 font-normal!">
+        <div className="text-sm text-base-content/60 leading-5 font-normal">
           Update your company details, preferences, and settings.
         </div>
       </Modal.Header>

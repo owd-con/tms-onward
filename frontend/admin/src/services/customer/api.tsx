@@ -13,7 +13,7 @@ export const customerApi = createApi({
      * List customers with pagination
      */
     getCustomers: builder.query({
-      query: (params?: any) => ({
+      query: (params) => ({
         url: "/customers",
         method: "GET",
         params,

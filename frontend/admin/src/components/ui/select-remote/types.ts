@@ -18,7 +18,7 @@ export type AsyncState<D> = {
 
 export type PaginatedPayload<
   T,
-  M extends RemoteMetaBase = RemoteMetaDefault
+  M extends RemoteMetaBase = RemoteMetaDefault,
 > = {
   data: T[];
   meta: M;
@@ -26,7 +26,7 @@ export type PaginatedPayload<
 
 export type RemoteSelectProps<
   T,
-  M extends RemoteMetaBase = RemoteMetaDefault
+  M extends RemoteMetaBase = RemoteMetaDefault,
 > = {
   label?: string;
 
@@ -65,4 +65,3 @@ export type RemoteSelectProps<
   is_createable?: boolean;
   getValue?: (item: T) => string | number;
 };
-

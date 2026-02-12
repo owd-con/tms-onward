@@ -31,7 +31,7 @@ export const NavbarMobileToggle = ({ items }: NavbarMobileToggleProps) => {
         <Drawer
           open={true}
           onClose={() => closeDrawer("menu")}
-          className="px-5 py-10 w-3/4!"
+          className="px-5 py-10 w-3/4"
           closeButton
           position="left"
         >

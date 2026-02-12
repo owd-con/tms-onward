@@ -48,7 +48,7 @@ const TableTool: React.FC<TableToolProps> = ({
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         placeholder="Search ..."
-        className="rounded-xl!"
+        className="rounded-xl"
         prefix={<IconSearch className="h-5 w-5" />}
         suffix={
           searchTerm && (
@@ -61,7 +61,7 @@ const TableTool: React.FC<TableToolProps> = ({
               shape="circle"
               size="xs"
               styleType="soft"
-              className="text-error hover:text-base-100 p-0!"
+              className="text-error hover:text-base-100 p-0"
               aria-label="Clear search"
             >
               &times;

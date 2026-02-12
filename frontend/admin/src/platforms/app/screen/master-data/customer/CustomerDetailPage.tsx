@@ -1,5 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaEdit, FaTrash } from "react-icons/fa";
@@ -29,31 +27,23 @@ const CustomerDetailPage = () => {
   } = useCustomer();
 
   const [customer, setCustomer] = useState<any>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Track delete success agar hanya handle sekali per delete
   const deleteSuccessHandledRef = useRef(false);
 
-  // Load customer detail
+  // Initial load - dependency array kosong
   useEffect(() => {
     if (customerId) {
-      setLoadError(null);
       show({ id: customerId });
     }
-  }, [customerId]);
+  }, []); // ✅ Kosong untuk initial load
 
+  // Sync state dengan result
   useEffect(() => {
     if (showResult?.isSuccess) {
       setCustomer((showResult?.data as any)?.data);
-      setLoadError(null);
     }
   }, [showResult]);
-
-  useEffect(() => {
-    if (showResult?.isError) {
-      setLoadError("Failed to load customer details. Please try again.");
-    }
-  }, [showResult?.isError]);
 
   const handleDeleteCustomer = () => {
     // Reset ref agar delete success yang baru bisa di-handle
@@ -133,17 +123,18 @@ const CustomerDetailPage = () => {
     }
   }, [removeCustomerResult?.isSuccess]);
 
+  // Error & Loading handling langsung dari RTK Query
   if (!customer) {
     return (
       <Page>
         <Page.Header title='Customer Detail' />
         <Page.Body>
-          {loadError ? (
+          {showResult?.isError ? (
             <div className='flex flex-col items-center justify-center h-64 gap-4'>
               <div className='text-error text-6xl'>:(</div>
               <div className='text-center'>
                 <h3 className='text-lg font-semibold'>Error Loading Customer</h3>
-                <p className='text-base-content/60 mt-1'>{loadError}</p>
+                <p className='text-base-content/60 mt-1'>Failed to load customer details. Please try again.</p>
               </div>
               <Button variant='secondary' onClick={() => navigate(-1)}>
                 Go Back

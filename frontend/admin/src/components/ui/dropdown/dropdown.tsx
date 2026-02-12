@@ -1,4 +1,4 @@
-import { useRef, useState, memo } from "react";
+import { useRef, useState } from "react";
 import clsx from "clsx";
 import { useOutsideClick } from "./useOutsideClick";
 import type { DropdownProps } from "./types";
@@ -8,7 +8,7 @@ interface DropdownComponent extends React.FC<DropdownProps> {
   Item: typeof DropdownItem;
 }
 
-const Dropdown: DropdownComponent = memo(({
+const Dropdown: DropdownComponent = ({
   value,
   onChange,
   position = "start",
@@ -61,37 +61,25 @@ const Dropdown: DropdownComponent = memo(({
     <div
       ref={ref}
       tabIndex={disabled ? -1 : 0}
-      role="combobox"
-      aria-expanded={open}
       aria-disabled={disabled}
-      aria-haspopup="listbox"
       className={clsx(
         "dropdown",
         positionClass[position],
         disabled && "pointer-events-none",
-        className
+        className,
       )}
     >
       <div
         onClick={toggle}
         className={clsx("cursor-pointer", disabled && "pointer-events-none")}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            toggle();
-          }
-        }}
       >
         {trigger}
       </div>
       {open && !disabled && (
         <ul
-          role="listbox"
           className={clsx(
             "dropdown-content menu rounded-box bg-base-100 z-20 w-auto p-2 shadow-md",
-            contentClassName
+            contentClassName,
           )}
         >
           {typeof children === "function"
@@ -101,9 +89,7 @@ const Dropdown: DropdownComponent = memo(({
       )}
     </div>
   );
-}) as unknown as DropdownComponent;
-
-(Dropdown as DropdownComponent).displayName = "Dropdown";
+};
 
 Dropdown.Item = DropdownItem;
 

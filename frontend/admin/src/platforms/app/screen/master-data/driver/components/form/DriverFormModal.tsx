@@ -16,10 +16,11 @@ import {
   Checkbox,
   Input,
   Modal,
-  Select,
+  RemoteSelect,
   useEnigmaUI,
 } from "@/components";
 import { licenseTypeOptions } from "@/shared/options";
+import type { SelectOptionValue } from "@/shared/types";
 import { useDriver } from "@/services/driver/hooks";
 import type { Driver } from "@/services/types";
 
@@ -73,8 +74,11 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
     // 5. State management untuk form fields
     const [name, setName] = useState("");
     const [licenseNumber, setLicenseNumber] = useState("");
-    const [licenseType, setLicenseType] = useState("");
-    const [licenseExpiryYear, setLicenseExpiryYear] = useState("");
+    const [licenseType, setLicenseType] = useState<SelectOptionValue | null>(
+      null,
+    );
+    const [licenseExpiryYear, setLicenseExpiryYear] =
+      useState<SelectOptionValue | null>(null);
     const [phone, setPhone] = useState("");
 
     // Login account fields
@@ -90,8 +94,8 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
     const buildPayload = () => {
       // Convert year to ISO date format (Dec 31 of that year for expiry)
       let licenseExpiryISO: string | undefined = undefined;
-      if (licenseExpiryYear) {
-        const year = parseInt(licenseExpiryYear, 10);
+      if (licenseExpiryYear?.value) {
+        const year = parseInt(String(licenseExpiryYear.value), 10);
         licenseExpiryISO = new Date(year, 11, 31).toISOString();
       }
 
@@ -107,7 +111,7 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
       } = {
         name,
         license_number: licenseNumber,
-        license_type: licenseType,
+        license_type: licenseType?.value ? String(licenseType.value) : "",
         license_expiry: licenseExpiryISO,
         phone: phone, // Send phone as-is (backend validates required)
       };
@@ -126,8 +130,8 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
     const reset = () => {
       setName("");
       setLicenseNumber("");
-      setLicenseType("");
-      setLicenseExpiryYear("");
+      setLicenseType(null);
+      setLicenseExpiryYear(null);
       setPhone("");
       setHasLogin(false);
       setEmail("");
@@ -146,14 +150,20 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
       if (mode === "update" && data) {
         setName(data.name ?? "");
         setLicenseNumber(data.license_number ?? "");
-        setLicenseType(data.license_type ?? "");
+        setLicenseType(
+          licenseTypeOptions.find((opt) => opt.value === data.license_type) ??
+            null,
+        );
 
         // Extract year from ISO date string
         if (data.license_expiry) {
           const date = new Date(data.license_expiry);
-          setLicenseExpiryYear(date.getFullYear().toString());
+          const year = date.getFullYear().toString();
+          setLicenseExpiryYear(
+            yearOptions.find((opt) => opt.value === year) ?? null,
+          );
         } else {
-          setLicenseExpiryYear("");
+          setLicenseExpiryYear(null);
         }
 
         setPhone(data.phone ?? "");
@@ -165,7 +175,7 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
         // validate the email/password fields that are not shown
         // hasLogin stays false - checkbox/form controls won't show for drivers with existing login
       }
-    }, [data, mode]);
+    }, [data, mode, yearOptions]);
 
     // 10. Reset form saat modal open untuk create
     useEffect(() => {
@@ -233,8 +243,10 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
       const baseValid =
         name.trim() !== "" &&
         licenseNumber.trim() !== "" &&
-        licenseType !== "" &&
-        licenseExpiryYear !== "" &&
+        licenseType !== null &&
+        licenseType?.value !== "" &&
+        licenseExpiryYear !== null &&
+        licenseExpiryYear?.value !== "" &&
         phone.trim() !== "";
 
       if (!baseValid) return false;
@@ -304,7 +316,12 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
                 />
 
                 {/* Has Login Account Checkbox - Only show for create or drivers without login */}
-                {mode === "create" || (mode === "update" && data && (!data.user_id || data.user_id === '00000000-0000-0000-0000-000000000000')) ? (
+                {mode === "create" ||
+                (mode === "update" &&
+                  data &&
+                  (!data.user_id ||
+                    data.user_id ===
+                      "00000000-0000-0000-0000-000000000000")) ? (
                   <div className='mt-4'>
                     <Checkbox
                       label='This driver has login account'
@@ -323,49 +340,53 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
 
               {/* Login Account Information - Conditional */}
               {/* Only show when creating new login (create mode or add login to existing driver without login) */}
-              {hasLogin && (mode === "create" || (mode === "update" && data && (!data.user_id || data.user_id === '00000000-0000-0000-0000-000000000000'))) && (
-                <div className='mt-6'>
-                  <h3 className='text-sm font-semibold text-gray-700 mb-3'>
-                    Login Account Information
-                  </h3>
+              {hasLogin &&
+                (mode === "create" ||
+                  (mode === "update" &&
+                    data &&
+                    (!data.user_id ||
+                      data.user_id ===
+                        "00000000-0000-0000-0000-000000000000"))) && (
+                  <div className='mt-6'>
+                    <h3 className='text-sm font-semibold text-gray-700 mb-3'>
+                      Login Account Information
+                    </h3>
 
-                  <Input
-                    label='Email'
-                    placeholder='driver@example.com'
-                    type='email'
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    error={FormState?.errors?.email as string}
-                    required
-                  />
+                    <Input
+                      label='Email'
+                      placeholder='driver@example.com'
+                      type='email'
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      error={FormState?.errors?.email as string}
+                      required
+                    />
 
-                  <Input
-                    label='Password'
-                    placeholder='Enter password (min 8 characters)'
-                    type='password'
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    error={FormState?.errors?.password as string}
-                    required
-                    className='mt-3'
-                  />
+                    <Input
+                      label='Password'
+                      placeholder='Enter password (min 8 characters)'
+                      type='password'
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      error={FormState?.errors?.password as string}
+                      required
+                    />
 
-                  <Input
-                    label='Confirm Password'
-                    placeholder='Re-enter password'
-                    type='password'
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    error={
-                      confirmPassword && password !== confirmPassword
-                        ? "Passwords do not match"
-                        : undefined
-                    }
-                    required
-                    className='mt-3'
-                  />
-                </div>
-              )}
+                    <Input
+                      label='Confirm Password'
+                      placeholder='Re-enter password'
+                      type='password'
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      error={
+                        confirmPassword && password !== confirmPassword
+                          ? "Passwords do not match"
+                          : undefined
+                      }
+                      required
+                    />
+                  </div>
+                )}
 
               {/* License Information */}
               <div className='mt-6'>
@@ -384,24 +405,28 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
                   required
                 />
 
-                <Select
+                <RemoteSelect<SelectOptionValue>
                   label='License Type'
-                  options={licenseTypeOptions}
+                  data={licenseTypeOptions}
                   value={licenseType}
-                  onChange={(e) => setLicenseType(e.target.value)}
+                  onChange={setLicenseType}
+                  onClear={() => setLicenseType(null)}
+                  getLabel={(item) => item?.label ?? ""}
+                  renderItem={(item) => item?.label}
                   error={FormState?.errors?.license_type as string}
                   required
-                  className='mt-3'
                 />
 
-                <Select
+                <RemoteSelect<SelectOptionValue>
                   label='License Expiry Year'
-                  options={yearOptions}
+                  data={yearOptions}
                   value={licenseExpiryYear}
-                  onChange={(e) => setLicenseExpiryYear(e.target.value)}
+                  onChange={setLicenseExpiryYear}
+                  onClear={() => setLicenseExpiryYear(null)}
+                  getLabel={(item) => item?.label ?? ""}
+                  renderItem={(item) => item?.label}
                   error={FormState?.errors?.license_expiry as string}
                   required
-                  className='mt-3'
                 />
               </div>
             </div>
@@ -433,6 +458,5 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
   },
 );
 
-DriverFormModal.displayName = "DriverFormModal";
-
+// Named export (no displayName needed in modern React)
 export default DriverFormModal;

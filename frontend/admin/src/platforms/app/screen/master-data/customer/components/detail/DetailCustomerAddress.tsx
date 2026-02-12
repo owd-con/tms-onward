@@ -200,7 +200,7 @@ const DetailCustomerAddress: React.FC<DetailCustomerAddressProps> = ({
                   </td>
                   <td className='px-3 lg:px-4 py-3 hidden sm:table-cell'>
                     <p className='text-gray-600 text-xs lg:text-sm'>
-                      {address.village?.alias_name || "-"}
+                      {address.region?.full_name || address.region?.name || "-"}
                     </p>
                   </td>
                   <td className='px-3 lg:px-4 py-3 hidden md:table-cell'>

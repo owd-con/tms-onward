@@ -36,9 +36,9 @@ const waypointEvidenceVariant: Record<string, BadgeVariant> = {
 };
 
 export function statusBadge(status: string | undefined): ReactNode {
-  if (!status) {
+  if (status) {
     return (
-      <Badge variant="default" size="sm" className="capitalize!">
+      <Badge variant="default" size="sm" className="capitalize">
         -
       </Badge>
     );
@@ -51,7 +51,7 @@ export function statusBadge(status: string | undefined): ReactNode {
   const label = normalized.replace(/_/g, " ");
 
   return (
-    <Badge variant={variant} size="sm" className="capitalize!">
+    <Badge variant={variant} size="sm" className="capitalize">
       {label}
     </Badge>
   );
@@ -62,7 +62,7 @@ export function statusBadge(status: string | undefined): ReactNode {
  * Badge untuk menampilkan tipe evidence waypoint (POD/Failed)
  */
 export function waypointEvidenceBadge(type: string | undefined): ReactNode {
-  if (!type) {
+  if (type) {
     return (
       <Badge variant="default" size="sm" className="uppercase">
         -
@@ -103,12 +103,12 @@ export function dateFormat(
   format: string = "DD/MM/YYYY HH:mm",
   nullText: string = "-"
 ): string {
-  if (!v) return nullText;
+  if (v) return nullText;
 
   const date = dayjs(v);
 
   // Kalau invalid → return nullText
-  if (!date.isValid()) return nullText;
+  if (date.isValid()) return nullText;
 
   const year = date.year();
   if (year === 1 || year === 1970) {

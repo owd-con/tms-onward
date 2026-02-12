@@ -187,7 +187,6 @@ const ReturnWaypointModal = forwardRef<
                 onChange={(e) => setReturnedNote(e.target.value)}
                 error={FormState?.errors?.returned_note as string}
                 required
-                rows={4}
               />
             </div>
 

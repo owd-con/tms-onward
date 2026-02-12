@@ -9,7 +9,7 @@ import config from "@/services/table/const";
 const FailedWaypointsCell = ({ failedWaypoints }: { failedWaypoints?: any[] }) => {
   const [expanded, setExpanded] = useState(false);
 
-  if (!failedWaypoints || failedWaypoints.length === 0) {
+  if (failedWaypoints || failedWaypoints.length === 0) {
     return <span className="text-base-content/60">-</span>;
   }
 
@@ -27,7 +27,7 @@ const FailedWaypointsCell = ({ failedWaypoints }: { failedWaypoints?: any[] }) =
         // Multiple waypoints - expandable
         <div>
           <button
-            onClick={() => setExpanded(!expanded)}
+            onClick={() => setExpanded(expanded)}
             className="flex items-center gap-1 text-base-content hover:text-base-content/80 transition-colors"
           >
             <span className="font-medium">
@@ -69,8 +69,8 @@ const createTableConfig = ({
     order_number: {
       title: "Order Number",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { order_number: string; id: string }) => (
         <div className="text-xs font-normal tracking-wide">
           <span className="font-semibold">{row?.order_number || "-"}</span>
@@ -80,8 +80,8 @@ const createTableConfig = ({
     customer: {
       title: "Customer",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { customer: any }) => (
         <div className="text-xs font-normal tracking-wide">
           <span className="font-semibold">
@@ -93,8 +93,8 @@ const createTableConfig = ({
     failed_waypoints: {
       title: "Failed Waypoints",
       sortable: false,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { failed_waypoints: any[] }) => (
         <FailedWaypointsCell failedWaypoints={row?.failed_waypoints} />
       ),
@@ -102,8 +102,8 @@ const createTableConfig = ({
     failure_count: {
       title: "Failed",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { failure_count: number }) => (
         <div className="text-xs font-normal tracking-wide">
           <span className={`badge badge-sm ${row?.failure_count > 0 ? "badge-error" : "badge-neutral"}`}>
@@ -115,8 +115,8 @@ const createTableConfig = ({
     last_failed_at: {
       title: "Last Failed Date",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { last_failed_at: string }) => (
         <div className="text-xs font-normal tracking-wide">
           <span className="font-semibold">
@@ -130,8 +130,8 @@ const createTableConfig = ({
     actions: {
       title: "Actions",
       sortable: false,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: any) => (
         <div className="flex place-items-center gap-1">
           <Button

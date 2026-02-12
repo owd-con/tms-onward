@@ -23,8 +23,8 @@ const createTableConfig = ({
     plate_number: {
       title: "Plate Number",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { plate_number: string }) => (
         <div className="text-xs font-normal tracking-wide cursor-pointer">
           <span className="font-mono font-semibold">{row?.plate_number || "-"}</span>
@@ -34,8 +34,8 @@ const createTableConfig = ({
     vehicle_type: {
       title: "Type",
       sortable: false,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { type: string }) => (
         <div className="text-xs font-normal tracking-wide capitalize">
           <span className="font-semibold">{row?.type || "-"}</span>
@@ -45,8 +45,8 @@ const createTableConfig = ({
     make: {
       title: "Make / Model",
       sortable: false,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { make: string; model: string }) => (
         <div className="text-xs font-normal tracking-wide capitalize">
           <span className="font-semibold">{row?.make} {row?.model || "-"}</span>
@@ -56,8 +56,8 @@ const createTableConfig = ({
     year: {
       title: "Year",
       sortable: false,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { year: number }) => (
         <div className="text-xs font-normal tracking-wide">
           <span className="font-semibold">{row?.year || "-"}</span>
@@ -67,8 +67,8 @@ const createTableConfig = ({
     capacity: {
       title: "Capacity",
       sortable: false,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { capacity_weight: number; capacity_volume: number }) => (
         <div className="text-xs font-normal tracking-wide">
           <span className="font-semibold">
@@ -82,8 +82,8 @@ const createTableConfig = ({
     is_active: {
       title: "Status",
       sortable: false,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { is_active: boolean; id: string }) => (
         <div className="text-xs font-normal tracking-wide capitalize">
           {onToggleStatus ? (
@@ -102,8 +102,8 @@ const createTableConfig = ({
     actions: {
       title: "Actions",
       sortable: false,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: any) => (
         <div className="flex place-items-center gap-1">
           <Button size="sm" variant="secondary" styleType="ghost" onClick={() => onClick(row, "update")}>

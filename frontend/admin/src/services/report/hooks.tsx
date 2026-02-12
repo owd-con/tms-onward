@@ -1,13 +1,12 @@
-import { createCrudHook } from "../hooks/createCrudHook";
+import { createCrudHook } from "@/services/hooks/createCrudHook";
 import {
-  useLazyGetOrderReportQuery,
-  useLazyGetTripReportQuery,
+  useLazyGetOrderTripWaypointReportQuery,
   useLazyGetRevenueReportQuery,
-  useLazyGetExceptionReportQuery,
   useLazyGetDriverPerformanceReportQuery,
+  useLazyGetCustomerReportQuery,
 } from "./api";
 
-// Noop query for createCrudHook - reports don't have a standard list endpoint
+// Noop query - report doesn't have a standard list endpoint
 const useNoopQuery = () => [
   async () => undefined,
   {
@@ -24,15 +23,26 @@ const useNoopQuery = () => [
  *
  * Custom hook for report operations.
  * Provides methods for fetching various reports with consistent error handling.
+ *
+ * @example
+ * ```tsx
+ * const { getOrderTripWaypointReport, getOrderTripWaypointReportResult } = useReport();
+ *
+ * await getOrderTripWaypointReport({
+ *   start_date: "2024-01-01",
+ *   end_date: "2024-01-31",
+ * });
+ *
+ * const data = getOrderTripWaypointReportResult?.data;
+ * ```
  */
 export const useReport = createCrudHook({
-  useLazyGetQuery: useNoopQuery,
+  useLazyGetQuery: useNoopQuery, // Required but not used
   additionalQueries: {
-    getOrderReport: useLazyGetOrderReportQuery,
-    getTripReport: useLazyGetTripReportQuery,
+    getOrderTripWaypointReport: useLazyGetOrderTripWaypointReportQuery,
     getRevenueReport: useLazyGetRevenueReportQuery,
-    getExceptionReport: useLazyGetExceptionReportQuery,
     getDriverPerformanceReport: useLazyGetDriverPerformanceReportQuery,
+    getCustomerReport: useLazyGetCustomerReportQuery,
   },
   entityName: "report",
 });

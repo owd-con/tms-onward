@@ -65,7 +65,9 @@ const TripDetailScreen = lazy(() => import("./trips/TripDetailPage"));
 const ExceptionListScreen = lazy(() => import("./exceptions/ExceptionListPage"));
 
 // Reports (Phase 17)
-const ReportListScreen = lazy(() => import("./reports/ReportListPage"));
+const OrderTripReportPage = lazy(() => import("./reports/OrderTripReportPage"));
+const DriverPerformanceReportPage = lazy(() => import("./reports/DriverPerformanceReportPage"));
+const CustomerReportPage = lazy(() => import("./reports/CustomerReportPage"));
 
 // Onboarding
 const OnboardingWizard = lazy(() =>
@@ -118,7 +120,9 @@ const routes = [
   { path: "exceptions", element: ExceptionListScreen },
 
   // Reports
-  { path: "reports", element: ReportListScreen },
+  { path: "reports/order-trip", element: OrderTripReportPage },
+  { path: "reports/driver-performance", element: DriverPerformanceReportPage },
+  { path: "reports/customer", element: CustomerReportPage },
 
   // Management (TMS-specific screens)
   { path: "management/company", element: CompanyDetailPage },

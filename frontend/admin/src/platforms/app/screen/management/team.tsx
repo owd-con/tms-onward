@@ -106,14 +106,14 @@ const TeamScreen = () => {
     <Page className="h-full flex flex-col min-h-0">
       <Page.Header
         title="Team Management"
-        titleClassName="!text-2xl"
+        titleClassName="text-2xl"
         subtitle="Manage users, roles, and access permissions"
         action={
           canManage("user") && (
             <Button
               size="sm"
               variant="primary"
-              className="hover:text-white!"
+              className="hover:text-white"
               onClick={handleOpenModal}
             >
               Add Team Member

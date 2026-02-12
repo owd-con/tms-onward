@@ -7,7 +7,7 @@ import { vehicleApi } from "./vehicle/api";
 import { driverApi } from "./driver/api";
 import { pricingMatrixApi } from "./pricingMatrix/api";
 import { addressApi } from "./address/api";
-import { geoApi } from "./geo/api";
+import { regionApi } from "./region/api";
 
 // TMS Onward - Order APIs
 import { orderApi } from "./order/api";
@@ -53,7 +53,7 @@ const apiReducers = {
   [driverApi.reducerPath]: driverApi.reducer,
   [pricingMatrixApi.reducerPath]: pricingMatrixApi.reducer,
   [addressApi.reducerPath]: addressApi.reducer,
-  [geoApi.reducerPath]: geoApi.reducer,
+  [regionApi.reducerPath]: regionApi.reducer,
   // TMS Onward - Order APIs
   [orderApi.reducerPath]: orderApi.reducer,
   // TMS Onward - Trip APIs

@@ -13,7 +13,7 @@ export const driverApi = createApi({
      * List drivers with pagination
      */
     getDrivers: builder.query({
-      query: (params?: any) => ({
+      query: (params) => ({
         url: "/drivers",
         method: "GET",
         params,

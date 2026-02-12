@@ -24,39 +24,39 @@ const TableFilter: React.FC<TableFilterProps> = ({
 }) => {
   return (
     <Dropdown
-      position="end"
+      position='end'
       trigger={
         <Button
-          styleType="soft"
+          styleType='soft'
           variant={isActive ? "primary" : "default"}
           className={isActive ? "avatar-online" : ""}
         >
           <IoFunnel />
         </Button>
       }
-      contentClassName="w-md p-4 border-t border-base-200"
+      contentClassName='w-md p-4 border-t border-base-200'
       open={open}
       onOpenChange={onOpenChange}
     >
-      <div className="flex flex-col gap-3">
+      <div className='flex flex-col gap-3'>
         {children}
 
-        <div className="flex gap-3 mt-4">
+        <div className='flex gap-3 mt-4'>
           <Button
-            size="sm"
-            styleType="soft"
+            size='sm'
+            styleType='soft'
             onClick={handleClear}
-            className="flex-1"
+            className='flex-1'
             disabled={!isDirty && !isActive}
           >
             Clear
           </Button>
           <Button
-            variant="primary"
-            size="sm"
+            variant='primary'
+            size='sm'
             onClick={handleFilter}
             disabled={!isDirty}
-            className="flex-1"
+            className='flex-1'
           >
             Apply Filter
           </Button>

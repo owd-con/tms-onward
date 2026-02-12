@@ -206,8 +206,8 @@ const WaypointTimeline = ({
                   {wpData?.address ? (
                     <div className='text-base-content/70'>
                       {wpData.address.address}
-                      {wpData.address.village &&
-                        `, ${wpData.address.village.alias_name || wpData.address.village.name}`}
+                      {wpData.address.region &&
+                        `, ${wpData.address.region.full_name || wpData.address.region.name}`}
                     </div>
                   ) : (
                     wpData?.location_address && (

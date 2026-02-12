@@ -1,11 +1,19 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useMemo } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  useMemo,
+} from "react";
 import type { RootState } from "@/services/store";
 import { useSelector } from "react-redux";
 
-import { Button, Input, Modal, Select, useEnigmaUI } from "@/components";
+import { Button, Input, Modal, RemoteSelect, useEnigmaUI } from "@/components";
 import { vehicleTypeOptions } from "@/shared/options";
+import type { SelectOptionValue } from "@/shared/types";
 import { useVehicle } from "@/services/vehicle/hooks";
 import type { Vehicle } from "@/services/types";
 
@@ -60,20 +68,22 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
 
     // 5. State management untuk form fields
     const [plateNumber, setPlateNumber] = useState("");
-    const [vehicleType, setVehicleType] = useState("");
+    const [vehicleType, setVehicleType] = useState<SelectOptionValue | null>(
+      null,
+    );
     const [capacityWeight, setCapacityWeight] = useState("");
     const [capacityVolume, setCapacityVolume] = useState("");
-    const [year, setYear] = useState("");
+    const [year, setYear] = useState<SelectOptionValue | null>(null);
     const [make, setMake] = useState("");
     const [model, setModel] = useState("");
 
     // 6. Build payload method
     const buildPayload = () => ({
       plate_number: plateNumber,
-      type: vehicleType,
+      type: vehicleType?.value ? String(vehicleType.value) : "",
       capacity_weight: capacityWeight ? parseFloat(capacityWeight) : undefined,
       capacity_volume: capacityVolume ? parseFloat(capacityVolume) : undefined,
-      year: year ? parseInt(year) : undefined,
+      year: year?.value ? parseInt(String(year.value)) : undefined,
       make: make || undefined,
       model: model || undefined,
     });
@@ -81,10 +91,10 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
     // 7. Reset form method
     const reset = () => {
       setPlateNumber("");
-      setVehicleType("");
+      setVehicleType(null);
       setCapacityWeight("");
       setCapacityVolume("");
-      setYear("");
+      setYear(null);
       setMake("");
       setModel("");
     };
@@ -99,14 +109,19 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
     useEffect(() => {
       if (mode === "update" && data) {
         setPlateNumber(data.plate_number ?? "");
-        setVehicleType(data.type ?? "");
+        setVehicleType(
+          vehicleTypeOptions.find((opt) => opt.value === data.type) ?? null,
+        );
         setCapacityWeight(data.capacity_weight?.toString() ?? "");
         setCapacityVolume(data.capacity_volume?.toString() ?? "");
-        setYear(data.year?.toString() ?? "");
+        setYear(
+          yearOptions.find((opt) => opt.value === data.year?.toString()) ??
+            null,
+        );
         setMake(data.make ?? "");
         setModel(data.model ?? "");
       }
-    }, [data, mode]);
+    }, [data, mode, yearOptions]);
 
     // 10. Reset form saat modal open untuk create
     useEffect(() => {
@@ -164,10 +179,12 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
     // 14. Validation
     const isFormValid =
       plateNumber.trim() !== "" &&
-      vehicleType !== "" &&
+      vehicleType !== null &&
+      vehicleType?.value !== "" &&
       make.trim() !== "" &&
       model.trim() !== "" &&
-      year !== "" &&
+      year !== null &&
+      year?.value !== "" &&
       capacityWeight.trim() !== "" &&
       capacityVolume.trim() !== "";
     const isLoading = createResult?.isLoading || updateResult?.isLoading;
@@ -178,13 +195,13 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
         open={open}
         onClose={handleClose}
         closeOnOutsideClick={false}
-        className="max-w-3xl"
+        className='max-w-3xl'
       >
-        <Modal.Header className="mb-2">
-          <div className="text-xl font-bold">
+        <Modal.Header className='mb-2'>
+          <div className='text-xl font-bold'>
             {mode === "create" ? "Add New Vehicle" : "Edit Vehicle"}
           </div>
-          <div className="text-sm text-base-content/60">
+          <div className='text-sm text-base-content/60'>
             {mode === "create"
               ? "Fill in the vehicle information below"
               : "Update vehicle information"}
@@ -192,45 +209,53 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
         </Modal.Header>
 
         <form onSubmit={handleSubmit}>
-          <Modal.Body className="max-h-[60vh] overflow-y-auto">
-            <div className="space-y-4">
+          <Modal.Body className='max-h-[60vh] overflow-y-auto'>
+            <div className='space-y-4'>
               {/* Basic Information */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                <h3 className='text-sm font-semibold text-gray-700 mb-3'>
                   Basic Information
                 </h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
                   <Input
-                    label="Plate Number"
-                    placeholder="B 1234 XYZ"
+                    label='Plate Number'
+                    placeholder='B 1234 XYZ'
                     value={plateNumber}
-                    onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
+                    onChange={(e) =>
+                      setPlateNumber(e.target.value.toUpperCase())
+                    }
                     error={FormState?.errors?.plate_number as string}
                     required
                   />
 
-                  <Select
-                    label="Vehicle Type"
-                    options={vehicleTypeOptions}
+                  <RemoteSelect<SelectOptionValue>
+                    label='Vehicle Type'
+                    data={vehicleTypeOptions}
                     value={vehicleType}
-                    onChange={(e) => setVehicleType(e.target.value)}
+                    onChange={setVehicleType}
+                    onClear={() => setVehicleType(null)}
+                    getLabel={(item) => item?.label ?? ""}
+                    renderItem={(item) => item?.label}
                     error={FormState?.errors?.type as string}
                     required
                   />
 
-                  <Select
-                    label="Year"
-                    options={yearOptions}
+                  <RemoteSelect<SelectOptionValue>
+                    label='Year'
+                    data={yearOptions}
                     value={year}
-                    onChange={(e) => setYear(e.target.value)}
+                    onChange={setYear}
+                    onClear={() => setYear(null)}
+                    getLabel={(item) => item?.label ?? ""}
+                    renderItem={(item) => item?.label}
                     error={FormState?.errors?.year as string}
                     required
                   />
 
                   <Input
-                    label="Make"
-                    placeholder="e.g., Isuzu, Hino"
+                    label='Make'
+                    placeholder='e.g., Isuzu, Hino'
                     value={make}
                     onChange={(e) => setMake(e.target.value)}
                     error={FormState?.errors?.make as string}
@@ -238,8 +263,8 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
                   />
 
                   <Input
-                    label="Model"
-                    placeholder="e.g., Elf, Dutro"
+                    label='Model'
+                    placeholder='e.g., Elf, Dutro'
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
                     error={FormState?.errors?.model as string}
@@ -249,16 +274,16 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
               </div>
 
               {/* Capacity Information */}
-              <div className="mt-6">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">
+              <div className='mt-6'>
+                <h3 className='text-sm font-semibold text-gray-700 mb-3'>
                   Capacity Information
                 </h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
                   <Input
-                    label="Capacity Weight (kg)"
-                    placeholder="Maximum weight in kg"
-                    type="number"
+                    label='Capacity Weight (kg)'
+                    placeholder='Maximum weight in kg'
+                    type='number'
                     value={capacityWeight}
                     onChange={(e) => setCapacityWeight(e.target.value)}
                     error={FormState?.errors?.capacity_weight as string}
@@ -267,9 +292,9 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
                   />
 
                   <Input
-                    label="Capacity Volume (m³)"
-                    placeholder="Maximum volume in cubic meters"
-                    type="number"
+                    label='Capacity Volume (m³)'
+                    placeholder='Maximum volume in cubic meters'
+                    type='number'
                     value={capacityVolume}
                     onChange={(e) => setCapacityVolume(e.target.value)}
                     error={FormState?.errors?.capacity_volume as string}
@@ -282,18 +307,18 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
           </Modal.Body>
 
           <Modal.Footer>
-            <div className="flex justify-end gap-3">
+            <div className='flex justify-end gap-3'>
               <Button
-                type="button"
-                variant="secondary"
+                type='button'
+                variant='secondary'
                 onClick={handleClose}
                 disabled={isLoading}
               >
                 Cancel
               </Button>
               <Button
-                type="submit"
-                variant="primary"
+                type='submit'
+                variant='primary'
                 isLoading={isLoading}
                 disabled={!isFormValid}
               >
@@ -304,7 +329,7 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
         </form>
       </Modal.Wrapper>
     );
-  }
+  },
 );
 
 VehicleFormModal.displayName = "VehicleFormModal";

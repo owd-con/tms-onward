@@ -3,8 +3,8 @@ import { useAddress } from "@/services/address/hooks";
 import type { RootState } from "@/services/store";
 import { useSelector } from "react-redux";
 import { useEffect, useRef, useState } from "react";
-import { GeoLocationSelect } from "@/components/form/GeoLocationSelect";
-import type { Address } from "@/services/types";
+import { RegionSearchInput } from "@/components/form/RegionSearchInput";
+import type { Address, RegionSearchResult } from "@/services/types";
 
 interface AddressSelectorProps {
   label: string;
@@ -23,6 +23,7 @@ interface AddressSelectorProps {
  *
  * Displays a dropdown of saved addresses with option to create new address.
  * Can optionally filter addresses by customer_id.
+ * Uses RegionSearchInput for location selection.
  */
 export const AddressSelector = ({
   label,
@@ -70,16 +71,16 @@ export const AddressSelector = ({
     }
   }, [value, getResult?.data?.data, address]);
 
-  const handleAddressChange = (address: Address) => {
+  const handleAddressChange = (addr: Address) => {
     console.log("📍 AddressSelector.handleAddressChange called:", {
-      addressId: address.id,
-      addressName: address.name,
-      cityId: address?.village?.district?.city?.id,
-      fullAddress: address,
+      addressId: addr.id,
+      addressName: addr.name,
+      regionId: addr.region_id,
+      fullAddress: addr,
     });
-    setSelectedAddress(address);
-    const cityId = address?.village?.district?.city?.id;
-    onChange(address.id, address, cityId);
+    setSelectedAddress(addr);
+    const regionId = addr?.region_id;
+    onChange(addr.id, addr, regionId);
   };
 
   const handleCreateNewAddress = () => {
@@ -93,8 +94,8 @@ export const AddressSelector = ({
     // Select the newly created address
     setTimeout(() => {
       setSelectedAddress(newAddress);
-      const cityId = newAddress?.village?.district?.city?.id;
-      onChange(newAddress.id, newAddress, cityId);
+      const regionId = newAddress?.region_id;
+      onChange(newAddress.id, newAddress, regionId);
     }, 300);
   };
 
@@ -141,16 +142,11 @@ export const AddressSelector = ({
             {selectedAddress.name}
           </div>
           <div className='text-base-content/70'>{selectedAddress.address}</div>
-          <div className='text-base-content/70'>
-            {[
-              selectedAddress.village?.district?.city?.province?.name,
-              selectedAddress.village?.district?.city?.name,
-              selectedAddress.village?.district?.name,
-              selectedAddress.village?.name,
-            ]
-              .filter(Boolean)
-              .join(", ")}
-          </div>
+          {selectedAddress.region && (
+            <div className='text-base-content/70'>
+              {selectedAddress.region.full_name || selectedAddress.region.path}
+            </div>
+          )}
           {(selectedAddress.contact_name || selectedAddress.contact_phone) && (
             <div className='text-base-content/70 text-xs'>
               Contact: {selectedAddress.contact_name}
@@ -196,14 +192,14 @@ const CreateAddressModal = ({
 
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
-  const [villageId, setVillageId] = useState("");
+  const [regionId, setRegionId] = useState("");
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
 
   const { create, createResult } = useAddress();
 
   const validate = () => {
-    return name.trim() !== "" && address.trim() !== "" && villageId !== "";
+    return name.trim() !== "" && address.trim() !== "" && regionId !== "";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -215,7 +211,7 @@ const CreateAddressModal = ({
       customer_id: customerId,
       name,
       address,
-      village_id: villageId,
+      region_id: regionId,
       contact_name: contactName || undefined,
       contact_phone: contactPhone || undefined,
     });
@@ -232,7 +228,12 @@ const CreateAddressModal = ({
     }
   }, [createResult]);
 
-  const isFormValid = name.trim() && address.trim() && villageId;
+  const isFormValid = name.trim() && address.trim() && regionId;
+
+  // Handle region selection from RegionSearchInput
+  const handleRegionChange = (id: string, region: RegionSearchResult) => {
+    setRegionId(id);
+  };
 
   return (
     <Modal.Wrapper open onClose={onClose} closeOnOutsideClick={false}>
@@ -286,19 +287,15 @@ const CreateAddressModal = ({
             />
           </div>
 
-          {/* Location Selector */}
-          <div>
-            <label className='block text-sm font-semibold text-base-content uppercase tracking-wide mb-2'>
-              Location
-            </label>
-            <GeoLocationSelect
-              villageId={villageId}
-              onVillageChange={(village) => {
-                setVillageId(village?.id || "");
-              }}
-              error={FormState?.errors?.village_id as string}
-            />
-          </div>
+          {/* Location Selector - Using RegionSearchInput */}
+          <RegionSearchInput
+            value={regionId}
+            onChange={handleRegionChange}
+            label="Location"
+            placeholder="Search location (e.g., 'Jakarta Selatan', 'Tebet')"
+            error={FormState?.errors?.region_id as string}
+            required
+          />
         </form>
       </Modal.Body>
 

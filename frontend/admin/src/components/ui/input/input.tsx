@@ -1,6 +1,6 @@
 // input/input.tsx
 import clsx from "clsx";
-import React, { memo } from "react";
+import React from "react";
 import { FaRegClock, FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 import { currencyFormat } from "../../../utils/common";
 import type { InputProps } from "./types";
@@ -15,7 +15,7 @@ import {
   preventComma,
 } from "./helper";
 
-export const Input: React.FC<InputProps> = memo(({
+export const Input: React.FC<InputProps> = ({
   id,
   label,
   required,
@@ -59,23 +59,23 @@ export const Input: React.FC<InputProps> = memo(({
 
   const renderLabel = () =>
     label && (
-      <label htmlFor={id} className="pb-2 block" id={`${id}-label`}>
-        <span className="text-base-content text-[10px] leading-[1.2] uppercase font-semibold tracking-[.6px]">
-          {label} {required && <span className="text-error">*</span>}
+      <label htmlFor={id} className='pb-2 block'>
+        <span className='text-base-content text-[10px] leading-[1.2] uppercase font-semibold tracking-[.6px]'>
+          {label} {required && <span className='text-error'>*</span>}
         </span>
       </label>
     );
 
   const renderError = () =>
     error && (
-      <div className="text-error text-xs font-medium leading-[1.66] pt-1" role="alert" id={`${id}-error`}>
+      <div className='text-error text-xs font-medium leading-[1.66] pt-1'>
         {error}
       </div>
     );
 
   const renderHint = () =>
     hint && (
-      <div className="text-base-content text-xs font-normal leading-[1.66] pt-1" id={`${id}-hint`}>
+      <div className='text-base-content text-xs font-normal leading-[1.66] pt-1'>
         {hint}
       </div>
     );
@@ -89,16 +89,8 @@ export const Input: React.FC<InputProps> = memo(({
       "!pl-10": prefix,
       "!pr-10": type === "password" || suffix,
     },
-    className
+    className,
   );
-
-  // Build ARIA attributes for accessibility
-  const ariaAttrs: Record<string, any> = {};
-  if (label) ariaAttrs["aria-labelledby"] = `${id}-label`;
-  if (error) ariaAttrs["aria-describedby"] = `${id}-error`;
-  else if (hint) ariaAttrs["aria-describedby"] = `${id}-hint`;
-  if (required) ariaAttrs["aria-required"] = true;
-  if (disabled) ariaAttrs["aria-disabled"] = true;
 
   const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/[^0-9]/g, "");
@@ -117,8 +109,6 @@ export const Input: React.FC<InputProps> = memo(({
       return (
         <textarea
           {...rest}
-          {...ariaAttrs}
-          id={id}
           value={value}
           onChange={onChange}
           className={clsx(inputClass, "min-h-30")}
@@ -130,9 +120,8 @@ export const Input: React.FC<InputProps> = memo(({
       return (
         <input
           {...rest}
-          {...ariaAttrs}
           id={id}
-          type="text"
+          type='text'
           className={inputClass}
           value={value && currencyFormat(value, prefix ? false : true)}
           onChange={handleCurrencyChange}
@@ -149,9 +138,8 @@ export const Input: React.FC<InputProps> = memo(({
       return (
         <input
           {...rest}
-          {...ariaAttrs}
           id={id}
-          type="text"
+          type='text'
           value={value}
           className={inputClass}
           disabled={disabled}
@@ -167,7 +155,7 @@ export const Input: React.FC<InputProps> = memo(({
             const normalized = normalizeDecimalString(
               e.currentTarget.value,
               min,
-              max
+              max,
             );
             // if changed, forward a patched event so parent receives normalized value
             if (normalized !== e.currentTarget.value) {
@@ -184,11 +172,10 @@ export const Input: React.FC<InputProps> = memo(({
       return (
         <input
           {...rest}
-          {...ariaAttrs}
           id={id}
-          type="text"
-          inputMode="numeric"
-          placeholder="--:--"
+          type='text'
+          inputMode='numeric'
+          placeholder='--:--'
           value={value}
           className={inputClass}
           disabled={disabled}
@@ -204,9 +191,8 @@ export const Input: React.FC<InputProps> = memo(({
       return (
         <input
           {...rest}
-          {...ariaAttrs}
           id={id}
-          type="tel"
+          type='tel'
           value={value}
           className={inputClass}
           disabled={disabled}
@@ -227,7 +213,6 @@ export const Input: React.FC<InputProps> = memo(({
     return (
       <input
         {...rest}
-        {...ariaAttrs}
         id={id}
         type={type === "password" ? secured : type}
         value={value}
@@ -241,51 +226,41 @@ export const Input: React.FC<InputProps> = memo(({
   if (hidden) return null;
 
   return (
-    <div className="w-full">
+    <div className='w-full'>
       {renderLabel()}
-      <div className="relative w-full flex items-center">
-        {prefix && <div className="absolute left-3">{prefix}</div>}
+      <div className='relative w-full flex items-center'>
+        {prefix && <div className='absolute left-3'>{prefix}</div>}
 
         {renderField()}
 
         {type === "password" ? (
-          <button
-            type="button"
-            className="absolute right-3 cursor-pointer bg-transparent border-0 p-0"
-            onClick={() => setSecured(secured === "password" ? "text" : "password")}
-            aria-label={secured === "password" ? "Show password" : "Hide password"}
-          >
+          <div className='absolute right-3 cursor-pointer'>
             {secured === "password" ? (
-              <FaRegEye aria-hidden="true" />
+              <FaRegEye onClick={() => setSecured("text")} />
             ) : (
-              <FaRegEyeSlash aria-hidden="true" />
+              <FaRegEyeSlash onClick={() => setSecured("password")} />
             )}
-          </button>
+          </div>
         ) : type === "time" ? (
-          <button
-            type="button"
-            className="absolute right-3 cursor-pointer bg-transparent border-0 p-0"
-            onClick={() => {
-              const now = getCurrentTime();
+          <div className='absolute right-3'>
+            <FaRegClock
+              onClick={() => {
+                const now = getCurrentTime();
 
-              onChange?.({
-                target: {
-                  value: now,
-                },
-              } as React.ChangeEvent<HTMLInputElement>);
-            }}
-            aria-label="Set current time"
-          >
-            <FaRegClock aria-hidden="true" />
-          </button>
+                onChange?.({
+                  target: {
+                    value: now,
+                  },
+                } as React.ChangeEvent<HTMLInputElement>);
+              }}
+            />
+          </div>
         ) : (
-          suffix && <div className="absolute right-3">{suffix}</div>
+          suffix && <div className='absolute right-3'>{suffix}</div>
         )}
       </div>
       {renderHint()}
       {renderError()}
     </div>
   );
-});
-
-Input.displayName = "Input";
+};

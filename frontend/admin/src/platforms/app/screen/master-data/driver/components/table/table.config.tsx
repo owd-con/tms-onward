@@ -25,8 +25,8 @@ const createTableConfig = ({
     name: {
       title: "Name",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { name: string }) => (
         <div className="text-xs font-normal tracking-wide capitalize cursor-pointer">
           <span className="font-semibold">{row?.name || "-"}</span>
@@ -36,8 +36,8 @@ const createTableConfig = ({
     license_number: {
       title: "License Number",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { license_number: string }) => (
         <div className="text-xs font-normal tracking-wide">
           <span className="font-mono font-semibold">{row?.license_number || "-"}</span>
@@ -47,8 +47,8 @@ const createTableConfig = ({
     license_type: {
       title: "License Type",
       sortable: false,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { license_type: string }) => (
         <div className="text-xs font-normal tracking-wide capitalize">
           <span className="font-semibold">{row?.license_type?.replace(/_/g, ' ') || "-"}</span>
@@ -58,8 +58,8 @@ const createTableConfig = ({
     license_expiry: {
       title: "License Expiry",
       sortable: false,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { license_expiry: string }) => {
         const expiryDate = row?.license_expiry ? new Date(row.license_expiry) : null;
         const year = expiryDate?.getFullYear();
@@ -77,8 +77,8 @@ const createTableConfig = ({
     phone: {
       title: "Phone",
       sortable: false,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { phone: string }) => (
         <div className="text-xs font-normal tracking-wide">
           <span className="font-semibold">{row?.phone || "-"}</span>
@@ -88,8 +88,8 @@ const createTableConfig = ({
     is_active: {
       title: "Status",
       sortable: false,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { is_active: boolean; id: string }) => (
         <div className="text-xs font-normal tracking-wide capitalize">
           {onToggleStatus ? (
@@ -108,11 +108,11 @@ const createTableConfig = ({
     user_id: {
       title: "Login Account",
       sortable: false,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { user_id: string | null }) => (
         <div className="text-xs font-normal tracking-wide">
-          {!row?.user_id || row?.user_id === '00000000-0000-0000-0000-000000000000' ? (
+          {row?.user_id || row?.user_id === '00000000-0000-0000-0000-000000000000' ? (
             <Badge variant="default" size="sm" className="gap-1">
               <HiXMark size={14} />
               <span>No Login</span>
@@ -129,8 +129,8 @@ const createTableConfig = ({
     actions: {
       title: "Actions",
       sortable: false,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: any) => (
         <div className="flex place-items-center gap-1">
           <Button size="sm" variant="secondary" styleType="ghost" onClick={() => onClick(row, "update")}>

@@ -113,8 +113,8 @@ const DetailCustomerPricing: React.FC<DetailCustomerPricingProps> = ({
               Are you sure you want to delete this pricing?
             </p>
             <p className='mt-2 text-sm text-gray-700'>
-              <span className='font-medium'>{pricing.origin_city?.name || pricing.origin_city_id}</span> →{" "}
-              <span className='font-medium'>{pricing.destination_city?.name || pricing.destination_city_id}</span>
+              <span className='font-medium'>{pricing.origin_region?.name || pricing.origin_city_id}</span> →{" "}
+              <span className='font-medium'>{pricing.destination_region?.name || pricing.destination_city_id}</span>
             </p>
             <p className='text-lg font-semibold mt-2'>
               Rp {new Intl.NumberFormat("id-ID").format(pricing.price)}
@@ -182,10 +182,10 @@ const DetailCustomerPricing: React.FC<DetailCustomerPricingProps> = ({
                 {pricings.map((pricing) => (
                   <tr key={pricing.id} className='hover:bg-base-50'>
                     <td className='px-3 lg:px-4 py-3'>
-                      <span className='font-medium text-xs lg:text-sm'>{pricing.origin_city?.name || "-"}</span>
+                      <span className='font-medium text-xs lg:text-sm'>{pricing.origin_region?.name || pricing.origin_city_id || "-"}</span>
                     </td>
                     <td className='px-3 lg:px-4 py-3'>
-                      <span className='font-medium text-xs lg:text-sm'>{pricing.destination_city?.name || "-"}</span>
+                      <span className='font-medium text-xs lg:text-sm'>{pricing.destination_region?.name || pricing.destination_city_id || "-"}</span>
                     </td>
                     <td className='px-3 lg:px-4 py-3 text-right'>
                       <span className='font-mono font-semibold text-xs lg:text-sm'>

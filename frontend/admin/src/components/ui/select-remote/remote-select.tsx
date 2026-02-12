@@ -86,7 +86,7 @@ export const RemoteSelect = <T,>({
     if (!multi && value && e.key === "Backspace") {
       const currentInputValue =
         inputValueRef.current ||
-        (value ? resolveLabel(value) ?? String(value) : "");
+        (value ? (resolveLabel(value) ?? String(value)) : "");
       const labelValue = resolveLabel(value);
 
       // Jika input value sama dengan label value dan panjangnya <= 1, atau input sudah kosong
@@ -121,7 +121,7 @@ export const RemoteSelect = <T,>({
     const exists = currentData.some(
       (item) =>
         (resolveLabel?.(item) ?? String(item)).toLowerCase().trim() ===
-        search.toLowerCase().trim()
+        search.toLowerCase().trim(),
     );
 
     if (exists) return currentData;
@@ -214,7 +214,7 @@ export const RemoteSelect = <T,>({
   const handleSelect = (item: T) => {
     if (multi) {
       const isSelected = values?.some((v) =>
-        getValue ? getValue(v) === getValue(item) : v === item
+        getValue ? getValue(v) === getValue(item) : v === item,
       );
 
       if (!isSelected) {
@@ -237,84 +237,67 @@ export const RemoteSelect = <T,>({
   if (hidden) return null;
 
   return (
-    <div className="w-full">
-      <div
-        onClick={() => {
-          // Toggle dropdown saat wrapper diklik
-          if (!open) {
-            setOpen(true);
-          }
-        }}
-      >
-        <Dropdown
-          disabled={disabled}
-          trigger={
-            <Input
-              required={required}
-              label={label}
-              placeholder={placeholder}
-              className={clsx("flex-1", inputClassName)}
-              value={
-                multi
-                  ? search
-                  : search ||
-                  (value ? resolveLabel?.(value) ?? String(value) : "")
-              }
-              prefix={prefix}
-              error={error}
-              suffix={
-                !multi && value && onClear ? (
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onClear();
-                      setSearch("");
-                      inputValueRef.current = "";
-                    }}
-                    type="button"
-                    variant="error"
-                    shape="circle"
-                    size="xs"
-                    styleType="soft"
-                    className="text-error hover:text-base-100 z-10 relative"
-                    style={{ pointerEvents: "auto" }}
-                  >
-                    &times;
-                  </Button>
-                ) : (
-                  suffix
-                )
-              }
-              onFocus={() => {
-                setOpen(true);
-                // Ketika fokus dan value sudah dipilih, set inputValueRef ke label value
-                // agar kita bisa track perubahan saat user mengetik
-                if (!multi && value) {
-                  const label = resolveLabel(value);
-                  inputValueRef.current = label;
-                  // Reset search ke kosong saat dropdown dibuka (jika value sudah dipilih)
-                  // Ini memastikan fetchData dipanggil dengan search kosong untuk load semua data
-                  if (search) {
-                    setSearch("");
-                  }
+    <div className='w-full'>
+      <Dropdown
+        disabled={disabled}
+        trigger={
+          <Input
+            required={required}
+            label={label}
+            placeholder={placeholder}
+            className={clsx("flex-1", inputClassName)}
+            value={
+              multi
+                ? search
+                : search ||
+                  (value ? (resolveLabel?.(value) ?? String(value)) : "")
+            }
+            prefix={prefix}
+            error={error}
+            suffix={
+              !multi && value && onClear ? (
+                <Button
+                  onClick={onClear}
+                  variant='error'
+                  shape='circle'
+                  size='xs'
+                  styleType='soft'
+                  className='text-error hover:text-base-100'
+                  onMouseDown={(e) => e.preventDefault()}
+                >
+                  &times;
+                </Button>
+              ) : (
+                suffix
+              )
+            }
+            onFocus={() => {
+              setOpen(true);
+              // Ketika fokus dan value sudah dipilih, set inputValueRef ke label value
+              // agar kita bisa track perubahan saat user mengetik
+              if (!multi && value) {
+                const label = resolveLabel(value);
+                inputValueRef.current = label;
+                // Reset search ke kosong saat dropdown dibuka (jika value sudah dipilih)
+                // Ini memastikan fetchData dipanggil dengan search kosong untuk load semua data
+                if (search) {
+                  setSearch("");
                 }
-              }}
-              onChange={(e) => handleInputChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={disabled}
-            />
-          }
-          open={open}
-          onOpenChange={(nextOpen) => {
-            setOpen(nextOpen);
-          }}
-          className="flex-1 w-full"
-          contentClassName="px-0 w-full"
-        >
+              }
+            }}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={disabled}
+          />
+        }
+        open={open}
+        className='flex-1 w-full'
+        contentClassName='px-0 w-full'
+      >
         <div
           ref={listRef}
           onScroll={handleScroll}
-          className="max-h-80 overflow-auto border border-base-200 rounded"
+          className='max-h-80 overflow-auto border border-base-200 rounded'
         >
           {listData.map((item, i) => {
             const isCreate = (item as CreateItem).is_create;
@@ -329,7 +312,7 @@ export const RemoteSelect = <T,>({
                   : false)) ||
                 (multi &&
                   values.some((v) =>
-                    getValue ? getValue(v) === getValue(item as T) : v === item
+                    getValue ? getValue(v) === getValue(item as T) : v === item,
                   )));
 
             return (
@@ -337,7 +320,7 @@ export const RemoteSelect = <T,>({
                 key={i}
                 className={clsx(
                   "px-2 py-3 border-b border-base-200 hover:bg-base-200 cursor-pointer",
-                  selected && "text-primary bg-primary/5"
+                  selected && "text-primary bg-primary/5",
                 )}
                 onClick={() => {
                   if (isCreate) {
@@ -358,36 +341,35 @@ export const RemoteSelect = <T,>({
                 ) : renderItem ? (
                   renderItem(item as T)
                 ) : (
-                  resolveLabel?.(item as T) ?? String(item)
+                  (resolveLabel?.(item as T) ?? String(item))
                 )}
               </div>
             );
           })}
 
-          {hook?.isLoading && <div className="p-2 text-center">Loading...</div>}
+          {hook?.isLoading && <div className='p-2 text-center'>Loading...</div>}
           {!hook?.isLoading && currentData.length === 0 && (
-            <div className="p-2 text-center text-gray-500">No data</div>
+            <div className='p-2 text-center text-gray-500'>No data</div>
           )}
           {hook?.isError && !hook?.isLoading && (
-            <div className="p-2 text-center text-red-500">
+            <div className='p-2 text-center text-red-500'>
               Failed to load data
             </div>
           )}
         </div>
       </Dropdown>
-      </div>
 
       {multi && values && values.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-2">
+        <div className='flex flex-wrap gap-2 mt-2'>
           {values.map((v, i) => (
             <div
               key={i}
-              className="flex items-center gap-1 bg-base-200 px-2 py-1 rounded-full text-sm"
+              className='flex items-center gap-1 bg-base-200 px-2 py-1 rounded-full text-sm'
             >
               {resolveLabel?.(v) ?? String(v)}
               <button
                 onClick={() => handleRemove(i)}
-                className="ml-1 text-error cursor-pointer"
+                className='ml-1 text-error cursor-pointer'
               >
                 &times;
               </button>

@@ -135,7 +135,7 @@ export interface Address {
   company_id: string;
   name: string;
   address: string;
-  village_id: string;
+  region_id: string; // Reference to region-id library's Region entity
   contact_name?: string;
   contact_phone?: string;
   is_active: boolean;
@@ -144,60 +144,81 @@ export interface Address {
   created_by?: string;
   updated_by?: string;
   is_deleted: boolean;
-  village?: Village;
+  region?: Region; // Region relation from region-id library
 }
 
-export interface Country {
-  id: string;
-  code: string; // e.g., "ID"
-  name: string;
-  created_at: string;
-  updated_at: string;
+// ============================================================================
+// Master Data - Region (from region-id library)
+// ============================================================================
+
+// Region types matching region-id library (v0.1.3)
+// Note: Library uses "regency" instead of "city", and 4 levels (1-4) instead of 5
+export type RegionType = "province" | "regency" | "district" | "village";
+
+// AdministrativeArea contains hierarchical region information for display
+// This is stored as JSONB in the database and contains full names of each level
+export interface AdministrativeArea {
+  country?: string;
+  province?: string;
+  regency?: string;
+  district?: string;
+  village?: string;
+  country_id?: string;
+  province_id?: string;
+  regency_id?: string;
+  district_id?: string;
+  village_id?: string;
 }
 
-export interface Province {
+export interface Region {
   id: string;
-  country_id: string;
-  code: string; // BPS code, e.g., "11", "31", "32"
+  parent_id?: string;
+  code: string;
   name: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface City {
-  id: string;
-  province_id: string;
-  code: string; // BPS code, e.g., "1101", "3171"
-  name: string;
-  type: "KABUPATEN" | "KOTA";
-  province?: Province;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface District {
-  id: string;
-  city_id: string;
-  code: string; // BPS code, e.g., "110101", "317101"
-  name: string;
-  created_at: string;
-  updated_at: string;
-  city?: City;
-}
-
-export interface Village {
-  id: string;
-  district_id: string;
-  code: string; // BPS code, e.g., "1101012001"
-  name: string;
-  type?: "KELURAHAN" | "DESA";
-  postal_code: string;
+  type: RegionType;
+  postal_code?: string;
   latitude?: number;
   longitude?: number;
+  level: number; // 1=province, 2=regency, 3=district, 4=village (region-id library)
+  administrative_area: AdministrativeArea; // JSONB with full hierarchy names
   created_at: string;
   updated_at: string;
-  alias_name?: string; // Computed: "Province, City, District, VillageName, PostalCode"
-  district?: District;
+  is_deleted?: boolean;
+  parent?: Region;
+  children?: Region[];
+  // Computed properties (may be populated by backend or frontend)
+  full_name?: string; // "Village, District, Regency, Province, Country"
+  path?: string; // "Province, Regency, District, Village" (for backward compatibility)
+}
+
+// Computed property helpers (not from backend, derived in frontend)
+export interface RegionWithExtras extends Region {
+  // Full hierarchical name computed from administrative_area
+  full_name?: string; // "Village, District, Regency, Province, Country"
+  // Path computed from administrative_area
+  path?: string; // "Province, Regency, District, Village" (for backward compatibility)
+}
+
+export interface RegionPath {
+  id: string;
+  name: string;
+  type: RegionType;
+  code: string;
+  level: number;
+}
+
+// Region search result for API responses (matches region-id library output)
+export interface RegionSearchResult {
+  id: string;
+  code: string;
+  name: string;
+  type: RegionType;
+  full_name: string; // Computed by backend from administrative_area
+  latitude?: number;
+  longitude?: number;
+  postal_code?: string;
+  parent_id?: string;
+  level: number;
 }
 
 // ============================================================================
@@ -218,8 +239,8 @@ export interface PricingMatrix {
   updated_by?: string;
   is_deleted: boolean;
   customer?: Customer;
-  origin_city?: City;
-  destination_city?: City;
+  origin_region?: Region;
+  destination_region?: Region;
 }
 
 // ============================================================================

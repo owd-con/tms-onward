@@ -34,7 +34,7 @@ const CompanyDetailPage = () => {
   }, []);
 
   const handleEditModal = () => {
-    if (!company) return;
+    if (company) return;
 
     openModal({
       id: "edit-company",
@@ -66,7 +66,7 @@ const CompanyDetailPage = () => {
       <Page className="h-full flex flex-col min-h-0">
         <Page.Header
           title="Company Management"
-          titleClassName="!text-2xl"
+          titleClassName="text-2xl"
           subtitle="Manage your company information"
         />
         <Page.Body className="flex-1 flex items-center justify-center">
@@ -82,7 +82,7 @@ const CompanyDetailPage = () => {
       <Page className="h-full flex flex-col min-h-0">
         <Page.Header
           title="Company Management"
-          titleClassName="!text-2xl"
+          titleClassName="text-2xl"
           subtitle="Manage your company information"
         />
         <Page.Body className="flex-1 flex items-center justify-center">
@@ -99,13 +99,13 @@ const CompanyDetailPage = () => {
     <Page className="h-full flex flex-col min-h-0">
       <Page.Header
         title="Company Management"
-        titleClassName="!text-2xl"
+        titleClassName="text-2xl"
         subtitle="Manage your company information"
         action={
           <Button
             size="sm"
             variant="primary"
-            className="hover:text-white!"
+            className="hover:text-white"
             onClick={handleEditModal}
           >
             Edit Company

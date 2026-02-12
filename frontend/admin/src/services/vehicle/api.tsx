@@ -13,7 +13,7 @@ export const vehicleApi = createApi({
      * List vehicles with pagination
      */
     getVehicles: builder.query({
-      query: (params?: any) => ({
+      query: (params) => ({
         url: "/vehicles",
         method: "GET",
         params,

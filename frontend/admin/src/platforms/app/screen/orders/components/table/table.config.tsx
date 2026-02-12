@@ -14,8 +14,8 @@ const createTableConfig = ({
     order_number: {
       title: "Order Number",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { order_number: string; reference_code?: string }) => (
         <div className="text-xs font-normal tracking-wide">
           <span className="font-semibold">{row?.order_number || "-"}</span>
@@ -30,8 +30,8 @@ const createTableConfig = ({
     customer: {
       title: "Customer",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { customer: any }) => (
         <div className="text-xs font-normal tracking-wide">
           <span className="font-semibold">{row?.customer?.name || "-"}</span>
@@ -41,8 +41,8 @@ const createTableConfig = ({
     order_type: {
       title: "Type",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { order_type: string }) => (
         <div className="text-xs font-normal tracking-wide">
           <span className="font-semibold">{row?.order_type || "-"}</span>
@@ -52,8 +52,8 @@ const createTableConfig = ({
     status: {
       title: "Status",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { status: string }) => (
         <div className="text-xs font-normal tracking-wide">
           {statusBadge(row.status)}
@@ -63,8 +63,8 @@ const createTableConfig = ({
     total_price: {
       title: "Total Price",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { total_price: number }) => (
         <div className="text-xs font-normal tracking-wide">
           <span className="font-semibold">
@@ -76,8 +76,8 @@ const createTableConfig = ({
     created_at: {
       title: "Created",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: { created_at: string; created_by?: string }) => (
         <div className="text-xs font-normal tracking-wide">
           <span className="font-semibold">{dateFormat(row?.created_at)}</span>
@@ -92,8 +92,8 @@ const createTableConfig = ({
     actions: {
       title: "Actions",
       sortable: false,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: any) => (
         <div className="flex place-items-center gap-1">
           <Button size="xs" onClick={() => onClick(row)}>

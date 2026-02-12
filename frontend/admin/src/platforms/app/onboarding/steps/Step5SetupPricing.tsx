@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/services/store";
 import { Button, Input, Modal, RemoteSelect, useEnigmaUI } from "@/components";
+import { RegionSearchInput } from "@/components/form/RegionSearchInput";
 import { useOnboarding } from "@/services/onboarding/hooks";
 import { usePricingMatrix } from "@/services/pricingMatrix/hooks";
 import { useCustomer } from "@/services/customer/hooks";
-import { useGeo } from "@/services/geo/hooks";
+import type { RegionSearchResult } from "@/services/types";
 import { HiPlus, HiTrash } from "react-icons/hi2";
 
 interface Step5SetupPricingProps {
@@ -19,12 +20,12 @@ interface Step5SetupPricingProps {
 interface PricingFormData {
   id?: string;
   customerId: string;
-  originCityId: string;
-  destinationCityId: string;
+  originRegionId: string;
+  destinationRegionId: string;
   price: string;
   customer?: any;
-  originCity?: any;
-  destinationCity?: any;
+  originRegion?: RegionSearchResult | null;
+  destinationRegion?: RegionSearchResult | null;
 }
 
 const Step5SetupPricing = ({ onNext, onBack, onSkip, onUpdate, isLoading }: Step5SetupPricingProps) => {
@@ -33,8 +34,8 @@ const Step5SetupPricing = ({ onNext, onBack, onSkip, onUpdate, isLoading }: Step
   const [pricingRules, setPricingRules] = useState<PricingFormData[]>([
     {
       customerId: "",
-      originCityId: "",
-      destinationCityId: "",
+      originRegionId: "",
+      destinationRegionId: "",
       price: "",
     },
   ]);
@@ -42,12 +43,7 @@ const Step5SetupPricing = ({ onNext, onBack, onSkip, onUpdate, isLoading }: Step
 
   const { onboardingStep5, onboardingStep5Result } = useOnboarding();
   const { get } = usePricingMatrix();
-  const { getCities, getCitiesResult } = useGeo();
   const { get: getCustomer, getResult: getCustomerResult } = useCustomer();
-
-  const fetchCities = (page?: number, search?: string) => {
-    getCities({ page, limit: 20, search });
-  };
 
   const fetchCustomers = (page?: number, search?: string) => {
     getCustomer({ page, limit: 20, search });
@@ -67,12 +63,12 @@ const Step5SetupPricing = ({ onNext, onBack, onSkip, onUpdate, isLoading }: Step
           const mappedPricing: PricingFormData[] = result.data.map((p: any) => ({
             id: p.id,
             customerId: p.customer_id || "",
-            originCityId: p.origin_city_id || "",
-            destinationCityId: p.destination_city_id || "",
+            originRegionId: p.origin_city_id || "",
+            destinationRegionId: p.destination_city_id || "",
             price: p.price?.toString() || "",
             customer: p.customer,
-            originCity: p.origin_city,
-            destinationCity: p.destination_city,
+            originRegion: p.origin_region,
+            destinationRegion: p.destination_region,
           }));
 
           if (mappedPricing.length > 0) {
@@ -95,8 +91,8 @@ const Step5SetupPricing = ({ onNext, onBack, onSkip, onUpdate, isLoading }: Step
       ...pricingRules,
       {
         customerId: "",
-        originCityId: "",
-        destinationCityId: "",
+        originRegionId: "",
+        destinationRegionId: "",
         price: "",
       },
     ]);
@@ -125,22 +121,22 @@ const Step5SetupPricing = ({ onNext, onBack, onSkip, onUpdate, isLoading }: Step
     setPricingRules(newPricingRules);
   };
 
-  const handleOriginCityChange = (index: number, value: any) => {
+  const handleOriginRegionChange = (index: number, regionId: string, region: RegionSearchResult) => {
     const newPricingRules = [...pricingRules];
     newPricingRules[index] = {
       ...newPricingRules[index],
-      originCity: value,
-      originCityId: value?.id || "",
+      originRegion: region,
+      originRegionId: regionId,
     };
     setPricingRules(newPricingRules);
   };
 
-  const handleDestCityChange = (index: number, value: any) => {
+  const handleDestRegionChange = (index: number, regionId: string, region: RegionSearchResult) => {
     const newPricingRules = [...pricingRules];
     newPricingRules[index] = {
       ...newPricingRules[index],
-      destinationCity: value,
-      destinationCityId: value?.id || "",
+      destinationRegion: region,
+      destinationRegionId: regionId,
     };
     setPricingRules(newPricingRules);
   };
@@ -150,7 +146,7 @@ const Step5SetupPricing = ({ onNext, onBack, onSkip, onUpdate, isLoading }: Step
 
     // Filter pricing rules that have data
     const validPricing = pricingRules.filter(
-      (p) => p.customerId || p.originCityId || p.destinationCityId || p.price
+      (p) => p.customerId || p.originRegionId || p.destinationRegionId || p.price
     );
 
     // Skip if no pricing to create/update
@@ -165,8 +161,8 @@ const Step5SetupPricing = ({ onNext, onBack, onSkip, onUpdate, isLoading }: Step
       pricing: validPricing.map((p) => ({
         id: p.id,
         customer_id: p.customerId,
-        origin_city_id: p.originCityId,
-        dest_city_id: p.destinationCityId,
+        origin_city_id: p.originRegionId,
+        dest_city_id: p.destinationRegionId,
         price: Number(p.price) || 0,
       })),
     };
@@ -179,7 +175,7 @@ const Step5SetupPricing = ({ onNext, onBack, onSkip, onUpdate, isLoading }: Step
   useEffect(() => {
     if (onboardingStep5Result.isSuccess) {
       const validPricingCount = pricingRules.filter(
-        (p) => p.customerId || p.originCityId || p.destinationCityId || p.price
+        (p) => p.customerId || p.originRegionId || p.destinationRegionId || p.price
       ).length;
       onUpdate({ pricingRulesCreated: validPricingCount });
       onNext();
@@ -268,29 +264,19 @@ const Step5SetupPricing = ({ onNext, onBack, onSkip, onUpdate, isLoading }: Step
                   error={(FormState?.errors as any)?.[`pricing.${index}.customer_id`]}
                 />
 
-                <RemoteSelect
-                  label="Origin City"
-                  placeholder="Select origin city"
-                  value={pricing.originCity}
-                  onChange={(value) => handleOriginCityChange(index, value)}
-                  onClear={() => handleOriginCityChange(index, null)}
-                  getLabel={(item) => item ? `${item.name}, ${item.province?.name || ""}` : ""}
-                  renderItem={(item) => `${item.name}, ${item.province?.name || ""}`}
-                  fetchData={fetchCities}
-                  hook={getCitiesResult as any}
+                <RegionSearchInput
+                  label="Origin City/Region"
+                  value={pricing.originRegionId}
+                  onChange={(id, region) => handleOriginRegionChange(index, id, region)}
+                  placeholder="Search origin (e.g., 'Jakarta Selatan')"
                   error={(FormState?.errors as any)?.[`pricing.${index}.origin_city_id`]}
                 />
 
-                <RemoteSelect
-                  label="Destination City"
-                  placeholder="Select destination city"
-                  value={pricing.destinationCity}
-                  onChange={(value) => handleDestCityChange(index, value)}
-                  onClear={() => handleDestCityChange(index, null)}
-                  getLabel={(item) => item ? `${item.name}, ${item.province?.name || ""}` : ""}
-                  renderItem={(item) => `${item.name}, ${item.province?.name || ""}`}
-                  fetchData={fetchCities}
-                  hook={getCitiesResult as any}
+                <RegionSearchInput
+                  label="Destination City/Region"
+                  value={pricing.destinationRegionId}
+                  onChange={(id, region) => handleDestRegionChange(index, id, region)}
+                  placeholder="Search destination (e.g., 'Surabaya')"
                   error={(FormState?.errors as any)?.[`pricing.${index}.dest_city_id`]}
                 />
 

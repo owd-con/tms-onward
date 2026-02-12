@@ -1,135 +1,6 @@
-/* ============================================
-   TMS Onward - Modern Input Styling
-
-   Clean, accessible input fields with proper states,
-   focus indicators, and error handling.
-   ============================================ */
-
-/* Base Input Styles */
 .input {
-  @apply bg-base-100;
-  @apply border border-base-300;
-  @apply text-base-content font-normal;
-  @apply w-full;
-  @apply transition-all duration-200 ease-in-out;
-  @apply rounded-[var(--radius-field)];
-  @apply focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary;
-  @apply placeholder:text-base-content/40;
-  @apply hover:border-base-300/80;
+  @apply bg-base-100 border border-base-300 text-(--input-color) font-normal p-[12px_14px] w-full transition-colors duration-200 ease-linear rounded-sm hover:border-(--input-color) focus:outline-none focus:border-(--input-color) focus:shadow-[0_0_0_4px];
 }
-
-/* ============================================
-   Size Variants
-   Consistent padding scale across sizes
-   ============================================ */
-
-.input-xs {
-  @apply h-7 px-2 text-[12px] leading-tight;
-}
-
-.input-sm {
-  @apply h-8.5 px-3 text-[13px] leading-tight;
-}
-
-.input-md {
-  @apply h-10 px-3.5 text-[14px] leading-tight;
-}
-
-.input-lg {
-  @apply h-11.5 px-4 text-[15px] leading-tight;
-}
-
-.input-xl {
-  @apply h-13 px-5 text-[16px] leading-tight;
-}
-
-/* ============================================
-   Variant Styles - Color Themes
-   ============================================ */
-
-/* Default - Neutral styling */
-.input-default {
-  --input-color: var(--color-base-content);
-  @apply focus:border-primary focus:ring-primary/20;
-}
-
-/* Neutral - Gray theme */
-.input-neutral {
-  --input-color: var(--color-neutral);
-  @apply focus:border-neutral focus:ring-neutral/20;
-}
-
-/* Primary - Blue theme (focus state) */
-.input-primary {
-  --input-color: var(--color-primary);
-  @apply focus:border-primary focus:ring-primary/20;
-}
-
-/* Secondary - Navy theme */
-.input-secondary {
-  --input-color: var(--color-secondary);
-  @apply focus:border-secondary focus:ring-secondary/20;
-}
-
-/* Accent - Blue-indigo theme */
-.input-accent {
-  --input-color: var(--color-accent);
-  @apply focus:border-accent focus:ring-accent/20;
-}
-
-/* Info - Clear blue theme */
-.input-info {
-  --input-color: var(--color-info);
-  @apply focus:border-info focus:ring-info/20;
-}
-
-/* Success - Green theme */
-.input-success {
-  --input-color: var(--color-success);
-  @apply focus:border-success focus:ring-success/20;
-}
-
-/* Warning - Amber theme */
-.input-warning {
-  --input-color: var(--color-warning);
-  @apply focus:border-warning focus:ring-warning/20;
-}
-
-/* Error - Red theme (for error state) */
-.input-error {
-  --input-color: var(--color-error);
-  @apply focus:border-error focus:ring-error/20;
-}
-
-/* ============================================
-   States
-   ============================================ */
-
-/* Disabled State */
-.input:disabled,
-.input[disabled] {
-  @apply bg-base-200 border-base-300 text-base-content/50;
-  @apply cursor-not-allowed placeholder:text-base-content/30;
-  @apply hover:border-base-300;
-  @apply focus:ring-0 focus:border-base-300;
-}
-
-/* Readonly State */
-.input[readonly] {
-  @apply bg-base-100 border-base-300;
-  @apply cursor-default;
-}
-
-/* Error State */
-.input.input-error {
-  @apply !border-error !text-error;
-  @apply focus:border-error focus:ring-error/20;
-  @apply placeholder:text-error/40;
-}
-
-/* ============================================
-   Spinner Removal (for number inputs)
-   ============================================ */
 
 .no-spinner::-webkit-outer-spin-button,
 .no-spinner::-webkit-inner-spin-button {
@@ -141,111 +12,76 @@
   -moz-appearance: textfield;
 }
 
-/* ============================================
-   Textarea-specific styles
-   ============================================ */
-
-textarea.input {
-  @apply min-h-[80px] py-3 resize-y;
+input[disabled] {
+  @apply border-base-300 text-gray-400;
 }
 
-textarea.input-sm {
-  @apply min-h-[60px] py-2;
+.input-xs {
+  @apply textarea-xs;
+  --size: calc(var(--size-field, 0.25rem) * 6);
 }
 
-textarea.input-lg {
-  @apply min-h-[120px] py-4;
+.input-sm {
+  @apply textarea-sm;
+  --size: calc(var(--size-field, 0.25rem) * 8);
 }
 
-/* ============================================
-   Input Groups
-   When input has prefix/suffix elements
-   ============================================ */
-
-/* With prefix icon */
-.input-with-prefix {
-  @apply pl-10;
+.input-md {
+  @apply textarea-md;
+  --size: calc(var(--size-field, 0.25rem) * 10);
 }
 
-/* With suffix icon */
-.input-with-suffix {
-  @apply pr-10;
+.input-lg {
+  @apply textarea-lg;
+  --size: calc(var(--size-field, 0.25rem) * 12);
 }
 
-/* ============================================
-   Autofill Styles
-   Override browser autofill to match theme
-   ============================================ */
-
-.input:-webkit-autofill,
-.input:-webkit-autofill:hover,
-.input:-webkit-autofill:focus,
-.input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 30px var(--color-base-100) inset !important;
-  -webkit-text-fill-color: var(--color-base-content) !important;
-  transition: background-color 5000s ease-in-out 0s;
+.input-xl {
+  @apply textarea-xl;
+  --size: calc(var(--size-field, 0.25rem) * 14);
 }
 
-/* ============================================
-   Focus Visible (for accessibility)
-   ============================================ */
-
-.input:focus-visible {
-  @apply outline-none ring-2 ring-primary/20 ring-offset-2 ring-offset-base-100;
+.input-default {
+  --input-color: var(--color-base-content);
+  --tw-shadow-color: var(--color-base-300-shadow);
 }
 
-/* ============================================
-   Validation States
-   ============================================ */
-
-/* Valid state */
-.input:valid:not(:placeholder-shown) {
-  @apply border-success/50;
+.input-neutral {
+  --input-color: var(--color-neutral);
+  --tw-shadow-color: var(--color-neutral-shadow);
 }
 
-/* Invalid state */
-.input:invalid:not(:placeholder-shown) {
-  @apply border-error;
+.input-primary {
+  --input-color: var(--color-primary);
+  --tw-shadow-color: var(--color-primary-shadow);
 }
 
-/* ============================================
-   Special Input Types
-   ============================================ */
-
-/* Date Input */
-.input[type="date"] {
-  @apply cursor-pointer;
+.input-secondary {
+  --input-color: var(--color-secondary);
+  --tw-shadow-color: var(--color-secondary-shadow);
 }
 
-/* File Input */
-.input[type="file"] {
-  @apply cursor-pointer file:mr-4 file:py-2 file:px-4;
-  @apply file:rounded-md file:border-0;
-  @apply file:text-sm file:font-medium;
-  @apply file:bg-base-200 file:text-base-content;
-  @apply hover:file:bg-base-300;
+.input-accent {
+  --input-color: var(--color-accent);
+  --tw-shadow-color: var(--color-accent-shadow);
 }
 
-/* Search Input */
-.input[type="search"] {
-  @apply pl-10;
+.input-info {
+  --input-color: var(--color-info);
+  --tw-shadow-color: var(--color-info-shadow);
 }
 
-/* Color Input */
-.input[type="color"] {
-  @apply h-10 p-1 cursor-pointer;
+.input-success {
+  --input-color: var(--color-success);
+  --tw-shadow-color: var(--color-success-shadow);
 }
 
-/* ============================================
-   Responsive Adjustments
-   ============================================ */
+.input-warning {
+  --input-color: var(--color-warning);
+  --tw-shadow-color: var(--color-warning-shadow);
+}
 
-@media (max-width: 640px) {
-  .input-lg {
-    @apply h-11 px-3.5 text-[14px];
-  }
-
-  .input-xl {
-    @apply h-12 px-4 text-[15px];
-  }
+.input-error {
+  --input-color: var(--color-error);
+  --tw-shadow-color: var(--color-error-shadow);
 }

@@ -26,7 +26,7 @@ const Header: FC<HeaderProps> = ({
   children,
 }) => {
   return (
-    <div className={clsx("p-4 lg:p-6 pb-0!", className)}>
+    <div className={clsx("p-4 lg:p-6 pb-0", className)}>
       <div
         className={clsx(
           action &&

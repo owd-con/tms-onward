@@ -32,8 +32,8 @@ const createTableConfig = ({
       alias: "id",
       title: "User Info",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: User) => (
         <div className="text-xs font-normal tracking-wide capitalize cursor-pointer ">
           <span className="font-semibold">{row?.name || "-"}</span>
@@ -42,8 +42,8 @@ const createTableConfig = ({
     },
     company: {
       title: "Company",
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: User) => (
         <div className="text-xs font-normal tracking-wide capitalize cursor-pointer ">
           <span className="font-semibold">{row?.company?.name ?? "-"}</span>
@@ -54,11 +54,11 @@ const createTableConfig = ({
     email: {
       title: "Email / Phone",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: User) => (
         <div className="text-xs font-normal tracking-wide cursor-pointer ">
-          <div className="font-semibold normal-case!">{row?.email || "-"}</div>
+          <div className="font-semibold normal-case">{row?.email || "-"}</div>
           <div>{row?.phone || "-"}</div>
         </div>
       ),
@@ -66,19 +66,19 @@ const createTableConfig = ({
     role: {
       title: "Role",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: User) => (
         <div className="text-xs font-normal tracking-wide cursor-pointer ">
-          <div className="font-semibold capitalize!">{row?.role || "-"}</div>
+          <div className="font-semibold capitalize">{row?.role || "-"}</div>
         </div>
       ),
     },
     is_active: {
       title: "Status",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: User) => (
         <div className="text-xs font-normal tracking-wide capitalize">
           {onToggleStatus ? (
@@ -97,8 +97,8 @@ const createTableConfig = ({
     created_at: {
       title: "Joined",
       sortable: true,
-      headerClass: "text-xs capitalize!",
-      class: "p-4!",
+      headerClass: "text-xs capitalize",
+      class: "p-4",
       component: (row: User) => (
         <div className="text-xs font-normal tracking-wide capitalize cursor-pointer ">
           <span className="font-semibold">{dateFormat(row?.created_at)}</span>
@@ -107,7 +107,7 @@ const createTableConfig = ({
     },
     action: {
       title: "Actions",
-      headerClass: "text-xs text-center! capitalize!",
+      headerClass: "text-xs text-center capitalize",
       class: "flex place-items-center place-content-center",
       component: (row: User) =>
         canManage && (

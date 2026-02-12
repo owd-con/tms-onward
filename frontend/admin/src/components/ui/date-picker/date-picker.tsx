@@ -419,7 +419,7 @@ export const DatePicker = memo(({
                               : "btn-ghost hover:btn-primary",
                             (isSelected || isInRangeHover) &&
                               !isDisabled &&
-                              "btn-primary bg-primary! text-base-100!"
+                              "btn-primary bg-primary text-base-100"
                           )}
                           onClick={() => !isDisabled && handleSelectDate(day)}
                           onMouseEnter={() => !isDisabled && setHoverDate(day)}

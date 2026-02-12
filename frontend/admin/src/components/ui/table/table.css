@@ -1,541 +1,99 @@
-/* ============================================
-   TMS Onward - Table Component Styling
-
-   Modern, clean table styling inspired by
-   Shopify Admin, Linear, and Ant Design.
-
-   Designed for logistics/TMS data with:
-   - Clear visual hierarchy
-   - Excellent readability
-   - Proper status indicators
-   - Smooth interactions
-   ============================================ */
-
-/* ============================================
-   TABLE BASE STYLES
-   ============================================ */
-
-.table {
-  @apply w-full border-separate border-spacing-0;
-  font-size: 14px;
-  line-height: 1.5;
-  font-weight: 400;
-}
-
-/* First/Last cell padding adjustments */
 table th:first-child,
 table td:first-child {
-  @apply !ps-4;
+  @apply ps-3.5;
 }
 
 table th:last-child,
 table td:last-child {
-  @apply !pe-4;
+  @apply pe-3.5;
 }
 
-/* ============================================
-   TABLE HEADER
-   ============================================ */
+.table {
+  @apply text-xs;
+}
 
 .table thead th {
-  font-size: 12px;
-  line-height: 1.4;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  @apply bg-base-200;
-  @apply sticky top-0 z-10;
-  @apply px-4 py-3;
-  @apply text-start;
-  @apply border-b border-base-300;
-  @apply transition-colors duration-200;
-  box-shadow: 0 1px 0 var(--color-base-300);
+  @apply bg-base-200 sticky top-0 z-10 py-3 font-semibold tracking-wider text-gray-600 uppercase shadow-xl;
 }
 
-/* Sortable headers */
+@media print {
+  .table thead th {
+    @apply bg-transparent;
+  }
+}
+
 .table thead th.sorting,
 .table thead th.sorting_asc,
 .table thead th.sorting_desc {
-  @apply cursor-pointer select-none;
-  @apply hover:bg-base-300/50;
-  @apply relative;
+  @apply cursor-pointer;
 }
 
 .table thead th.sorting::before,
 .table thead th.sorting_asc::before,
 .table thead th.sorting_desc::before {
-  content: '';
+  content: "";
   position: absolute;
   z-index: 10;
-  top: 10px;
-  right: 12px;
+  top: 12px;
+  right: 8px;
   border-width: 4px;
   border-color: transparent;
   border-style: solid;
-  border-bottom-color: oklch(from var(--color-base-content) l c h / 0.3);
+  border-bottom-color: theme("colors.gray.400");
 }
 
 .table thead th.sorting::after,
 .table thead th.sorting_asc::after,
 .table thead th.sorting_desc::after {
-  content: '';
+  content: "";
   position: absolute;
   z-index: 10;
-  top: 18px;
-  right: 12px;
+  top: 22px;
+  right: 8px;
   border-width: 4px;
   border-color: transparent;
   border-style: solid;
-  border-top-color: oklch(from var(--color-base-content) l c h / 0.3);
+  border-top-color: theme("colors.gray.400");
 }
 
-/* Active sort indicators */
 .table thead th.sorting_asc::before {
-  border-bottom-color: var(--color-primary);
+  border-bottom-color: theme("colors.gray.800");
 }
 
 .table thead th.sorting_desc::after {
-  border-top-color: var(--color-primary);
+  border-top-color: theme("colors.gray.800");
 }
 
-/* Center alignment variant */
 .table th.center,
 .table td.center {
   @apply text-center;
 }
 
-.table th.end,
-.table td.end {
-  @apply text-end;
-}
-
-/* Action column - no vertical padding */
 .table td.action {
   @apply pt-0 pb-0;
 }
 
-/* ============================================
-   TABLE BODY & ROWS
-   ============================================ */
-
-.table tbody tr {
-  @apply transition-colors duration-150 ease-in-out;
-  @apply border-b border-base-200;
+/* Hover effects */
+.table-hover tbody tr td,
+.table-hover tbody tr th {
+  @apply transition-colors duration-200;
 }
 
-.table tbody tr:last-child {
-  @apply border-b-0;
-}
-
-/* Cell base styles */
-.table tbody td {
-  @apply px-4 py-3;
-  @apply align-middle;
-  @apply text-base-content;
-}
-
-/* Hover effect - enabled by parent class */
-.table-hover tbody tr {
+.table-hover tbody tr:hover td,
+.table-hover tbody tr:hover th {
   @apply cursor-pointer;
 }
 
-.table-hover tbody tr:hover {
-  @apply bg-base-200/50;
-}
-
-.table-hover tbody tr:hover td {
-  @apply text-base-content;
-}
-
-/* Striped rows */
+/* Striped */
 .table-striped tbody tr:nth-of-type(odd) {
   @apply bg-base-100;
 }
 
 .table-striped tbody tr:nth-of-type(even) {
-  @apply bg-base-200/30;
-}
-
-.table-striped.table-hover tbody tr:hover {
   @apply bg-base-200/70;
 }
 
-/* Row selection state */
-.table tbody tr.selected {
-  @apply bg-primary/10;
-}
-
-.table tbody tr.selected td {
-  @apply text-primary;
-}
-
-/* ============================================
-   STATUS BADGES IN TABLES
-   ============================================ */
-
-/* Status badge container */
-.table .status-badge {
-  @apply inline-flex items-center gap-1.5;
-  @apply px-2.5 py-1;
-  @apply rounded-md;
-  font-size: 13px;
-  line-height: 1.4;
-  font-weight: 500;
-  @apply font-medium;
-  @apply whitespace-nowrap;
-}
-
-/* Status dot indicator */
-.table .status-badge::before {
-  content: '';
-  @apply w-1.5 h-1.5 rounded-full;
-}
-
-/* Active/Enabled status */
-.table .status-badge.active {
-  @apply bg-success/10 text-success;
-}
-
-.table .status-badge.active::before {
-  @apply bg-success;
-  box-shadow: 0 0 0 2px oklch(from var(--color-success) l c h / 0.2);
-}
-
-/* Inactive/Disabled status */
-.table .status-badge.inactive {
-  @apply bg-base-300/50 text-base-content/60;
-}
-
-.table .status-badge.inactive::before {
-  @apply bg-base-content/30;
-}
-
-/* Pending status */
-.table .status-badge.pending {
-  @apply bg-warning/10 text-warning;
-}
-
-.table .status-badge.pending::before {
-  @apply bg-warning;
-  box-shadow: 0 0 0 2px oklch(from var(--color-warning) l c h / 0.2);
-}
-
-/* Processing status */
-.table .status-badge.processing {
-  @apply bg-info/10 text-info;
-}
-
-.table .status-badge.processing::before {
-  @apply bg-info;
-  box-shadow: 0 0 0 2px oklch(from var(--color-info) l c h / 0.2);
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-
-/* Completed/Success status */
-.table .status-badge.completed {
-  @apply bg-success/10 text-success;
-}
-
-.table .status-badge.completed::before {
-  @apply bg-success;
-  box-shadow: 0 0 0 2px oklch(from var(--color-success) l c h / 0.2);
-}
-
-/* Failed/Error status */
-.table .status-badge.failed {
-  @apply bg-error/10 text-error;
-}
-
-.table .status-badge.failed::before {
-  @apply bg-error;
-  box-shadow: 0 0 0 2px oklch(from var(--color-error) l c h / 0.2);
-}
-
-/* Cancelled status */
-.table .status-badge.cancelled {
-  @apply bg-neutral/10 text-neutral;
-}
-
-.table .status-badge.cancelled::before {
-  @apply bg-neutral;
-  box-shadow: 0 0 0 2px oklch(from var(--color-neutral) l c h / 0.2);
-}
-
-/* Draft status */
-.table .status-badge.draft {
-  @apply bg-base-300/50 text-base-content/75;
-}
-
-.table .status-badge.draft::before {
-  @apply bg-base-content/40;
-}
-
-/* Published/Live status */
-.table .status-badge.published,
-.table .status-badge.live {
-  @apply bg-accent/10 text-accent;
-}
-
-.table .status-badge.published::before,
-.table .status-badge.live::before {
-  @apply bg-accent;
-  box-shadow: 0 0 0 2px oklch(from var(--color-accent) l c h / 0.2);
-}
-
-/* Loading animation for processing status */
-@keyframes pulse-dot {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-/* ============================================
-   TABLE CONTAINER & WRAPPER
-   ============================================ */
-
-.table-container {
-  @apply relative;
-  @apply w-full overflow-hidden;
-  @apply bg-base-100;
-  @apply rounded-lg;
-  @apply border border-base-300;
-  box-shadow: 0 1px 3px oklch(from var(--color-base-300) l c h / 0.1);
-}
-
-/* Table container with overflow for wide tables */
-.table-container-overflow {
-  @apply overflow-x-auto;
-}
-
-/* Custom scrollbar styling */
-.table-container-overflow::-webkit-scrollbar {
-  @apply h-2;
-}
-
-.table-container-overflow::-webkit-scrollbar-track {
-  @apply bg-transparent;
-}
-
-.table-container-overflow::-webkit-scrollbar-thumb {
-  @apply bg-base-300 rounded-full;
-}
-
-.table-container-overflow::-webkit-scrollbar-thumb:hover {
-  @apply bg-base-content/20;
-}
-
-/* ============================================
-   LOADING STATE
-   ============================================ */
-
-.table-loading {
-  @apply relative;
-}
-
-.table-loading::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  @apply bg-base-100/60;
-  @apply backdrop-blur-[2px];
-  z-index: 20;
-}
-
-.table-loading-indicator {
-  @apply absolute inset-0;
-  @apply flex items-center justify-center;
-  z-index: 21;
-}
-
-/* Loading skeleton rows */
-.table-skeleton tbody tr {
-  @apply animate-pulse;
-}
-
-.table-skeleton tbody td {
-  @apply bg-base-200/50;
-}
-
-.table-skeleton tbody td::before {
-  content: '\00a0';
-}
-
-/* ============================================
-   EMPTY STATE
-   ============================================ */
-
-.table-empty-state {
-  @apply py-12 px-6;
-  @apply text-center;
-}
-
-.table-empty-icon {
-  @apply mx-auto;
-  @apply w-16 h-16;
-  @apply mb-4;
-  @apply text-base-300;
-}
-
-.table-empty-title {
-  font-size: 18px;
-  line-height: 1.4;
-  font-weight: 600;
-  @apply text-base-content;
-  @apply mb-2;
-}
-
-.table-empty-description {
-  font-size: 14px;
-  line-height: 1.5;
-  font-weight: 400;
-  @apply text-base-content/75;
-  @apply max-w-sm mx-auto;
-  @apply mb-6;
-}
-
-.table-empty-action {
-  @apply flex items-center justify-center gap-3;
-}
-
-/* ============================================
-   PAGINATION STYLES
-   ============================================ */
-
-.table-pagination {
-  @apply flex items-center justify-between;
-  @apply mt-4 px-2;
-  font-size: 13px;
-  line-height: 1.45;
-  font-weight: 400;
-}
-
-.table-pagination-info {
-  @apply text-base-content/75;
-}
-
-.table-pagination-info strong {
-  @apply text-base-content font-medium;
-}
-
-.table-pagination-controls {
-  @apply flex items-center gap-2;
-}
-
-/* Page size selector */
-.table-page-size-selector {
-  @apply ml-4;
-  @apply pl-4;
-  @apply border-l border-base-300;
-}
-
-.table-page-size-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-size: 13px;
-  line-height: 1.4;
-  font-weight: 400;
-  background-color: var(--color-base-200);
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-field);
-  transition: all 200ms ease-in-out;
-}
-
-.table-page-size-dropdown {
-  @apply bg-base-100;
-  @apply w-40 p-2;
-  @apply shadow-lg border border-base-200;
-  @apply rounded-lg;
-}
-
-.table-page-size-dropdown li a {
-  font-size: 13px;
-  line-height: 1.4;
-  font-weight: 500;
-  @apply font-normal;
-  @apply rounded-md;
-}
-
-/* ============================================
-   RESPONSIVE TABLE (Mobile)
-   ============================================ */
-
-@media (max-width: 768px) {
-  .table-mobile {
-    @apply block;
-  }
-
-  .table-mobile thead {
-    @apply hidden;
-  }
-
-  .table-mobile tbody,
-  .table-mobile tr {
-    @apply flex flex-col;
-  }
-
-  .table-mobile tr {
-    @apply border-b border-base-200;
-    @apply mb-0;
-  }
-
-  .table-mobile td {
-    @apply flex items-start justify-between;
-    @apply block border-none;
-    @apply px-4 py-3;
-    @apply text-base-content;
-  }
-
-  .table-mobile td[data-label]::before {
-    content: attr(data-label);
-    @apply mb-0 mr-4;
-    @apply block text-base-content/60;
-    @apply font-medium uppercase tracking-wide;
-    @apply text-xs;
-    font-size: 13px;
-    line-height: 1.4;
-    font-weight: 500;
-  }
-
-  .table-mobile .btn {
-    @apply w-full mt-2;
-  }
-
-  /* Hide less important columns on mobile */
-  .table-hide-mobile {
-    @apply hidden;
-  }
-}
-
-/* ============================================
-   UTILITY CLASSES
-   ============================================ */
-
-/* No wrap - prevent text wrapping */
-.table-nowrap > :not(caption) > * > * {
-  @apply whitespace-nowrap;
-}
-
-/* Truncate - truncate long text */
-.td-truncate {
-  @apply w-full max-w-[1px] truncate whitespace-nowrap;
-}
-
-/* Vertically center all content */
-.table-vcenter > :not(caption) > * > * {
-  @apply align-middle;
-}
-
-/* Center align all text */
-.table-center > :not(caption) > * > * {
-  @apply text-center;
-}
-
-/* Responsive table wrapper */
+/* Responsive */
 .table-responsive {
   @apply mb-4;
 }
@@ -544,89 +102,60 @@ table td:last-child {
   @apply mb-0;
 }
 
-/* Transparent variant - no header bg */
+/* Transparent */
 .table-transparent thead th {
   @apply bg-transparent;
 }
 
-/* Compact variant - less padding */
-.table-compact thead th {
-  @apply px-3 py-2;
+/* No wrap */
+.table-nowrap > :not(caption) > * > * {
+  @apply whitespace-nowrap;
 }
 
-.table-compact tbody td {
-  @apply px-3 py-2;
+/* Vertically center */
+.table-vcenter > :not(caption) > * > * {
+  @apply align-middle;
 }
 
-/* Comfortable variant - more padding */
-.table-comfortable thead th {
-  @apply px-5 py-4;
+/* Text center */
+.table-center > :not(caption) > * > * {
+  @apply text-center;
 }
 
-.table-compact tbody td {
-  @apply px-5 py-4;
+/* Truncate */
+.td-truncate {
+  @apply w-full max-w-[1px] truncate whitespace-nowrap;
 }
 
-/* ============================================
-   PRINT STYLES
-   ============================================ */
-
-@media print {
-  .table thead th {
-    @apply bg-transparent;
-    box-shadow: none;
+/* Mobile Responsive Table */
+@media (max-width: 768px) {
+  .table-mobile {
+    display: block;
   }
 
-  .table-container {
-    @apply border-none shadow-none;
+  .table-mobile thead {
+    display: none;
   }
 
-  .table-hover tbody tr:hover {
-    @apply bg-transparent;
+  .table-mobile tbody,
+  .table-mobile tr {
+    @apply flex flex-col;
   }
 
-  .table-striped tbody tr:nth-of-type(even) {
-    @apply bg-transparent;
+  .table-mobile td {
+    @apply block border-none px-4 py-3 text-gray-900;
   }
 
-  /* Hide pagination and actions */
-  .table-pagination,
-  .table td.action {
-    @apply hidden;
-  }
-}
-
-/* ============================================
-   ACCESSIBILITY
-   ============================================ */
-
-/* Focus visible for keyboard navigation */
-.table a:focus-visible,
-.table button:focus-visible {
-  @apply outline-none;
-  @apply ring-2 ring-primary ring-offset-2;
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .table thead th {
-    @apply border-b-2 border-base-content;
+  .table-mobile td[data-label]::before {
+    content: attr(data-label);
+    @apply mb-1 block text-xs font-semibold tracking-wider text-gray-500 uppercase;
   }
 
-  .table tbody tr {
-    @apply border-b border-base-content;
-  }
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  .table tbody tr,
-  .table thead th,
-  .table tbody td {
-    @apply transition-none;
+  .table-mobile tr {
+    @apply border-b border-gray-200;
   }
 
-  .status-badge.processing::before {
-    animation: none;
+  .table-mobile .btn {
+    @apply block;
   }
 }
