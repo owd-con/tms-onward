@@ -1,7 +1,7 @@
 import { RemoteSelect } from "@/components";
 import { useRegion } from "@/services/region/hooks";
-import type { RegionSearchResult, Region } from "@/services/types";
-import { getFullName } from "@/services/region/api";
+import type { RegionSearchResult } from "@/services/types";
+import { getDisplayPath } from "@/utils/common";
 import { useState, useEffect } from "react";
 
 /**
@@ -27,7 +27,7 @@ export const RegionSearchInput = ({
   minSearchLength = 3,
   filterType,
 }: {
-  value?: string;
+  value?: RegionSearchResult | null;
   onChange: (regionId: string, region: RegionSearchResult) => void;
   label?: string;
   placeholder?: string;
@@ -37,10 +37,11 @@ export const RegionSearchInput = ({
   minSearchLength?: number;
   filterType?: "province" | "regency" | "district" | "village";
 }) => {
-  const [selectedRegion, setSelectedRegion] = useState<RegionSearchResult | null>(null);
+  const [selectedRegion, setSelectedRegion] =
+    useState<RegionSearchResult | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { searchRegions, searchResult } = useRegion();
+  const { searchRegions, searchRegionsResult } = useRegion();
 
   // Handle region selection
   const handleRegionChange = (region: RegionSearchResult | null) => {
@@ -67,10 +68,8 @@ export const RegionSearchInput = ({
 
   // Initialize with provided value
   useEffect(() => {
-    if (value && !selectedRegion) {
-      // If value is provided but no region is selected, we could fetch it
-      // For now, just clear the selection
-      setSelectedRegion(null);
+    if (value !== selectedRegion) {
+      setSelectedRegion(value ?? null);
     }
   }, [value]);
 
@@ -81,15 +80,19 @@ export const RegionSearchInput = ({
       value={selectedRegion}
       onChange={handleRegionChange}
       onClear={() => handleRegionChange(null)}
-      getLabel={(item) => item?.full_name || item?.name || ""}
+      getLabel={(item) => item?.administrative_area ? getDisplayPath(item.administrative_area) : item?.name || ""}
+      getValue={(item) => item.id}
       renderItem={(item) => (
-        <div className="flex flex-col">
-          <span className="font-medium">{item.name}</span>
-          <span className="text-xs text-gray-500">{item.full_name}</span>
+        <div className='flex flex-col'>
+          <span className='font-medium'>{item.name}</span>
+          <span className='text-xs text-gray-500'>
+            {item.administrative_area ? getDisplayPath(item.administrative_area) : item.name}
+          </span>
         </div>
       )}
       fetchData={handleSearch}
-      hook={searchResult}
+      hook={searchRegionsResult}
+      watchKey={filterType}
       required={required}
       disabled={disabled}
       error={error}
@@ -104,15 +107,18 @@ export const RegionSearchInput = ({
  * expect the old village_id field.
  */
 export const RegionSearchInputWithVillage = ({
-  villageId,
+  regionId,
   onVillageChange,
   label,
   placeholder,
   error,
   required,
 }: {
-  villageId?: string;
-  onVillageChange: (villageId: string | null, region: RegionSearchResult) => void;
+  regionId?: RegionSearchResult | null;
+  onVillageChange: (
+    regionId: string | null,
+    region: RegionSearchResult,
+  ) => void;
   label?: string;
   placeholder?: string;
   error?: string;
@@ -126,7 +132,7 @@ export const RegionSearchInputWithVillage = ({
 
   return (
     <RegionSearchInput
-      value={villageId}
+      value={regionId}
       onChange={handleChange}
       label={label}
       placeholder={placeholder}

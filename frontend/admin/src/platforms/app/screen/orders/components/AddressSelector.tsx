@@ -3,8 +3,9 @@ import { useAddress } from "@/services/address/hooks";
 import type { RootState } from "@/services/store";
 import { useSelector } from "react-redux";
 import { useEffect, useRef, useState } from "react";
-import { RegionSearchInput } from "@/components/form/RegionSearchInput";
+import { RegionSearchInput } from "@/platforms/app/components/region/RegionSearchInput";
 import type { Address, RegionSearchResult } from "@/services/types";
+import { getDisplayPath } from "@/utils/common";
 
 interface AddressSelectorProps {
   label: string;
@@ -56,7 +57,9 @@ export const AddressSelector = ({
 
       // Otherwise try to find in getResult
       if (getResult?.data?.data) {
-        const foundAddress = getResult.data.data.find((a: any) => a.id === value) as Address | undefined;
+        const foundAddress = getResult.data.data.find(
+          (a: any) => a.id === value,
+        ) as Address | undefined;
         if (foundAddress) {
           setSelectedAddress(foundAddress);
           return;
@@ -72,12 +75,6 @@ export const AddressSelector = ({
   }, [value, getResult?.data?.data, address]);
 
   const handleAddressChange = (addr: Address) => {
-    console.log("📍 AddressSelector.handleAddressChange called:", {
-      addressId: addr.id,
-      addressName: addr.name,
-      regionId: addr.region_id,
-      fullAddress: addr,
-    });
     setSelectedAddress(addr);
     const regionId = addr?.region_id;
     onChange(addr.id, addr, regionId);
@@ -122,7 +119,14 @@ export const AddressSelector = ({
             value={selectedAddress}
             onChange={handleAddressChange}
             fetchData={(page, search) =>
-              get({ page: page || 1, limit: 20, customer_id: customerId, search })
+              customerId
+                ? get({
+                    page: page || 1,
+                    limit: 20,
+                    customer_id: customerId,
+                    search,
+                  })
+                : undefined
             }
             hook={getResult as any}
             getLabel={(item: Address) => item.name || item.address}
@@ -144,7 +148,9 @@ export const AddressSelector = ({
           <div className='text-base-content/70'>{selectedAddress.address}</div>
           {selectedAddress.region && (
             <div className='text-base-content/70'>
-              {selectedAddress.region.full_name || selectedAddress.region.path}
+              {selectedAddress.region.administrative_area
+                ? getDisplayPath(selectedAddress.region.administrative_area)
+                : selectedAddress.region.name}
             </div>
           )}
           {(selectedAddress.contact_name || selectedAddress.contact_phone) && (
@@ -193,6 +199,8 @@ const CreateAddressModal = ({
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [regionId, setRegionId] = useState("");
+  const [selectedRegion, setSelectedRegion] =
+    useState<RegionSearchResult | null>(null);
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
 
@@ -219,7 +227,11 @@ const CreateAddressModal = ({
 
   // Handle successful address creation
   useEffect(() => {
-    if (createResult?.isSuccess && !successHandledRef.current && createResult?.data) {
+    if (
+      createResult?.isSuccess &&
+      !successHandledRef.current &&
+      createResult?.data
+    ) {
       successHandledRef.current = true;
       const newAddress = (createResult.data as any)?.data;
       if (newAddress) {
@@ -230,9 +242,10 @@ const CreateAddressModal = ({
 
   const isFormValid = name.trim() && address.trim() && regionId;
 
-  // Handle region selection from RegionSearchInput
+  // Handle region change
   const handleRegionChange = (id: string, region: RegionSearchResult) => {
     setRegionId(id);
+    setSelectedRegion(region);
   };
 
   return (
@@ -289,10 +302,10 @@ const CreateAddressModal = ({
 
           {/* Location Selector - Using RegionSearchInput */}
           <RegionSearchInput
-            value={regionId}
+            label='Location'
+            value={selectedRegion}
             onChange={handleRegionChange}
-            label="Location"
-            placeholder="Search location (e.g., 'Jakarta Selatan', 'Tebet')"
+            placeholder='Search location (e.g., "Jakarta Selatan", "Tebet")'
             error={FormState?.errors?.region_id as string}
             required
           />

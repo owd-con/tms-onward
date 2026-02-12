@@ -58,7 +58,9 @@ export const OrderInformation = ({ order }: OrderInformationProps) => {
             <span className='text-xs text-base-content/60 block'>
               Reference Code
             </span>
-            <span className='font-semibold text-sm'>{order.reference_code}</span>
+            <span className='font-semibold text-sm'>
+              {order.reference_code}
+            </span>
           </div>
         )}
 

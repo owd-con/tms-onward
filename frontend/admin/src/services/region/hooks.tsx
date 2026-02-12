@@ -1,80 +1,37 @@
 /**
  * TMS Onward - Region Service Hooks
  *
- * Custom hooks for region search and lookup.
- * Region API doesn't follow standard CRUD pattern, so we use custom hooks.
+ * Custom hooks for region search and lookup using createCrudHook pattern.
  */
 
-import { useCallback } from "react";
+import { createCrudHook } from "@/services/hooks/createCrudHook";
 import {
   useLazySearchRegionsQuery,
   useLazyGetRegionQuery,
   useLazyGetRegionChildrenQuery,
   useLazyGetRegionPathQuery,
 } from "./api";
-import type { RegionSearchParams } from "./api";
-import type { Region, RegionSearchResult, RegionPath } from "@/services/types";
 
-/**
- * Region CRUD operations hook
- */
-export const useRegion = () => {
-  // Search regions hook
-  const [triggerSearch, searchResult] = useLazySearchRegionsQuery();
-  const [triggerGet, getResult] = useLazyGetRegionQuery();
-  const [triggerChildren, childrenResult] = useLazyGetRegionChildrenQuery();
-  const [triggerPath, pathResult] = useLazyGetRegionPathQuery();
-
-  // Search regions
-  const searchRegions = useCallback(
-    async (params: RegionSearchParams) => {
-      const result = await triggerSearch(params, true);
-      return result.data;
+// Noop query - region doesn't have standard CRUD list endpoint
+const useNoopQuery = () =>
+  [
+    async () => undefined,
+    {
+      data: undefined,
+      isLoading: false,
+      isFetching: false,
+      isSuccess: false,
+      isError: false,
     },
-    [triggerSearch]
-  );
+  ] as const;
 
-  // Get region by ID
-  const getRegion = useCallback(
-    async (id: string) => {
-      const result = await triggerGet(id, true);
-      return result.data;
-    },
-    [triggerGet]
-  );
-
-  // Get region children
-  const getRegionChildren = useCallback(
-    async (id: string) => {
-      const result = await triggerChildren(id, true);
-      return result.data;
-    },
-    [triggerChildren]
-  );
-
-  // Get region path
-  const getRegionPath = useCallback(
-    async (id: string) => {
-      const result = await triggerPath(id, true);
-      return result.data;
-    },
-    [triggerPath]
-  );
-
-  return {
-    // Operations
-    searchRegions,
-    getRegion,
-    getRegionChildren,
-    getRegionPath,
-
-    // Results
-    searchResult,
-    getResult,
-    childrenResult,
-    pathResult,
-  };
-};
-
-export type { Region, RegionSearchParams, RegionSearchResult, RegionPath } from "./api";
-export type { RegionType } from "@/services/types";
+export const useRegion = createCrudHook({
+  useLazyGetQuery: useNoopQuery, // Required but not used
+  additionalQueries: {
+    searchRegions: useLazySearchRegionsQuery,
+    getRegion: useLazyGetRegionQuery,
+    getRegionChildren: useLazyGetRegionChildrenQuery,
+    getRegionPath: useLazyGetRegionPathQuery,
+  },
+  entityName: "region",
+});

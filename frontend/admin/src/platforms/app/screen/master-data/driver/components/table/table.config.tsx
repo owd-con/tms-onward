@@ -28,8 +28,8 @@ const createTableConfig = ({
       headerClass: "text-xs capitalize",
       class: "p-4",
       component: (row: { name: string }) => (
-        <div className="text-xs font-normal tracking-wide capitalize cursor-pointer">
-          <span className="font-semibold">{row?.name || "-"}</span>
+        <div className='text-xs font-normal tracking-wide capitalize cursor-pointer'>
+          <span className='font-semibold'>{row?.name || "-"}</span>
         </div>
       ),
     },
@@ -39,8 +39,10 @@ const createTableConfig = ({
       headerClass: "text-xs capitalize",
       class: "p-4",
       component: (row: { license_number: string }) => (
-        <div className="text-xs font-normal tracking-wide">
-          <span className="font-mono font-semibold">{row?.license_number || "-"}</span>
+        <div className='text-xs font-normal tracking-wide'>
+          <span className='font-mono font-semibold'>
+            {row?.license_number || "-"}
+          </span>
         </div>
       ),
     },
@@ -50,8 +52,10 @@ const createTableConfig = ({
       headerClass: "text-xs capitalize",
       class: "p-4",
       component: (row: { license_type: string }) => (
-        <div className="text-xs font-normal tracking-wide capitalize">
-          <span className="font-semibold">{row?.license_type?.replace(/_/g, ' ') || "-"}</span>
+        <div className='text-xs font-normal tracking-wide capitalize'>
+          <span className='font-semibold'>
+            {row?.license_type?.replace(/_/g, " ") || "-"}
+          </span>
         </div>
       ),
     },
@@ -61,15 +65,26 @@ const createTableConfig = ({
       headerClass: "text-xs capitalize",
       class: "p-4",
       component: (row: { license_expiry: string }) => {
-        const expiryDate = row?.license_expiry ? new Date(row.license_expiry) : null;
+        const expiryDate = row?.license_expiry
+          ? new Date(row.license_expiry)
+          : null;
         const year = expiryDate?.getFullYear();
-        const isExpiringSoon = expiryDate && expiryDate <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) && expiryDate > new Date();
+        const isExpiringSoon =
+          expiryDate &&
+          expiryDate <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) &&
+          expiryDate > new Date();
         const isExpired = expiryDate && expiryDate < new Date();
         return (
-          <div className="text-xs font-normal tracking-wide">
-            <span className="font-semibold">{year || "-"}</span>
-            {isExpiringSoon && <span className="badge badge-warning badge-sm ml-1">Expiring Soon</span>}
-            {isExpired && <span className="badge badge-error badge-sm ml-1">Expired</span>}
+          <div className='text-xs font-normal tracking-wide'>
+            <span className='font-semibold'>{year || "-"}</span>
+            {isExpiringSoon && (
+              <span className='badge badge-warning badge-sm ml-1'>
+                Expiring Soon
+              </span>
+            )}
+            {isExpired && (
+              <span className='badge badge-error badge-sm ml-1'>Expired</span>
+            )}
           </div>
         );
       },
@@ -80,8 +95,8 @@ const createTableConfig = ({
       headerClass: "text-xs capitalize",
       class: "p-4",
       component: (row: { phone: string }) => (
-        <div className="text-xs font-normal tracking-wide">
-          <span className="font-semibold">{row?.phone || "-"}</span>
+        <div className='text-xs font-normal tracking-wide'>
+          <span className='font-semibold'>{row?.phone || "-"}</span>
         </div>
       ),
     },
@@ -91,14 +106,16 @@ const createTableConfig = ({
       headerClass: "text-xs capitalize",
       class: "p-4",
       component: (row: { is_active: boolean; id: string }) => (
-        <div className="text-xs font-normal tracking-wide capitalize">
+        <div className='text-xs font-normal tracking-wide capitalize'>
           {onToggleStatus ? (
             <StatusToggle
               checked={row?.is_active ?? false}
               onChange={(checked) => onToggleStatus(row, checked)}
             />
           ) : (
-            <span className={`badge badge-sm ${row?.is_active ? "badge-success" : "badge-error"}`}>
+            <span
+              className={`badge badge-sm ${row?.is_active ? "badge-success" : "badge-error"}`}
+            >
               {row?.is_active ? "Active" : "Inactive"}
             </span>
           )}
@@ -111,14 +128,14 @@ const createTableConfig = ({
       headerClass: "text-xs capitalize",
       class: "p-4",
       component: (row: { user_id: string | null }) => (
-        <div className="text-xs font-normal tracking-wide">
-          {row?.user_id || row?.user_id === '00000000-0000-0000-0000-000000000000' ? (
-            <Badge variant="default" size="sm" className="gap-1">
+        <div className='text-xs font-normal tracking-wide'>
+          {row?.user_id === "00000000-0000-0000-0000-000000000000" ? (
+            <Badge variant='default' size='sm' className='gap-1'>
               <HiXMark size={14} />
               <span>No Login</span>
             </Badge>
           ) : (
-            <Badge variant="success" size="sm" className="gap-1">
+            <Badge variant='success' size='sm' className='gap-1'>
               <HiUser size={14} />
               <span>Has Login</span>
             </Badge>
@@ -132,12 +149,22 @@ const createTableConfig = ({
       headerClass: "text-xs capitalize",
       class: "p-4",
       component: (row: any) => (
-        <div className="flex place-items-center gap-1">
-          <Button size="sm" variant="secondary" styleType="ghost" onClick={() => onClick(row, "update")}>
-            <FaEdit className="w-4 h-4" />
+        <div className='flex place-items-center gap-1'>
+          <Button
+            size='sm'
+            variant='secondary'
+            styleType='ghost'
+            onClick={() => onClick(row, "update")}
+          >
+            <FaEdit className='w-4 h-4' />
           </Button>
-          <Button size="sm" variant="error" styleType="ghost" onClick={() => onClick(row, "delete")}>
-            <FaTrash className="w-4 h-4" />
+          <Button
+            size='sm'
+            variant='error'
+            styleType='ghost'
+            onClick={() => onClick(row, "delete")}
+          >
+            <FaTrash className='w-4 h-4' />
           </Button>
         </div>
       ),

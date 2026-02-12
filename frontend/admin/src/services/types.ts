@@ -213,7 +213,7 @@ export interface RegionSearchResult {
   code: string;
   name: string;
   type: RegionType;
-  full_name: string; // Computed by backend from administrative_area
+  administrative_area: any; // Full hierarchy from backend
   latitude?: number;
   longitude?: number;
   postal_code?: string;

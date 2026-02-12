@@ -11,9 +11,10 @@ import type { RootState } from "@/services/store";
 import { useSelector } from "react-redux";
 
 import { Button, Input, Modal, useEnigmaUI } from "@/components";
-import { RegionSearchInput } from "@/components/form/RegionSearchInput";
+import { RegionSearchInput } from "@/platforms/app/components/region/RegionSearchInput";
 import { usePricingMatrix } from "@/services/pricingMatrix/hooks";
 import type { PricingMatrix, RegionSearchResult } from "@/services/types";
+import { getDisplayPath } from "@/utils/common";
 
 interface CustomerPricingFormModalProps {
   onClose: () => void;
@@ -76,7 +77,7 @@ const CustomerPricingFormModal = forwardRef<
           code: data.origin_region.code,
           name: data.origin_region.name,
           type: data.origin_region.type,
-          full_name: data.origin_region.full_name || data.origin_region.path,
+          administrative_area: data.origin_region.administrative_area,
           level: data.origin_region.level,
           parent_id: data.origin_region.parent_id,
           postal_code: data.origin_region.postal_code,
@@ -94,8 +95,7 @@ const CustomerPricingFormModal = forwardRef<
           code: data.destination_region.code,
           name: data.destination_region.name,
           type: data.destination_region.type,
-          full_name:
-            data.destination_region.full_name || data.destination_region.path,
+          administrative_area: data.destination_region.administrative_area,
           level: data.destination_region.level,
           parent_id: data.destination_region.parent_id,
           postal_code: data.destination_region.postal_code,
@@ -179,7 +179,7 @@ const CustomerPricingFormModal = forwardRef<
 
               <RegionSearchInput
                 label='Origin City/Region'
-                value={originRegionId}
+                value={selectedOriginRegion}
                 onChange={(id, region) => {
                   setOriginRegionId(id);
                   setSelectedOriginRegion(region);
@@ -190,7 +190,7 @@ const CustomerPricingFormModal = forwardRef<
 
               <RegionSearchInput
                 label='Destination City/Region'
-                value={destinationRegionId}
+                value={selectedDestinationRegion}
                 onChange={(id, region) => {
                   setDestinationRegionId(id);
                   setSelectedDestinationRegion(region);

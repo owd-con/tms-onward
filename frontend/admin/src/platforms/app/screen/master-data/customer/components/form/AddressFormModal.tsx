@@ -11,9 +11,9 @@ import type { RootState } from "@/services/store";
 import { useSelector } from "react-redux";
 
 import { Button, Input, Modal, useEnigmaUI } from "@/components";
-import { RegionSearchInput } from "@/components/form/RegionSearchInput";
+import { RegionSearchInput } from "@/platforms/app/components/region/RegionSearchInput";
 import { useAddress } from "@/services/address/hooks";
-import type { Address, Region, RegionSearchResult } from "@/services/types";
+import type { Address, RegionSearchResult } from "@/services/types";
 
 // Type definitions
 export interface AddressFormModalRef {
@@ -103,7 +103,7 @@ const AddressFormModal = forwardRef<AddressFormModalRef, AddressFormModalProps>(
             code: data.region.code,
             name: data.region.name,
             type: data.region.type,
-            full_name: data.region.full_name || data.region.path,
+            administrative_area: data.region.administrative_area,
             level: data.region.level,
             parent_id: data.region.parent_id,
             postal_code: data.region.postal_code,
@@ -241,7 +241,7 @@ const AddressFormModal = forwardRef<AddressFormModalRef, AddressFormModalProps>(
               <div className='mt-3'>
                 <RegionSearchInput
                   label='Location'
-                  value={regionId}
+                  value={selectedRegion}
                   onChange={handleRegionChange}
                   placeholder='Search location (e.g., "Jakarta Selatan", "Tebet")'
                   error={FormState?.errors?.region_id as string}

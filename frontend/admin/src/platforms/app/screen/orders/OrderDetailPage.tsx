@@ -61,7 +61,7 @@ const OrderDetailPage = () => {
   useEffect(() => {
     if (cancelOrderResult?.isSuccess) {
       closeModal("cancel-order-confirm");
-      showOrder({ id: orderId });
+      showOrder({ id: orderId as string });
     }
   }, [cancelOrderResult?.isSuccess]);
 
@@ -280,7 +280,7 @@ const OrderDetailPage = () => {
 
           {/* Trip History (v2.10) */}
           {order?.status !== "pending" && orderId && (
-            <OrderTripList orderId={orderId} className="lg:col-span-3" />
+            <OrderTripList orderId={orderId} className='lg:col-span-3' />
           )}
         </div>
       </Page.Body>

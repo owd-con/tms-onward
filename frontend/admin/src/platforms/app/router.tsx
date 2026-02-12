@@ -75,7 +75,9 @@ const AppRouter = () => {
   const matchExceptions = useMatch("/a/exceptions");
   const matchReports = useMatch("/a/reports");
   const matchReportOrderTrip = useMatch("/a/reports/order-trip");
-  const matchReportDriverPerformance = useMatch("/a/reports/driver-performance");
+  const matchReportDriverPerformance = useMatch(
+    "/a/reports/driver-performance",
+  );
   const matchReportCustomer = useMatch("/a/reports/customer");
   const matchManagement = useMatch("/a/management/*");
   const matchCompany = useMatch("/a/management/company");
@@ -96,7 +98,10 @@ const AppRouter = () => {
 
       if (needsOnboarding) {
         // Redirect to onboarding wizard (only if not already there)
-        if (location.pathname !== "/a/onboarding" && location.pathname !== "/a/onboarding/complete") {
+        if (
+          location.pathname !== "/a/onboarding" &&
+          location.pathname !== "/a/onboarding/complete"
+        ) {
           navigate("/a/onboarding", { replace: true });
         }
       }
@@ -108,15 +113,18 @@ const AppRouter = () => {
   // Show loading while checking onboarding status
   if (isCheckingOnboarding) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className='flex items-center justify-center min-h-screen'>
         <FullPageLoading />
       </div>
     );
   }
 
   // Check if user needs onboarding
-  const needsOnboarding = Profile?.user?.company && !Profile.user.company.onboarding_completed;
-  const isOnboardingPage = location.pathname === "/a/onboarding" || location.pathname === "/a/onboarding/complete";
+  const needsOnboarding =
+    Profile?.user?.company && !Profile.user.company.onboarding_completed;
+  const isOnboardingPage =
+    location.pathname === "/a/onboarding" ||
+    location.pathname === "/a/onboarding/complete";
 
   // TMS Onward - Full menu structure
   const menuOverview: MenuItem[] = [
@@ -199,7 +207,7 @@ const AppRouter = () => {
       collapsible: true,
       children: [
         {
-          label: "Company Settings",
+          label: "Company",
           onClick: () => navigate("/a/management/company"),
           active: !!matchCompany,
         },

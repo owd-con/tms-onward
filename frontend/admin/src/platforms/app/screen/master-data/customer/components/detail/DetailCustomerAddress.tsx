@@ -7,6 +7,7 @@ import { useSelector } from "react-redux";
 import { Button, Modal, useEnigmaUI } from "@/components";
 import { useAddress } from "@/services/address/hooks";
 import type { Address } from "@/services/types";
+import { getDisplayPath } from "@/utils/common";
 import { FaEdit } from "react-icons/fa";
 import { FaTrash } from "react-icons/fa";
 
@@ -22,7 +23,6 @@ const DetailCustomerAddress: React.FC<DetailCustomerAddressProps> = ({
   onRefresh,
 }) => {
   const { openModal, closeModal, showToast } = useEnigmaUI();
-  const FormState = useSelector((state: RootState) => state.form);
 
   const { get, remove: removeAddress, removeResult } = useAddress();
 
@@ -200,7 +200,9 @@ const DetailCustomerAddress: React.FC<DetailCustomerAddressProps> = ({
                   </td>
                   <td className='px-3 lg:px-4 py-3 hidden sm:table-cell'>
                     <p className='text-gray-600 text-xs lg:text-sm'>
-                      {address.region?.full_name || address.region?.name || "-"}
+                      {address.region?.administrative_area
+                        ? getDisplayPath(address.region.administrative_area)
+                        : address.region?.name || "-"}
                     </p>
                   </td>
                   <td className='px-3 lg:px-4 py-3 hidden md:table-cell'>

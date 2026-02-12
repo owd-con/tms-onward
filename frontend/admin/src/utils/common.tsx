@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import type { AdministrativeArea } from "@/services/types";
 
 export function currencyFormat(
   value: string | number | null | undefined,
@@ -8,7 +9,6 @@ export function currencyFormat(
   nullText = "-"
 ): string {
   const p = usingText ? prefix : "";
-
   const num =
     typeof value === "string" ? parseInt(value.replace(/[^\d]/g, "")) : value;
 
@@ -41,6 +41,7 @@ export function postedAgo(date: string | Date): string {
   dayjs.extend(relativeTime);
 
   const d = dayjs(date);
+
   const now = dayjs();
 
   const diffHours = now.diff(d, "hour");
@@ -56,6 +57,7 @@ export function updateAt(date: string | Date): string {
   dayjs.extend(relativeTime);
 
   const d = dayjs(date);
+
   const now = dayjs();
 
   const diffHours = now.diff(d, "hour");
@@ -90,4 +92,27 @@ export function findByKeyValue<T, K extends keyof T>(
   value: T[K]
 ): T | undefined {
   return array.find((item) => item[key] === value);
+}
+
+/**
+ * Get display path from administrative area
+ * Returns: "Province, Regency, District, Village"
+ */
+export function getDisplayPath(administrativeArea: AdministrativeArea): string {
+  const parts = [];
+
+  if (administrativeArea.province) {
+    parts.push(administrativeArea.province);
+  }
+  if (administrativeArea.regency) {
+    parts.push(administrativeArea.regency);
+  }
+  if (administrativeArea.district) {
+    parts.push(administrativeArea.district);
+  }
+  if (administrativeArea.village) {
+    parts.push(administrativeArea.village);
+  }
+
+  return parts.join(", ");
 }

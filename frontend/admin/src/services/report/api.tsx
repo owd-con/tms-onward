@@ -5,9 +5,9 @@ import { baseQuery } from "@/services/baseQuery";
  * TMS Onward - Report API
  *
  * Provides API endpoints for report operations.
- * Reference: backend/src/handler/rest/report/handler.go
+ *
+ * @module reportApi
  */
-
 export const reportApi = createApi({
   reducerPath: "reportApi",
   baseQuery,
@@ -15,18 +15,8 @@ export const reportApi = createApi({
     /**
      * GET /reports/order-trip-waypoint
      * Get comprehensive order, trip, and waypoint report
-     *
-     * Query params:
-     * - start_date: string (YYYY-MM-DD)
-     * - end_date: string (YYYY-MM-DD)
-     * - customer_id: string (optional)
-     * - driver_id: string (optional)
-     * - status: string (optional)
-     * - downloadable: boolean (optional) - triggers Excel download
-     * - page: number (optional)
-     * - limit: number (optional)
      */
-    getOrderTripWaypointReport: builder.query({
+    getOrderTripWaypointReport: builder.query<any, any>({
       query: (params?: any) => ({
         url: "/reports/order-trip-waypoint",
         method: "GET",
@@ -37,15 +27,8 @@ export const reportApi = createApi({
     /**
      * GET /reports/revenue
      * Get revenue report
-     *
-     * Query params:
-     * - start_date: string (YYYY-MM-DD)
-     * - end_date: string (YYYY-MM-DD)
-     * - customer_id: string (optional)
-     * - group_by: string (optional) - day|week|month
-     * - downloadable: boolean (optional) - triggers Excel download
      */
-    getRevenueReport: builder.query({
+    getRevenueReport: builder.query<any, any>({
       query: (params?: any) => ({
         url: "/reports/revenue",
         method: "GET",
@@ -56,17 +39,8 @@ export const reportApi = createApi({
     /**
      * GET /reports/driver-performance
      * Get driver performance report with sorting
-     *
-     * Query params:
-     * - start_date: string (YYYY-MM-DD)
-     * - end_date: string (YYYY-MM-DD)
-     * - driver_id: string (optional)
-     * - sort_by: string (optional) - trip_count|success_rate|delivery_time
-     * - downloadable: boolean (optional) - triggers Excel download
-     * - page: number (optional)
-     * - limit: number (optional)
      */
-    getDriverPerformanceReport: builder.query({
+    getDriverPerformanceReport: builder.query<any, any>({
       query: (params?: any) => ({
         url: "/reports/driver-performance",
         method: "GET",
@@ -77,17 +51,8 @@ export const reportApi = createApi({
     /**
      * GET /reports/customer
      * Get customer report with sorting
-     *
-     * Query params:
-     * - start_date: string (YYYY-MM-DD)
-     * - end_date: string (YYYY-MM-DD)
-     * - customer_id: string (optional)
-     * - sort_by: string (optional) - revenue|order_count
-     * - downloadable: boolean (optional) - triggers Excel download
-     * - page: number (optional)
-     * - limit: number (optional)
      */
-    getCustomerReport: builder.query({
+    getCustomerReport: builder.query<any, any>({
       query: (params?: any) => ({
         url: "/reports/customer",
         method: "GET",
@@ -152,7 +117,7 @@ export interface RevenueCustomerSummary {
 
 /**
  * Driver Performance Report Response
- * Reference: backend/src/usecase/report.go - DriverPerformanceReportWrapper
+ * Reference: backend/src/usecase/report.go - DriverPerformanceReport
  */
 export interface DriverPerformanceReportResponse {
   data: DriverPerformanceItem[];
@@ -192,8 +157,9 @@ export interface CustomerReportItem {
 }
 
 // ============================================================================
-// Re-export legacy types from services/types (for backward compatibility)
+// Re-export types from services/types (for backward compatibility)
 // ============================================================================
+
 export type {
   OrderSummaryReport,
   TripSummaryReport,
@@ -206,6 +172,7 @@ export type {
 // ============================================================================
 // Export RTK Query hooks
 // ============================================================================
+
 export const {
   useLazyGetOrderTripWaypointReportQuery,
   useLazyGetRevenueReportQuery,

@@ -236,6 +236,4 @@ const CustomerFormModal = forwardRef<
   );
 });
 
-CustomerFormModal.displayName = "CustomerFormModal";
-
 export default CustomerFormModal;

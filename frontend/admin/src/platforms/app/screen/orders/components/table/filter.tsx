@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { RemoteSelect } from "@/components";
 import TableFilters from "@/components/ui/table/filter";
 import type { SelectOptionValue } from "@/shared/types";
+import { orderStatusOptions, orderTypeOptions } from "@/shared/options";
 
 // TableFilter props: accept any filter shape
 type OrderFilters = {
@@ -19,23 +20,6 @@ interface TableFilterProps {
     };
   };
 }
-
-const orderStatusOptions = [
-  { label: "All Status", value: "" },
-  { label: "Pending", value: "Pending" },
-  { label: "Confirmed", value: "Confirmed" },
-  { label: "Dispatched", value: "Dispatched" },
-  { label: "In Transit", value: "In_Transit" },
-  { label: "Delivered", value: "Delivered" },
-  { label: "Failed", value: "Failed" },
-  { label: "Cancelled", value: "Cancelled" },
-];
-
-const orderTypeOptions = [
-  { label: "All Types", value: "" },
-  { label: "FTL", value: "FTL" },
-  { label: "LTL", value: "LTL" },
-];
 
 const TableFilter: React.FC<TableFilterProps> = ({ table }) => {
   const current = useMemo(

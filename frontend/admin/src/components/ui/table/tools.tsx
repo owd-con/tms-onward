@@ -22,7 +22,7 @@ const TableTool: React.FC<TableToolProps> = ({
   onDownload,
 }) => {
   const StateSearch = useSelector(
-    (state: RootState) => state?.table?.data[name]?.textSearch
+    (state: RootState) => state?.table?.data[name]?.textSearch,
   );
 
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -43,13 +43,13 @@ const TableTool: React.FC<TableToolProps> = ({
   }, [searchTerm]);
 
   return (
-    <div className="ml-auto flex place-items-center gap-3">
+    <div className='ml-auto flex place-items-center gap-3'>
       <Input
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="Search ..."
-        className="rounded-xl"
-        prefix={<IconSearch className="h-5 w-5" />}
+        placeholder='Search ...'
+        className='rounded-xl'
+        prefix={<IconSearch className='h-5 w-5' />}
         suffix={
           searchTerm && (
             <Button
@@ -57,12 +57,12 @@ const TableTool: React.FC<TableToolProps> = ({
                 e.stopPropagation();
                 setSearchTerm("");
               }}
-              variant="error"
-              shape="circle"
-              size="xs"
-              styleType="soft"
-              className="text-error hover:text-base-100 p-0"
-              aria-label="Clear search"
+              variant='error'
+              shape='circle'
+              size='xs'
+              styleType='soft'
+              className='text-error hover:text-base-100 p-0'
+              aria-label='Clear search'
             >
               &times;
             </Button>
@@ -70,17 +70,17 @@ const TableTool: React.FC<TableToolProps> = ({
         }
       />
 
-      {children && <div className="flex gap-3">{children}</div>}
+      {children && <div className='flex gap-3'>{children}</div>}
 
       {downloadable && (
         <Button
           onClick={onDownload}
-          size="sm"
-          variant="accent"
-          className="text-base-100"
-          aria-label="Download table data"
+          size='md'
+          variant='accent'
+          className='text-base-100'
+          aria-label='Download table data'
         >
-          <IoCloudDownload aria-hidden="true" />
+          <IoCloudDownload aria-hidden='true' />
         </Button>
       )}
     </div>

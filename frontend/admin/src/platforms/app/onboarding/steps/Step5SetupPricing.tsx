@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/services/store";
 import { Button, Input, Modal, RemoteSelect, useEnigmaUI } from "@/components";
-import { RegionSearchInput } from "@/components/form/RegionSearchInput";
+import { RegionSearchInput } from "@/platforms/app/components/region/RegionSearchInput";
 import { useOnboarding } from "@/services/onboarding/hooks";
 import { usePricingMatrix } from "@/services/pricingMatrix/hooks";
 import { useCustomer } from "@/services/customer/hooks";

@@ -6,6 +6,7 @@ import type {
 import { formatStatus } from "@/utils/status";
 import { dateFormat, statusBadge } from "@/shared/helper";
 import { formatCurrency } from "@/shared/utils/formatter";
+import { getDisplayPath } from "@/utils/common";
 import { Button } from "@/components";
 import { HiArrowUturnLeft } from "react-icons/hi2";
 
@@ -159,6 +160,12 @@ const WaypointTimeline = ({
           }
 
           const config = statusConfig[status as WaypointStatus];
+          console.log(
+            "Rendering waypoint with status:",
+            status,
+            "config:",
+            config,
+          ); // Debug log
           const isPickup = wpData?.type === "pickup";
 
           return (
@@ -206,8 +213,11 @@ const WaypointTimeline = ({
                   {wpData?.address ? (
                     <div className='text-base-content/70'>
                       {wpData.address.address}
-                      {wpData.address.region &&
-                        `, ${wpData.address.region.full_name || wpData.address.region.name}`}
+                      {wpData.address.region?.administrative_area
+                        ? `, ${getDisplayPath(wpData.address.region.administrative_area)}`
+                        : wpData.address.region?.name
+                          ? `, ${wpData.address.region.name}`
+                          : ""}
                     </div>
                   ) : (
                     wpData?.location_address && (
@@ -333,13 +343,13 @@ const WaypointTimeline = ({
                 )}
 
                 {/* Price for Delivery - only for OrderWaypoint (not TripWaypoint) */}
-                {!isTripWp && wpData.price > 0 && (
+                {!isTripWp && wpData?.price > 0 && (
                   <div className='mt-2 text-sm'>
                     <span className='font-medium text-base-content/70'>
                       Price:{" "}
                     </span>
                     <span className='font-semibold text-success'>
-                      {formatCurrency(wpData.price)}
+                      {formatCurrency(wpData?.price)}
                     </span>
                   </div>
                 )}
@@ -361,9 +371,9 @@ const WaypointTimeline = ({
                             <span>{item.name}</span>
                             <span className='text-base-content/50'>x</span>
                             <span>{item.quantity}</span>
-                            {item.weight > 0 && (
+                            {item?.weight > 0 && (
                               <span className='text-base-content/50'>
-                                ({item.weight} kg)
+                                ({item?.weight} kg)
                               </span>
                             )}
                           </div>
