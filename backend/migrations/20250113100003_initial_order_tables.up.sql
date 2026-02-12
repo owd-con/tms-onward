@@ -60,25 +60,3 @@ CREATE TABLE IF NOT EXISTS order_waypoints (
 CREATE INDEX idx_order_waypoints_order_id ON order_waypoints(order_id) WHERE is_deleted = false;
 CREATE INDEX idx_order_waypoints_type ON order_waypoints(type) WHERE is_deleted = false;
 CREATE INDEX idx_order_waypoints_dispatch_status ON order_waypoints(dispatch_status) WHERE is_deleted = false;
-
--- Waypoint Logs table
--- Includes additional columns from 00015_update_waypoint_logs
--- order_waypoint_id is nullable from 00019_make_waypoint_logs_order_waypoint_id_nullable
-CREATE TABLE IF NOT EXISTS waypoint_logs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id UUID REFERENCES orders(id), -- from 00015: allow logs without trip_waypoint
-    order_waypoint_id UUID REFERENCES order_waypoints(id), -- from 00019: nullable
-    old_status VARCHAR(50),
-    new_status VARCHAR(50) NOT NULL,
-    event_type VARCHAR(100) NOT NULL DEFAULT '', -- from 00015: event type categorization
-    message TEXT NOT NULL DEFAULT '', -- from 00015: structured message
-    metadata JSONB, -- from 00015: flexible metadata
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT NOW(),
-    created_by VARCHAR(255)
-);
-
-CREATE INDEX idx_waypoint_logs_order_waypoint_id ON waypoint_logs(order_waypoint_id);
-CREATE INDEX idx_waypoint_logs_order_id ON waypoint_logs(order_id);
-CREATE INDEX idx_waypoint_logs_created_at ON waypoint_logs(created_at);
-CREATE INDEX idx_waypoint_logs_event_type ON waypoint_logs(event_type);

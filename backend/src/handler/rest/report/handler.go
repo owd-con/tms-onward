@@ -8,15 +8,12 @@ import (
 )
 
 type handler struct {
-	uc *usecase.Factory
+	uc *usecase.ReportUsecase
 }
 
 // RegisterHandler registers REST handlers for Report service.
-func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
-	h := &handler{uc: factory}
-
-	// Revenue reports
-	s.GET("/reports/revenue", h.getRevenueReport, middleware.WithActiveCheck(s))
+func RegisterHandler(s *rest.RestServer) {
+	h := &handler{uc: usecase.NewReportUsecase()}
 
 	// Order Trip Waypoint report (NEW - Phase 8)
 	s.GET("/reports/order-trip-waypoint", h.getOrderTripWaypointReport, middleware.WithActiveCheck(s))
@@ -26,33 +23,6 @@ func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 
 	// Customer report (NEW - Phase 8)
 	s.GET("/reports/customer", h.getCustomerReport, middleware.WithActiveCheck(s))
-}
-
-// getRevenueReport handles GET /reports/revenue
-// @Summary Get revenue report
-// @Description Generate revenue report
-// @Tags report
-// @Accept json
-// @Produce json
-// @Param start_date query string true "Start date (YYYY-MM-DD)"
-// @Param end_date query string true "End date (YYYY-MM-DD)"
-// @Param customer_id query string false "Filter by customer ID"
-// @Param group_by query string false "Group by (day|week|month)"
-// @Param authorization header string true "Bearer jwt-token..."
-// @Success 200 {object} rest.ResponseBody
-// @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
-// @Router /reports/revenue [get]
-func (h *handler) getRevenueReport(ctx *rest.Context) (err error) {
-	var req getRevenueReportRequest
-	var res *rest.ResponseBody
-
-	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
-		res, err = req.get()
-	}
-	return ctx.Respond(res, err)
 }
 
 // getOrderTripWaypointReport handles GET /reports/order-trip-waypoint

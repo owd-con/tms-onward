@@ -82,7 +82,7 @@ func RegisterRestRoutes(s *rest.RestServer) {
 	dashboard.RegisterHandler(s, factory)
 
 	// Report routes
-	report.RegisterHandler(s, factory)
+	report.RegisterHandler(s)
 
 	// i18n routes
 	i18n.RegisterHandler(s, factory)

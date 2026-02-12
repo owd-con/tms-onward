@@ -128,7 +128,7 @@ func createTestUser(t *testing.T, companyID uuid.UUID) *entity.User {
 }
 
 func TestHandler_GetOrderTripWaypointReport_Success(t *testing.T) {
-	uc := usecase.NewFactory()
+	uc := usecase.NewReportUsecase()
 	h := &handler{uc: uc}
 
 	company := createTestCompany(t)
@@ -149,36 +149,8 @@ func TestHandler_GetOrderTripWaypointReport_Success(t *testing.T) {
 	assert.NotNil(t, response["data"])
 }
 
-func TestHandler_GetRevenueReport_Success(t *testing.T) {
-	uc := usecase.NewFactory()
-	h := &handler{uc: uc}
-
-	company := createTestCompany(t)
-	user := createTestUser(t, company.ID)
-
-	ctx := createTestContext("GET", "/reports/revenue", nil, user.ID.String(), company.ID.String())
-
-	err := h.getRevenueReport(ctx)
-
-	if err != nil {
-		t.Logf("Error: %v", err)
-	}
-	assert.NoError(t, err)
-
-	recorder := ctx.Response.(*httptest.ResponseRecorder)
-	if recorder.Code != http.StatusOK {
-		t.Logf("Response Body: %s", recorder.Body.String())
-	}
-	assert.Equal(t, http.StatusOK, recorder.Code)
-
-	var response map[string]interface{}
-	json.Unmarshal(recorder.Body.Bytes(), &response)
-	assert.True(t, response["success"].(bool))
-	assert.NotNil(t, response["data"])
-}
-
 func TestHandler_GetDriverPerformance_Success(t *testing.T) {
-	uc := usecase.NewFactory()
+	uc := usecase.NewReportUsecase()
 	h := &handler{uc: uc}
 
 	company := createTestCompany(t)

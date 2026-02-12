@@ -16,7 +16,7 @@ type getCustomerReportRequest struct {
 	// Query parameters
 	Downloadable bool `query:"downloadable"`
 
-	uc      *usecase.Factory
+	uc      *usecase.ReportUsecase
 	ctx     context.Context
 	session *entity.TMSSessionClaims
 }
@@ -25,15 +25,15 @@ func (r *getCustomerReportRequest) get() (*rest.ResponseBody, error) {
 	opts := r.BuildQueryOption()
 	opts.Session = r.session
 
-	report, err := r.uc.Report.GetCustomerReport(r.ctx, opts)
+	data, total, err := r.uc.GetCustomerReport(opts)
 	if err != nil {
 		return nil, err
 	}
 
-	return rest.NewResponseBody(report), nil
+	return rest.NewResponseBody(data, rest.BuildMeta(r.Page, r.Limit, total)), nil
 }
 
-func (r *getCustomerReportRequest) with(ctx context.Context, uc *usecase.Factory) *getCustomerReportRequest {
+func (r *getCustomerReportRequest) with(ctx context.Context, uc *usecase.ReportUsecase) *getCustomerReportRequest {
 	r.ctx = ctx
 	r.uc = uc.WithContext(ctx)
 	r.session = common.GetContextSessionGeneric[entity.TMSSessionClaims](ctx)

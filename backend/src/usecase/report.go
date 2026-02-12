@@ -171,7 +171,7 @@ func (u *ReportUsecase) WithContext(ctx context.Context) *ReportUsecase {
 }
 
 // GetCustomerReport retrieves customer statistics report
-func (u *ReportUsecase) GetCustomerReport(ctx context.Context, opts *ReportQueryOptions) (*CustomerReport, error) {
+func (u *ReportUsecase) GetCustomerReport(opts *ReportQueryOptions) ([]*CustomerReportItem, int64, error) {
 	query := u.db.NewSelect().
 		TableExpr("customers AS c").
 		ColumnExpr("c.id AS customer_id").
@@ -222,8 +222,8 @@ func (u *ReportUsecase) GetCustomerReport(ctx context.Context, opts *ReportQuery
 		countQuery = countQuery.Where("c.id = ?", opts.CustomerID)
 	}
 
-	if err := countQuery.Scan(ctx, &totalCount); err != nil {
-		return nil, err
+	if err := countQuery.Scan(u.ctx, &totalCount); err != nil {
+		return nil, 0, err
 	}
 
 	// Apply sorting
@@ -244,8 +244,8 @@ func (u *ReportUsecase) GetCustomerReport(ctx context.Context, opts *ReportQuery
 
 	// Execute query
 	var items []*CustomerReportItem
-	if err := query.Scan(ctx, &items); err != nil {
-		return nil, err
+	if err := query.Scan(u.ctx, &items); err != nil {
+		return nil, totalCount, err
 	}
 
 	// Calculate success rate for each item
@@ -256,16 +256,11 @@ func (u *ReportUsecase) GetCustomerReport(ctx context.Context, opts *ReportQuery
 		}
 	}
 
-	return &CustomerReport{
-		Data:  items,
-		Total: totalCount,
-		Page:  int(opts.Page),
-		Limit: int(opts.Limit),
-	}, nil
+	return items, totalCount, nil
 }
 
 // GetDriverPerformance retrieves driver performance statistics report
-func (u *ReportUsecase) GetDriverPerformance(ctx context.Context, opts *ReportQueryOptions) (*DriverPerformanceReportWrapper, error) {
+func (u *ReportUsecase) GetDriverPerformance(opts *ReportQueryOptions) ([]*DriverPerformanceReport, int64, error) {
 	query := u.db.NewSelect().
 		TableExpr("drivers AS d").
 		ColumnExpr("d.id AS driver_id").
@@ -313,8 +308,8 @@ func (u *ReportUsecase) GetDriverPerformance(ctx context.Context, opts *ReportQu
 		countQuery = countQuery.Where("d.id = ?", opts.DriverID)
 	}
 
-	if err := countQuery.Scan(ctx, &totalCount); err != nil {
-		return nil, err
+	if err := countQuery.Scan(u.ctx, &totalCount); err != nil {
+		return nil, 0, err
 	}
 
 	// Apply sorting
@@ -335,8 +330,8 @@ func (u *ReportUsecase) GetDriverPerformance(ctx context.Context, opts *ReportQu
 
 	// Execute query
 	var items []*DriverPerformanceReport
-	if err := query.Scan(ctx, &items); err != nil {
-		return nil, err
+	if err := query.Scan(u.ctx, &items); err != nil {
+		return nil, 0, err
 	}
 
 	// Calculate on-time rate for each item
@@ -346,16 +341,11 @@ func (u *ReportUsecase) GetDriverPerformance(ctx context.Context, opts *ReportQu
 		}
 	}
 
-	return &DriverPerformanceReportWrapper{
-		Data:  items,
-		Total: totalCount,
-		Page:  opts.Page,
-		Limit: opts.Limit,
-	}, nil
+	return items, totalCount, nil
 }
 
 // GetOrderTripWaypointReport retrieves comprehensive order-trip-waypoint report
-func (u *ReportUsecase) GetOrderTripWaypointReport(ctx context.Context, opts *ReportQueryOptions) (*OrderTripWaypointReport, error) {
+func (u *ReportUsecase) GetOrderTripWaypointReport(opts *ReportQueryOptions) ([]*OrderTripWaypointReportItem, int64, error) {
 	query := u.db.NewSelect().
 		TableExpr("order_waypoints AS ow").
 		ColumnExpr("o.order_number").
@@ -379,7 +369,8 @@ func (u *ReportUsecase) GetOrderTripWaypointReport(ctx context.Context, opts *Re
 		Join("LEFT JOIN drivers AS d ON d.id = t.driver_id AND d.is_deleted = false").
 		Join("LEFT JOIN vehicles AS v ON v.id = t.vehicle_id AND v.is_deleted = false").
 		Where("o.company_id = ?", opts.Session.CompanyID).
-		Where("ow.is_deleted = false")
+		Where("ow.is_deleted = false").
+		Where("o.status != 'pending'")
 
 	// Filter by date range
 	if opts.StartDate != "" {
@@ -413,7 +404,8 @@ func (u *ReportUsecase) GetOrderTripWaypointReport(ctx context.Context, opts *Re
 		Join("LEFT JOIN trip_waypoints AS tw ON tw.order_waypoint_id = ow.id AND tw.is_deleted = false").
 		Join("LEFT JOIN trips AS t ON t.id = tw.trip_id AND t.is_deleted = false").
 		Where("o.company_id = ?", opts.Session.CompanyID).
-		Where("ow.is_deleted = false")
+		Where("ow.is_deleted = false").
+		Where("o.status != 'pending'")
 
 	// Apply same filters to count query
 	if opts.StartDate != "" {
@@ -432,8 +424,8 @@ func (u *ReportUsecase) GetOrderTripWaypointReport(ctx context.Context, opts *Re
 		countQuery = countQuery.Where("ow.dispatch_status = ?", opts.Status)
 	}
 
-	if err := countQuery.Scan(ctx, &totalCount); err != nil {
-		return nil, err
+	if err := countQuery.Scan(u.ctx, &totalCount); err != nil {
+		return nil, 0, err
 	}
 
 	// Apply sorting by waypoint sequence and created_at
@@ -450,100 +442,9 @@ func (u *ReportUsecase) GetOrderTripWaypointReport(ctx context.Context, opts *Re
 
 	// Execute query
 	var items []*OrderTripWaypointReportItem
-	if err := query.Scan(ctx, &items); err != nil {
-		return nil, err
+	if err := query.Scan(u.ctx, &items); err != nil {
+		return nil, 0, err
 	}
 
-	return &OrderTripWaypointReport{
-		Data:  items,
-		Total: totalCount,
-		Page:  int(opts.Page),
-		Limit: int(opts.Limit),
-	}, nil
-}
-
-// GetRevenueReport retrieves revenue statistics report
-func (u *ReportUsecase) GetRevenueReport(ctx context.Context, opts *ReportQueryOptions) (*RevenueReport, error) {
-	report := &RevenueReport{
-		RevenueByDate:     []RevenueDateSummary{},
-		RevenueByCustomer: []RevenueCustomerSummary{},
-	}
-
-	// Get total revenue
-	totalRevenueQuery := u.db.NewSelect().
-		TableExpr("orders AS o").
-		ColumnExpr("COALESCE(SUM(o.total_price), 0)").
-		Where("o.company_id = ?", opts.Session.CompanyID).
-		Where("o.is_deleted = false")
-
-	// Filter by date range
-	if opts.StartDate != "" {
-		totalRevenueQuery = totalRevenueQuery.Where("o.created_at >= ?", opts.StartDate+" 00:00:00")
-	}
-	if opts.EndDate != "" {
-		totalRevenueQuery = totalRevenueQuery.Where("o.created_at <= ?", opts.EndDate+" 23:59:59")
-	}
-
-	// Filter by customer
-	if opts.CustomerID != "" {
-		totalRevenueQuery = totalRevenueQuery.Where("o.customer_id = ?", opts.CustomerID)
-	}
-
-	if err := totalRevenueQuery.Scan(ctx, &report.TotalRevenue); err != nil {
-		return nil, err
-	}
-
-	// Get revenue by date
-	dateQuery := u.db.NewSelect().
-		TableExpr("orders AS o").
-		ColumnExpr("DATE(o.created_at) AS date").
-		ColumnExpr("COALESCE(SUM(o.total_price), 0) AS revenue").
-		Where("o.company_id = ?", opts.Session.CompanyID).
-		Where("o.is_deleted = false")
-
-	// Apply same filters
-	if opts.StartDate != "" {
-		dateQuery = dateQuery.Where("o.created_at >= ?", opts.StartDate+" 00:00:00")
-	}
-	if opts.EndDate != "" {
-		dateQuery = dateQuery.Where("o.created_at <= ?", opts.EndDate+" 23:59:59")
-	}
-	if opts.CustomerID != "" {
-		dateQuery = dateQuery.Where("o.customer_id = ?", opts.CustomerID)
-	}
-
-	dateQuery = dateQuery.GroupExpr("DATE(o.created_at)").OrderExpr("date ASC")
-
-	if err := dateQuery.Scan(ctx, &report.RevenueByDate); err != nil {
-		return nil, err
-	}
-
-	// Get revenue by customer
-	customerQuery := u.db.NewSelect().
-		TableExpr("orders AS o").
-		Join("LEFT JOIN customers AS c ON c.id = o.customer_id AND c.is_deleted = false").
-		ColumnExpr("c.name AS customer_name").
-		ColumnExpr("COALESCE(SUM(o.total_price), 0) AS revenue").
-		ColumnExpr("COUNT(DISTINCT o.id) AS order_count").
-		Where("o.company_id = ?", opts.Session.CompanyID).
-		Where("o.is_deleted = false")
-
-	// Apply same filters
-	if opts.StartDate != "" {
-		customerQuery = customerQuery.Where("o.created_at >= ?", opts.StartDate+" 00:00:00")
-	}
-	if opts.EndDate != "" {
-		customerQuery = customerQuery.Where("o.created_at <= ?", opts.EndDate+" 23:59:59")
-	}
-	if opts.CustomerID != "" {
-		customerQuery = customerQuery.Where("o.customer_id = ?", opts.CustomerID)
-	}
-
-	customerQuery = customerQuery.GroupExpr("c.id, c.name").OrderExpr("revenue DESC")
-
-	if err := customerQuery.Scan(ctx, &report.RevenueByCustomer); err != nil {
-		return nil, err
-	}
-
-	return report, nil
+	return items, totalCount, nil
 }

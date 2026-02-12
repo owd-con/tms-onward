@@ -16,10 +16,10 @@ func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 	h := &handler{uc: factory}
 
 	// Public tracking routes (no auth required)
-	s.GET("/public/tracking/:orderNumber", h.trackOrder, nil)
+	s.GET("/public/tracking/{orderNumber}", h.trackOrder, nil)
 }
 
-// trackOrder handles GET /public/tracking/:orderNumber
+// trackOrder handles GET /public/tracking/{orderNumber}
 // @Summary Track order
 // @Description Public endpoint to track order status by order number (no authentication required)
 // @Tags tracking

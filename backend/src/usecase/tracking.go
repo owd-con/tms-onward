@@ -4,6 +4,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/logistics-id/engine/ds/postgres"
 	"github.com/logistics-id/onward-tms/entity"
@@ -16,32 +17,32 @@ type TrackingUsecase struct {
 
 // TrackingResponse represents the public tracking information
 type TrackingResponse struct {
-	OrderNumber     string             `json:"order_number"`
-	Status          string             `json:"status"`
-	OrderType       string             `json:"order_type"`
-	CustomerName    string             `json:"customer_name"`
-	CreatedAt       string             `json:"created_at"`
-	WaypointHistory []WaypointHistory  `json:"waypoint_history"`
+	OrderNumber     string              `json:"order_number"`
+	Status          string              `json:"status"`
+	OrderType       string              `json:"order_type"`
+	CustomerName    string              `json:"customer_name"`
+	CreatedAt       string              `json:"created_at"`
+	WaypointHistory []WaypointHistory   `json:"waypoint_history"`
 	WaypointImages  []WaypointImageInfo `json:"waypoint_images,omitempty"`
-	Driver          *DriverInfo        `json:"driver,omitempty"`
-	Vehicle         *VehicleInfo       `json:"vehicle,omitempty"`
+	Driver          *DriverInfo         `json:"driver,omitempty"`
+	Vehicle         *VehicleInfo        `json:"vehicle,omitempty"`
 }
 
 type WaypointHistory struct {
-	WaypointID    string    `json:"waypoint_id"`
-	LocationName  string    `json:"location_name"`
-	Address       string    `json:"address"`
-	Type          string    `json:"type"`     // pickup or delivery
-	Status        string    `json:"status"`
-	OldStatus     string    `json:"old_status,omitempty"`
-	Notes         string    `json:"notes,omitempty"`
-	ChangedAt     string    `json:"changed_at"`
+	WaypointID   string `json:"waypoint_id"`
+	LocationName string `json:"location_name"`
+	Address      string `json:"address"`
+	Type         string `json:"type"` // pickup or delivery
+	Status       string `json:"status"`
+	OldStatus    string `json:"old_status,omitempty"`
+	Notes        string `json:"notes,omitempty"`
+	ChangedAt    string `json:"changed_at"`
 }
 
 type WaypointImageInfo struct {
 	WaypointImageID string   `json:"waypoint_image_id"`
-	Type            string   `json:"type"` // "pod" | "failed"
-	RecipientName   string   `json:"recipient_name,omitempty"`
+	Type            string   `json:"type"`           // "pod" | "failed"
+	Note            string   `json:"note,omitempty"` // ini kalo ga received_by atau failed reason
 	Photos          []string `json:"photos,omitempty"`
 	SignatureURL    string   `json:"signature_url,omitempty"`
 	SubmittedAt     string   `json:"submitted_at"`
@@ -65,6 +66,7 @@ func NewTrackingUsecase() *TrackingUsecase {
 
 // TrackByOrderNumber retrieves tracking information by order number
 func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber string) (*TrackingResponse, error) {
+	fmt.Println("===============", orderNumber)
 	if orderNumber == "" {
 		return nil, errors.New("order number is required")
 	}
@@ -74,8 +76,8 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 	err := u.db.NewSelect().
 		Model(order).
 		Relation("Customer").
-		Where("order_number = ?", orderNumber).
-		Where("is_deleted = false").
+		Where("order_number = ? OR reference_code = ?", orderNumber, orderNumber).
+		Where("orders.is_deleted = false").
 		Scan(ctx)
 	if err != nil {
 		return nil, errors.New("order not found")
@@ -94,7 +96,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 	err = u.db.NewSelect().
 		Model(&waypoints).
 		Where("order_id = ?", order.ID).
-		Where("is_deleted = false").
+		Where("order_waypoints.is_deleted = false").
 		Order("sequence_number ASC").
 		Scan(ctx)
 	if err != nil {
@@ -106,8 +108,8 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 	err = u.db.NewSelect().
 		Model(&waypointLogs).
 		Relation("OrderWaypoint").
-		Where("order_waypoint_id IN (?)", bun.In(getWaypointIDs(waypoints))).
-		Order("created_at ASC").
+		Where("waypoint_logs.order_id = ?", order.ID).
+		Order("created_at DESC").
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -116,18 +118,21 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 	// Build waypoint history
 	history := make([]WaypointHistory, 0)
 	for _, log := range waypointLogs {
-		if log.OrderWaypoint != nil {
-			history = append(history, WaypointHistory{
-				WaypointID:   log.OrderWaypoint.ID.String(),
-				LocationName: log.OrderWaypoint.LocationName,
-				Address:      log.OrderWaypoint.LocationAddress,
-				Type:         log.OrderWaypoint.Type,
-				Status:       log.NewStatus,
-				OldStatus:    log.OldStatus,
-				Notes:        log.Notes,
-				ChangedAt:    log.CreatedAt.Format("2006-01-02 15:04:05"),
-			})
+		h := &WaypointHistory{
+			Status:    log.NewStatus,
+			OldStatus: log.OldStatus,
+			Notes:     log.Message,
+			ChangedAt: log.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
+
+		if log.OrderWaypoint != nil {
+			h.WaypointID = log.OrderWaypoint.ID.String()
+			h.LocationName = log.OrderWaypoint.LocationName
+			h.Address = log.OrderWaypoint.LocationAddress
+			h.Type = log.OrderWaypoint.Type
+		}
+
+		history = append(history, *h)
 	}
 	response.WaypointHistory = history
 
@@ -137,7 +142,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 	err = u.db.NewSelect().
 		Model(&tripWaypoints).
 		Where("order_waypoint_id IN (?)", bun.In(getWaypointIDs(waypoints))).
-		Where("is_deleted = false").
+		Where("trip_waypoints.is_deleted = false").
 		Scan(ctx)
 	if err == nil && len(tripWaypoints) > 0 {
 		// Get waypoint images for these trip_waypoints
@@ -150,7 +155,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 		err = u.db.NewSelect().
 			Model(&waypointImages).
 			Where("trip_waypoint_id IN (?)", bun.In(tripWaypointIDs)).
-			Where("is_deleted = false").
+			Where("waypoint_images.is_deleted = false").
 			Order("created_at ASC").
 			Scan(ctx)
 		if err == nil {
@@ -170,9 +175,12 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 				for _, tw := range tripWaypoints {
 					if tw.ID == wi.TripWaypointID {
 						if tw.ReceivedBy != nil {
-							imageInfo.RecipientName = *tw.ReceivedBy
+							imageInfo.Note = *tw.ReceivedBy
 						}
-						break
+
+						if tw.FailedReason != nil {
+							imageInfo.Note = *tw.FailedReason
+						}
 					}
 				}
 
@@ -191,7 +199,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 			Relation("Driver").
 			Relation("Vehicle").
 			Where("order_id = ?", order.ID).
-			Where("is_deleted = false").
+			Where("trips.is_deleted = false").
 			Scan(ctx)
 		if err == nil {
 			if trip.Driver != nil {

@@ -16,7 +16,7 @@ func NewPricingMatrixRepository() *PricingMatrixRepository {
 	base := postgres.NewBaseRepository[entity.PricingMatrix](postgres.GetDB(),
 		"pricing_matrices",
 		[]string{}, // No unique fields (unique constraint is composite: company_id, customer_id, origin_city_id, destination_city_id)
-		[]string{"Company", "Customer", "OriginCity.Province", "DestinationCity.Province"},
+		[]string{"Company", "Customer", "OriginRegion", "DestinationRegion"},
 		true,
 	)
 
