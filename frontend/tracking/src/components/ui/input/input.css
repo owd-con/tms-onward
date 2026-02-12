@@ -1,0 +1,80 @@
+.input {
+    @apply bg-base-100 border border-base-300 text-(--input-color) font-normal p-[12px_14px] w-full transition-colors duration-200 ease-linear rounded-sm hover:border-(--input-color) focus:outline-none focus:border-(--input-color) focus:shadow-[0_0_0_4px];
+}
+
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.no-spinner {
+  -moz-appearance: textfield;
+}
+
+input[disabled] {
+    @apply border-base-300! text-gray-400! ;
+}
+
+.input-xs {
+    @apply textarea-xs!;
+    --size: calc(var(--size-field, .25rem) * 6);
+}
+
+.input-sm {
+    @apply textarea-sm!;
+    --size: calc(var(--size-field, .25rem) * 8);
+}
+
+.input-md {
+    @apply textarea-md!;
+    --size: calc(var(--size-field, .25rem) * 10);
+}
+
+.input-lg {
+    @apply textarea-lg!;
+    --size: calc(var(--size-field, .25rem) * 12);
+}
+
+.input-xl {
+    @apply textarea-xl!;
+    --size: calc(var(--size-field, .25rem) * 14);
+}
+
+.input-default {
+    --input-color: var(--color-base-content);
+    --tw-shadow-color: var(--color-base-300-shadow);
+}
+
+.input-neutral {
+    --input-color: var(--color-neutral);
+    --tw-shadow-color: var(--color-neutral-shadow);
+}
+.input-primary {
+    --input-color: var(--color-primary);
+    --tw-shadow-color: var(--color-primary-shadow);
+}
+.input-secondary {
+    --input-color: var(--color-secondary);
+    --tw-shadow-color: var(--color-secondary-shadow);
+}
+.input-accent {
+    --input-color: var(--color-accent);
+    --tw-shadow-color: var(--color-accent-shadow);
+}
+.input-info {
+    --input-color: var(--color-info);
+    --tw-shadow-color: var(--color-info-shadow);
+}
+.input-success {
+    --input-color: var(--color-success);
+    --tw-shadow-color: var(--color-success-shadow);
+}
+.input-warning {
+    --input-color: var(--color-warning);
+    --tw-shadow-color: var(--color-warning-shadow);
+}
+.input-error {
+    --input-color: var(--color-error);
+    --tw-shadow-color: var(--color-error-shadow);
+}
