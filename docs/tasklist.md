@@ -706,26 +706,38 @@ For each resource (User, Company, Customer, Vehicle, Driver, Address, PricingMat
 - [x] GET `/dashboard` - Get dashboard summary
 
 ### 8.3 Report Usecase
-- [x] Get orders report (with filters)
-- [x] Get trips report (with filters)
-- [x] Get driver performance report
-- [x] Get customer report
-- [x] Export to Excel
+- [x] Get order trip waypoint report (with filters, pagination)
+- [x] Get revenue report (with filters, group by)
+- [x] Get driver performance report (with filters, sorting)
+- [x] Get customer report (with filters, sorting)
+- [x] Export to Excel (using `downloadable=true` parameter)
 
 ### 8.4 Report Handler
 - [x] Create `src/handler/rest/report/handler.go`
-- [x] Create `src/handler/rest/report/request_orders.go`
-- [x] Create `src/handler/rest/report/request_trips.go`
-- [x] Create `src/handler/rest/report/request_drivers.go`
-- [x] Create `src/handler/rest/report/request_customers.go`
-- [x] Create `src/handler/rest/report/request_export.go`
+- [x] Create `src/handler/rest/report/request_order_trip_waypoint.go`
+- [x] Create `src/handler/rest/report/request_revenue.go`
+- [x] Create `src/handler/rest/report/request_driver_performance.go`
+- [x] Create `src/handler/rest/report/request_customer.go`
 
 **Endpoints:**
-- [x] GET `/reports/orders` - Orders report
-- [x] GET `/reports/trips` - Trips report
-- [x] GET `/reports/drivers` - Driver performance
-- [x] GET `/reports/customers` - Customer report
-- [x] GET `/reports/export` - Export to Excel
+- [x] GET `/reports/order-trip-waypoint` - Order Trip Waypoint report (with `downloadable=true` for Excel)
+- [x] GET `/reports/revenue` - Revenue report (with `downloadable=true` for Excel)
+- [x] GET `/reports/driver-performance` - Driver Performance report (with `downloadable=true` for Excel)
+- [x] GET `/reports/customer` - Customer report (with `downloadable=true` for Excel)
+
+**Note:**
+- Orders, Trips, dan Exception List sudah tersedia di menu masing-masing (tidak perlu report terpisah)
+- Export mechanism menggunakan parameter `downloadable=true`, bukan endpoint terpisah
+- Updated ReportQueryOptions with: CustomerID, DriverID, GroupBy, SortBy, Page (int64), Limit (int64)
+- Added DriverPerformanceReportWrapper for pagination support
+- Added OrderTripWaypointReport, CustomerReport, CustomerReportItem, OrderTripWaypointReportItem structs
+- All reports support JSON response (default) and Excel download (`downloadable=true`)
+- **CLEANUP (Phase 8 Refinement):** Removed duplicate/legacy endpoints:
+  - Deleted: `/reports/orders`, `/reports/trips`, `/reports/exceptions`, `/reports/drivers`
+  - Reason: Data already available in respective menus (Orders, Trips, Exceptions)
+  - Deleted old request files: `request_get_order_report.go`, `request_get_trip_report.go`, `request_get_exception_report.go`, `request_get_driver_performance_report.go`
+  - Kept: `/reports/revenue` (existing endpoint, still used)
+  - Final endpoints: 4 report endpoints with proper sorting/filtering/pagination
 
 ---
 
@@ -974,7 +986,7 @@ Per blueprint.md line 496 & 1658, entity `OrderWaypoint` harus memiliki field `r
 
 **P1 (Should Have - Post MVP):** ✅ **100% COMPLETE**
 - ✅ Phase 7: Notification Service (Email with SMTP, templates ID/EN, RabbitMQ events)
-- ✅ Phase 8: Dashboard & Reports
+- ✅ Phase 8: Dashboard & Reports (Dashboard DONE, Reports updated based on blueprint v3.0)
 - ✅ Phase 9: Multi-language (i18n)
 - ✅ Phase 10: Public Tracking Page
 
@@ -987,10 +999,11 @@ Per blueprint.md line 496 & 1658, entity `OrderWaypoint` harus memiliki field `r
 
 ## Implementation Progress Summary
 
-### Overall Progress: **~95% Complete (2 Critical Bugs Found)**
+### Overall Progress: **~95% Complete**
 
 **Completed Features:**
-- ✅ Dashboard & Reports
+- ✅ Dashboard (DONE)
+- ✅ Reports (DONE - 4 new report endpoints based on blueprint v3.0)
 - ✅ Multi-language support (ID/EN)
 - ✅ Public Tracking Page
 - ✅ Onboarding Wizard
@@ -1003,16 +1016,6 @@ Per blueprint.md line 496 & 1658, entity `OrderWaypoint` harus memiliki field `r
 - ✅ Notification Service (Email with SMTP, templates ID/EN, RabbitMQ events)
 - ✅ Developer Documentation (README, structure guide)
 
-**🔧 Critical Bug Fixes Needed (Phase 13):**
-- ⚠️ **BUG #1:** Order auto-complete logic salah - memasukkan "failed" sebagai final state
-  - Location: `src/usecase/waypoint.go:482`
-  - Blueprint: Lines 710-715, 718-724
-  - Impact: Order akan auto-complete walaupun masih ada failed waypoints
-- ⚠️ **BUG #2:** Missing `returned_note` field di OrderWaypoint entity
-  - Location: `entity/order_waypoint.go`
-  - Blueprint: Line 496, 1658
-  - Impact: Tidak bisa menyimpan alasan return untuk failed waypoint
-
 **Pending Features:**
 - ⚠️ Migration rollback tests
 - ⚠️ Database schema documentation (ERD, table structure docs)
@@ -1024,6 +1027,8 @@ Per blueprint.md line 496 & 1658, entity `OrderWaypoint` harus memiliki field `r
 
 ---
 
+---
+
 ## Bug Summary
 
 | Bug ID | Description | Location | Severity | Blueprint Reference |
@@ -1031,14 +1036,31 @@ Per blueprint.md line 496 & 1658, entity `OrderWaypoint` harus memiliki field `r
 | #1 | Order auto-complete includes "failed" as final state | `src/usecase/waypoint.go:482` | **P0 - Critical** | Blueprint lines 710-724 |
 | #2 | Missing `returned_note` field | `entity/order_waypoint.go` | **P0 - Critical** | Blueprint line 496, 1658 |
 
+**Status:** ✅ **RESOLVED** (Phase 13 completed)
+
 ---
 
-**Last Updated:** 2026-02-07
-**Version:** 2.5 (Additional Tasks verified & updated with actual progress)
+**Last Updated:** 2026-02-12
+**Version:** 3.0 (Reports module updated based on blueprint v3.0)
 
-**Note:** Tasklist ini akan terus di-update seiring dengan progres development. Centang item yang sudah selesai dan update status secara berkala.
+**Recent Changes (v3.0):**
+- 🔄 **Phase 8 (Dashboard & Reports):** Updated reports module based on blueprint v3.0:
+  - Removed duplicate reports: Orders, Trips (sudah ada di menu masing-masing)
+  - Added new report: Order Trip Waypoint (detail eksekusi order per waypoint)
+  - Added new report: Customer Report
+  - Updated reports: Revenue, Driver Performance
+  - Changed export mechanism: Using parameter `downloadable=true` instead of separate `/export` endpoint
+  - All reports support JSON response (default) and Excel download (`downloadable=true`)
+  - Update endpoints:
+    - `GET /reports/order-trip-waypoint` (with `downloadable=true`)
+    - `GET /reports/revenue` (with `downloadable=true`)
+    - `GET /reports/driver-performance` (with `downloadable=true`)
+    - `GET /reports/customer` (with `downloadable=true`)
+- 📊 Updated Priority Summary: P1 now 75% (Reports need update)
+- 📊 Updated Implementation Progress: ~90% (Reports need update)
+- ✅ Bug Summary marked as RESOLVED (Phase 13 completed)
 
-**Recent Changes (v2.5):**
+**Previous Changes (v2.5):**
 - ✅ Verified & Updated Additional Task C (DevOps): 33% complete (2/6 items)
   - Docker compose: DONE (PostgreSQL, Redis, RabbitMQ, MongoDB with healthcheck)
   - Environment configs: DONE (.env.example & .env for all services)

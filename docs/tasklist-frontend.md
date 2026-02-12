@@ -716,19 +716,19 @@ Sebelum melanjutkan ke phase berikutnya, pastikan:
 
 ---
 
-## Phase 20: Reports (P1) ✅ SELESAI
+## Phase 20: Reports (P1) 🔄 PERLU UPDATE
 
 > **Catatan:** Module ini untuk generate laporan dengan Excel export.
 
 ### Blueprint Reference
 - Requirements 2.10: Module 10 - Laporan Sederhana
-- Blueprint 3.10: Report Endpoints
+- Blueprint 3.11: Report Endpoints (updated v3.0)
 
 ### Tasks
 - [x] **Report API Created** - `src/services/report/api.tsx`:
-  - [x] `GET /reports/orders` - order summary report
-  - [x] `GET /reports/trips` - trip summary report
-  - [x] `GET /reports/revenue` - revenue report
+  - [x] `GET /reports/orders` - order summary report ❌ DUPLICATE (hapus - sudah ada di menu Orders)
+  - [x] `GET /reports/trips` - trip summary report ❌ DUPLICATE (hapus - sudah ada di menu Trips)
+  - [x] `GET /reports/revenue` - revenue report (perlu update downloadable=true)
   - [x] `GET /reports/exceptions` - exception report
   - [x] `GET /reports/drivers` - driver performance report
   - [x] Note: Backend export endpoints don't exist, export done on frontend
@@ -766,12 +766,23 @@ Sebelum melanjutkan ke phase berikutnya, pastikan:
   - [x] Positioned after Exceptions, before Management
   - [x] "All Reports" menu item
 
-### Implementation Notes (2026-01-25):
-- **Backend Export**: Backend export endpoints (/reports/*export) don't exist - export done entirely on frontend
-- **Excel Export**: Client-side export using xlsx library (CSV format for tables, XLSX for summary reports)
-- **Report Types**: 5 report types - Orders, Trips, Revenue, Exceptions, Driver Performance
-- **Date Filter**: Required params: start_date, end_date (YYYY-MM-DD format)
-- **Currency Formatting**: IDR format (e.g., "Rp 15.000.000")
+### Implementation Notes (2026-02-12) - NEED UPDATE:
+- **Report Types (OLD - 5 types)**: Orders, Trips, Revenue, Exceptions, Driver Performance
+- **Report Types (NEW - 4 types)**:
+  1. **Order Trip Waypoint** 🆕 BARU - Detail eksekusi order per waypoint
+  2. **Revenue** ✅ UPDATE - Revenue dengan `downloadable=true`
+  3. **Driver Performance** ✅ UPDATE - Driver performance dengan `downloadable=true`
+  4. **Customer** 🆕 BARU - Customer report dengan `downloadable=true`
+- **Export Mechanism (NEW)**: Parameter `downloadable=true` pada setiap endpoint
+  - `downloadable=true` → download Excel file (binary)
+  - `downloadable=false` atau tidak ada → return JSON data untuk UI
+- **Backend Export**: Tidak perlu endpoint terpisah - export via parameter query
+- **Excel Export**: Client-side export menggunakan `downloadable=true` flag
+- **Frontend Logic**:
+  - Jika `downloadable=true` → trigger download langsung (window.location atau hidden iframe)
+  - Jika `downloadable=false` atau tidak ada → tampilkan data di table
+- **Date Filter**: Required params: date_from, date_to (YYYY-MM-DD format)
+- **Currency Formatting**: IDR format (e.g., "Rp 1.500.000")
 - **Percentage Display**: On-time rate with progress bar and color coding
 - **Icons**: HiDocument (Orders), HiTruck (Trips), HiCurrencyDollar (Revenue), HiExclamationTriangle (Exceptions), HiUser (Driver)
 

@@ -1767,13 +1767,182 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 | ------ | ------------ | --------------------- |
 | GET    | `/dashboard` | Get dashboard summary |
 
-### 3.11 i18n Endpoints
+### 3.11 Reports Endpoints
+
+**Catatan:** Order List, Trip List, dan Exception List sudah tersedia di menu masing-masing (Order, Trip, Exception). Module Reports hanya menyediakan laporan tambahan yang berbeda dari menu existing.
+
+**Export Mechanism:** Semua endpoint reports mendukung parameter `downloadable=true` untuk download Excel file. Tidak perlu endpoint terpisah untuk export.
+
+#### Order Trip Waypoint Report
+
+Laporan detail eksekusi order per waypoint dengan informasi driver, vehicle, dan status.
+
+| Method | Endpoint                            | Description                                    |
+| ------ | ----------------------------------- | ---------------------------------------------- |
+| GET    | `/reports/order-trip-waypoint`        | List order trip waypoint dengan filter (JSON) atau download Excel (`downloadable=true`) |
+
+**Query Parameters (GET /reports/order-trip-waypoint):**
+
+| Parameter   | Type    | Required | Description                                    |
+|------------|---------|-----------|------------------------------------------------|
+| page        | int     | No        | Page number (default: 1) - Ignored jika downloadable=true       |
+| limit       | int     | No        | Items per page (default: 10) - Ignored jika downloadable=true  |
+| date_from   | date    | No        | Filter dari tanggal (YYYY-MM-DD)       |
+| date_to     | date    | No        | Filter sampai tanggal (YYYY-MM-DD)     |
+| driver_id   | string  | No        | Filter by driver ID                   |
+| status      | string  | No        | Filter by waypoint status (Pending, Dispatched, In Transit, Completed, Failed) |
+| order_type  | string  | No        | Filter by order type (FTL, LTL)      |
+| downloadable | boolean | No        | Jika true, return Excel file download (default: false) |
+
+**Response (downloadable=false atau tidak ada):**
+
+```json
+{
+  "data": [
+    {
+      "order_number": "ORD-20260125-001",
+      "waypoint_type": "Delivery",
+      "waypoint_sequence": 2,
+      "address": "Jl. Sudirman No. 123, Jakarta Selatan",
+      "driver_name": "Budi Santoso",
+      "vehicle_plate": "B 1234 XYZ",
+      "status": "Completed",
+      "completed_at": "2026-01-25T14:30:00Z",
+      "received_by": "Ahmad",
+      "failed_reason": null
+    },
+    {
+      "order_number": "ORD-20260125-002",
+      "waypoint_type": "Delivery",
+      "waypoint_sequence": 1,
+      "address": "Jl. Thamrin No. 45, Jakarta Pusat",
+      "driver_name": "Agus Setiawan",
+      "vehicle_plate": "B 5678 ABC",
+      "status": "Failed",
+      "completed_at": null,
+      "received_by": null,
+      "failed_reason": "Alamat tidak ditemukan"
+    }
+  ],
+  "meta": {
+    "total": 150,
+    "page": 1,
+    "limit": 10,
+    "total_pages": 15
+  }
+}
+```
+
+**Response (downloadable=true):**
+
+- Content-Type: `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+- Content-Disposition: `attachment; filename="order-trip-waypoint-report-{timestamp}.xlsx"`
+- Binary Excel file dengan columns: Order Number, Waypoint Type, Sequence, Address, Driver, Vehicle, Status, Completed At, Received By, Failed Reason
+
+#### Revenue Report
+
+Laporan revenue berdasarkan orders dengan total_price.
+
+| Method | Endpoint                   | Description                          |
+| ------ | -------------------------- | ------------------------------------ |
+| GET    | `/reports/revenue`        | List revenue dengan filter (JSON) atau download Excel (`downloadable=true`) |
+
+**Query Parameters (GET /reports/revenue):**
+
+| Parameter   | Type    | Required | Description                                    |
+|------------|---------|-----------|------------------------------------------------|
+| page       | int     | No        | Page number (default: 1) - Ignored jika downloadable=true       |
+| limit      | int     | No        | Items per page (default: 10) - Ignored jika downloadable=true  |
+| date_from  | date    | No        | Filter dari tanggal (YYYY-MM-DD)       |
+| date_to    | date    | No        | Filter sampai tanggal (YYYY-MM-DD)     |
+| customer_id | string  | No        | Filter by customer ID                          |
+| downloadable | boolean | No        | Jika true, return Excel file download (default: false) |
+
+**Response (downloadable=false atau tidak ada):**
+
+```json
+{
+  "data": [
+    {
+      "order_number": "ORD-20260125-001",
+      "customer_name": "PT ABC",
+      "order_type": "FTL",
+      "total_price": 1500000,
+      "status": "Completed",
+      "created_at": "2026-01-25T10:00:00Z"
+    }
+  ],
+  "meta": {
+    "total": 200,
+    "page": 1,
+    "limit": 10,
+    "total_pages": 20
+  }
+}
+```
+
+**Response (downloadable=true):**
+
+- Content-Type: `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+- Content-Disposition: `attachment; filename="revenue-report-{timestamp}.xlsx"`
+- Binary Excel file dengan columns: Order Number, Customer Name, Order Type, Total Price, Status, Created At
+
+#### Driver Performance Report
+
+Laporan performa driver dengan statistik trips.
+
+| Method | Endpoint                          | Description                             |
+| ------ | --------------------------------- | --------------------------------------- |
+| GET    | `/reports/driver-performance`        | List performa driver dengan filter (JSON) atau download Excel (`downloadable=true`) |
+
+**Query Parameters (GET /reports/driver-performance):**
+
+| Parameter   | Type    | Required | Description                                    |
+|------------|---------|-----------|------------------------------------------------|
+| page        | int     | No        | Page number (default: 1) - Ignored jika downloadable=true       |
+| limit       | int     | No        | Items per page (default: 10) - Ignored jika downloadable=true  |
+| date_from   | date    | No        | Filter dari tanggal (YYYY-MM-DD)       |
+| date_to     | date    | No        | Filter sampai tanggal (YYYY-MM-DD)     |
+| driver_id   | string  | No        | Filter by driver ID                          |
+| downloadable | boolean | No        | Jika true, return Excel file download (default: false) |
+
+**Response (downloadable=false atau tidak ada):**
+
+```json
+{
+  "data": [
+    {
+      "driver_name": "Budi Santoso",
+      "total_trips": 50,
+      "completed_trips": 45,
+      "in_progress_trips": 3,
+      "failed_trips": 2,
+      "on_time_rate": "90%",
+      "avg_completion_time_hours": 4.5
+    }
+  ],
+  "meta": {
+    "total": 25,
+    "page": 1,
+    "limit": 10,
+    "total_pages": 3
+  }
+}
+```
+
+**Response (downloadable=true):**
+
+- Content-Type: `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+- Content-Disposition: `attachment; filename="driver-performance-report-{timestamp}.xlsx"`
+- Binary Excel file dengan columns: Driver Name, Total Trips, Completed Trips, In Progress Trips, Failed Trips, On-Time Rate, Avg Completion Time (Hours)
+
+### 3.12 i18n Endpoints
 
 | Method | Endpoint      | Description      |
 | ------ | ------------- | ---------------- |
 | GET    | `/i18n/:lang` | Get translations |
 
-### 3.12 Public Tracking Endpoints
+### 3.13 Public Tracking Endpoints
 
 | Method | Endpoint                        | Description                   |
 | ------ | ------------------------------- | ----------------------------- |
@@ -1781,7 +1950,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 
 ---
 
-## 3.13 Module Priorities
+## 3.14 Module Priorities
 
 | Prioritas | Modul                  | Deskripsi                                                                                 |
 | --------- | ---------------------- | ----------------------------------------------------------------------------------------- |
@@ -1794,6 +1963,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 | **P0**    | Exception Management   | Handle orders gagal (Waypoint-Level Failure)                                              |
 | **P1**    | Notification Service   | Notifikasi email (Failed Delivery, Delivered)                                             |
 | **P1**    | Basic Dashboard        | Ringkasan                                                                                 |
+| **P1**    | Reports               | Order Trip Waypoint, Revenue, Driver Performance dengan Excel Export                        |
 | **P1**    | Multi-language (i18n)  | Lokalisasi                                                                                |
 | **P1**    | Public Tracking Page   | Halaman publik tracking order (tanpa login, timeline, nama penerima, driver/vehicle info) |
 | **P2**    | Audit Trail            | Order history untuk customer tracking (OrderCreated, StatusChange)                        |
