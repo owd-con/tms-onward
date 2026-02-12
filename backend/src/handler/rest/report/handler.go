@@ -15,72 +15,17 @@ type handler struct {
 func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 	h := &handler{uc: factory}
 
-	// Order reports
-	s.GET("/reports/orders", h.getOrderReport, middleware.WithActiveCheck(s))
-
-	// Trip reports
-	s.GET("/reports/trips", h.getTripReport, middleware.WithActiveCheck(s))
-
 	// Revenue reports
 	s.GET("/reports/revenue", h.getRevenueReport, middleware.WithActiveCheck(s))
 
-	// Exception reports
-	s.GET("/reports/exceptions", h.getExceptionReport, middleware.WithActiveCheck(s))
+	// Order Trip Waypoint report (NEW - Phase 8)
+	s.GET("/reports/order-trip-waypoint", h.getOrderTripWaypointReport, middleware.WithActiveCheck(s))
 
-	// Driver performance reports
-	s.GET("/reports/drivers", h.getDriverPerformanceReport, middleware.WithActiveCheck(s))
-}
+	// Driver Performance report with sorting (NEW - Phase 8)
+	s.GET("/reports/driver-performance", h.getDriverPerformance, middleware.WithActiveCheck(s))
 
-// getOrderReport handles GET /reports/orders
-// @Summary Get order report
-// @Description Generate order summary report
-// @Tags report
-// @Accept json
-// @Produce json
-// @Param start_date query string true "Start date (YYYY-MM-DD)"
-// @Param end_date query string true "End date (YYYY-MM-DD)"
-// @Param customer_id query string false "Filter by customer ID"
-// @Param authorization header string true "Bearer jwt-token..."
-// @Success 200 {object} rest.ResponseBody
-// @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
-// @Router /reports/orders [get]
-func (h *handler) getOrderReport(ctx *rest.Context) (err error) {
-	var req getOrderReportRequest
-	var res *rest.ResponseBody
-
-	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
-		res, err = req.get()
-	}
-	return ctx.Respond(res, err)
-}
-
-// getTripReport handles GET /reports/trips
-// @Summary Get trip report
-// @Description Generate trip summary report
-// @Tags report
-// @Accept json
-// @Produce json
-// @Param start_date query string true "Start date (YYYY-MM-DD)"
-// @Param end_date query string true "End date (YYYY-MM-DD)"
-// @Param driver_id query string false "Filter by driver ID"
-// @Param authorization header string true "Bearer jwt-token..."
-// @Success 200 {object} rest.ResponseBody
-// @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
-// @Router /reports/trips [get]
-func (h *handler) getTripReport(ctx *rest.Context) (err error) {
-	var req getTripReportRequest
-	var res *rest.ResponseBody
-
-	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
-		res, err = req.get()
-	}
-	return ctx.Respond(res, err)
+	// Customer report (NEW - Phase 8)
+	s.GET("/reports/customer", h.getCustomerReport, middleware.WithActiveCheck(s))
 }
 
 // getRevenueReport handles GET /reports/revenue
@@ -92,6 +37,7 @@ func (h *handler) getTripReport(ctx *rest.Context) (err error) {
 // @Param start_date query string true "Start date (YYYY-MM-DD)"
 // @Param end_date query string true "End date (YYYY-MM-DD)"
 // @Param customer_id query string false "Filter by customer ID"
+// @Param group_by query string false "Group by (day|week|month)"
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
@@ -109,23 +55,29 @@ func (h *handler) getRevenueReport(ctx *rest.Context) (err error) {
 	return ctx.Respond(res, err)
 }
 
-// getExceptionReport handles GET /reports/exceptions
-// @Summary Get exception report
-// @Description Generate delivery exception report
+// getOrderTripWaypointReport handles GET /reports/order-trip-waypoint
+// @Summary Get order-trip-waypoint report
+// @Description Generate comprehensive order, trip, and waypoint report
 // @Tags report
 // @Accept json
 // @Produce json
-// @Param start_date query string true "Start date (YYYY-MM-DD)"
-// @Param end_date query string true "End date (YYYY-MM-DD)"
+// @Param start_date query string false "Start date (YYYY-MM-DD)"
+// @Param end_date query string false "End date (YYYY-MM-DD)"
+// @Param customer_id query string false "Filter by customer ID"
+// @Param driver_id query string false "Filter by driver ID"
+// @Param status query string false "Filter by status"
+// @Param downloadable query bool false "Download as Excel (default: false)"
+// @Param page query int false "Page number"
+// @Param limit query int false "Items per page"
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
 // @Failure 401 {object} rest.HTTPError
 // @Failure 404 {object} rest.HTTPError
 // @Failure 500 {object} rest.HTTPError
-// @Router /reports/exceptions [get]
-func (h *handler) getExceptionReport(ctx *rest.Context) (err error) {
-	var req getExceptionReportRequest
+// @Router /reports/order-trip-waypoint [get]
+func (h *handler) getOrderTripWaypointReport(ctx *rest.Context) (err error) {
+	var req getOrderTripWaypointRequest
 	var res *rest.ResponseBody
 
 	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
@@ -134,24 +86,58 @@ func (h *handler) getExceptionReport(ctx *rest.Context) (err error) {
 	return ctx.Respond(res, err)
 }
 
-// getDriverPerformanceReport handles GET /reports/drivers
-// @Summary Get driver performance report
-// @Description Generate driver performance report
+// getDriverPerformance handles GET /reports/driver-performance
+// @Summary Get driver performance report with sorting
+// @Description Generate driver performance report with sorting options
 // @Tags report
 // @Accept json
 // @Produce json
-// @Param start_date query string true "Start date (YYYY-MM-DD)"
-// @Param end_date query string true "End date (YYYY-MM-DD)"
+// @Param start_date query string false "Start date (YYYY-MM-DD)"
+// @Param end_date query string false "End date (YYYY-MM-DD)"
 // @Param driver_id query string false "Filter by driver ID"
+// @Param sort_by query string false "Sort by (trip_count|success_rate|delivery_time)"
+// @Param downloadable query bool false "Download as Excel (default: false)"
+// @Param page query int false "Page number"
+// @Param limit query int false "Items per page"
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
 // @Failure 401 {object} rest.HTTPError
 // @Failure 404 {object} rest.HTTPError
 // @Failure 500 {object} rest.HTTPError
-// @Router /reports/drivers [get]
-func (h *handler) getDriverPerformanceReport(ctx *rest.Context) (err error) {
-	var req getDriverPerformanceReportRequest
+// @Router /reports/driver-performance [get]
+func (h *handler) getDriverPerformance(ctx *rest.Context) (err error) {
+	var req getDriverPerformanceRequest
+	var res *rest.ResponseBody
+
+	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
+		res, err = req.get()
+	}
+	return ctx.Respond(res, err)
+}
+
+// getCustomerReport handles GET /reports/customer
+// @Summary Get customer report
+// @Description Generate customer report with sorting options
+// @Tags report
+// @Accept json
+// @Produce json
+// @Param start_date query string false "Start date (YYYY-MM-DD)"
+// @Param end_date query string false "End date (YYYY-MM-DD)"
+// @Param customer_id query string false "Filter by customer ID"
+// @Param sort_by query string false "Sort by (revenue|order_count)"
+// @Param downloadable query bool false "Download as Excel (default: false)"
+// @Param page query int false "Page number"
+// @Param limit query int false "Items per page"
+// @Param authorization header string true "Bearer jwt-token..."
+// @Success 200 {object} rest.ResponseBody
+// @Failure 400 {object} rest.HTTPError
+// @Failure 401 {object} rest.HTTPError
+// @Failure 404 {object} rest.HTTPError
+// @Failure 500 {object} rest.HTTPError
+// @Router /reports/customer [get]
+func (h *handler) getCustomerReport(ctx *rest.Context) (err error) {
+	var req getCustomerReportRequest
 	var res *rest.ResponseBody
 
 	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {

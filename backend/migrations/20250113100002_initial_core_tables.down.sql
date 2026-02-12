@@ -3,7 +3,7 @@
 
 -- Drop Addresses
 DROP TABLE IF EXISTS addresses;
-DROP INDEX IF EXISTS idx_addresses_village_id;
+DROP INDEX IF EXISTS idx_addresses_region_id;
 DROP INDEX IF EXISTS idx_addresses_customer_id;
 
 -- Drop Pricing Matrices

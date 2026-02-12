@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	regionid "github.com/enigma-id/region-id/pkg/entity"
+	regionrep "github.com/enigma-id/region-id/pkg/repository"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -23,6 +25,7 @@ import (
 	"github.com/logistics-id/engine/ds/redis"
 	"github.com/logistics-id/engine/transport/rest"
 	"github.com/logistics-id/onward-tms/entity"
+	regionpkg "github.com/logistics-id/onward-tms/src/region"
 	"github.com/logistics-id/onward-tms/src/repository"
 )
 
@@ -193,114 +196,27 @@ func createTestCustomer(t *testing.T, companyID uuid.UUID) *entity.Customer {
 	return customer
 }
 
-func createTestCountry(t *testing.T) *entity.Country {
+func createTestRegion(t *testing.T) *regionid.Region {
 	ctx := context.Background()
 
-	// Try to find existing country first
-	country := &entity.Country{}
-	err := postgres.GetDB().NewSelect().
-		Model(country).
-		Where("code = ?", "ID").
-		Scan(ctx)
-
-	if err == nil {
-		return country // Found existing country
+	// Search for any existing region (e.g., Jakarta)
+	regions, err := regionpkg.Repository.Search(ctx, "Jakarta", regionrep.SearchOptions{
+		Limit: 1,
+	})
+	if err == nil && len(regions) > 0 {
+		return regions[0]
 	}
 
-	// Create new country
-	country = &entity.Country{
-		Code: "ID",
-		Name: "Indonesia",
-	}
-	if _, err := postgres.GetDB().NewInsert().Model(country).Exec(ctx); err != nil {
-		t.Skip("Cannot create test country - " + err.Error())
-	}
-
-	return country
-}
-
-func createTestProvince(t *testing.T, countryID uuid.UUID) *entity.Province {
-	ctx := context.Background()
-	// Use shorter code format (max 10 chars)
-	uniqueCode := "T" + uuid.New().String()[:8]
-
-	province := &entity.Province{
-		CountryID: countryID,
-		Code:      uniqueCode,
-		Name:      "Test Province",
-	}
-	if _, err := postgres.GetDB().NewInsert().Model(province).Exec(ctx); err != nil {
-		t.Skip("Cannot create test province - " + err.Error())
-	}
-
-	return province
-}
-
-func createTestCity(t *testing.T, provinceID uuid.UUID) *entity.City {
-	ctx := context.Background()
-	// Use shorter code format (max 10 chars)
-	uniqueCode := "T" + uuid.New().String()[:8]
-
-	city := &entity.City{
-		ProvinceID: provinceID,
-		Code:       uniqueCode,
-		Name:       "Test City",
-		Type:       "Kota",
-	}
-	if _, err := postgres.GetDB().NewInsert().Model(city).Exec(ctx); err != nil {
-		t.Skip("Cannot create test city - " + err.Error())
-	}
-
-	return city
-}
-
-func createTestDistrict(t *testing.T, cityID uuid.UUID) *entity.District {
-	ctx := context.Background()
-	// Use shorter code format (max 10 chars)
-	uniqueCode := "T" + uuid.New().String()[:8]
-
-	district := &entity.District{
-		CityID: cityID,
-		Code:   uniqueCode,
-		Name:   "Test District",
-	}
-	if _, err := postgres.GetDB().NewInsert().Model(district).Exec(ctx); err != nil {
-		t.Skip("Cannot create test district - " + err.Error())
-	}
-
-	return district
-}
-
-func createTestVillage(t *testing.T, districtID uuid.UUID) *entity.Village {
-	ctx := context.Background()
-	// Use shorter code format (max 10 chars)
-	uniqueCode := "T" + uuid.New().String()[:8]
-
-	village := &entity.Village{
-		DistrictID: districtID,
-		Code:       uniqueCode,
-		Name:       "Test Village",
-		Type:       "Kelurahan",
-		PostalCode: "12345",
-		Latitude:   -6.200000,
-		Longitude:  106.816666,
-	}
-	if _, err := postgres.GetDB().NewInsert().Model(village).Exec(ctx); err != nil {
-		t.Skip("Cannot create test village - " + err.Error())
-	}
-
-	return village
+	// If no region found, skip test
+	t.Skip("No regions found in database. Please run migrations first.")
+	return nil
 }
 
 func createTestAddress(t *testing.T, companyID uuid.UUID) *entity.Address {
 	ctx := context.Background()
 
-	// Create master data chain
-	country := createTestCountry(t)
-	province := createTestProvince(t, country.ID)
-	city := createTestCity(t, province.ID)
-	district := createTestDistrict(t, city.ID)
-	village := createTestVillage(t, district.ID)
+	// Get test region from region-id library
+	region := createTestRegion(t)
 
 	// Create customer first (required after blueprint v2.1)
 	customer := createTestCustomer(t, companyID)
@@ -310,7 +226,7 @@ func createTestAddress(t *testing.T, companyID uuid.UUID) *entity.Address {
 		CustomerID:   customer.ID,
 		Name:         "Test Address",
 		Address:      "Jl. Test No. 123",
-		VillageID:    village.ID,
+		RegionID:     region.ID,
 		ContactName:  "Test Recipient",
 		ContactPhone: "+628123456789",
 		IsActive:     true,
@@ -505,20 +421,6 @@ func cleanupTestData() {
 	db.ExecContext(ctx, "DELETE FROM companies WHERE name LIKE 'Test Company%'")
 
 	// 13. Clean up test master data (with specific naming pattern)
-	// Clean up addresses first
+	// Clean up addresses (regions are managed by region-id library, no cleanup needed)
 	db.ExecContext(ctx, "DELETE FROM addresses WHERE name = 'Test Address'")
-
-	// Clean up villages
-	db.ExecContext(ctx, "DELETE FROM villages WHERE name = 'Test Village' AND code LIKE 'T%'")
-
-	// Clean up districts
-	db.ExecContext(ctx, "DELETE FROM districts WHERE name = 'Test District' AND code LIKE 'T%'")
-
-	// Clean up cities
-	db.ExecContext(ctx, "DELETE FROM cities WHERE name = 'Test City' AND code LIKE 'T%'")
-
-	// Clean up provinces
-	db.ExecContext(ctx, "DELETE FROM provinces WHERE name = 'Test Province' AND code LIKE 'T%'")
-
-	// Note: We don't delete the "Indonesia" country as it might be used by other tests
 }

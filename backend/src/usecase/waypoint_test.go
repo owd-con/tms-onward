@@ -6,17 +6,20 @@ import (
 	"testing"
 	"time"
 
+	regionrep "github.com/enigma-id/region-id/pkg/repository"
 	"github.com/google/uuid"
 	"github.com/logistics-id/onward-tms/entity"
+	regionpkg "github.com/logistics-id/onward-tms/src/region"
 	"github.com/logistics-id/onward-tms/src/repository"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // cleanupTestGeoData removes test geographic data from previous test runs
 // Must be called before creating new test geographic data
 func cleanupTestGeoData(t *testing.T, ctx context.Context) {
-	db := repository.NewCountryRepository().DB
+	db := repository.NewAddressRepository().DB
 
 	// Delete in reverse dependency order to avoid foreign key constraint violations
 	db.NewDelete().Model((*entity.WaypointLog)(nil)).Where("1=1").Exec(ctx)
@@ -24,148 +27,33 @@ func cleanupTestGeoData(t *testing.T, ctx context.Context) {
 	db.NewDelete().Model((*entity.OrderWaypoint)(nil)).Where("location_name LIKE ?", "Test Location%").Exec(ctx)
 	db.NewDelete().Model((*entity.Order)(nil)).Where("order_number LIKE ?", "ORD-TEST%").Exec(ctx)
 	db.NewDelete().Model((*entity.Address)(nil)).Where("name LIKE ?", "Test Address%").Exec(ctx)
-	db.NewDelete().Model((*entity.Village)(nil)).Where("name LIKE ?", "Test Village%").Exec(ctx)
-	db.NewDelete().Model((*entity.District)(nil)).Where("name LIKE ?", "Test District%").Exec(ctx)
-	db.NewDelete().Model((*entity.City)(nil)).Where("name LIKE ?", "Test City%").Exec(ctx)
-	db.NewDelete().Model((*entity.Province)(nil)).Where("name LIKE ?", "Test Province%").Exec(ctx)
-	db.NewDelete().Model((*entity.Country)(nil)).Where("name LIKE ?", "Test Country%").Exec(ctx)
+	// Note: regions are managed by region-id library, no cleanup needed
 }
 
-// createTestAddress creates a test address with proper village hierarchy
+// createTestAddress creates a test address using region-id library
 func createTestAddress(t *testing.T, ctx context.Context, customerID uuid.UUID) *entity.Address {
-	// Generate unique codes within schema constraints:
-	// provinces.code: varchar(10)
-	// cities.code: varchar(10)
-	// districts.code: varchar(15)
-	// villages.code: varchar(15)
-
-	// Use multiple UUIDs for maximum randomness to avoid collisions
-	testUUID := uuid.New().String()
-	testUUID2 := uuid.New().String()
-	testUUID3 := uuid.New().String()
-	testUUID4 := uuid.New().String()
-
-	// Create codes by extracting parts from different UUIDs (remove hyphens)
-	removeHyphens := func(s string) string {
-		result := ""
-		for _, c := range s {
-			if c != '-' {
-				result += string(c)
-			}
-		}
-		return result
-	}
-
-	hex2 := removeHyphens(testUUID)
-	hex3 := removeHyphens(testUUID2)
-	hex4 := removeHyphens(testUUID3)
-	hex5 := removeHyphens(testUUID4)
-
-	// Map hex digits to letters for uniqueness
-	// Using 36 characters (letters + digits) for better variety
-	hexToLetters := func(hex string) string {
-		letters := "abcdefghijklmnopqrstuvwxyz0123456789"
-		result := ""
-		for i, c := range hex {
-			if i >= 30 { // Limit input length
-				break
-			}
-			// Map hex digit (0-9, a-f) to letter index
-			idx := 0
-			if c >= '0' && c <= '9' {
-				idx = int(c-'0') + 10 // 0-9 -> 10-19
-			} else {
-				idx = int(c - 'a') // a-f -> 0-5
-			}
-			result += string(letters[idx%36])
-		}
-		return result
-	}
-
-	// Try to find existing "ID" country first (to avoid unique constraint violations)
-	country := &entity.Country{}
-	countryRepo := repository.NewCountryRepository()
-	err := countryRepo.DB.NewSelect().
-		Model(country).
-		Where("code = ?", "ID").
-		Scan(ctx)
-	if err != nil {
-		// Create "ID" country if it doesn't exist
-		country = &entity.Country{
-			Code: "ID",
-			Name: "Indonesia",
-		}
-		err = countryRepo.WithContext(ctx).Insert(country)
-		assert.NoError(t, err)
-	}
-
-	// Generate codes within column length constraints
-	provinceCode := hexToLetters(hex2)[:10] // 10 chars for provinces.code
-	cityCode := hexToLetters(hex3)[:10]     // 10 chars for cities.code
-	districtCode := hexToLetters(hex4)[:15] // 15 chars for districts.code
-	villageCode := hexToLetters(hex5)[:15]  // 15 chars for villages.code
-
-	// Create test province
-	province := &entity.Province{
-		CountryID: country.ID,
-		Code:      provinceCode,
-		Name:      fmt.Sprintf("Test Province %s", provinceCode),
-	}
-
-	provinceRepo := repository.NewProvinceRepository()
-	err = provinceRepo.WithContext(ctx).Insert(province)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, province.ID)
-
-	// Create test city
-	city := &entity.City{
-		ProvinceID: province.ID,
-		Code:       cityCode,
-		Name:       fmt.Sprintf("Test City %s", cityCode),
-	}
-
-	cityRepo := repository.NewCityRepository()
-	err = cityRepo.WithContext(ctx).Insert(city)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, city.ID)
-
-	// Create test district
-	district := &entity.District{
-		CityID: city.ID,
-		Code:   districtCode,
-		Name:   fmt.Sprintf("Test District %s", districtCode),
-	}
-
-	districtRepo := repository.NewDistrictRepository()
-	err = districtRepo.WithContext(ctx).Insert(district)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, district.ID)
-
-	// Create test village
-	village := &entity.Village{
-		DistrictID: district.ID,
-		Code:       villageCode,
-		Name:       fmt.Sprintf("Test Village %s", villageCode),
-	}
-
-	villageRepo := repository.NewVillageRepository()
-	err = villageRepo.WithContext(ctx).Insert(village)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, village.ID)
+	// Search for any existing region (e.g., Jakarta)
+	regions, err := regionpkg.Repository.Search(ctx, "Jakarta", regionrep.SearchOptions{
+		Limit: 1,
+	})
+	require.NoError(t, err, "Failed to search for regions")
+	require.Greater(t, len(regions), 0, "No regions found. Please run migrations first.")
+	region := regions[0]
 
 	// Create test address
+	testUUID := uuid.New().String()
 	address := &entity.Address{
 		CustomerID: customerID,
-		Name:       fmt.Sprintf("Test Address %s", villageCode),
+		Name:       fmt.Sprintf("Test Address %s", testUUID[:8]),
 		Address:    fmt.Sprintf("Jl. Test No. %s", testUUID[:8]),
-		VillageID:  village.ID,
+		RegionID:   region.ID,
 		IsActive:   true,
 	}
 
 	addressRepo := repository.NewAddressRepository()
 	err = addressRepo.WithContext(ctx).Insert(address)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, address.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, address.ID)
 
 	return address
 }
@@ -206,7 +94,7 @@ func TestWaypointUsecase_UpdateStatus_Success(t *testing.T) {
 		t.Skip("Cannot create test customer")
 	}
 
-	// Create test address with proper village hierarchy
+	// Create test address using region-id library
 	address := createTestAddress(t, ctx, customer.ID)
 
 	// Create order
@@ -303,7 +191,7 @@ func TestWaypointUsecase_UpdateStatus_InvalidTransition(t *testing.T) {
 		t.Skip("Cannot create test customer")
 	}
 
-	// Create test address with proper village hierarchy
+	// Create test address using region-id library
 	address := createTestAddress(t, ctx, customer.ID)
 
 	// Create order
@@ -395,7 +283,7 @@ func TestWaypointUsecase_GetByOrderID_Success(t *testing.T) {
 		t.Skip("Cannot create test customer")
 	}
 
-	// Create test addresses with proper village hierarchy
+	// Create test addresses using region-id library
 	address1 := createTestAddress(t, ctx, customer.ID)
 	address2 := createTestAddress(t, ctx, customer.ID)
 
@@ -504,7 +392,7 @@ func TestCheckAndUpdateOrderStatus_WithFailedWaypoints_ShouldNotComplete(t *test
 		t.Skip("Cannot create test customer")
 	}
 
-	// Create test addresses
+	// Create test addresses using region-id library
 	address1 := createTestAddress(t, ctx, customer.ID)
 	address2 := createTestAddress(t, ctx, customer.ID)
 	address3 := createTestAddress(t, ctx, customer.ID)
@@ -632,7 +520,7 @@ func TestCheckAndUpdateOrderStatus_AllCompleted_ShouldComplete(t *testing.T) {
 		t.Skip("Cannot create test customer")
 	}
 
-	// Create test addresses
+	// Create test addresses using region-id library
 	address1 := createTestAddress(t, ctx, customer.ID)
 	address2 := createTestAddress(t, ctx, customer.ID)
 
@@ -741,7 +629,7 @@ func TestCheckAndUpdateOrderStatus_MixedCompletedAndReturned_ShouldComplete(t *t
 		t.Skip("Cannot create test customer")
 	}
 
-	// Create test addresses
+	// Create test addresses using region-id library
 	address1 := createTestAddress(t, ctx, customer.ID)
 	address2 := createTestAddress(t, ctx, customer.ID)
 	address3 := createTestAddress(t, ctx, customer.ID)
@@ -869,7 +757,7 @@ func TestCheckAndUpdateOrderStatus_WithPendingWaypoints_ShouldNotComplete(t *tes
 		t.Skip("Cannot create test customer")
 	}
 
-	// Create test addresses
+	// Create test addresses using region-id library
 	address1 := createTestAddress(t, ctx, customer.ID)
 	address2 := createTestAddress(t, ctx, customer.ID)
 	address3 := createTestAddress(t, ctx, customer.ID)

@@ -23,7 +23,6 @@ type Factory struct {
 	I18n           *I18nUsecase
 	Tracking       *TrackingUsecase
 	Onboarding     *OnboardingUsecase
-	Geo            *GeoUsecase
 	Upload         *UploadUsecase
 }
 
@@ -57,7 +56,6 @@ func NewFactory() *Factory {
 		I18n:           NewI18nUsecase(),
 		Tracking:       NewTrackingUsecase(),
 		Onboarding:     NewOnboardingUsecase(),
-		Geo:            NewGeoUsecase(),
 		Upload:         upload,
 	}
 }
@@ -92,7 +90,6 @@ func (f *Factory) WithContext(ctx context.Context) *Factory {
 		I18n:           f.I18n,
 		Tracking:       f.Tracking,
 		Onboarding:     f.Onboarding.WithContext(ctx),
-		Geo:            f.Geo.WithContext(ctx),
 		Upload:         f.Upload.WithContext(ctx),
 	}
 }

@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	regionid "github.com/enigma-id/region-id/pkg/entity"
+	regionrep "github.com/enigma-id/region-id/pkg/repository"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/logistics-id/engine/common"
@@ -18,6 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/logistics-id/onward-tms/entity"
+	regionpkg "github.com/logistics-id/onward-tms/src/region"
 	"github.com/logistics-id/onward-tms/src/repository"
 	"github.com/logistics-id/onward-tms/src/usecase"
 )
@@ -95,159 +98,22 @@ func createTestCustomer(t *testing.T, companyID uuid.UUID) *entity.Customer {
 	return customer
 }
 
-// Helper function to create test village with all required dependencies
-func createTestVillage(t *testing.T) *entity.Village {
+// Helper function to create test region using region-id library
+func createTestRegion(t *testing.T) *regionid.Region {
 	ctx := context.Background()
 
-	// Use existing "ID" (Indonesia) country to avoid collisions
-	// If it doesn't exist, we'll create a test country
-	country := &entity.Country{}
-	err := postgres.GetDB().NewSelect().
-		Model(country).
-		Where("code = ?", "ID").
-		Scan(ctx)
-
-	if err != nil || country.ID == uuid.Nil {
-		// Create test country with unique 2-char code
-		// Use timestamp-based approach for uniqueness
-		uuidStr := uuid.New().String()
-		removeHyphens := func(s string) string {
-			result := ""
-			for _, c := range s {
-				if c != '-' {
-					result += string(c)
-				}
-			}
-			return result
-		}
-		hex := removeHyphens(uuidStr)
-
-		// Use first hex char that's a number (0-9) to avoid letters colliding
-		// Try positions 0, 1, 2 until we find a digit
-		countryCode := ""
-		for i := 0; i < len(hex) && i < 10; i++ {
-			if hex[i] >= '0' && hex[i] <= '9' {
-				countryCode = "T" + string(hex[i])
-				break
-			}
-		}
-		// If no digit found, just use first char
-		if countryCode == "" {
-			countryCode = "T" + string(hex[0])
-		}
-
-		country = &entity.Country{
-			Code: countryCode,
-			Name: fmt.Sprintf("TC %s", countryCode),
-		}
-
-		countryRepo := repository.NewCountryRepository()
-		err = countryRepo.WithContext(ctx).Insert(country)
-		if err != nil {
-			t.Fatal("Cannot create test country:", err)
-		}
-		if country.ID == uuid.Nil {
-			t.Fatal("Country ID is empty after insert")
-		}
+	// Search for any existing region (e.g., Jakarta)
+	regions, err := regionpkg.Repository.Search(ctx, "Jakarta", regionrep.SearchOptions{
+		Limit: 1,
+	})
+	if err == nil && len(regions) > 0 {
+		return regions[0]
 	}
 
-	// Generate unique codes for other entities
-	uuidStr := uuid.New().String()
-	removeHyphens := func(s string) string {
-		result := ""
-		for _, c := range s {
-			if c != '-' {
-				result += string(c)
-			}
-		}
-		return result
-	}
-	hex := removeHyphens(uuidStr)
-
-	provinceCode := hex[:10]
-	cityCode := hex[5:15]
-	districtCode := hex[10:20]
-	villageCode := hex[15:28]
-
-	// Create test province
-	province := &entity.Province{
-		CountryID: country.ID,
-		Code:      provinceCode,
-		Name:      fmt.Sprintf("TP %s", provinceCode),
-	}
-
-	provinceRepo := repository.NewProvinceRepository()
-	err = provinceRepo.WithContext(ctx).Insert(province)
-	if err != nil {
-		t.Fatal("Cannot create test province:", err)
-	}
-	if province.ID == uuid.Nil {
-		t.Fatal("Province ID is empty after insert")
-	}
-
-	// Create test city
-	city := &entity.City{
-		ProvinceID: province.ID,
-		Code:       cityCode,
-		Name:       fmt.Sprintf("TCity %s", cityCode),
-		Type:       "Kota",
-	}
-
-	cityRepo := repository.NewCityRepository()
-	err = cityRepo.WithContext(ctx).Insert(city)
-	if err != nil {
-		t.Fatal("Cannot create test city:", err)
-	}
-	if city.ID == uuid.Nil {
-		t.Fatal("City ID is empty after insert")
-	}
-
-	// Create test district
-	district := &entity.District{
-		CityID: city.ID,
-		Code:   districtCode,
-		Name:   fmt.Sprintf("TD %s", districtCode),
-	}
-
-	districtRepo := repository.NewDistrictRepository()
-	err = districtRepo.WithContext(ctx).Insert(district)
-	if err != nil {
-		t.Fatal("Cannot create test district:", err)
-	}
-	if district.ID == uuid.Nil {
-		t.Fatal("District ID is empty after insert")
-	}
-
-	// Create test village - generate a unique postal code from UUID
-	postalNum := 0
-	for i, c := range hex[0:8] {
-		if c >= '0' && c <= '9' {
-			postalNum = postalNum*16 + int(c-'0')
-		} else if c >= 'a' && c <= 'f' {
-			postalNum = postalNum*16 + int(c-'a') + 10
-		}
-		// Simple hash to avoid same postal codes
-		postalNum = postalNum + i
-	}
-
-	village := &entity.Village{
-		DistrictID: district.ID,
-		Code:       villageCode,
-		Name:       fmt.Sprintf("TV %s", villageCode),
-		Type:       "Kelurahan",
-		PostalCode: fmt.Sprintf("%05d", (postalNum%90000)+10000),
-	}
-
-	villageRepo := repository.NewVillageRepository()
-	err = villageRepo.WithContext(ctx).Insert(village)
-	if err != nil {
-		t.Fatal("Cannot create test village:", err)
-	}
-	if village.ID == uuid.Nil {
-		t.Fatal("Village ID is empty after insert")
-	}
-
-	return village
+	// If no region found, create a test region
+	// This would require direct database insertion for testing purposes
+	t.Fatal("No regions found in database. Please run migrations first.")
+	return nil
 }
 
 // Helper function to create test context with session
@@ -310,7 +176,7 @@ func generateTestAddressName() string {
 func TestAddressHandler_Create_Success(t *testing.T) {
 	user, company := createTestUserCompany(t)
 	customer := createTestCustomer(t, company.ID)
-	village := createTestVillage(t)
+	village := createTestRegion(t)
 	t.Cleanup(func() {
 		cleanupTestData(t, user.ID, company.ID)
 	})
@@ -323,7 +189,7 @@ func TestAddressHandler_Create_Success(t *testing.T) {
 		"customer_id":   customer.ID.String(),
 		"name":          testAddressName,
 		"address":       "Jl. Test No. 123",
-		"village_id":    village.ID.String(),
+		"region_id":    village.ID.String(),
 		"contact_name":  "John Doe",
 		"contact_phone": "08123456789",
 		"is_active":     true,
@@ -380,7 +246,7 @@ func TestAddressHandler_Create_InvalidVillageID(t *testing.T) {
 	createReq := map[string]interface{}{
 		"name":       generateTestAddressName(),
 		"address":    "Jl. Test No. 123",
-		"village_id": uuid.New().String(), // Non-existent village
+		"region_id": uuid.New().String(), // Non-existent village
 	}
 
 	ctx, recorder := createTestContext(t, "POST", "/addresses", createReq, user, company, nil)
@@ -396,7 +262,7 @@ func TestAddressHandler_Create_InvalidPhone(t *testing.T) {
 	t.Cleanup(func() {
 		cleanupTestData(t, user.ID, company.ID)
 	})
-	village := createTestVillage(t)
+	village := createTestRegion(t)
 
 	uc := usecase.NewAddressUsecase()
 	h := &handler{uc: uc}
@@ -404,7 +270,7 @@ func TestAddressHandler_Create_InvalidPhone(t *testing.T) {
 	createReq := map[string]interface{}{
 		"name":          generateTestAddressName(),
 		"address":       "Jl. Test No. 123",
-		"village_id":    village.ID.String(),
+		"region_id":    village.ID.String(),
 		"contact_phone": "invalid-phone",
 	}
 
@@ -422,7 +288,7 @@ func TestAddressHandler_Create_DuplicateName(t *testing.T) {
 	t.Cleanup(func() {
 		cleanupTestData(t, user.ID, company.ID)
 	})
-	village := createTestVillage(t)
+	village := createTestRegion(t)
 
 	uc := usecase.NewAddressUsecase()
 	h := &handler{uc: uc}
@@ -432,7 +298,7 @@ func TestAddressHandler_Create_DuplicateName(t *testing.T) {
 		"customer_id":   customer.ID.String(),
 		"name":          duplicateName,
 		"address":       "Jl. Test No. 123",
-		"village_id":    village.ID.String(),
+		"region_id":    village.ID.String(),
 		"contact_name":  "John Doe",
 		"contact_phone": "08123456789",
 	}
@@ -458,7 +324,7 @@ func TestAddressHandler_Update_Success(t *testing.T) {
 	t.Cleanup(func() {
 		cleanupTestData(t, user.ID, company.ID)
 	})
-	village := createTestVillage(t)
+	village := createTestRegion(t)
 
 	// Create test address first
 	addressRepo := repository.NewAddressRepository()
@@ -467,7 +333,7 @@ func TestAddressHandler_Update_Success(t *testing.T) {
 		CustomerID:   customer.ID,
 		Name:         originalName,
 		Address:      "Jl. Original No. 123",
-		VillageID:    village.ID,
+		RegionID:    village.ID,
 		ContactName:  "Original Contact",
 		ContactPhone: "08123456789",
 		IsActive:     true,
@@ -490,7 +356,7 @@ func TestAddressHandler_Update_Success(t *testing.T) {
 		"customer_id":   customer.ID.String(),
 		"name":          updatedName,
 		"address":       "Jl. Updated No. 456",
-		"village_id":    village.ID.String(),
+		"region_id":    village.ID.String(),
 		"contact_name":  "Updated Contact",
 		"contact_phone": "08987654321",
 	}
@@ -544,7 +410,7 @@ func TestAddressHandler_Update_InvalidVillageID(t *testing.T) {
 	t.Cleanup(func() {
 		cleanupTestData(t, user.ID, company.ID)
 	})
-	village := createTestVillage(t)
+	village := createTestRegion(t)
 
 	// Create test address first
 	addressRepo := repository.NewAddressRepository()
@@ -552,7 +418,7 @@ func TestAddressHandler_Update_InvalidVillageID(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       "Test Address",
 		Address:    "Jl. Test No. 123",
-		VillageID:  village.ID,
+		RegionID:  village.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -564,7 +430,7 @@ func TestAddressHandler_Update_InvalidVillageID(t *testing.T) {
 	h := &handler{uc: uc}
 
 	updateReq := map[string]interface{}{
-		"village_id": uuid.New().String(), // Non-existent village
+		"region_id": uuid.New().String(), // Non-existent village
 	}
 
 	pathParams := map[string]string{"id": address.ID.String()}
@@ -582,7 +448,7 @@ func TestAddressHandler_Update_DuplicateName(t *testing.T) {
 	t.Cleanup(func() {
 		cleanupTestData(t, user.ID, company.ID)
 	})
-	village := createTestVillage(t)
+	village := createTestRegion(t)
 
 	// Create two test addresses
 	addressRepo := repository.NewAddressRepository()
@@ -593,7 +459,7 @@ func TestAddressHandler_Update_DuplicateName(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       name1,
 		Address:    "Jl. Test No. 1",
-		VillageID:  village.ID,
+		RegionID:  village.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -602,7 +468,7 @@ func TestAddressHandler_Update_DuplicateName(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       name2,
 		Address:    "Jl. Test No. 2",
-		VillageID:  village.ID,
+		RegionID:  village.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -634,7 +500,7 @@ func TestAddressHandler_Delete_Success(t *testing.T) {
 	t.Cleanup(func() {
 		cleanupTestData(t, user.ID, company.ID)
 	})
-	village := createTestVillage(t)
+	village := createTestRegion(t)
 
 	// Create test address first
 	addressRepo := repository.NewAddressRepository()
@@ -644,7 +510,7 @@ func TestAddressHandler_Delete_Success(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       testName,
 		Address:    "Jl. Test No. 123",
-		VillageID:  village.ID,
+		RegionID:  village.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -697,7 +563,7 @@ func TestAddressHandler_GetDetail_Success(t *testing.T) {
 	t.Cleanup(func() {
 		cleanupTestData(t, user.ID, company.ID)
 	})
-	village := createTestVillage(t)
+	village := createTestRegion(t)
 
 	// Create test address first
 	addressRepo := repository.NewAddressRepository()
@@ -706,7 +572,7 @@ func TestAddressHandler_GetDetail_Success(t *testing.T) {
 		CustomerID:   customer.ID,
 		Name:         testName,
 		Address:      "Jl. Test No. 123",
-		VillageID:    village.ID,
+		RegionID:    village.ID,
 		ContactName:  "John Doe",
 		ContactPhone: "08123456789",
 		IsActive:     true,
@@ -762,7 +628,7 @@ func TestAddressHandler_GetDetail_InvalidID(t *testing.T) {
 func TestAddressHandler_GetList_Success(t *testing.T) {
 	user, company := createTestUserCompany(t)
 	customer := createTestCustomer(t, company.ID)
-	village := createTestVillage(t)
+	village := createTestRegion(t)
 
 	// Create test addresses
 	addressRepo := repository.NewAddressRepository()
@@ -772,7 +638,7 @@ func TestAddressHandler_GetList_Success(t *testing.T) {
 			CustomerID: customer.ID,
 			Name:       generateTestAddressName(),
 			Address:    fmt.Sprintf("Jl. Test No. %d", i),
-			VillageID:  village.ID,
+			RegionID:  village.ID,
 			IsActive:   true,
 			IsDeleted:  false,
 			CreatedAt:  time.Now(),
@@ -809,7 +675,7 @@ func TestAddressHandler_GetList_Success(t *testing.T) {
 func TestAddressHandler_GetList_WithNameFilter(t *testing.T) {
 	user, company := createTestUserCompany(t)
 	customer := createTestCustomer(t, company.ID)
-	village := createTestVillage(t)
+	village := createTestRegion(t)
 
 	// Create test addresses with unique names containing "Warehouse"
 	addressRepo := repository.NewAddressRepository()
@@ -822,7 +688,7 @@ func TestAddressHandler_GetList_WithNameFilter(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       warehouse1Name,
 		Address:    "Jl. Test No. 1",
-		VillageID:  village.ID,
+		RegionID:  village.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -831,7 +697,7 @@ func TestAddressHandler_GetList_WithNameFilter(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       warehouse2Name,
 		Address:    "Jl. Test No. 2",
-		VillageID:  village.ID,
+		RegionID:  village.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -840,7 +706,7 @@ func TestAddressHandler_GetList_WithNameFilter(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       officeName,
 		Address:    "Jl. Test No. 3",
-		VillageID:  village.ID,
+		RegionID:  village.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -878,7 +744,7 @@ func TestAddressHandler_GetList_WithNameFilter(t *testing.T) {
 func TestAddressHandler_GetList_WithVillageFilter(t *testing.T) {
 	user, company := createTestUserCompany(t)
 	customer := createTestCustomer(t, company.ID)
-	village := createTestVillage(t)
+	region := createTestRegion(t)
 
 	// Create test addresses
 	addressRepo := repository.NewAddressRepository()
@@ -887,7 +753,7 @@ func TestAddressHandler_GetList_WithVillageFilter(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       testName,
 		Address:    "Jl. Test No. 1",
-		VillageID:  village.ID,
+		RegionID:   region.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -897,7 +763,7 @@ func TestAddressHandler_GetList_WithVillageFilter(t *testing.T) {
 	uc := usecase.NewAddressUsecase()
 	h := &handler{uc: uc}
 
-	ctx, recorder := createTestContext(t, "GET", "/addresses?village_id="+village.ID.String(), nil, user, company, nil)
+	ctx, recorder := createTestContext(t, "GET", "/addresses?region_id="+region.ID.String(), nil, user, company, nil)
 
 	err := h.list(ctx)
 
@@ -934,7 +800,7 @@ func TestAddressHandler_GetList_WithVillageFilter(t *testing.T) {
 func TestAddressHandler_GetList_WithIsActiveFilter(t *testing.T) {
 	user, company := createTestUserCompany(t)
 	customer := createTestCustomer(t, company.ID)
-	village := createTestVillage(t)
+	village := createTestRegion(t)
 
 	// Create test addresses
 	addressRepo := repository.NewAddressRepository()
@@ -943,7 +809,7 @@ func TestAddressHandler_GetList_WithIsActiveFilter(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       "Active " + uuid.New().String()[:4],
 		Address:    "Jl. Test No. 1",
-		VillageID:  village.ID,
+		RegionID:  village.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -952,7 +818,7 @@ func TestAddressHandler_GetList_WithIsActiveFilter(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       "Inactive " + uuid.New().String()[:4],
 		Address:    "Jl. Test No. 2",
-		VillageID:  village.ID,
+		RegionID:  village.ID,
 		IsActive:   false,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),

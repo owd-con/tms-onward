@@ -3,6 +3,8 @@ package entity
 import (
 	"time"
 
+	regionid "github.com/enigma-id/region-id/pkg/entity"
+
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 )
@@ -21,8 +23,8 @@ type PricingMatrix struct {
 	UpdatedAt         time.Time `bun:"updated_at,default:current_timestamp" json:"updated_at"`
 	IsDeleted         bool      `bun:"is_deleted,default:false" json:"is_deleted,omitempty"`
 
-	Company         *Company  `bun:"rel:belongs-to,join:company_id=id" json:"company,omitempty"`
+	Company         *Company `bun:"rel:belongs-to,join:company_id=id" json:"company,omitempty"`
 	Customer        *Customer `bun:"rel:belongs-to,join:customer_id=id" json:"customer,omitempty"`
-	OriginCity      *City     `bun:"rel:belongs-to,join:origin_city_id=id" json:"origin_city,omitempty"`
-	DestinationCity *City     `bun:"rel:belongs-to,join:destination_city_id=id" json:"destination_city,omitempty"`
+	OriginRegion    *regionid.Region  `bun:"rel:belongs-to,join:origin_city_id=id" json:"origin_region,omitempty"`
+	DestinationRegion *regionid.Region `bun:"rel:belongs-to,join:destination_city_id=id" json:"destination_region,omitempty"`
 }

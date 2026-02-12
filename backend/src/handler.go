@@ -12,7 +12,6 @@ import (
 	"github.com/logistics-id/onward-tms/src/handler/rest/driver"
 	"github.com/logistics-id/onward-tms/src/handler/rest/driver_web"
 	"github.com/logistics-id/onward-tms/src/handler/rest/exception"
-	"github.com/logistics-id/onward-tms/src/handler/rest/geo"
 	"github.com/logistics-id/onward-tms/src/handler/rest/i18n"
 	"github.com/logistics-id/onward-tms/src/handler/rest/onboarding"
 	"github.com/logistics-id/onward-tms/src/handler/rest/order"
@@ -26,6 +25,7 @@ import (
 	"github.com/logistics-id/onward-tms/src/handler/rest/user"
 	"github.com/logistics-id/onward-tms/src/handler/rest/vehicle"
 	"github.com/logistics-id/onward-tms/src/handler/rest/waypoint"
+	"github.com/logistics-id/onward-tms/src/region"
 	"github.com/logistics-id/onward-tms/src/usecase"
 	"google.golang.org/grpc"
 )
@@ -54,8 +54,10 @@ func RegisterRestRoutes(s *rest.RestServer) {
 	// Master Data routes
 	// Location routes
 	address.RegisterHandler(s)
-	// Geo routes
-	geo.RegisterHandler(s)
+	// Region routes (using region-id library)
+	if region.Handler != nil {
+		region.Handler.RegisterRoutes(s)
+	}
 	// Customer routes
 	customer.RegisterHandler(s)
 	// Vehicle routes

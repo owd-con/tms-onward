@@ -7,9 +7,12 @@ import (
 	"os"
 	"testing"
 
+	regionid "github.com/enigma-id/region-id/pkg/entity"
+	regionidrepo "github.com/enigma-id/region-id/pkg/repository"
 	"github.com/google/uuid"
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/repository"
+	"github.com/logistics-id/onward-tms/src/region"
 
 	"github.com/logistics-id/engine"
 	"github.com/logistics-id/engine/ds/postgres"
@@ -85,42 +88,21 @@ func createTestCompany(t *testing.T, name, email string) *entity.Company {
 	return company
 }
 
-func createTestCity(t *testing.T, name, code string) *entity.City {
-	// First create a country for the province
-	repoCountry := repository.NewCountryRepository().WithContext(ctx)
-	country := &entity.Country{
-		Name: "Test Country",
-		Code: "ID",
-	}
-	err := repoCountry.Insert(country)
+func createTestCity(t *testing.T, name, code string) *regionid.Region {
+	// Use the region-id library to find an existing test region
+	// For tests, we'll use Jakarta Selatan as a test region
+	testRegion, err := region.Repository.FindByCode(ctx, "31.71.01.1001") // Jakarta Selatan code
 	if err != nil {
-		t.Skip("Cannot create test country")
+		// If not found, try to find any region
+		regions, err := region.Repository.Search(ctx, "Jakarta", regionidrepo.SearchOptions{
+			Limit: 1,
+		})
+		if err != nil || len(regions) == 0 {
+			t.Skip("Cannot find test region")
+		}
+		return regions[0]
 	}
-
-	// Then create a province for the city
-	repoProvince := repository.NewProvinceRepository().WithContext(ctx)
-	province := &entity.Province{
-		Name:      "Test Province",
-		Code:      code + "-PROV",
-		CountryID: country.ID,
-	}
-	err = repoProvince.Insert(province)
-	if err != nil {
-		t.Skip("Cannot create test province")
-	}
-
-	repoCity := repository.NewCityRepository().WithContext(ctx)
-	city := &entity.City{
-		Name:       name,
-		Code:       code,
-		Type:       "City",
-		ProvinceID: province.ID,
-	}
-	err = repoCity.Insert(city)
-	if err != nil {
-		t.Skip("Cannot create test city")
-	}
-	return city
+	return testRegion
 }
 
 func createTestCustomer(t *testing.T, companyID uuid.UUID, name, email string) *entity.Customer {

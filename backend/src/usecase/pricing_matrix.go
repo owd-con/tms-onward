@@ -17,7 +17,6 @@ import (
 type PricingMatrixUsecase struct {
 	*common.BaseUsecase[entity.PricingMatrix]
 	Repo         *repository.PricingMatrixRepository
-	CityRepo     *repository.CityRepository
 	CustomerRepo *repository.CustomerRepository
 }
 
@@ -41,7 +40,6 @@ func (u *PricingMatrixUsecase) WithContext(ctx context.Context) *PricingMatrixUs
 		BaseUsecase:  u.BaseUsecase.WithContext(ctx),
 		Repo:         u.Repo.WithContext(ctx).(*repository.PricingMatrixRepository),
 		CustomerRepo: u.CustomerRepo.WithContext(ctx).(*repository.CustomerRepository),
-		CityRepo:     u.CityRepo.WithContext(ctx).(*repository.CityRepository),
 	}
 }
 
@@ -148,7 +146,6 @@ func NewPricingMatrixUsecase() *PricingMatrixUsecase {
 	return &PricingMatrixUsecase{
 		BaseUsecase:  common.NewBaseUsecase(repository.NewPricingMatrixRepository()),
 		Repo:         repository.NewPricingMatrixRepository(),
-		CityRepo:     repository.NewCityRepository(),
 		CustomerRepo: repository.NewCustomerRepository(),
 	}
 }

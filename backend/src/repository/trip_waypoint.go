@@ -6,7 +6,6 @@ import (
 	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/engine/ds/postgres"
 	"github.com/logistics-id/onward-tms/entity"
-	"github.com/uptrace/bun"
 )
 
 type TripWaypointRepository struct {
@@ -35,9 +34,7 @@ func (r *TripWaypointRepository) WithContext(ctx context.Context) common.BaseRep
 func (r *TripWaypointRepository) GetByTripID(tripID string) (mx []*entity.TripWaypoint, err error) {
 	qs := r.DB.NewSelect().Model(&mx)
 
-	qs.Relation("OrderWaypoint", func(sq *bun.SelectQuery) *bun.SelectQuery {
-		return sq.Relation("Address.Village.District.City.Province")
-	})
+	qs.Relation("OrderWaypoint.Address.Region")
 
 	qs.Where("trip_waypoints.is_deleted = false")
 	qs.Where("trip_id = ?", tripID)

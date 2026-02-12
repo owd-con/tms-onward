@@ -27,7 +27,7 @@ func NewOrderWaypointRepository() *OrderWaypointRepository {
 func (r *OrderWaypointRepository) GetByOrderID(id string) (mx []*entity.OrderWaypoint, err error) {
 	qs := r.DB.NewSelect().Model(&mx)
 
-	qs.Relation("Address.Village.District.City.Province")
+	qs.Relation("Address.Region")
 
 	qs.Where("order_waypoints.is_deleted = false")
 	qs.Where("order_id = ?", id)

@@ -3,7 +3,10 @@ package pricing_matrix
 import (
 	"context"
 
+	"github.com/google/uuid"
+	regionid "github.com/enigma-id/region-id/pkg/entity"
 	"github.com/logistics-id/onward-tms/entity"
+	"github.com/logistics-id/onward-tms/src/region"
 	"github.com/logistics-id/onward-tms/src/usecase"
 
 	"github.com/logistics-id/engine/common"
@@ -18,10 +21,10 @@ type updateRequest struct {
 	DestinationCityID string  `json:"destination_city_id" valid:"required|uuid"`
 	Price             float64 `json:"price" valid:"required|gte:0"`
 
-	pricingMatrix   *entity.PricingMatrix
-	customer        *entity.Customer
-	originCity      *entity.City
-	destinationCity *entity.City
+	pricingMatrix     *entity.PricingMatrix
+	customer          *entity.Customer
+	originRegion      *regionid.Region
+	destinationRegion *regionid.Region
 
 	ctx     context.Context
 	uc      *usecase.PricingMatrixUsecase
@@ -48,17 +51,17 @@ func (r *updateRequest) Validate() *validate.Response {
 		}
 	}
 
-	// Validate origin_city_id
+	// Validate origin_city_id (using region-id library)
 	if r.OriginCityID != "" {
-		if r.originCity, err = r.uc.CityRepo.FindByID(r.OriginCityID); err != nil {
-			v.SetError("origin_city_id.invalid", "origin city not found.")
+		if r.originRegion, err = region.Repository.FindByID(r.ctx, uuid.MustParse(r.OriginCityID)); err != nil {
+			v.SetError("origin_city_id.invalid", "origin city/region not found.")
 		}
 	}
 
-	// Validate destination_city_id
+	// Validate destination_city_id (using region-id library)
 	if r.DestinationCityID != "" {
-		if r.destinationCity, err = r.uc.CityRepo.FindByID(r.DestinationCityID); err != nil {
-			v.SetError("destination_city_id.invalid", "destination city not found.")
+		if r.destinationRegion, err = region.Repository.FindByID(r.ctx, uuid.MustParse(r.DestinationCityID)); err != nil {
+			v.SetError("destination_city_id.invalid", "destination city/region not found.")
 		}
 	}
 
@@ -85,14 +88,14 @@ func (r *updateRequest) toEntity() *entity.PricingMatrix {
 		pricingMatrix.CustomerID = r.customer.ID
 	}
 
-	// Set OriginCityID only if originCity is provided
-	if r.originCity != nil {
-		pricingMatrix.OriginCityID = r.originCity.ID
+	// Set OriginCityID only if originRegion is provided
+	if r.originRegion != nil {
+		pricingMatrix.OriginCityID = r.originRegion.ID
 	}
 
-	// Set DestinationCityID only if destinationCity is provided
-	if r.destinationCity != nil {
-		pricingMatrix.DestinationCityID = r.destinationCity.ID
+	// Set DestinationCityID only if destinationRegion is provided
+	if r.destinationRegion != nil {
+		pricingMatrix.DestinationCityID = r.destinationRegion.ID
 	}
 
 	return pricingMatrix

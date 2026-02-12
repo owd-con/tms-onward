@@ -9,6 +9,7 @@ import (
 	"github.com/logistics-id/engine/transport/rest"
 	"github.com/logistics-id/engine/validate"
 	"github.com/logistics-id/onward-tms/entity"
+	"github.com/logistics-id/onward-tms/src/region"
 	"github.com/logistics-id/onward-tms/src/usecase"
 )
 
@@ -93,7 +94,7 @@ func (r *step5Request) Validate() *validate.Response {
 			}
 		}
 
-		// Validate OriginCityID exists
+		// Validate OriginCityID exists (using region-id library)
 		if pricingReq.OriginCityID != "" {
 			var originUUID uuid.UUID
 			originUUID, err = uuid.Parse(pricingReq.OriginCityID)
@@ -101,13 +102,13 @@ func (r *step5Request) Validate() *validate.Response {
 				v.SetError(fmt.Sprintf("pricing.%d.origin_city_id.invalid", i), "Invalid origin city ID format.")
 				continue
 			}
-			_, err = r.uc.Geo.GetCity(r.ctx, originUUID)
+			_, err = region.Repository.FindByID(r.ctx, originUUID)
 			if err != nil {
 				v.SetError(fmt.Sprintf("pricing.%d.origin_city_id.not_found", i), "Origin city not found.")
 			}
 		}
 
-		// Validate DestCityID exists
+		// Validate DestCityID exists (using region-id library)
 		if pricingReq.DestCityID != "" {
 			var destUUID uuid.UUID
 			destUUID, err = uuid.Parse(pricingReq.DestCityID)
@@ -115,7 +116,7 @@ func (r *step5Request) Validate() *validate.Response {
 				v.SetError(fmt.Sprintf("pricing.%d.dest_city_id.invalid", i), "Invalid destination city ID format.")
 				continue
 			}
-			_, err = r.uc.Geo.GetCity(r.ctx, destUUID)
+			_, err = region.Repository.FindByID(r.ctx, destUUID)
 			if err != nil {
 				v.SetError(fmt.Sprintf("pricing.%d.dest_city_id.not_found", i), "Destination city not found.")
 			}

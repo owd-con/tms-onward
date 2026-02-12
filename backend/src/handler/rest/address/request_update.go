@@ -17,7 +17,7 @@ type updateRequest struct {
 	ID           string `json:"id" param:"id" valid:"required|uuid"` // From path parameter
 	Name         string `json:"name" valid:"required"`
 	Address      string `json:"address" valid:"required"`
-	VillageID    string `json:"village_id" valid:"required"`
+	RegionID     string `json:"region_id" valid:"required"`
 	CustomerID   string `json:"customer_id" valid:"required"`
 	ContactName  string `json:"contact_name" valid:"required"`
 	ContactPhone string `json:"contact_phone" valid:"required"`
@@ -47,10 +47,10 @@ func (r *updateRequest) Validate() *validate.Response {
 		}
 	}
 
-	// Validate village_id if provided
-	if r.VillageID != "" {
-		if err = r.uc.ValidateVillageID(r.VillageID); err != nil {
-			v.SetError("village_id.invalid", err.Error())
+	// Validate region_id if provided
+	if r.RegionID != "" {
+		if err = r.uc.ValidateRegionID(r.RegionID); err != nil {
+			v.SetError("region_id.invalid", err.Error())
 		}
 	}
 
@@ -72,13 +72,13 @@ func (r *updateRequest) Validate() *validate.Response {
 }
 
 func (r *updateRequest) toEntity() *entity.Address {
-	villageID, _ := uuid.Parse(r.VillageID)
+	regionID, _ := uuid.Parse(r.RegionID)
 
 	return &entity.Address{
 		ID:           r.existing.ID,
 		Name:         r.Name,
 		Address:      r.Address,
-		VillageID:    villageID,
+		RegionID:     regionID,
 		ContactName:  r.ContactName,
 		ContactPhone: r.ContactPhone,
 		UpdatedAt:    time.Now(),
@@ -88,7 +88,7 @@ func (r *updateRequest) toEntity() *entity.Address {
 func (r *updateRequest) execute() (*rest.ResponseBody, error) {
 	entity := r.toEntity()
 
-	fields := []string{"name", "address", "village_id", "contact_name", "contact_phone", "updated_at"}
+	fields := []string{"name", "address", "region_id", "contact_name", "contact_phone", "updated_at"}
 	if err := r.uc.Update(entity, fields...); err != nil {
 		return nil, err
 	}

@@ -127,38 +127,16 @@ func createTestUser(t *testing.T, companyID uuid.UUID) *entity.User {
 	return user
 }
 
-func TestHandler_GetOrderReport_Success(t *testing.T) {
+func TestHandler_GetOrderTripWaypointReport_Success(t *testing.T) {
 	uc := usecase.NewFactory()
 	h := &handler{uc: uc}
 
 	company := createTestCompany(t)
 	user := createTestUser(t, company.ID)
 
-	ctx := createTestContext("GET", "/reports/orders", nil, user.ID.String(), company.ID.String())
+	ctx := createTestContext("GET", "/reports/order-trip-waypoint", nil, user.ID.String(), company.ID.String())
 
-	err := h.getOrderReport(ctx)
-
-	assert.NoError(t, err)
-
-	recorder := ctx.Response.(*httptest.ResponseRecorder)
-	assert.Equal(t, http.StatusOK, recorder.Code)
-
-	var response map[string]interface{}
-	json.Unmarshal(recorder.Body.Bytes(), &response)
-	assert.True(t, response["success"].(bool))
-	assert.NotNil(t, response["data"])
-}
-
-func TestHandler_GetTripReport_Success(t *testing.T) {
-	uc := usecase.NewFactory()
-	h := &handler{uc: uc}
-
-	company := createTestCompany(t)
-	user := createTestUser(t, company.ID)
-
-	ctx := createTestContext("GET", "/reports/trips", nil, user.ID.String(), company.ID.String())
-
-	err := h.getTripReport(ctx)
+	err := h.getOrderTripWaypointReport(ctx)
 
 	assert.NoError(t, err)
 
@@ -199,38 +177,16 @@ func TestHandler_GetRevenueReport_Success(t *testing.T) {
 	assert.NotNil(t, response["data"])
 }
 
-func TestHandler_GetExceptionReport_Success(t *testing.T) {
+func TestHandler_GetDriverPerformance_Success(t *testing.T) {
 	uc := usecase.NewFactory()
 	h := &handler{uc: uc}
 
 	company := createTestCompany(t)
 	user := createTestUser(t, company.ID)
 
-	ctx := createTestContext("GET", "/reports/exceptions", nil, user.ID.String(), company.ID.String())
+	ctx := createTestContext("GET", "/reports/driver-performance", nil, user.ID.String(), company.ID.String())
 
-	err := h.getExceptionReport(ctx)
-
-	assert.NoError(t, err)
-
-	recorder := ctx.Response.(*httptest.ResponseRecorder)
-	assert.Equal(t, http.StatusOK, recorder.Code)
-
-	var response map[string]interface{}
-	json.Unmarshal(recorder.Body.Bytes(), &response)
-	assert.True(t, response["success"].(bool))
-	assert.NotNil(t, response["data"])
-}
-
-func TestHandler_GetDriverPerformanceReport_Success(t *testing.T) {
-	uc := usecase.NewFactory()
-	h := &handler{uc: uc}
-
-	company := createTestCompany(t)
-	user := createTestUser(t, company.ID)
-
-	ctx := createTestContext("GET", "/reports/drivers", nil, user.ID.String(), company.ID.String())
-
-	err := h.getDriverPerformanceReport(ctx)
+	err := h.getDriverPerformance(ctx)
 
 	assert.NoError(t, err)
 

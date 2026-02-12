@@ -16,7 +16,7 @@ import (
 type createRequest struct {
 	Name         string `json:"name" valid:"required"`
 	Address      string `json:"address" valid:"required"`
-	VillageID    string `json:"village_id" valid:"required"`
+	RegionID     string `json:"region_id" valid:"required"`
 	CustomerID   string `json:"customer_id" valid:"required"`
 	ContactName  string `json:"contact_name" valid:"required"`
 	ContactPhone string `json:"contact_phone" valid:"required"`
@@ -30,9 +30,9 @@ func (r *createRequest) Validate() *validate.Response {
 	v := validate.NewResponse()
 	var err error
 
-	// Validate village_id exists
-	if err = r.uc.ValidateVillageID(r.VillageID); err != nil {
-		v.SetError("village_id.invalid", err.Error())
+	// Validate region_id exists
+	if err = r.uc.ValidateRegionID(r.RegionID); err != nil {
+		v.SetError("region_id.invalid", err.Error())
 	}
 
 	// Validate customer_id (now required)
@@ -60,14 +60,14 @@ func (r *createRequest) Validate() *validate.Response {
 }
 
 func (r *createRequest) toEntity() *entity.Address {
-	villageID, _ := uuid.Parse(r.VillageID)
+	regionID, _ := uuid.Parse(r.RegionID)
 	customerID, _ := uuid.Parse(r.CustomerID)
 
 	return &entity.Address{
 		CustomerID:   customerID,
 		Name:         r.Name,
 		Address:      r.Address,
-		VillageID:    villageID,
+		RegionID:     regionID,
 		ContactName:  r.ContactName,
 		ContactPhone: r.ContactPhone,
 		IsActive:     true,

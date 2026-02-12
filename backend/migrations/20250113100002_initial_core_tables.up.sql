@@ -47,24 +47,24 @@ CREATE INDEX idx_users_email ON users(email) WHERE is_deleted = false;
 CREATE INDEX idx_users_role ON users(role) WHERE is_deleted = false;
 
 -- Addresses table (customer-level from 00007_modify_addresses_for_customer)
+-- Using region-id library for location data
 CREATE TABLE IF NOT EXISTS addresses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id UUID NOT NULL, -- from 00007: customer_id instead of company_id
     name VARCHAR(255) NOT NULL,
     address TEXT NOT NULL,
-    village_id UUID NOT NULL REFERENCES villages(id),
+    region_id UUID NOT NULL, -- References region-id library's regions table
     contact_name VARCHAR(255),
     contact_phone VARCHAR(50),
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     is_deleted BOOLEAN DEFAULT false,
-    CONSTRAINT fk_addresses_customer FOREIGN KEY (customer_id) REFERENCES customers(id),
-    CONSTRAINT fk_addresses_village FOREIGN KEY (village_id) REFERENCES villages(id)
+    CONSTRAINT fk_addresses_customer FOREIGN KEY (customer_id) REFERENCES customers(id)
 );
 
 CREATE INDEX idx_addresses_customer_id ON addresses(customer_id) WHERE is_deleted = false;
-CREATE INDEX idx_addresses_village_id ON addresses(village_id) WHERE is_deleted = false;
+CREATE INDEX idx_addresses_region_id ON addresses(region_id) WHERE is_deleted = false;
 
 -- Customers table
 CREATE TABLE IF NOT EXISTS customers (
@@ -127,12 +127,13 @@ CREATE INDEX idx_drivers_company_id ON drivers(company_id) WHERE is_deleted = fa
 CREATE INDEX idx_drivers_user_id ON drivers(user_id) WHERE is_deleted = false;
 
 -- Pricing Matrices table
+-- Using region-id library for origin/destination regions
 CREATE TABLE IF NOT EXISTS pricing_matrices (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     company_id UUID NOT NULL REFERENCES companies(id),
     customer_id UUID REFERENCES customers(id), -- NULL untuk default pricing
-    origin_city_id UUID NOT NULL REFERENCES cities(id),
-    destination_city_id UUID NOT NULL REFERENCES cities(id),
+    origin_city_id UUID NOT NULL, -- References region-id library's regions table
+    destination_city_id UUID NOT NULL, -- References region-id library's regions table
     price DECIMAL(15, 2) NOT NULL,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT NOW(),

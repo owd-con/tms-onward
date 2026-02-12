@@ -17,7 +17,6 @@ import (
 
 type AddressUsecase struct {
 	Repo         *repository.AddressRepository
-	repoVillage  *repository.VillageRepository
 	repoCustomer *repository.CustomerRepository
 
 	ctx context.Context
@@ -30,7 +29,7 @@ type AddressQueryOptions struct {
 
 	// Custom filter fields
 	Name       string `query:"name"`
-	VillageID  string `query:"village_id"`
+	RegionID   string `query:"region_id"` // Changed from VillageID to RegionID
 	CustomerID string `query:"customer_id"`
 	Status     string `query:"status"`
 }
@@ -42,7 +41,6 @@ func (o *AddressQueryOptions) BuildQueryOption() *AddressQueryOptions {
 func (u *AddressUsecase) WithContext(ctx context.Context) *AddressUsecase {
 	return &AddressUsecase{
 		Repo:         u.Repo.WithContext(ctx).(*repository.AddressRepository),
-		repoVillage:  u.repoVillage.WithContext(ctx).(*repository.VillageRepository),
 		repoCustomer: u.repoCustomer.WithContext(ctx).(*repository.CustomerRepository),
 		ctx:          ctx,
 	}
@@ -69,8 +67,8 @@ func (u *AddressUsecase) Get(req *AddressQueryOptions) (resp []*entity.Address, 
 			q.Where("lower(addresses.name) like ?", "%"+strings.ToLower(req.Name)+"%")
 		}
 
-		if req.VillageID != "" {
-			q.Where("addresses.village_id = ?", req.VillageID)
+		if req.RegionID != "" {
+			q.Where("addresses.region_id = ?", req.RegionID)
 		}
 
 		if req.Status != "" {
@@ -118,15 +116,11 @@ func (u *AddressUsecase) ValidateAddressUnique(field string, value string, custo
 	return false
 }
 
-// ValidateVillageID validates if village ID exists
-func (u *AddressUsecase) ValidateVillageID(villageID string) error {
-	_, err := u.repoVillage.FindByID(villageID)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return errors.New("village not found")
-		}
-		return err
-	}
+// ValidateRegionID validates if region ID exists
+// Note: Region validation now uses region-id library directly in handlers
+// This method is deprecated and should not be used
+func (u *AddressUsecase) ValidateRegionID(regionID string) error {
+	// This method is no longer needed as validation is done using region.Repository in handlers
 	return nil
 }
 
@@ -151,7 +145,6 @@ func (u *AddressUsecase) ValidateCustomerID(customerID string, companyID string)
 func NewAddressUsecase() *AddressUsecase {
 	return &AddressUsecase{
 		Repo:         repository.NewAddressRepository(),
-		repoVillage:  repository.NewVillageRepository(),
 		repoCustomer: repository.NewCustomerRepository(),
 	}
 }

@@ -16,7 +16,7 @@ func NewOrderRepository() *OrderRepository {
 	base := postgres.NewBaseRepository[entity.Order](postgres.GetDB(),
 		"orders",
 		[]string{"order_number"},
-		[]string{"Company", "Customer", "OrderWaypoints.Address.Village.District.City.Province"},
+		[]string{"Company", "Customer", "OrderWaypoints.Address.Region"},
 		true,
 	)
 

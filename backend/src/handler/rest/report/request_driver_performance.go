@@ -10,19 +10,22 @@ import (
 	"github.com/logistics-id/engine/transport/rest"
 )
 
-type getOrderReportRequest struct {
+type getDriverPerformanceRequest struct {
 	usecase.ReportQueryOptions
+
+	// Query parameters
+	Downloadable bool `query:"downloadable"`
 
 	uc      *usecase.Factory
 	ctx     context.Context
 	session *entity.TMSSessionClaims
 }
 
-func (r *getOrderReportRequest) get() (*rest.ResponseBody, error) {
+func (r *getDriverPerformanceRequest) get() (*rest.ResponseBody, error) {
 	opts := r.BuildQueryOption()
 	opts.Session = r.session
 
-	report, err := r.uc.Report.GetOrderSummary(r.ctx, opts)
+	report, err := r.uc.Report.GetDriverPerformance(r.ctx, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +33,7 @@ func (r *getOrderReportRequest) get() (*rest.ResponseBody, error) {
 	return rest.NewResponseBody(report), nil
 }
 
-func (r *getOrderReportRequest) with(ctx context.Context, uc *usecase.Factory) *getOrderReportRequest {
+func (r *getDriverPerformanceRequest) with(ctx context.Context, uc *usecase.Factory) *getDriverPerformanceRequest {
 	r.ctx = ctx
 	r.uc = uc.WithContext(ctx)
 	r.session = common.GetContextSessionGeneric[entity.TMSSessionClaims](ctx)

@@ -29,6 +29,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src"
+	regionid "github.com/enigma-id/region-id"
+	"github.com/logistics-id/onward-tms/src/region"
 
 	"github.com/joho/godotenv"
 	"github.com/logistics-id/engine"
@@ -97,7 +99,19 @@ func initiateConnection(ctx context.Context) error {
 		return err
 	}
 
+	// Initialize PostgreSQL connection and get DB instance
 	if err := postgres.NewConnection(postgres.ConfigDefault(os.Getenv("POSTGRES_DATABASE")), engine.Logger); err != nil {
+		return err
+	}
+
+	// Get the database connection for region-id initialization
+	db := postgres.GetDB()
+
+	// Initialize region-id library with auto-migration
+	if err := region.Initialize(regionid.Config{
+		DB:          db,
+		AutoMigrate: true,
+	}); err != nil {
 		return err
 	}
 

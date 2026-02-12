@@ -10,11 +10,13 @@ import (
 	"net/url"
 	"testing"
 
+	regionrep "github.com/enigma-id/region-id/pkg/repository"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/engine/transport/rest"
 	"github.com/logistics-id/onward-tms/entity"
+	regionpkg "github.com/logistics-id/onward-tms/src/region"
 	"github.com/logistics-id/onward-tms/src/repository"
 	"github.com/logistics-id/onward-tms/src/usecase"
 	"github.com/stretchr/testify/assert"
@@ -94,99 +96,24 @@ func createTestCompanyDriverVehicle(t *testing.T) (*entity.Company, *entity.Driv
 	return company, driver, vehicle
 }
 
-// createTestAddressWithHierarchy creates a test address with proper village hierarchy
+// createTestAddressWithHierarchy creates a test address with proper region from region-id library
 func createTestAddressWithHierarchy(t *testing.T, ctx context.Context, companyID uuid.UUID) *entity.Address {
-	// Generate unique codes using multiple UUIDs for guaranteed uniqueness
 	testUUID := uuid.New().String()
-	testUUID2 := uuid.New().String()
-	testUUID3 := uuid.New().String()
-	testUUID4 := uuid.New().String()
-	testUUID5 := uuid.New().String()
 
-	// Create codes by extracting parts from different UUIDs (remove hyphens)
-	removeHyphens := func(s string) string {
-		result := ""
-		for _, c := range s {
-			if c != '-' {
-				result += string(c)
-			}
-		}
-		return result
-	}
-
-	hex1 := removeHyphens(testUUID)
-	hex2 := removeHyphens(testUUID2)
-	hex3 := removeHyphens(testUUID3)
-	hex4 := removeHyphens(testUUID4)
-	hex5 := removeHyphens(testUUID5)
-
-	// Use different UUID portions for each code to ensure uniqueness
-	countryCode := hex1[:2]
-	provinceCode := hex2[:10]
-	cityCode := hex3[:10]
-	districtCode := hex4[:10]
-	villageCode := hex5[:13]
-
-	// Create test country
-	country := &entity.Country{
-		Code: countryCode,
-		Name: fmt.Sprintf("Test Country %s", countryCode),
-	}
-	countryRepo := repository.NewCountryRepository().WithContext(ctx)
-	err := countryRepo.Insert(country)
-	require.NoError(t, err)
-	require.NotEmpty(t, country.ID)
-
-	// Create test province
-	province := &entity.Province{
-		CountryID: country.ID,
-		Code:      provinceCode,
-		Name:      fmt.Sprintf("Test Province %s", provinceCode),
-	}
-	provinceRepo := repository.NewProvinceRepository().WithContext(ctx)
-	err = provinceRepo.Insert(province)
-	require.NoError(t, err)
-	require.NotEmpty(t, province.ID)
-
-	// Create test city
-	city := &entity.City{
-		ProvinceID: province.ID,
-		Code:       cityCode,
-		Name:       fmt.Sprintf("Test City %s", cityCode),
-	}
-	cityRepo := repository.NewCityRepository().WithContext(ctx)
-	err = cityRepo.Insert(city)
-	require.NoError(t, err)
-	require.NotEmpty(t, city.ID)
-
-	// Create test district
-	district := &entity.District{
-		CityID: city.ID,
-		Code:   districtCode,
-		Name:   fmt.Sprintf("Test District %s", districtCode),
-	}
-	districtRepo := repository.NewDistrictRepository().WithContext(ctx)
-	err = districtRepo.Insert(district)
-	require.NoError(t, err)
-	require.NotEmpty(t, district.ID)
-
-	// Create test village
-	village := &entity.Village{
-		DistrictID: district.ID,
-		Code:       villageCode,
-		Name:       fmt.Sprintf("Test Village %s", villageCode),
-	}
-	villageRepo := repository.NewVillageRepository().WithContext(ctx)
-	err = villageRepo.Insert(village)
-	require.NoError(t, err)
-	require.NotEmpty(t, village.ID)
+	// Search for any existing region (e.g., Jakarta)
+	regions, err := regionpkg.Repository.Search(ctx, "Jakarta", regionrep.SearchOptions{
+		Limit: 1,
+	})
+	require.NoError(t, err, "Failed to search for regions")
+	require.Greater(t, len(regions), 0, "No regions found. Please run migrations first.")
+	region := regions[0]
 
 	// Create test address
 	address := &entity.Address{
-		Name:      fmt.Sprintf("Test Address %s", villageCode),
-		Address:   fmt.Sprintf("Jl. Test No. %s", testUUID[:8]),
-		VillageID: village.ID,
-		IsActive:  true,
+		Name:     fmt.Sprintf("Test Address %s", testUUID[:8]),
+		Address:  fmt.Sprintf("Jl. Test No. %s", testUUID[:8]),
+		RegionID: region.ID,
+		IsActive: true,
 	}
 	addressRepo := repository.NewAddressRepository().WithContext(ctx)
 	err = addressRepo.Insert(address)
