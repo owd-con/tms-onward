@@ -81,8 +81,6 @@ func (u *TripUsecase) Get(req *TripQueryOptions) ([]*entity.Trip, int64, error) 
 			q.Where("trips.vehicle_id = ?", req.VehicleID)
 		}
 
-		fmt.Println("====================", req.OrderID)
-
 		// Filter by order ID
 		if req.OrderID != "" {
 			q.Where("trips.order_id = ?", req.OrderID)

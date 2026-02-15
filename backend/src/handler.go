@@ -12,7 +12,6 @@ import (
 	"github.com/logistics-id/onward-tms/src/handler/rest/driver"
 	"github.com/logistics-id/onward-tms/src/handler/rest/driver_web"
 	"github.com/logistics-id/onward-tms/src/handler/rest/exception"
-	"github.com/logistics-id/onward-tms/src/handler/rest/i18n"
 	"github.com/logistics-id/onward-tms/src/handler/rest/onboarding"
 	"github.com/logistics-id/onward-tms/src/handler/rest/order"
 	"github.com/logistics-id/onward-tms/src/handler/rest/pricing_matrix"
@@ -83,9 +82,6 @@ func RegisterRestRoutes(s *rest.RestServer) {
 
 	// Report routes
 	report.RegisterHandler(s)
-
-	// i18n routes
-	i18n.RegisterHandler(s, factory)
 
 	// Public tracking routes
 	tracking.RegisterHandler(s, factory)

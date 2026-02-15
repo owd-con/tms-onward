@@ -30,7 +30,7 @@ type OrderWaypoint struct {
 	Price           float64              `bun:"price" json:"price"`
 	Weight          float64              `bun:"weight" json:"weight"`
 	Items           []*OrderWaypointItem `bun:"items,type:jsonb" json:"items"`
-	DispatchStatus  string               `bun:"dispatch_status,default:'Pending'" json:"dispatch_status"`
+	DispatchStatus  string               `bun:"dispatch_status,default:'pending'" json:"dispatch_status"`
 	ReturnedNote    *string              `bun:"returned_note,type:text" json:"returned_note,omitempty"`
 	SequenceNumber  int                  `bun:"sequence_number" json:"sequence_number"`
 	CreatedAt       time.Time            `bun:"created_at,default:current_timestamp" json:"created_at"`

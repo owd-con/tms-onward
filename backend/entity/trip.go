@@ -16,7 +16,7 @@ type Trip struct {
 	TripNumber  string     `bun:"trip_number,notnull,unique" json:"trip_number"`
 	DriverID    uuid.UUID  `bun:"driver_id,notnull" json:"driver_id"`
 	VehicleID   uuid.UUID  `bun:"vehicle_id,notnull" json:"vehicle_id"`
-	Status      string     `bun:"status,notnull,default:'Planned'" json:"status"`
+	Status      string     `bun:"status,notnull,default:'planned'" json:"status"`
 	StartedAt   *time.Time `bun:"started_at" json:"started_at"`
 	CompletedAt *time.Time `bun:"completed_at" json:"completed_at"`
 	Notes       string     `bun:"notes" json:"notes"`

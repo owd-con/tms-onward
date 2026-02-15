@@ -20,7 +20,6 @@ type Factory struct {
 	Notification   *NotificationUsecase
 	Dashboard      *DashboardUsecase
 	Report         *ReportUsecase
-	I18n           *I18nUsecase
 	Tracking       *TrackingUsecase
 	Onboarding     *OnboardingUsecase
 	Upload         *UploadUsecase
@@ -53,7 +52,6 @@ func NewFactory() *Factory {
 		Notification:   NewNotificationUsecase(),
 		Dashboard:      NewDashboardUsecase(),
 		Report:         NewReportUsecase(),
-		I18n:           NewI18nUsecase(),
 		Tracking:       NewTrackingUsecase(),
 		Onboarding:     NewOnboardingUsecase(),
 		Upload:         upload,
@@ -87,7 +85,6 @@ func (f *Factory) WithContext(ctx context.Context) *Factory {
 		Notification:   f.Notification.WithContext(ctx),
 		Dashboard:      f.Dashboard,
 		Report:         f.Report,
-		I18n:           f.I18n,
 		Tracking:       f.Tracking,
 		Onboarding:     f.Onboarding.WithContext(ctx),
 		Upload:         f.Upload.WithContext(ctx),

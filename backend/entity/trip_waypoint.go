@@ -14,7 +14,7 @@ type TripWaypoint struct {
 	TripID               uuid.UUID  `bun:"trip_id,notnull,type:uuid" json:"trip_id"`
 	OrderWaypointID      uuid.UUID  `bun:"order_waypoint_id,notnull,type:uuid" json:"order_waypoint_id"`
 	SequenceNumber       int        `bun:"sequence_number,notnull" json:"sequence_number"`
-	Status               string     `bun:"status,default:'Pending'" json:"status"`
+	Status               string     `bun:"status,default:'pending'" json:"status"`
 	ActualArrivalTime    *time.Time `bun:"actual_arrival_time" json:"actual_arrival_time,omitempty"`
 	ActualCompletionTime *time.Time `bun:"actual_completion_time" json:"actual_completion_time,omitempty"`
 	Notes                string     `bun:"notes,type:text" json:"notes"`
