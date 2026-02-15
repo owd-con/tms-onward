@@ -12,7 +12,7 @@ definitions:
         type: string
       name:
         type: string
-      village_id:
+      region_id:
         type: string
     type: object
   address.updateRequest:
@@ -30,7 +30,7 @@ definitions:
         type: string
       name:
         type: string
-      village_id:
+      region_id:
         type: string
     type: object
   auth.changePasswordRequest:
@@ -176,6 +176,12 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  exception.returnWaypointRequest:
+    properties:
+      returned_note:
+        description: required - alasan barang dikembalikan ke origin
+        type: string
     type: object
   onboarding.driverRequest:
     properties:
@@ -2041,6 +2047,42 @@ paths:
       summary: Get failed waypoints
       tags:
       - exception
+  /exceptions/waypoints/{id}/return:
+    put:
+      consumes:
+      - application/json
+      description: Mark a failed waypoint as returned to origin
+      parameters:
+      - description: Waypoint ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Return waypoint request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/exception.returnWaypointRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Return waypoint to origin
+      tags:
+      - exception
   /exceptions/waypoints/batch-reschedule:
     post:
       consumes:
@@ -2072,207 +2114,6 @@ paths:
       summary: Batch reschedule failed waypoints
       tags:
       - exception
-  /geo/cities:
-    get:
-      consumes:
-      - application/json
-      description: Get list of cities by province code
-      parameters:
-      - description: Province code
-        in: query
-        name: province_code
-        required: true
-        type: string
-      - description: Bearer jwt-token...
-        in: header
-        name: authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.ResponseBody'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-      summary: Get cities
-      tags:
-      - geo
-  /geo/countries:
-    get:
-      consumes:
-      - application/json
-      description: Get list of all countries
-      parameters:
-      - description: Bearer jwt-token...
-        in: header
-        name: authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.ResponseBody'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-      summary: Get countries
-      tags:
-      - geo
-  /geo/districts:
-    get:
-      consumes:
-      - application/json
-      description: Get list of districts by city code
-      parameters:
-      - description: City code
-        in: query
-        name: city_code
-        required: true
-        type: string
-      - description: Bearer jwt-token...
-        in: header
-        name: authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.ResponseBody'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-      summary: Get districts
-      tags:
-      - geo
-  /geo/lookup:
-    get:
-      consumes:
-      - application/json
-      description: Search for locations by keyword
-      parameters:
-      - description: Search keyword
-        in: query
-        name: keyword
-        required: true
-        type: string
-      - description: Bearer jwt-token...
-        in: header
-        name: authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.ResponseBody'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-      summary: Lookup location
-      tags:
-      - geo
-  /geo/provinces:
-    get:
-      consumes:
-      - application/json
-      description: Get list of provinces by country code
-      parameters:
-      - description: Country code (e.g., ID)
-        in: query
-        name: country_code
-        required: true
-        type: string
-      - description: Bearer jwt-token...
-        in: header
-        name: authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.ResponseBody'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-      summary: Get provinces
-      tags:
-      - geo
-  /geo/villages:
-    get:
-      consumes:
-      - application/json
-      description: Get list of villages by district code
-      parameters:
-      - description: District code
-        in: query
-        name: district_code
-        required: true
-        type: string
-      - description: Bearer jwt-token...
-        in: header
-        name: authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.ResponseBody'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-      summary: Get villages
-      tags:
-      - geo
-  /i18n/{lang}:
-    get:
-      consumes:
-      - application/json
-      description: Get translations for a specific language (public endpoint, no authentication
-        required)
-      parameters:
-      - description: Language code (id, en)
-        in: path
-        name: lang
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.ResponseBody'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-      summary: Get translations
-      tags:
-      - i18n
   /me:
     get:
       consumes:
@@ -3095,124 +2936,40 @@ paths:
       summary: Track order
       tags:
       - tracking
-  /reports/drivers:
+  /reports/customer:
     get:
       consumes:
       - application/json
-      description: Generate driver performance report
+      description: Generate customer report with sorting options
       parameters:
       - description: Start date (YYYY-MM-DD)
         in: query
         name: start_date
-        required: true
         type: string
       - description: End date (YYYY-MM-DD)
         in: query
         name: end_date
-        required: true
-        type: string
-      - description: Filter by driver ID
-        in: query
-        name: driver_id
-        type: string
-      - description: Bearer jwt-token...
-        in: header
-        name: authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.ResponseBody'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-      summary: Get driver performance report
-      tags:
-      - report
-  /reports/exceptions:
-    get:
-      consumes:
-      - application/json
-      description: Generate delivery exception report
-      parameters:
-      - description: Start date (YYYY-MM-DD)
-        in: query
-        name: start_date
-        required: true
-        type: string
-      - description: End date (YYYY-MM-DD)
-        in: query
-        name: end_date
-        required: true
-        type: string
-      - description: Bearer jwt-token...
-        in: header
-        name: authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.ResponseBody'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-      summary: Get exception report
-      tags:
-      - report
-  /reports/orders:
-    get:
-      consumes:
-      - application/json
-      description: Generate order summary report
-      parameters:
-      - description: Start date (YYYY-MM-DD)
-        in: query
-        name: start_date
-        required: true
-        type: string
-      - description: End date (YYYY-MM-DD)
-        in: query
-        name: end_date
-        required: true
         type: string
       - description: Filter by customer ID
         in: query
         name: customer_id
         type: string
+      - description: Sort by (revenue|order_count)
+        in: query
+        name: sort_by
+        type: string
+      - description: 'Download as Excel (default: false)'
+        in: query
+        name: downloadable
+        type: boolean
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
       - description: Bearer jwt-token...
         in: header
         name: authorization
@@ -3241,80 +2998,43 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.HTTPError'
-      summary: Get order report
+      summary: Get customer report
       tags:
       - report
-  /reports/revenue:
+  /reports/driver-performance:
     get:
       consumes:
       - application/json
-      description: Generate revenue report
+      description: Generate driver performance report with sorting options
       parameters:
       - description: Start date (YYYY-MM-DD)
         in: query
         name: start_date
-        required: true
         type: string
       - description: End date (YYYY-MM-DD)
         in: query
         name: end_date
-        required: true
-        type: string
-      - description: Filter by customer ID
-        in: query
-        name: customer_id
-        type: string
-      - description: Bearer jwt-token...
-        in: header
-        name: authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.ResponseBody'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-      summary: Get revenue report
-      tags:
-      - report
-  /reports/trips:
-    get:
-      consumes:
-      - application/json
-      description: Generate trip summary report
-      parameters:
-      - description: Start date (YYYY-MM-DD)
-        in: query
-        name: start_date
-        required: true
-        type: string
-      - description: End date (YYYY-MM-DD)
-        in: query
-        name: end_date
-        required: true
         type: string
       - description: Filter by driver ID
         in: query
         name: driver_id
         type: string
+      - description: Sort by (trip_count|success_rate|delivery_time)
+        in: query
+        name: sort_by
+        type: string
+      - description: 'Download as Excel (default: false)'
+        in: query
+        name: downloadable
+        type: boolean
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
       - description: Bearer jwt-token...
         in: header
         name: authorization
@@ -3343,7 +3063,76 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.HTTPError'
-      summary: Get trip report
+      summary: Get driver performance report with sorting
+      tags:
+      - report
+  /reports/order-trip-waypoint:
+    get:
+      consumes:
+      - application/json
+      description: Generate comprehensive order, trip, and waypoint report
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      - description: Filter by customer ID
+        in: query
+        name: customer_id
+        type: string
+      - description: Filter by driver ID
+        in: query
+        name: driver_id
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: 'Download as Excel (default: false)'
+        in: query
+        name: downloadable
+        type: boolean
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get order-trip-waypoint report
       tags:
       - report
   /trips:

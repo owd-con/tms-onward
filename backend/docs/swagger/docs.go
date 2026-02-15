@@ -2259,9 +2259,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/geo/cities": {
-            "get": {
-                "description": "Get list of cities by province code",
+        "/exceptions/waypoints/{id}/return": {
+            "put": {
+                "description": "Mark a failed waypoint as returned to origin",
                 "consumes": [
                     "application/json"
                 ],
@@ -2269,278 +2269,31 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "geo"
+                    "exception"
                 ],
-                "summary": "Get cities",
+                "summary": "Return waypoint to origin",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Province code",
-                        "name": "province_code",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer jwt-token...",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.ResponseBody"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/geo/countries": {
-            "get": {
-                "description": "Get list of all countries",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "geo"
-                ],
-                "summary": "Get countries",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer jwt-token...",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.ResponseBody"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/geo/districts": {
-            "get": {
-                "description": "Get list of districts by city code",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "geo"
-                ],
-                "summary": "Get districts",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "City code",
-                        "name": "city_code",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer jwt-token...",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.ResponseBody"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/geo/lookup": {
-            "get": {
-                "description": "Search for locations by keyword",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "geo"
-                ],
-                "summary": "Lookup location",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Search keyword",
-                        "name": "keyword",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer jwt-token...",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.ResponseBody"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/geo/provinces": {
-            "get": {
-                "description": "Get list of provinces by country code",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "geo"
-                ],
-                "summary": "Get provinces",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Country code (e.g., ID)",
-                        "name": "country_code",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer jwt-token...",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.ResponseBody"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/geo/villages": {
-            "get": {
-                "description": "Get list of villages by district code",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "geo"
-                ],
-                "summary": "Get villages",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "District code",
-                        "name": "district_code",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer jwt-token...",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.ResponseBody"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/i18n/{lang}": {
-            "get": {
-                "description": "Get translations for a specific language (public endpoint, no authentication required)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "i18n"
-                ],
-                "summary": "Get translations",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Language code (id, en)",
-                        "name": "lang",
+                        "description": "Waypoint ID",
+                        "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Return waypoint request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/exception.returnWaypointRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer jwt-token...",
+                        "name": "authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -3782,9 +3535,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/reports/drivers": {
+        "/reports/customer": {
             "get": {
-                "description": "Generate driver performance report",
+                "description": "Generate customer report with sorting options",
                 "consumes": [
                     "application/json"
                 ],
@@ -3794,167 +3547,19 @@ const docTemplate = `{
                 "tags": [
                     "report"
                 ],
-                "summary": "Get driver performance report",
+                "summary": "Get customer report",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Start date (YYYY-MM-DD)",
                         "name": "start_date",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "End date (YYYY-MM-DD)",
-                        "name": "end_date",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by driver ID",
-                        "name": "driver_id",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Bearer jwt-token...",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.ResponseBody"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/reports/exceptions": {
-            "get": {
-                "description": "Generate delivery exception report",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "report"
-                ],
-                "summary": "Get exception report",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Start date (YYYY-MM-DD)",
-                        "name": "start_date",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
                         "description": "End date (YYYY-MM-DD)",
                         "name": "end_date",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer jwt-token...",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.ResponseBody"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/reports/orders": {
-            "get": {
-                "description": "Generate order summary report",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "report"
-                ],
-                "summary": "Get order report",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Start date (YYYY-MM-DD)",
-                        "name": "start_date",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "End date (YYYY-MM-DD)",
-                        "name": "end_date",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "string",
@@ -3964,78 +3569,26 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Bearer jwt-token...",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.ResponseBody"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/reports/revenue": {
-            "get": {
-                "description": "Generate revenue report",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "report"
-                ],
-                "summary": "Get revenue report",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Start date (YYYY-MM-DD)",
-                        "name": "start_date",
-                        "in": "query",
-                        "required": true
+                        "description": "Sort by (revenue|order_count)",
+                        "name": "sort_by",
+                        "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "End date (YYYY-MM-DD)",
-                        "name": "end_date",
-                        "in": "query",
-                        "required": true
+                        "type": "boolean",
+                        "description": "Download as Excel (default: false)",
+                        "name": "downloadable",
+                        "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Filter by customer ID",
-                        "name": "customer_id",
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page",
+                        "name": "limit",
                         "in": "query"
                     },
                     {
@@ -4080,9 +3633,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/reports/trips": {
+        "/reports/driver-performance": {
             "get": {
-                "description": "Generate trip summary report",
+                "description": "Generate driver performance report with sorting options",
                 "consumes": [
                     "application/json"
                 ],
@@ -4092,26 +3645,152 @@ const docTemplate = `{
                 "tags": [
                     "report"
                 ],
-                "summary": "Get trip report",
+                "summary": "Get driver performance report with sorting",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Start date (YYYY-MM-DD)",
                         "name": "start_date",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "string",
                         "description": "End date (YYYY-MM-DD)",
                         "name": "end_date",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "string",
                         "description": "Filter by driver ID",
                         "name": "driver_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by (trip_count|success_rate|delivery_time)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Download as Excel (default: false)",
+                        "name": "downloadable",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer jwt-token...",
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ResponseBody"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/rest.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/rest.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/rest.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/order-trip-waypoint": {
+            "get": {
+                "description": "Generate comprehensive order, trip, and waypoint report",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "report"
+                ],
+                "summary": "Get order-trip-waypoint report",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by customer ID",
+                        "name": "customer_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by driver ID",
+                        "name": "driver_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Download as Excel (default: false)",
+                        "name": "downloadable",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page",
+                        "name": "limit",
                         "in": "query"
                     },
                     {
@@ -5330,7 +5009,7 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "village_id": {
+                "region_id": {
                     "type": "string"
                 }
             }
@@ -5357,7 +5036,7 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "village_id": {
+                "region_id": {
                     "type": "string"
                 }
             }
@@ -5577,6 +5256,15 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "exception.returnWaypointRequest": {
+            "type": "object",
+            "properties": {
+                "returned_note": {
+                    "description": "required - alasan barang dikembalikan ke origin",
+                    "type": "string"
                 }
             }
         },
