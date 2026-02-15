@@ -30,9 +30,8 @@ graph TB
         H[Master Data Service]
         I[Order Service]
         J[Trip Service]
-        K[Notification Service]
+        ~~K[Notification Service]~~
         L[Report Service]
-        M[i18n Service]
     end
 
     subgraph Databases
@@ -52,9 +51,8 @@ graph TB
     D --> H
     D --> I
     D --> J
-    D --> K
+    ~~D --> K~~
     D --> L
-    D --> M
 
     E --> N
     F --> N
@@ -62,9 +60,8 @@ graph TB
     H --> N
     I --> N
     J --> N
-    K --> N
+    ~~K --> N~~
     L --> N
-    M --> N
 
     I --> O
     J --> O
@@ -76,7 +73,7 @@ graph TB
     I --> P
     J --> P
 
-    K --> Q
+    ~~K --> Q~~
 ```
 
 ### 1.2 Backend Architecture (Practical Clean Architecture)
@@ -541,6 +538,7 @@ CREATE INDEX idx_waypoint_images_type ON waypoint_images(type) WHERE is_deleted 
 **Purpose:** Menyimpan bukti foto untuk POD (Proof of Delivery) dan Failed delivery. Tabel ini menggantikan tabel `pods`.
 
 **Type Values:**
+
 - `pod`: Bukti pengiriman berhasil (delivery complete)
 - `failed`: Bukti pengiriman gagal
 
@@ -673,28 +671,31 @@ CREATE INDEX idx_trip_waypoints_sequence ON trip_waypoints(trip_id, sequence_num
 
 **Status Flow Matrix:**
 
-| Event | Order | Trip | Waypoint (order_waypoints) | Trip_Waypoint |
-|-------|-------|------|---------------------------|---------------|
-| Create Order | Pending | - | Pending | - |
-| Assign Driver | Planned | Planned | Pending | Pending (created) |
-| Dispatch Trip | Dispatched | Dispatched | Dispatched | Dispatched (first only) |
-| **Driver Start Trip** | In Transit | In Transit | Dispatched → In Transit (first only) | Dispatched → In Transit (first only) |
-| Driver completes/starts WP | In Transit | In Transit | Mixed | Mixed (completed/failed/returned, pending) |
-| **Return to Origin** | Completed | Completed | Failed → returned | Failed (no change) |
-| **Auto Complete** | Completed | Completed | Completed/Returned | Completed/Failed/Returned |
-| **Auto Complete Order** | Completed | Completed | Completed/Returned (no Failed) | - |
+| Event                      | Order      | Trip       | Waypoint (order_waypoints)           | Trip_Waypoint                              |
+| -------------------------- | ---------- | ---------- | ------------------------------------ | ------------------------------------------ |
+| Create Order               | Pending    | -          | Pending                              | -                                          |
+| Assign Driver              | Planned    | Planned    | Pending                              | Pending (created)                          |
+| Dispatch Trip              | Dispatched | Dispatched | Dispatched                           | Dispatched (first only)                    |
+| **Driver Start Trip**      | In Transit | In Transit | Dispatched → In Transit (first only) | Dispatched → In Transit (first only)       |
+| Driver completes/starts WP | In Transit | In Transit | Mixed                                | Mixed (completed/failed/returned, pending) |
+| **Return to Origin**       | Completed  | Completed  | Failed → returned                    | Failed (no change)                         |
+| **Auto Complete**          | Completed  | Completed  | Completed/Returned                   | Completed/Failed/Returned                  |
+| **Auto Complete Order**    | Completed  | Completed  | Completed/Returned (no Failed)       | -                                          |
 
 **Dispatch Trip Behavior:**
+
 - Admin/Dispatcher dispatch trip → signal ke driver
 - Hanya **waypoint pertama** → `Dispatched`
 
 **Start Trip Behavior (by Driver):**
+
 - Driver **Start Trip** via `PUT /driver/trips/:id/start`
 - Trip status: `Dispatched` → `In Transit`
 - Hanya **waypoint pertama** → `In Transit`
 - Waypoint lain tetap `Pending`
 
 **Waypoint Execution Flow:**
+
 - Driver klik "Start Waypoint" via `PUT /driver/trips/waypoint/{id}/start` (pending → in_transit)
 - Untuk pickup: Driver klik "Arrive" via `PUT /driver/trips/waypoint/{id}/arrive` (in_transit → completed)
 - Untuk delivery: Driver klik "Complete" via `PUT /driver/trips/waypoint/{id}/complete` (in_transit → completed + POD)
@@ -702,20 +703,22 @@ CREATE INDEX idx_trip_waypoints_sequence ON trip_waypoints(trip_id, sequence_num
 - Tidak ada auto-progression ke waypoint berikutnya
 
 **Auto-Complete Behavior:**
+
 - System mengecek status semua trip_waypoints setelah setiap update
 - Jika **semua** trip_waypoints sudah dalam status final (`completed`, `failed`, atau `returned`)
 - System otomatis set `trip.status` → `Completed`
 - Tidak perlu aksi manual dari admin/driver
 
 **Order Auto-Complete Behavior:**
+
 - System mengecek status semua order_waypoints setelah setiap update
 - Jika semua order_waypoints sudah dalam status completed atau returned (tanpa failed)
 - System otomatis set order.status → "Completed"
 - Jika masih ada order_waypoint yang failed, order tetap pada status In Transit
 - Tidak perlu aksi manual dari admin/driver
 
-
 **Order Completion Rule:**
+
 ```
 IF ALL order_waypoints.dispatch_status IN ("Completed", "Returned")
 THEN Order.status = "Completed"
@@ -725,14 +728,14 @@ THEN Order.status = "Completed"
 
 **Status Update Cascade - Who Updates What:**
 
-| Trigger | Updates |
-|---------|---------|
-| **Driver starts trip** via `PUT /driver/trips/:id/start` | 1. `trip.status` → "In Transit"<br>2. `order.status` → "In Transit"<br>3. `trip_waypoints.status` (first only) → "In Transit"<br>4. `order_waypoints.dispatch_status` (first only) → "In Transit" |
-| **Driver starts waypoint** via `PUT /driver/trips/waypoint/:id/start` | 1. `trip_waypoints.status` → "In Transit"<br>2. `trip_waypoints.actual_arrival_time` → NOW()<br>3. `order_waypoints.dispatch_status` → "In Transit"<br>4. Create `waypoint_log` |
-| **Driver arrives at pickup** via `PUT /driver/trips/waypoint/:id/arrive` | 1. `trip_waypoints.status` → "Completed"<br>2. `trip_waypoints.actual_completion_time` → NOW()<br>3. `order_waypoints.dispatch_status` → "Completed"<br>4. Create `waypoint_log`<br>5. **Auto-complete trip if all waypoints done** |
-| **Driver completes delivery** via `PUT /driver/trips/waypoint/:id/complete` | 1. `trip_waypoints.status` → "Completed"<br>2. `trip_waypoints.actual_completion_time` → NOW()<br>3. `trip_waypoints.received_by` → input<br>4. `order_waypoints.dispatch_status` → "Completed"<br>5. Create `waypoint_image` (POD)<br>6. Create `waypoint_log`<br>7. **Auto-complete trip if all waypoints done** |
-| **Driver reports failed** via `PUT /driver/trips/waypoint/:id/failed` | 1. `trip_waypoints.status` → "Completed"<br>2. `trip_waypoints.actual_completion_time` → NOW()<br>3. `trip_waypoints.failed_reason` → input<br>4. `order_waypoints.dispatch_status` → "Failed"<br>5. Create `waypoint_image` (failed)<br>6. Create `waypoint_log`<br>7. **Auto-complete trip if all waypoints done** |
-| **Admin returns waypoint** via `PUT /exceptions/waypoints/:id/return` | 1. `order_waypoints.dispatch_status` → "returned"<br>2. `order_waypoints.returned_note` → input<br>3. Create `waypoint_log`<br>4. **Auto-complete order if all waypoints are completed/returned** |
+| Trigger                                                                     | Updates                                                                                                                                                                                                                                                                                                              |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Driver starts trip** via `PUT /driver/trips/:id/start`                    | 1. `trip.status` → "In Transit"<br>2. `order.status` → "In Transit"<br>3. `trip_waypoints.status` (first only) → "In Transit"<br>4. `order_waypoints.dispatch_status` (first only) → "In Transit"                                                                                                                    |
+| **Driver starts waypoint** via `PUT /driver/trips/waypoint/:id/start`       | 1. `trip_waypoints.status` → "In Transit"<br>2. `trip_waypoints.actual_arrival_time` → NOW()<br>3. `order_waypoints.dispatch_status` → "In Transit"<br>4. Create `waypoint_log`                                                                                                                                      |
+| **Driver arrives at pickup** via `PUT /driver/trips/waypoint/:id/arrive`    | 1. `trip_waypoints.status` → "Completed"<br>2. `trip_waypoints.actual_completion_time` → NOW()<br>3. `order_waypoints.dispatch_status` → "Completed"<br>4. Create `waypoint_log`<br>5. **Auto-complete trip if all waypoints done**                                                                                  |
+| **Driver completes delivery** via `PUT /driver/trips/waypoint/:id/complete` | 1. `trip_waypoints.status` → "Completed"<br>2. `trip_waypoints.actual_completion_time` → NOW()<br>3. `trip_waypoints.received_by` → input<br>4. `order_waypoints.dispatch_status` → "Completed"<br>5. Create `waypoint_image` (POD)<br>6. Create `waypoint_log`<br>7. **Auto-complete trip if all waypoints done**   |
+| **Driver reports failed** via `PUT /driver/trips/waypoint/:id/failed`       | 1. `trip_waypoints.status` → "Completed"<br>2. `trip_waypoints.actual_completion_time` → NOW()<br>3. `trip_waypoints.failed_reason` → input<br>4. `order_waypoints.dispatch_status` → "Failed"<br>5. Create `waypoint_image` (failed)<br>6. Create `waypoint_log`<br>7. **Auto-complete trip if all waypoints done** |
+| **Admin returns waypoint** via `PUT /exceptions/waypoints/:id/return`       | 1. `order_waypoints.dispatch_status` → "returned"<br>2. `order_waypoints.returned_note` → input<br>3. Create `waypoint_log`<br>4. **Auto-complete order if all waypoints are completed/returned**                                                                                                                    |
 
 ### 2.2.5 Exception Reschedule Rules
 
@@ -741,6 +744,7 @@ THEN Order.status = "Completed"
 **Scenario: Waypoint 3 Failed**
 
 **Current State (sebelum reschedule):**
+
 ```
 Order #003: status = "In Transit"
 order_waypoints:
@@ -758,6 +762,7 @@ trip_waypoints:
 **Reschedule Flow (Opsi B - Reset order_waypoints):**
 
 1. **Complete Trip T001**
+
    ```
    PUT /trips/T001/complete
    → T001.status = "Completed"
@@ -765,6 +770,7 @@ trip_waypoints:
    ```
 
 2. **Create Trip T002 (reschedule WP3)**
+
    ```
    POST /trips
    {
@@ -780,6 +786,7 @@ trip_waypoints:
    ```
 
 3. **Execute T002 sampai Completed**
+
    ```
    → T002-WP3.status: "Pending" → "In Transit" → "Completed"
    → order_waypoints WP3.dispatch_status: "Pending" → "In Transit" → "Completed"
@@ -794,6 +801,7 @@ trip_waypoints:
    ```
 
 **Final State (setelah reschedule success):**
+
 ```
 Order #003: status = "Completed" ✅
 order_waypoints:
@@ -811,6 +819,7 @@ Trip T002: "Completed" (reschedule success)
 ```
 
 **Key Points:**
+
 - **History preserved**: trip_waypoints T001-WP3 tetap "Failed" (audit trail)
 - **order_waypoints reset**: WP3 di-reset ke "Pending" lalu "Completed" (source of truth)
 - **Order completion**: Karena semua order_waypoints "Completed/Returned" (tanpa Failed), order → "Completed"
@@ -849,27 +858,27 @@ Trip T002: "Completed" (reschedule success)
 
 **Perbedaan FTL vs LTL:**
 
-| Fitur                 | FTL                                        | LTL                                                      |
-| --------------------- | ------------------------------------------ | -------------------------------------------------------- |
-| Sequence Waypoint     | Set saat order creation, fixed             | NULL saat creation, set saat trip creation, bisa diubah ( Planned only) |
-| Display Waypoint      | Urut berdasarkan sequence_number           | Urut berdasarkan created_at sebelum trip creation        |
-| Manual Override Price | Ya (opsional)                              | Tidak                                                    |
+| Fitur                 | FTL                              | LTL                                                                     |
+| --------------------- | -------------------------------- | ----------------------------------------------------------------------- |
+| Sequence Waypoint     | Set saat order creation, fixed   | NULL saat creation, set saat trip creation, bisa diubah ( Planned only) |
+| Display Waypoint      | Urut berdasarkan sequence_number | Urut berdasarkan created_at sebelum trip creation                       |
+| Manual Override Price | Ya (opsional)                    | Tidak                                                                   |
 
 **Waypoint Sequence Rules:**
 
-| Order Type | When Set | Can Change? | How |
-|------------|----------|-------------|-----|
-| **FTL** | Order creation | No | Fixed |
-| **LTL** | Trip creation | Yes (if Planned) | POST /trips or PUT /trips/:id |
+| Order Type | When Set       | Can Change?      | How                           |
+| ---------- | -------------- | ---------------- | ----------------------------- |
+| **FTL**    | Order creation | No               | Fixed                         |
+| **LTL**    | Trip creation  | Yes (if Planned) | POST /trips or PUT /trips/:id |
 
 **Trip Update Capability:**
 
-| Trip Status | Change Sequence | Change Driver/Vehicle |
-|-------------|-----------------|----------------------|
-| Planned | ✅ Yes (LTL only) | No (cancel + create) |
-| Dispatched | ❌ No | No (cancel + create) |
-| In Transit | ❌ No | No (cancel + create) |
-| Completed | ❌ No | No |
+| Trip Status | Change Sequence   | Change Driver/Vehicle |
+| ----------- | ----------------- | --------------------- |
+| Planned     | ✅ Yes (LTL only) | No (cancel + create)  |
+| Dispatched  | ❌ No             | No (cancel + create)  |
+| In Transit  | ❌ No             | No (cancel + create)  |
+| Completed   | ❌ No             | No                    |
 
 **Exception Handling - Waypoint-Level Failure:**
 
@@ -881,16 +890,19 @@ Trip T002: "Completed" (reschedule success)
 - Re-schedule hanya untuk waypoint yang gagal (buat trip baru)
 
 **Order Completion Requirements:**
+
 - **Completed**: SEMUA waypoints Completed/Returned (TANPA Failed)
 - **In Transit**: Ada Pending/In Transit/Failed waypoints
 
 **Failed Waypoint Handling Options:**
+
 1. **Reschedule**: Buat trip baru untuk attempt delivery ulang
    - Failed → Pending → In Transit → Completed (jika sukses)
    - Order tetap In Transit sampai semua Completed/Returned
 2. **Return to Origin**: Mark sebagai Returned
    - Failed → Returned
    - Order bisa Complete jika semua Completed/Returned (tanpa Failed)
+
 - Satu order bisa punya multiple trip (hanya untuk reschedule scenario)
 
 ---
@@ -907,38 +919,39 @@ Base URL: `https://api.tms-onward.com/v1`
 | ------ | ---------------- | --------------------------------- |
 | POST   | `/auth/register` | Register new company & admin user |
 | POST   | `/auth/login`    | Login user                        |
-| POST   | `/auth/refresh`  | Refresh access token              |
 | POST   | `/auth/logout`   | Logout user                       |
 
 ### 3.3 Company Endpoints
 
-| Method | Endpoint                   | Description                                      |
-| ------ | -------------------------- | ------------------------------------------------ |
-| GET    | `/companies`               | Get company info (current user)                  |
-| PUT    | `/companies`               | Update company info                               |
-| POST   | `/companies/onboarding`    | Complete onboarding                               |
-| PUT    | `/companies/:id/activate`   | Activate company                                  |
-| PUT    | `/companies/:id/deactivate` | Deactivate company                                |
+| Method | Endpoint                    | Description                     |
+| ------ | --------------------------- | ------------------------------- |
+| GET    | `/companies`                | Get company info (current user) |
+| PUT    | `/companies`                | Update company info             |
+| POST   | `/companies/onboarding`     | Complete onboarding             |
+| PUT    | `/companies/:id/activate`   | Activate company                |
+| PUT    | `/companies/:id/deactivate` | Deactivate company              |
 
 **Query Parameters for GET /companies:**
+
 - `status` (string, optional) - Filter by status: `active` or `inactive` (default: all)
 
 ### 3.4 User Endpoints
 
-| Method | Endpoint                   | Description                                    |
-| ------ | -------------------------- | ---------------------------------------------- |
-| GET    | `/users`                   | List users (Admin/Dispatcher only)             |
-| POST   | `/users`                   | Create user (Admin only)                       |
-| GET    | `/users/:id`               | Get user detail                                |
-| PUT    | `/users/:id`               | Update user (sync name & phone to driver if role=Driver) |
-| DELETE | `/users/:id`               | Delete user (soft delete, cascade to driver if role=Driver) |
-| PUT    | `/users/:id/password`      | Change password                                |
-| GET    | `/users/me`                | Get current user profile                       |
-| PUT    | `/users/me`                | Update current user profile                    |
-| PUT    | `/users/:id/activate`      | Activate user (auto-logout all sessions if deactivating) |
-| PUT    | `/users/:id/deactivate`    | Deactivate user (auto-logout all sessions)     |
+| Method | Endpoint                | Description                                                 |
+| ------ | ----------------------- | ----------------------------------------------------------- |
+| GET    | `/users`                | List users (Admin/Dispatcher only)                          |
+| POST   | `/users`                | Create user (Admin only)                                    |
+| GET    | `/users/:id`            | Get user detail                                             |
+| PUT    | `/users/:id`            | Update user (sync name & phone to driver if role=Driver)    |
+| DELETE | `/users/:id`            | Delete user (soft delete, cascade to driver if role=Driver) |
+| PUT    | `/users/:id/password`   | Change password                                             |
+| GET    | `/me`                   | Get current user profile                                    |
+| PUT    | `/me`                   | Update current user profile                                 |
+| PUT    | `/users/:id/activate`   | Activate user (auto-logout all sessions if deactivating)    |
+| PUT    | `/users/:id/deactivate` | Deactivate user (auto-logout all sessions)                  |
 
 **Query Parameters for GET /users:**
+
 - `status` (string, optional) - Filter by status: `active` or `inactive` (default: all)
 - `page` (int, optional) - Page number for pagination
 - `limit` (int, optional) - Items per page
@@ -947,17 +960,18 @@ Base URL: `https://api.tms-onward.com/v1`
 
 #### Addresses (Customer Addresses)
 
-| Method | Endpoint                      | Description                                    |
-| ------ | ----------------------------- | ---------------------------------------------- |
-| GET    | `/addresses`                  | List addresses (filter by customer_id)         |
-| POST   | `/addresses`                  | Create address (customer_id required)          |
-| GET    | `/addresses/:id`              | Get address detail                             |
-| PUT    | `/addresses/:id`              | Update address                                 |
-| DELETE | `/addresses/:id`              | Delete address (soft delete)                   |
-| PUT    | `/addresses/:id/activate`     | Activate address                               |
-| PUT    | `/addresses/:id/deactivate`   | Deactivate address                             |
+| Method | Endpoint                    | Description                            |
+| ------ | --------------------------- | -------------------------------------- |
+| GET    | `/addresses`                | List addresses (filter by customer_id) |
+| POST   | `/addresses`                | Create address (customer_id required)  |
+| GET    | `/addresses/:id`            | Get address detail                     |
+| PUT    | `/addresses/:id`            | Update address                         |
+| DELETE | `/addresses/:id`            | Delete address (soft delete)           |
+| PUT    | `/addresses/:id/activate`   | Activate address                       |
+| PUT    | `/addresses/:id/deactivate` | Deactivate address                     |
 
 **Query Parameters for GET /addresses:**
+
 - `customer_id` (UUID, required) - Filter addresses by customer
 - `status` (string, optional) - Filter by status: `active` or `inactive` (default: all)
 - `page` (int, optional) - Page number for pagination
@@ -978,69 +992,73 @@ Base URL: `https://api.tms-onward.com/v1`
 
 #### Customers
 
-| Method | Endpoint                   | Description                     |
-| ------ | -------------------------- | ------------------------------- |
-| GET    | `/customers`               | List customers                  |
-| POST   | `/customers`               | Create customer                 |
-| GET    | `/customers/:id`           | Get customer detail             |
-| PUT    | `/customers/:id`           | Update customer                 |
-| DELETE | `/customers/:id`           | Delete customer (soft delete)   |
-| PUT    | `/customers/:id/activate`  | Activate customer               |
-| PUT    | `/customers/:id/deactivate`| Deactivate customer             |
+| Method | Endpoint                    | Description                   |
+| ------ | --------------------------- | ----------------------------- |
+| GET    | `/customers`                | List customers                |
+| POST   | `/customers`                | Create customer               |
+| GET    | `/customers/:id`            | Get customer detail           |
+| PUT    | `/customers/:id`            | Update customer               |
+| DELETE | `/customers/:id`            | Delete customer (soft delete) |
+| PUT    | `/customers/:id/activate`   | Activate customer             |
+| PUT    | `/customers/:id/deactivate` | Deactivate customer           |
 
 **Query Parameters for GET /customers:**
+
 - `status` (string, optional) - Filter by status: `active` or `inactive` (default: all)
 - `page` (int, optional) - Page number for pagination
 - `limit` (int, optional) - Items per page
 
 #### Vehicles
 
-| Method | Endpoint                   | Description                   |
-| ------ | -------------------------- | ----------------------------- |
-| GET    | `/vehicles`                | List vehicles                 |
-| POST   | `/vehicles`                | Create vehicle                |
-| GET    | `/vehicles/:id`            | Get vehicle detail            |
-| PUT    | `/vehicles/:id`            | Update vehicle                |
-| DELETE | `/vehicles/:id`            | Delete vehicle (soft delete)  |
-| PUT    | `/vehicles/:id/activate`   | Activate vehicle              |
-| PUT    | `/vehicles/:id/deactivate` | Deactivate vehicle            |
+| Method | Endpoint                   | Description                  |
+| ------ | -------------------------- | ---------------------------- |
+| GET    | `/vehicles`                | List vehicles                |
+| POST   | `/vehicles`                | Create vehicle               |
+| GET    | `/vehicles/:id`            | Get vehicle detail           |
+| PUT    | `/vehicles/:id`            | Update vehicle               |
+| DELETE | `/vehicles/:id`            | Delete vehicle (soft delete) |
+| PUT    | `/vehicles/:id/activate`   | Activate vehicle             |
+| PUT    | `/vehicles/:id/deactivate` | Deactivate vehicle           |
 
 **Query Parameters for GET /vehicles:**
+
 - `status` (string, optional) - Filter by status: `active` or `inactive` (default: all)
 - `page` (int, optional) - Page number for pagination
 - `limit` (int, optional) - Items per page
 
 #### Drivers
 
-| Method | Endpoint                   | Description                                         |
-| ------ | -------------------------- | --------------------------------------------------- |
-| GET    | `/drivers`                 | List drivers                                        |
-| POST   | `/drivers`                 | Create driver (with option to create user account)  |
-| GET    | `/drivers/:id`             | Get driver detail                                   |
-| PUT    | `/drivers/:id`             | Update driver (sync name & phone to user if user_id != NULL) |
-| DELETE | `/drivers/:id`             | Delete driver (soft delete, cascade to user if user_id != NULL) |
-| PUT    | `/drivers/:id/activate`    | Activate driver                                     |
-| PUT    | `/drivers/:id/deactivate`  | Deactivate driver                                   |
+| Method | Endpoint                  | Description                                                     |
+| ------ | ------------------------- | --------------------------------------------------------------- |
+| GET    | `/drivers`                | List drivers                                                    |
+| POST   | `/drivers`                | Create driver (with option to create user account)              |
+| GET    | `/drivers/:id`            | Get driver detail                                               |
+| PUT    | `/drivers/:id`            | Update driver (sync name & phone to user if user_id != NULL)    |
+| DELETE | `/drivers/:id`            | Delete driver (soft delete, cascade to user if user_id != NULL) |
+| PUT    | `/drivers/:id/activate`   | Activate driver                                                 |
+| PUT    | `/drivers/:id/deactivate` | Deactivate driver                                               |
 
 **Query Parameters for GET /drivers:**
+
 - `status` (string, optional) - Filter by status: `active` or `inactive` (default: all)
 - `page` (int, optional) - Page number for pagination
 - `limit` (int, optional) - Items per page
 
 #### Pricing Matrix
 
-| Method | Endpoint                      | Description                                        |
-| ------ | ----------------------------- | -------------------------------------------------- |
-| GET    | `/pricing-matrices`           | List pricing matrices                              |
-| POST   | `/pricing-matrices`           | Create pricing matrix                              |
-| GET    | `/pricing-matrices/:id`       | Get pricing matrix detail                          |
-| PUT    | `/pricing-matrices/:id`       | Update pricing matrix                              |
-| DELETE | `/pricing-matrices/:id`       | Delete pricing matrix (soft delete)                |
-| GET    | `/pricing-matrices/price`     | Calculate price (origin, destination, customer_id) |
-| PUT    | `/pricing-matrices/:id/activate`  | Activate pricing matrix                           |
-| PUT    | `/pricing-matrices/:id/deactivate`| Deactivate pricing matrix                         |
+| Method | Endpoint                           | Description                                        |
+| ------ | ---------------------------------- | -------------------------------------------------- |
+| GET    | `/pricing-matrices`                | List pricing matrices                              |
+| POST   | `/pricing-matrices`                | Create pricing matrix                              |
+| GET    | `/pricing-matrices/:id`            | Get pricing matrix detail                          |
+| PUT    | `/pricing-matrices/:id`            | Update pricing matrix                              |
+| DELETE | `/pricing-matrices/:id`            | Delete pricing matrix (soft delete)                |
+| GET    | `/pricing-matrices/price`          | Calculate price (origin, destination, customer_id) |
+| PUT    | `/pricing-matrices/:id/activate`   | Activate pricing matrix                            |
+| PUT    | `/pricing-matrices/:id/deactivate` | Deactivate pricing matrix                          |
 
 **Query Parameters for GET /pricing-matrices:**
+
 - `customer_id` (UUID, optional) - Filter by customer
 - `status` (string, optional) - Filter by status: `active` or `inactive` (default: all)
 - `page` (int, optional) - Page number for pagination
@@ -1052,17 +1070,20 @@ Base URL: `https://api.tms-onward.com/v1`
 The Customer Addresses feature ensures that all order waypoints reference valid, saved customer addresses. This eliminates ad-hoc location input and improves data consistency and accuracy.
 
 **Key Changes:**
+
 1. **Addresses are now customer-specific** - Each address belongs to a customer (not company-level)
 2. **Order waypoints require saved addresses** - `address_id` is NOT NULL in `order_waypoints` table
 3. **Address management UI** - Dedicated screen for managing customer addresses
 4. **In-order address creation** - "Create New Address" modal for on-the-fly creation
 
 **Database Schema Changes:**
+
 - `addresses.company_id` → `addresses.customer_id` (removed company-level addresses)
 - `order_waypoints.address_id` is now NOT NULL (required field)
 - Added index on `order_waypoints.address_id` for query optimization
 
 **Frontend Components:**
+
 - **Customer Addresses Screen** (`customer-addresses.tsx`)
   - List all addresses for selected customer
   - Create, edit, delete addresses
@@ -1075,11 +1096,13 @@ The Customer Addresses feature ensures that all order waypoints reference valid,
   - Address creation modal includes full geographic lookup
 
 **API Workflow:**
+
 1. **Get customer addresses:** `GET /addresses?customer_id=xxx`
 2. **Create address:** `POST /addresses` with `customer_id` required
 3. **Create order waypoint:** Use `address_id` from saved addresses (required)
 
 **Benefits:**
+
 - Improved data consistency (no typos in addresses)
 - Faster order creation (reuse saved addresses)
 - Better customer experience (familiar addresses)
@@ -1093,20 +1116,20 @@ Driver dan User entity memiliki field duplikat (`name`, `phone`) yang disinkroni
 
 #### Synchronized Fields
 
-| Field | Driver | User | Sync Direction |
-|-------|--------|------|----------------|
-| **name** | ✅ | ✅ | Driver ↔ User (2-way) |
-| **phone** | ✅ | ✅ | Driver ↔ User (2-way) |
+| Field     | Driver | User | Sync Direction        |
+| --------- | ------ | ---- | --------------------- |
+| **name**  | ✅     | ✅   | Driver ↔ User (2-way) |
+| **phone** | ✅     | ✅   | Driver ↔ User (2-way) |
 
 **Not synced:** `avatar_url`, `is_active` (independent)
 
 #### Sync Rules
 
-| Operation | Driver Change | User Change |
-|-----------|--------------|-------------|
-| **Create** | Copy name & phone ke user (if has_login=true) | N/A |
+| Operation  | Driver Change                                                    | User Change                                                  |
+| ---------- | ---------------------------------------------------------------- | ------------------------------------------------------------ |
+| **Create** | Copy name & phone ke user (if has_login=true)                    | N/A                                                          |
 | **Update** | driver.name/phone → sync to user.name/phone (if user_id != NULL) | user.name/phone → sync to driver.name/phone (if role=Driver) |
-| **Delete** | Soft delete driver + cascade to user (if user_id != NULL) | Soft delete user + cascade to driver (if role=Driver) |
+| **Delete** | Soft delete driver + cascade to user (if user_id != NULL)        | Soft delete user + cascade to driver (if role=Driver)        |
 
 #### Create Driver with User Flow
 
@@ -1228,23 +1251,23 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 | Method | Endpoint      | Description              |
 | ------ | ------------- | ------------------------ |
 | GET    | `/orders`     | List orders with filters |
-| POST   | `/orders`     | Create order            |
-| GET    | `/orders/:id`  | Get order detail         |
-| PUT    | `/orders/:id`  | Update order             |
-| DELETE | `/orders/:id`  | Cancel order             |
+| POST   | `/orders`     | Create order             |
+| GET    | `/orders/:id` | Get order detail         |
+| PUT    | `/orders/:id` | Update order             |
+| DELETE | `/orders/:id` | Cancel order             |
 
 **Note:** For public tracking, use `GET /public/tracking/:orderNumber` endpoint (see section 3.11).
 
 ### 3.7 Direct Assignment Endpoints
 
-| Method | Endpoint               | Description                                    |
-| ------ | ---------------------- | ---------------------------------------------- |
-| GET    | `/trips`               | List trips                                     |
-| POST   | `/trips`               | Create trip (assign driver + vehicle)          |
-| GET    | `/trips/:id`           | Get trip detail (includes waypoints)           |
-| PUT    | `/trips/:id`           | Update trip (notes, waypoint sequence)         |
-| DELETE | `/trips/:id`           | Delete trip (soft delete)                      |
-| PUT    | `/trips/:id/dispatch`  | Dispatch trip (signal to driver)               |
+| Method | Endpoint              | Description                            |
+| ------ | --------------------- | -------------------------------------- |
+| GET    | `/trips`              | List trips                             |
+| POST   | `/trips`              | Create trip (assign driver + vehicle)  |
+| GET    | `/trips/:id`          | Get trip detail (includes waypoints)   |
+| PUT    | `/trips/:id`          | Update trip (notes, waypoint sequence) |
+| DELETE | `/trips/:id`          | Delete trip (soft delete)              |
+| PUT    | `/trips/:id/dispatch` | Dispatch trip (signal to driver)       |
 
 **Note:** `GET /trips/:id` response includes `waypoints` array (trip_waypoints data with execution status).
 
@@ -1258,21 +1281,22 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
   "driver_id": "uuid",
   "vehicle_id": "uuid",
   "waypoints": [
-    {"waypoint_id": "uuid-1", "sequence": 1},
-    {"waypoint_id": "uuid-2", "sequence": 2},
-    {"waypoint_id": "uuid-3", "sequence": 3}
+    { "waypoint_id": "uuid-1", "sequence": 1 },
+    { "waypoint_id": "uuid-2", "sequence": 2 },
+    { "waypoint_id": "uuid-3", "sequence": 3 }
   ]
 }
 ```
 
 **Behavior:**
 
-| Order Type | `waypoints` Field | Sequence Source |
-|------------|------------------|-----------------|
-| **FTL** | Optional | From `order_waypoints.sequence_number` (set at order creation) |
-| **LTL** | Required | From request body (set by dispatcher) |
+| Order Type | `waypoints` Field | Sequence Source                                                |
+| ---------- | ----------------- | -------------------------------------------------------------- |
+| **FTL**    | Optional          | From `order_waypoints.sequence_number` (set at order creation) |
+| **LTL**    | Required          | From request body (set by dispatcher)                          |
 
 **Actions:**
+
 - Creates trip with status "Planned"
 - **Immediately creates `trip_waypoints`** with sequence from request
 - Updates `order_waypoints.sequence_number` for consistency
@@ -1287,21 +1311,22 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 {
   "notes": "Update notes...",
   "waypoints": [
-    {"waypoint_id": "uuid-1", "sequence": 1},
-    {"waypoint_id": "uuid-3", "sequence": 2},
-    {"waypoint_id": "uuid-2", "sequence": 3}
+    { "waypoint_id": "uuid-1", "sequence": 1 },
+    { "waypoint_id": "uuid-3", "sequence": 2 },
+    { "waypoint_id": "uuid-2", "sequence": 3 }
   ]
 }
 ```
 
 **Update Rules:**
 
-| Field | Planned | Dispatched | In Transit | Completed |
-|-------|---------|------------|------------|-----------|
-| `notes` | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
-| `waypoints` (sequence) | ✅ Yes (LTL only) | ❌ No | ❌ No | ❌ No |
+| Field                  | Planned           | Dispatched | In Transit | Completed |
+| ---------------------- | ----------------- | ---------- | ---------- | --------- |
+| `notes`                | ✅ Yes            | ✅ Yes     | ✅ Yes     | ✅ Yes    |
+| `waypoints` (sequence) | ✅ Yes (LTL only) | ❌ No      | ❌ No      | ❌ No     |
 
 **Notes:**
+
 - Waypoint sequence only updateable for `trip.status = "Planned"` and `order.order_type = "LTL"`
 - **Update method: Delete all existing trip_waypoints + recreate** with new sequence
 - Updates both `trip_waypoints.sequence_number` and `order_waypoints.sequence_number`
@@ -1311,15 +1336,18 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 **Description:** Dispatch a planned trip to signal the driver. Transition trip status from "Planned" to "Dispatched".
 
 **Validation Rules:**
+
 - Trip must exist
 - Trip status must be "Planned"
 
 **Actions:**
+
 - Update `trip.status` to "Dispatched"
 - Update `order.status` to "Dispatched"
 - Update first waypoint (`sequence = 1`) status to "Dispatched" (both `trip_waypoints.status` and `order_waypoints.dispatch_status`)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1332,13 +1360,16 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 **Description:** Soft delete a trip.
 
 **Validation Rules:**
+
 - Trip must exist
 
 **Actions:**
+
 - Set `trip.is_deleted = true`
 - If trip status was "Planned" or "Dispatched", reset `order.status` to "Pending"
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1348,18 +1379,19 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 
 ### 3.8 Driver Endpoints
 
-| Method | Endpoint                                    | Description            |
-| ------ | -------------------------------------------- | ---------------------- |
-| GET    | `/driver/trips`                             | Get my active trips (Planned, Dispatched, In Transit) |
-| GET    | `/driver/trips/history`                     | Get all my trips (all statuses) |
-| GET    | `/driver/trips/:id`                         | Get trip detail (includes waypoints) |
-| PUT    | `/driver/trips/:id/start`                   | Start trip (Dispatched → In Transit) |
-| PUT    | `/driver/trips/:trip_waypoint_id/status`    | Update waypoint status (with auto-complete on last WP) |
-| POST   | `/driver/trips/:trip_waypoint_id/pod`       | Submit POD             |
-| POST   | `/driver/trips/:trip_waypoint_id/report-issue` | Report issue           |
-| POST   | `/upload/presigned-url`                     | Generate presigned URL for S3 upload |
+| Method | Endpoint                                       | Description                                            |
+| ------ | ---------------------------------------------- | ------------------------------------------------------ |
+| GET    | `/driver/trips`                                | Get my active trips (Planned, Dispatched, In Transit)  |
+| GET    | `/driver/trips/history`                        | Get all my trips (all statuses)                        |
+| GET    | `/driver/trips/:id`                            | Get trip detail (includes waypoints)                   |
+| PUT    | `/driver/trips/:id/start`                      | Start trip (Dispatched → In Transit)                   |
+| PUT    | `/driver/trips/:trip_waypoint_id/status`       | Update waypoint status (with auto-complete on last WP) |
+| POST   | `/driver/trips/:trip_waypoint_id/pod`          | Submit POD                                             |
+| POST   | `/driver/trips/:trip_waypoint_id/report-issue` | Report issue                                           |
+| POST   | `/upload/presigned-url`                        | Generate presigned URL for S3 upload                   |
 
 **Default Filters:**
+
 - `GET /driver/trips`: Hanya return trips dengan status IN (Planned, Dispatched, In Transit) - untuk dashboard aktif
 - `GET /driver/trips/history`: Return semua trips (termasuk Completed) - untuk history
 
@@ -1372,6 +1404,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 **Description:** Generate presigned URL untuk upload file langsung ke S3 dari frontend (tanpa melalui backend).
 
 **Request Body:**
+
 ```json
 {
   "filename": "signature.jpg",
@@ -1380,6 +1413,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 ```
 
 **Response:**
+
 ```json
 {
   "uploadUrl": "https://bucket.s3.ap-southeast-1.amazonaws.com/uploads/2025/01/uuid.jpg?X-Amz-Algorithm=...&X-Amz-Credential=...&X-Amz-Date=...&X-Amz-Expires=300&X-Amz-SignedHeaders=...&X-Amz-Signature=...",
@@ -1388,10 +1422,12 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 ```
 
 **Fields:**
+
 - `uploadUrl`: Presigned URL untuk PUT request ke S3 (expire dalam 5 menit)
 - `fileUrl`: Final URL setelah upload berhasil (untuk disimpan ke database)
 
 **Upload Flow:**
+
 1. Frontend request presigned URL dari backend
 2. Backend generate URL dengan AWS SDK (expire 5 menit, PUT permission only)
 3. Frontend upload file langsung ke S3 menggunakan `uploadUrl` (PUT request)
@@ -1399,6 +1435,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 5. Frontend kirim `fileUrl` ke backend endpoint (POD, issue report, dll)
 
 **Security:**
+
 - AWS credentials tetap di backend
 - Presigned URL expire dalam 5 menit
 - Hanya bisa upload ke path tertentu
@@ -1413,12 +1450,14 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 **Description:** Mulai waypoint execution (Pending → In Transit).
 
 **Validation Rules:**
+
 - Trip waypoint harus ada
 - Trip waypoint milik driver yang sedang login
 - Status waypoint harus "Pending"
 - Tidak ada waypoint lain dalam trip ini yang status "In Transit" (hanya 1 waypoint aktif dalam satu waktu)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1427,6 +1466,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 ```
 
 **Actions:**
+
 - Update `trip_waypoint.status` → "In Transit"
 - Update `trip_waypoint.actual_arrival_time` → NOW()
 - Update `order_waypoint.dispatch_status` → "In Transit"
@@ -1439,12 +1479,14 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 **Description:** Tiba di pickup point dan selesaikan pickup (In Transit → Completed). **Khusus untuk Pickup type.**
 
 **Validation Rules:**
+
 - Trip waypoint harus ada
 - Trip waypoint milik driver yang sedang login
 - Order waypoint type harus "Pickup"
 - Status waypoint harus "In Transit"
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1453,6 +1495,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 ```
 
 **Actions:**
+
 - Update `trip_waypoint.status` → "Completed"
 - Update `trip_waypoint.actual_completion_time` → NOW()
 - Update `order_waypoint.dispatch_status` → "Completed"
@@ -1466,6 +1509,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 **Description:** Selesaikan delivery dengan POD (In Transit → Completed). **Khusus untuk Delivery type.**
 
 **Validation Rules:**
+
 - Trip waypoint harus ada
 - Trip waypoint milik driver yang sedang login
 - Order waypoint type harus "Delivery"
@@ -1474,6 +1518,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 - Photos tidak boleh kosong (minimal 1 photo)
 
 **Request Body:**
+
 ```json
 {
   "received_by": "Mukhyar",
@@ -1487,12 +1532,14 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 ```
 
 **Fields:**
+
 - `received_by`: Nama penerima (wajib)
 - `signature_url`: URL foto signature (wajib)
 - `images`: Array of photo URLs (wajib, minimal 1)
 - `note`: Optional notes
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1501,6 +1548,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 ```
 
 **Actions:**
+
 - Update `trip_waypoint.status` → "Completed"
 - Update `trip_waypoint.actual_completion_time` → NOW()
 - Update `trip_waypoint.received_by` → input
@@ -1516,6 +1564,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 **Description:** Laporkan waypoint gagal (In Transit → Completed/Failed). **Untuk Pickup & Delivery.**
 
 **Validation Rules:**
+
 - Trip waypoint harus ada
 - Trip waypoint milik driver yang sedang login
 - Status waypoint harus "In Transit"
@@ -1523,6 +1572,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 - Photos tidak boleh kosong (minimal 1 photo sebagai bukti)
 
 **Request Body:**
+
 ```json
 {
   "failed_reason": "Alamat tidak ditemukan",
@@ -1534,10 +1584,12 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 ```
 
 **Fields:**
+
 - `failed_reason`: Alasan gagal (wajib)
 - `images`: Array of photo URLs sebagai bukti (wajib, minimal 1)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1546,6 +1598,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 ```
 
 **Actions:**
+
 - Update `trip_waypoint.status` → "Completed"
 - Update `trip_waypoint.actual_completion_time` → NOW()
 - Update `trip_waypoint.failed_reason` → input
@@ -1563,12 +1616,13 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 **Description:** Get waypoint logs untuk tracking history.
 
 **Query Parameters:**
-| Parameter | Type   | Required | Description                |
+| Parameter | Type | Required | Description |
 |-----------|--------|----------|----------------------------|
-| order_id  | string | No       | Filter by order ID         |
+| order_id | string | No | Filter by order ID |
 | trip_waypoint_id | string | No | Filter by trip waypoint ID |
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -1590,12 +1644,13 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 **Description:** Get waypoint images (POD & failed images).
 
 **Query Parameters:**
-| Parameter | Type   | Required | Description        |
+| Parameter | Type | Required | Description |
 |-----------|--------|----------|--------------------|
-| trip_id   | string | No       | Filter by trip ID  |
+| trip_id | string | No | Filter by trip ID |
 | trip_waypoint_id | string | No | Filter by trip waypoint ID |
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -1617,28 +1672,28 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 
 ### 3.11 Exception Endpoints
 
-| Method | Endpoint                                    | Description                                    |
-| ------ | ------------------------------------------- | ---------------------------------------------- |
-| GET    | `/exceptions/orders`                        | List orders with failed/returned waypoints     |
-| GET    | `/exceptions/waypoints`                     | List failed/returned waypoints                 |
-| POST   | `/exceptions/waypoints/batch-reschedule`    | Reschedule multiple failed waypoints to new trip |
-| PUT    | `/exceptions/waypoints/:id/return`          | Mark failed waypoint as returned               |
+| Method | Endpoint                                 | Description                                      |
+| ------ | ---------------------------------------- | ------------------------------------------------ |
+| GET    | `/exceptions/orders`                     | List orders with failed waypoints                |
+| GET    | `/exceptions/waypoints`                  | List failed waypoints                            |
+| POST   | `/exceptions/waypoints/batch-reschedule` | Reschedule multiple failed waypoints to new trip |
+| PUT    | `/exceptions/waypoints/:id/return`       | Mark failed waypoint as returned                 |
 
 **Query Parameters (GET /exceptions/orders):**
-| Parameter | Type   | Required | Description                           |
+| Parameter | Type | Required | Description |
 |-----------|--------|----------|---------------------------------------|
-| page      | int    | No       | Page number (default: 1)              |
-| limit     | int    | No       | Items per page (default: 10)          |
-| order_id  | string | No       | Filter by order ID                    |
-| status    | string | No       | Filter by status (Failed/Returned)    |
+| page | int | No | Page number (default: 1) |returned
+| limit | int | No | Items per page (default: 10) |
+| order_id | string | No | Filter by order ID |
+| status | string | No | Filter by status failed |
 
 **Query Parameters (GET /exceptions/waypoints):**
-| Parameter | Type   | Required | Description                           |
+| Parameter | Type | Required | Description |
 |-----------|--------|----------|---------------------------------------|
-| page      | int    | No       | Page number (default: 1)              |
-| limit     | int    | No       | Items per page (default: 10)          |
-| order_id  | string | No       | Filter by order ID                    |
-| status    | string | No       | Filter by status (Failed/Returned)    |
+| page | int | No | Page number (default: 1) |
+| limit | int | No | Items per page (default: 10) |
+| order_id | string | No | Filter by order ID |
+| status | string | No | Filter by status failed |
 
 ---
 
@@ -1647,23 +1702,27 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 **Description:** Mark a failed waypoint as returned to origin. Returned waypoints cannot be rescheduled.
 
 **Validation Rules:**
+
 - Waypoint must exist
 - Waypoint `dispatch_status` must be "failed"
 
 **Request Body:**
+
 ```json
 {
-  "returned_note": "Barang dikembalikan ke gudang karena customer tidak dapat dihubungi"  // required - alasan barang dikembalikan ke origin
+  "returned_note": "Barang dikembalikan ke gudang karena customer tidak dapat dihubungi" // required - alasan barang dikembalikan ke origin
 }
 ```
 
 **Actions:**
+
 - Update `order_waypoint.dispatch_status` → "returned"
 - Update `order_waypoint.returned_note` → request body value
 - Create `waypoint_log` (event_type: `waypoint_returned`)
 - **Trip waypoint tetap failed** (tidak diubah)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1678,11 +1737,13 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 **Component Location:** `WaypointTimeline.tsx` (Order Detail Page)
 
 **Return Button:**
+
 - **Display Condition:** `waypoint.dispatch_status === "failed"`
 - **Button Style:** Warning style (matches "returned" status color)
 - **Action:** Opens `ReturnWaypointModal` with waypoint data
 
 **ReturnWaypointModal:**
+
 - **Modal Title:** "Mark Waypoint as Returned"
 - **Fields:**
   - `returned_note` (textarea, required) - Alasan barang dikembalikan ke origin
@@ -1690,17 +1751,20 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 - **Success Action:** Close modal, refresh order data (WaypointTimeline auto-updates via order detail refetch)
 
 **Display Returned Note:**
+
 - When `waypoint.dispatch_status === "returned"`:
   - Show `returned_note` in WaypointTimeline card
   - Display below waypoint status with info icon
 
 **Validation Notes:**
+
 - Frontend only validates waypoint is "failed" status
 - Trip status validation will be handled by backend
 
 ---
 
 **Request Body (POST /exceptions/waypoints/batch-reschedule):**
+
 ```json
 {
   "waypoint_ids": ["uuid-1", "uuid-2", "uuid-3"],
@@ -1710,6 +1774,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 ```
 
 **Validation Rules:**
+
 1. At least one `waypoint_id` is required
 2. All waypoints must belong to the same order
 3. Waypoints must be in "Failed" or "Returned" status
@@ -1717,6 +1782,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 5. Waypoints must not already be completed in the latest trip
 
 **Response (POST /exceptions/waypoints/batch-reschedule):**
+
 ```json
 {
   "success": true,
@@ -1747,6 +1813,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 ```
 
 **Actions (POST /exceptions/waypoints/batch-reschedule):**
+
 1. Validates all waypoints belong to same order and are Failed
 2. Validates old trip is Completed
 3. Creates new trip with status "Planned"
@@ -1755,6 +1822,7 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 6. Creates waypoint logs for audit trail
 
 **Business Rules:**
+
 - Only **Failed** waypoints can be rescheduled (Returned cannot be rescheduled)
 - Old trip must be Completed before creating new reschedule trip
 - Multiple reschedule attempts allowed (if waypoints fail again)
@@ -1777,22 +1845,22 @@ func (u *DriverUsecase) Update(ctx context.Context, driver *entity.Driver) error
 
 Laporan detail eksekusi order per waypoint dengan informasi driver, vehicle, dan status.
 
-| Method | Endpoint                            | Description                                    |
-| ------ | ----------------------------------- | ---------------------------------------------- |
-| GET    | `/reports/order-trip-waypoint`        | List order trip waypoint dengan filter (JSON) atau download Excel (`downloadable=true`) |
+| Method | Endpoint                       | Description                                                                             |
+| ------ | ------------------------------ | --------------------------------------------------------------------------------------- |
+| GET    | `/reports/order-trip-waypoint` | List order trip waypoint dengan filter (JSON) atau download Excel (`downloadable=true`) |
 
 **Query Parameters (GET /reports/order-trip-waypoint):**
 
-| Parameter   | Type    | Required | Description                                    |
-|------------|---------|-----------|------------------------------------------------|
-| page        | int     | No        | Page number (default: 1) - Ignored jika downloadable=true       |
-| limit       | int     | No        | Items per page (default: 10) - Ignored jika downloadable=true  |
-| date_from   | date    | No        | Filter dari tanggal (YYYY-MM-DD)       |
-| date_to     | date    | No        | Filter sampai tanggal (YYYY-MM-DD)     |
-| driver_id   | string  | No        | Filter by driver ID                   |
-| status      | string  | No        | Filter by waypoint status (Pending, Dispatched, In Transit, Completed, Failed) |
-| order_type  | string  | No        | Filter by order type (FTL, LTL)      |
-| downloadable | boolean | No        | Jika true, return Excel file download (default: false) |
+| Parameter    | Type    | Required | Description                                                                    |
+| ------------ | ------- | -------- | ------------------------------------------------------------------------------ |
+| page         | int     | No       | Page number (default: 1) - Ignored jika downloadable=true                      |
+| limit        | int     | No       | Items per page (default: 10) - Ignored jika downloadable=true                  |
+| date_from    | date    | No       | Filter dari tanggal (YYYY-MM-DD)                                               |
+| date_to      | date    | No       | Filter sampai tanggal (YYYY-MM-DD)                                             |
+| driver_id    | string  | No       | Filter by driver ID                                                            |
+| status       | string  | No       | Filter by waypoint status (Pending, Dispatched, In Transit, Completed, Failed) |
+| order_type   | string  | No       | Filter by order type (FTL, LTL)                                                |
+| downloadable | boolean | No       | Jika true, return Excel file download (default: false)                         |
 
 **Response (downloadable=false atau tidak ada):**
 
@@ -1843,20 +1911,20 @@ Laporan detail eksekusi order per waypoint dengan informasi driver, vehicle, dan
 
 Laporan revenue berdasarkan orders dengan total_price.
 
-| Method | Endpoint                   | Description                          |
-| ------ | -------------------------- | ------------------------------------ |
-| GET    | `/reports/revenue`        | List revenue dengan filter (JSON) atau download Excel (`downloadable=true`) |
+| Method | Endpoint           | Description                                                                 |
+| ------ | ------------------ | --------------------------------------------------------------------------- |
+| GET    | `/reports/revenue` | List revenue dengan filter (JSON) atau download Excel (`downloadable=true`) |
 
 **Query Parameters (GET /reports/revenue):**
 
-| Parameter   | Type    | Required | Description                                    |
-|------------|---------|-----------|------------------------------------------------|
-| page       | int     | No        | Page number (default: 1) - Ignored jika downloadable=true       |
-| limit      | int     | No        | Items per page (default: 10) - Ignored jika downloadable=true  |
-| date_from  | date    | No        | Filter dari tanggal (YYYY-MM-DD)       |
-| date_to    | date    | No        | Filter sampai tanggal (YYYY-MM-DD)     |
-| customer_id | string  | No        | Filter by customer ID                          |
-| downloadable | boolean | No        | Jika true, return Excel file download (default: false) |
+| Parameter    | Type    | Required | Description                                                   |
+| ------------ | ------- | -------- | ------------------------------------------------------------- |
+| page         | int     | No       | Page number (default: 1) - Ignored jika downloadable=true     |
+| limit        | int     | No       | Items per page (default: 10) - Ignored jika downloadable=true |
+| date_from    | date    | No       | Filter dari tanggal (YYYY-MM-DD)                              |
+| date_to      | date    | No       | Filter sampai tanggal (YYYY-MM-DD)                            |
+| customer_id  | string  | No       | Filter by customer ID                                         |
+| downloadable | boolean | No       | Jika true, return Excel file download (default: false)        |
 
 **Response (downloadable=false atau tidak ada):**
 
@@ -1891,20 +1959,20 @@ Laporan revenue berdasarkan orders dengan total_price.
 
 Laporan performa driver dengan statistik trips.
 
-| Method | Endpoint                          | Description                             |
-| ------ | --------------------------------- | --------------------------------------- |
-| GET    | `/reports/driver-performance`        | List performa driver dengan filter (JSON) atau download Excel (`downloadable=true`) |
+| Method | Endpoint                      | Description                                                                         |
+| ------ | ----------------------------- | ----------------------------------------------------------------------------------- |
+| GET    | `/reports/driver-performance` | List performa driver dengan filter (JSON) atau download Excel (`downloadable=true`) |
 
 **Query Parameters (GET /reports/driver-performance):**
 
-| Parameter   | Type    | Required | Description                                    |
-|------------|---------|-----------|------------------------------------------------|
-| page        | int     | No        | Page number (default: 1) - Ignored jika downloadable=true       |
-| limit       | int     | No        | Items per page (default: 10) - Ignored jika downloadable=true  |
-| date_from   | date    | No        | Filter dari tanggal (YYYY-MM-DD)       |
-| date_to     | date    | No        | Filter sampai tanggal (YYYY-MM-DD)     |
-| driver_id   | string  | No        | Filter by driver ID                          |
-| downloadable | boolean | No        | Jika true, return Excel file download (default: false) |
+| Parameter    | Type    | Required | Description                                                   |
+| ------------ | ------- | -------- | ------------------------------------------------------------- |
+| page         | int     | No       | Page number (default: 1) - Ignored jika downloadable=true     |
+| limit        | int     | No       | Items per page (default: 10) - Ignored jika downloadable=true |
+| date_from    | date    | No       | Filter dari tanggal (YYYY-MM-DD)                              |
+| date_to      | date    | No       | Filter sampai tanggal (YYYY-MM-DD)                            |
+| driver_id    | string  | No       | Filter by driver ID                                           |
+| downloadable | boolean | No       | Jika true, return Excel file download (default: false)        |
 
 **Response (downloadable=false atau tidak ada):**
 
@@ -1936,13 +2004,7 @@ Laporan performa driver dengan statistik trips.
 - Content-Disposition: `attachment; filename="driver-performance-report-{timestamp}.xlsx"`
 - Binary Excel file dengan columns: Driver Name, Total Trips, Completed Trips, In Progress Trips, Failed Trips, On-Time Rate, Avg Completion Time (Hours)
 
-### 3.12 i18n Endpoints
-
-| Method | Endpoint      | Description      |
-| ------ | ------------- | ---------------- |
-| GET    | `/i18n/:lang` | Get translations |
-
-### 3.13 Public Tracking Endpoints
+### 3.12 Public Tracking Endpoints
 
 | Method | Endpoint                        | Description                   |
 | ------ | ------------------------------- | ----------------------------- |
@@ -1950,7 +2012,7 @@ Laporan performa driver dengan statistik trips.
 
 ---
 
-## 3.14 Module Priorities
+## 3.13 Module Priorities
 
 | Prioritas | Modul                  | Deskripsi                                                                                 |
 | --------- | ---------------------- | ----------------------------------------------------------------------------------------- |
@@ -1961,10 +2023,9 @@ Laporan performa driver dengan statistik trips.
 | **P0**    | Direct Assignment      | Assign driver + vehicle (+ urutan LTL), trip creation                                     |
 | **P0**    | Driver Web             | Operasi driver                                                                            |
 | **P0**    | Exception Management   | Handle orders gagal (Waypoint-Level Failure)                                              |
-| **P1**    | Notification Service   | Notifikasi email (Failed Delivery, Delivered)                                             |
+| ~~P1~~    | Notification Service   | ~~Notifikasi email (Failed Delivery, Delivered)~~ - **OUT OF SCOPE** |
 | **P1**    | Basic Dashboard        | Ringkasan                                                                                 |
-| **P1**    | Reports               | Order Trip Waypoint, Revenue, Driver Performance dengan Excel Export                        |
-| **P1**    | Multi-language (i18n)  | Lokalisasi                                                                                |
+| **P1**    | Reports                | Order Trip Waypoint, Revenue, Driver Performance dengan Excel Export                      |
 | **P1**    | Public Tracking Page   | Halaman publik tracking order (tanpa login, timeline, nama penerima, driver/vehicle info) |
 | **P2**    | Audit Trail            | Order history untuk customer tracking (OrderCreated, StatusChange)                        |
 | **P2**    | Onboarding Wizard      | Setup cepat                                                                               |
@@ -1980,9 +2041,11 @@ Session management menggunakan Redis untuk menyimpan active sessions dan enable 
 ### Redis Key Format
 
 **Session Key:**
+
 ```
 onward-tms:session:{userID}:{jti}
 ```
+
 - Value: User entity (JSON)
 - Example: `onward-tms:session:123e4567-89ab-cdef-1111_a1b2c3d4-e5f6-7890-abcd-ef1234567890`
 - Purpose: Check if session is valid per request
@@ -1992,6 +2055,7 @@ onward-tms:session:{userID}:{jti}
 ### Session Lifecycle
 
 **1. Login (Create Session):**
+
 ```go
 // Generate unique JTI (JWT ID)
 claims.ID = uuid.New().String()
@@ -2005,6 +2069,7 @@ redis.Save(ctx, key, user)  // Full user entity as JSON
 ```
 
 **2. Request (Check Session):**
+
 ```go
 // Middleware CheckUserActive
 session := getSessionFromContext(ctx)
@@ -2018,6 +2083,7 @@ if err != nil {
 ```
 
 **3. Logout (Delete Single Session):**
+
 ```go
 // Delete session key
 key := "onward-tms:session:{userID}:{jti}"
@@ -2025,6 +2091,7 @@ redis.Delete(ctx, key)
 ```
 
 **4. Deactivate User:**
+
 ```go
 // Update is_active flag
 user.IsActive = false
@@ -2043,14 +2110,16 @@ for _, key := range keys {
 ### Middleware Implementation
 
 **CheckUserActive Middleware:**
+
 - Applied to all protected routes (except public endpoints)
 - Checks Redis key existence on every request
 - Returns 401 if key not found (session invalid or user deactivated)
 - Returns 503 if Redis is down
 
 **Protected Routes:**
+
 - All routes with `s.Restricted()` or `s.WithAuth(true)`
-- Exceptions: `/auth/login`, `/auth/register`, `/public/tracking/*`, `/docs/*`, `/i18n/*`
+- Exceptions: `/auth/login`, `/auth/register`, `/public/tracking/*`, `/docs/*`
 
 ### Multi-Session Support
 
@@ -2068,17 +2137,18 @@ User Device 3: onward-tms:onward-tms:session:123_ghi
 ### Login Validation
 
 Additional checks during login:
+
 1. User must be active (`is_active = true`)
 2. Company must be active (`is_active = true`)
 
 ### Error Messages
 
-| Scenario | HTTP Code | Message |
-|----------|-----------|---------|
-| Session invalid/expired | 401 | "Please login again" |
-| Service unavailable (Redis down) | 503 | "Service Unavailable" |
-| User inactive | - | (Handled by session check) |
-| Company inactive | 422 | "Company is inactive" |
+| Scenario                         | HTTP Code | Message                    |
+| -------------------------------- | --------- | -------------------------- |
+| Session invalid/expired          | 401       | "Please login again"       |
+| Service unavailable (Redis down) | 503       | "Service Unavailable"      |
+| User inactive                    | -         | (Handled by session check) |
+| Company inactive                 | 422       | "Company is inactive"      |
 
 ---
 
@@ -2090,26 +2160,28 @@ Business rules for activate/deactivate operations across all resources.
 
 ### Common Validation Rules (All Resources)
 
-| Rule | Description | Error Message |
-|------|-------------|---------------|
-| Already active | Cannot activate if `is_active = true` | "{Resource} is already active" |
+| Rule             | Description                              | Error Message                    |
+| ---------------- | ---------------------------------------- | -------------------------------- |
+| Already active   | Cannot activate if `is_active = true`    | "{Resource} is already active"   |
 | Already inactive | Cannot deactivate if `is_active = false` | "{Resource} is already inactive" |
 
 ### User-Specific Validation
 
-| Rule | Description | Error Message |
-|------|-------------|---------------|
-| Self-deactivate prevention | User cannot deactivate themselves | "You cannot deactivate yourself" |
-| Minimum active users | Company must have at least 1 active user | "Company must have at least 1 active user" |
+| Rule                       | Description                              | Error Message                              |
+| -------------------------- | ---------------------------------------- | ------------------------------------------ |
+| Self-deactivate prevention | User cannot deactivate themselves        | "You cannot deactivate yourself"           |
+| Minimum active users       | Company must have at least 1 active user | "Company must have at least 1 active user" |
 
 ### Implementation Notes
 
 **User Activation:**
+
 - Check `user.IsActive` → return error if already true
 - Set `user.IsActive = true`
 - Update database
 
 **User Deactivation:**
+
 - Check `user.IsActive` → return error if already false
 - Check `user.ID == current_user_id` → return error if self
 - Count active users in company → return error if count would be < 1
@@ -2118,6 +2190,7 @@ Business rules for activate/deactivate operations across all resources.
 - Update database
 
 **Other Resources (Company, Customer, Vehicle, Driver, Address, PricingMatrix):**
+
 - Check `resource.IsActive` → return error if same status
 - Set `resource.IsActive = true` (activate) or `false` (deactivate)
 - Update database
@@ -2455,6 +2528,7 @@ UI components for managing `is_active` status across 7 resources: Users, Compani
 #### 4.5.1 List Page Components
 
 **Status Filter Dropdown:**
+
 ```
 ┌─────────────────────────────────┐
 │ Status: [All ▼]                 │
@@ -2463,11 +2537,13 @@ UI components for managing `is_active` status across 7 resources: Users, Compani
 │         └─ Inactive             │
 └─────────────────────────────────┘
 ```
+
 - Location: Top of list page, above table
 - Default: "All"
 - API: `?status=active` or `?status=inactive`
 
 **Toggle Switch in Table:**
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ Name           │ Email            │ Status                    │
@@ -2475,6 +2551,7 @@ UI components for managing `is_active` status across 7 resources: Users, Compani
 │ Jane Smith     │ jane@example.com │ [○ Inactive]      ●      │ ← Toggle
 └──────────────────────────────────────────────────────────────┘
 ```
+
 - Direct execute on click (no confirmation dialog)
 - Disabled for current user (self-deactivate prevention)
 - Disabled while loading
@@ -2482,6 +2559,7 @@ UI components for managing `is_active` status across 7 resources: Users, Compani
 #### 4.5.2 Toggle Behavior
 
 **Optimistic Update (Opsi A):**
+
 ```
 User Click → UI immediately updates → API Call
               ↓
@@ -2490,6 +2568,7 @@ User Click → UI immediately updates → API Call
 ```
 
 **API Endpoints:**
+
 ```
 ON  → OFF: PUT /users/{id}/deactivate
 OFF → ON : PUT /users/{id}/activate
@@ -2498,6 +2577,7 @@ OFF → ON : PUT /users/{id}/activate
 #### 4.5.3 Form Select/Dropdown Behavior
 
 **All select fields ONLY show active records:**
+
 - Select Customer → Only `is_active = true`
 - Select Vehicle → Only `is_active = true`
 - Select Driver → Only `is_active = true`
@@ -2509,17 +2589,18 @@ Inactive records are completely hidden from dropdown options.
 
 #### 4.5.4 Error Messages
 
-| Error | Toast Message |
-|-------|---------------|
-| Self-deactivate | "You cannot deactivate yourself" |
-| Already active | "User is already active" |
-| Already inactive | "User is already inactive" |
+| Error             | Toast Message                              |
+| ----------------- | ------------------------------------------ |
+| Self-deactivate   | "You cannot deactivate yourself"           |
+| Already active    | "User is already active"                   |
+| Already inactive  | "User is already inactive"                 |
 | Min 1 active user | "Company must have at least 1 active user" |
-| Network error | "Failed to update user status" |
+| Network error     | "Failed to update user status"             |
 
 #### 4.5.5 Page Locations
 
 **Standalone List Pages:**
+
 - Users: `/users`
 - Customers: `/customers`
 - Vehicles: `/vehicles`
@@ -2527,6 +2608,7 @@ Inactive records are completely hidden from dropdown options.
 - Companies: `/companies`
 
 **Customer Detail Sub-Pages:**
+
 - Addresses: `/customers/{id}` → Addresses tab
 - Pricing Matrix: `/customers/{id}` → Pricing tab
 
@@ -2535,21 +2617,23 @@ Inactive records are completely hidden from dropdown options.
 Applied to all 3 apps: Admin App, Driver App, Customer Portal
 
 **API Interceptor Logic:**
+
 ```typescript
 // axiosResponseInterceptor.ts
 if (error.response?.status === 401) {
   // Clear all state
-  dispatch({ type: 'LOGOUT_SUCCESS' });
+  dispatch({ type: "LOGOUT_SUCCESS" });
 
   // Redirect to login
-  window.location.href = '/login';
+  window.location.href = "/login";
 
   // Show toast
-  toast.error('Please login again');
+  toast.error("Please login again");
 }
 ```
 
 **Triggered When:**
+
 - User is deactivated by admin
 - Session expires
 - Redis is down (503)
@@ -2576,49 +2660,49 @@ All users can activate/deactivate (no special permission required).
 
 ### 5.2 Phase 2: Master Data (P0 Module)
 
-| Task | Description                                    |
-| ---- | ---------------------------------------------- |
-| 2.1  | Implement location management                  |
-| 2.2  | Implement customer management                  |
-| 2.3  | Implement customer addresses management        |
-| 2.4  | Implement vehicle management                   |
-| 2.5  | Implement driver management                    |
-| 2.6  | Implement pricing matrix management            |
-| 2.7  | Build admin UI for master data                 |
-| 2.8  | Build customer addresses management screen      |
+| Task | Description                                |
+| ---- | ------------------------------------------ |
+| 2.1  | Implement location management              |
+| 2.2  | Implement customer management              |
+| 2.3  | Implement customer addresses management    |
+| 2.4  | Implement vehicle management               |
+| 2.5  | Implement driver management                |
+| 2.6  | Implement pricing matrix management        |
+| 2.7  | Build admin UI for master data             |
+| 2.8  | Build customer addresses management screen |
 
 ### 5.3 Phase 2.5: Activate/Deactivate Feature (P0 Module)
 
-| Task | Description |
-| ---- | ----------- |
-| 2.5.1 | Implement activate/deactivate endpoints for 7 resources (User, Company, Customer, Vehicle, Driver, Address, PricingMatrix) |
-| 2.5.2 | Implement Redis session management (JTI, session keys, user sessions list) |
-| 2.5.3 | Implement CheckUserActive middleware |
-| 2.5.4 | Implement WithAuthAndActiveCheck helper function |
-| 2.5.5 | Add status query parameters to list endpoints |
-| 2.5.6 | Implement validation (self-deactivate, min active user, already active/inactive) |
-| 2.5.7 | Implement company active check during login |
-| 2.5.8 | Update logout handler to support JTI-based session deletion |
-| 2.5.9 | Build frontend toggle switch component for status |
-| 2.5.10 | Build frontend status filter dropdown (All/Active/Inactive) |
-| 2.5.11 | Implement API interceptor for 401 auto-logout (Admin, Driver, Customer apps) |
-| 2.5.12 | Update form dropdowns to only show active records |
-| 2.5.13 | Add optimistic update behavior for toggle |
-| 2.5.14 | Add error handling and toast messages |
+| Task   | Description                                                                                                                |
+| ------ | -------------------------------------------------------------------------------------------------------------------------- |
+| 2.5.1  | Implement activate/deactivate endpoints for 7 resources (User, Company, Customer, Vehicle, Driver, Address, PricingMatrix) |
+| 2.5.2  | Implement Redis session management (JTI, session keys, user sessions list)                                                 |
+| 2.5.3  | Implement CheckUserActive middleware                                                                                       |
+| 2.5.4  | Implement WithAuthAndActiveCheck helper function                                                                           |
+| 2.5.5  | Add status query parameters to list endpoints                                                                              |
+| 2.5.6  | Implement validation (self-deactivate, min active user, already active/inactive)                                           |
+| 2.5.7  | Implement company active check during login                                                                                |
+| 2.5.8  | Update logout handler to support JTI-based session deletion                                                                |
+| 2.5.9  | Build frontend toggle switch component for status                                                                          |
+| 2.5.10 | Build frontend status filter dropdown (All/Active/Inactive)                                                                |
+| 2.5.11 | Implement API interceptor for 401 auto-logout (Admin, Driver, Customer apps)                                               |
+| 2.5.12 | Update form dropdowns to only show active records                                                                          |
+| 2.5.13 | Add optimistic update behavior for toggle                                                                                  |
+| 2.5.14 | Add error handling and toast messages                                                                                      |
 
 ---
 
 ### 5.4 Phase 3: Order Management (P0 Module)
 
-| Task | Description                                                                                                    |
-| ---- | -------------------------------------------------------------------------------------------------------------- |
-| 3.1  | Implement order CRUD operations                                                                                |
-| 3.2  | Implement waypoint management with required address_id                                                          |
-| 3.3  | Implement item management per waypoint                                                                         |
-| 3.4  | Implement pricing calculation (sum of delivery waypoint prices, with manual override option for FTL)           |
-| 3.5  | Build order list and detail pages                                                                              |
-| 3.6  | Build order creation form with customer address selector                                                        |
-| 3.7  | Implement "Create New Address" modal for on-the-fly address creation during order creation                      |
+| Task | Description                                                                                          |
+| ---- | ---------------------------------------------------------------------------------------------------- |
+| 3.1  | Implement order CRUD operations                                                                      |
+| 3.2  | Implement waypoint management with required address_id                                               |
+| 3.3  | Implement item management per waypoint                                                               |
+| 3.4  | Implement pricing calculation (sum of delivery waypoint prices, with manual override option for FTL) |
+| 3.5  | Build order list and detail pages                                                                    |
+| 3.6  | Build order creation form with customer address selector                                             |
+| 3.7  | Implement "Create New Address" modal for on-the-fly address creation during order creation           |
 
 ### 5.5 Phase 4: Direct Assignment (P0 Module)
 
@@ -2649,13 +2733,17 @@ All users can activate/deactivate (no special permission required).
 | 6.3  | Build exception list and detail pages                                          |
 | 6.4  | Build re-schedule form                                                         |
 
-### 5.8 Phase 7: Notification Service (P1 Module) - Failed Delivery & Delivered Only
+### ~~5.8 Phase 7: Notification Service (P1 Module) - Failed Delivery & Delivered Only~~
 
-| Task | Description                                                   |
+**OUT OF SCOPE - NOT REQUIRED**
+
+Email notification service tidak diimplementasikan. Customer dapat melakukan tracking secara real-time melalui Public Tracking Page.
+
+| ~~Task~~ | ~~Description~~                                                   |
 | ---- | ------------------------------------------------------------- |
-| 7.1  | Implement email service (SMTP)                                |
-| 7.2  | Create email templates (ID & EN) - Failed Delivery, Delivered |
-| 7.3  | Implement notification triggers (Failed Delivery, Delivered)  |
+| ~~7.1~~  | ~~Implement email service (SMTP)~~                                |
+| ~~7.2~~  | ~~Create email templates (ID & EN) - Failed Delivery, Delivered~~ |
+| ~~7.3~~  | ~~Implement notification triggers (Failed Delivery, Delivered)~~  |
 
 ### 5.9 Phase 8: Dashboard & Reports (P1 Modules) - With Excel Export
 
@@ -2667,31 +2755,21 @@ All users can activate/deactivate (no special permission required).
 | 8.4  | Build report pages                 |
 | 8.5  | Implement Excel export for reports |
 
-### 5.10 Phase 9: Multi-language (P1 Module)
-
-| Task | Description                            |
-| ---- | -------------------------------------- |
-| 9.1  | Create translation files (ID & EN)     |
-| 9.2  | Implement i18n service                 |
-| 9.3  | Add language selector to UI            |
-| 9.4  | Implement auto-detect browser language |
-
-### 5.11 Phase 10: Public Tracking Page (P1 Module) - Timeline with Recipient Name, Driver & Vehicle Info
+### 5.9 Phase 9: Public Tracking Page (P1 Module) - Timeline with Recipient Name, Driver & Vehicle Info
 
 | Task | Description                                                                            |
 | ---- | -------------------------------------------------------------------------------------- |
-| 10.1 | Implement public tracking endpoint                                                     |
-| 10.2 | Implement waypoint logs query (OrderCreated, StatusChange)                             |
-| 10.3 | Build public tracking page UI with timeline, recipient name, driver name, vehicle info |
-| 10.4 | Add language support                                                                   |
+| 9.1  | Implement public tracking endpoint                                                     |
+| 9.2  | Implement waypoint logs query (OrderCreated, StatusChange)                             |
+| 9.3  | Build public tracking page UI with timeline, recipient name, driver name, vehicle info |
 
-### 5.12 Phase 11: Onboarding Wizard (P2 Module)
+### 5.10 Phase 10: Onboarding Wizard (P2 Module)
 
 | Task | Description                    |
 | ---- | ------------------------------ |
-| 11.1 | Implement onboarding endpoints |
-| 11.2 | Build onboarding wizard UI     |
-| 11.3 | Add skip option                |
+| 10.1 | Implement onboarding endpoints |
+| 10.2 | Build onboarding wizard UI     |
+| 10.3 | Add skip option                |
 
 ---
 
@@ -2797,7 +2875,7 @@ All users can activate/deactivate (no special permission required).
 - Offline support for driver app
 - Advanced analytics dashboard
 - Customer portal
-- WhatsApp/SMS notifications
+- ~~WhatsApp/SMS notifications~~
 - Integration with external systems (ERP, CRM)
 
 ---
@@ -2806,6 +2884,7 @@ All users can activate/deactivate (no special permission required).
 **Terakhir Diupdate:** 2026-01-29
 
 **Changelog:**
+
 - v3.0 (2026-01-29):
   - **[FEATURE]** Added Driver-User Sync Logic (section 3.5.2)
     - 2-way sync for `name` and `phone` fields between drivers and users tables
@@ -2892,8 +2971,8 @@ All users can activate/deactivate (no special permission required).
   - This change simplifies the API while maintaining all security validations via trip_waypoint.Trip relation
 - v2.6 (2026-01-25):
   - Added Exception Management API endpoints (section 3.9)
-  - Added `GET /exceptions/orders` - list orders with failed/returned waypoints
-  - Added `GET /exceptions/waypoints` - list failed/returned waypoints
+  - Added `GET /exceptions/orders` - list orders with failed waypoints
+  - Added `GET /exceptions/waypoints` - list failed waypoints
   - Added `POST /exceptions/waypoints/batch-reschedule` - reschedule multiple failed waypoints to new trip
   - Removed `/waypoints/*` standalone endpoints (not in blueprint, redundant with driver_web)
   - Removed `GetByCustomerID()` from Address usecase/repository (unused, use Get() with filter instead)
