@@ -51,7 +51,9 @@ func (h *handler) getOrderTripWaypointReport(ctx *rest.Context) (err error) {
 	var res *rest.ResponseBody
 
 	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
-		res, err = req.get()
+		if res, err = req.get(); err == nil && req.Downloadable {
+			return req.getDownload(res.Data, ctx)
+		}
 	}
 	return ctx.Respond(res, err)
 }
@@ -81,7 +83,9 @@ func (h *handler) getDriverPerformance(ctx *rest.Context) (err error) {
 	var res *rest.ResponseBody
 
 	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
-		res, err = req.get()
+		if res, err = req.get(); err == nil && req.Downloadable {
+			return req.getDownload(res.Data, ctx)
+		}
 	}
 	return ctx.Respond(res, err)
 }
@@ -111,7 +115,9 @@ func (h *handler) getCustomerReport(ctx *rest.Context) (err error) {
 	var res *rest.ResponseBody
 
 	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
-		res, err = req.get()
+		if res, err = req.get(); err == nil && req.Downloadable {
+			return req.getDownload(res.Data, ctx)
+		}
 	}
 	return ctx.Respond(res, err)
 }

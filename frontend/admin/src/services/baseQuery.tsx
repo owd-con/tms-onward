@@ -52,11 +52,13 @@ export const baseQuery: BaseQueryFn<
   const params = typeof args === "object" ? args.params : undefined;
 
   // Log request
+  console.log("[baseQuery] Request:", { url, method, params, body });
   logger.apiRequest(url, method, params, body);
 
   const result = await rawBaseQuery(args, api, extraOptions);
 
   // Log response
+  console.log("[baseQuery] Response:", result);
   logger.apiResponse(result);
 
   // Handle authentication errors (401/403)

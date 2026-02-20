@@ -6,16 +6,17 @@ export const dashboardApi = createApi({
   baseQuery,
   endpoints: (builder) => ({
     getDashboard: builder.query({
-      query: (params?: any) => ({
-        url: `/dashboard`,
-        method: "GET",
-        params,
-      }),
+      query: (params) => {
+        console.log("[dashboardApi] getDashboard called with params:", params);
+        return {
+          url: `/dashboard`,
+          method: "GET",
+          params,
+        };
+      },
     }),
   }),
 });
 
 // export hooks RTK Query
-export const {
-  useLazyGetDashboardQuery,
-} = dashboardApi;
+export const { useLazyGetDashboardQuery } = dashboardApi;

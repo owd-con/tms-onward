@@ -703,6 +703,163 @@ func (r *returnWaypointRequest) execute() (*rest.ResponseBody, error) {
 
 **Alasan:** Field tersebut diperlukan untuk **validasi** (`trip.Status == "completed"`), bukan untuk business logic di `execute()`.
 
+### Report Pattern with Downloadable Parameter
+
+For report endpoints that support Excel export, use the `downloadable` query parameter pattern. This allows the same endpoint to return either JSON data (for UI) or Excel file download.
+
+**Package Dependency:**
+```bash
+go get github.com/xuri/excelize/v2
+```
+
+#### Request Structure
+
+**File:** `src/handler/rest/report/request_{report_name}.go`
+
+```go
+package report
+
+import (
+	"context"
+	"fmt"
+	"io/ioutil"
+	"strings"
+	"time"
+
+	"github.com/logistics-id/onward-tms/entity"
+	"github.com/logistics-id/onward-tms/src/usecase"
+	"github.com/logistics-id/engine/common"
+	"github.com/logistics-id/engine/transport/rest"
+	"github.com/xuri/excelize/v2"
+)
+
+type getCustomerReportRequest struct {
+	usecase.ReportQueryOptions
+
+	// Query parameters
+	Downloadable bool `query:"downloadable"`
+
+	uc      *usecase.ReportUsecase
+	ctx     context.Context
+	session *entity.TMSSessionClaims
+}
+```
+
+#### Required Methods
+
+| Method | Purpose |
+|--------|---------|
+| `with()` | Attach context, usecase, and session |
+| `get()` | Query & return JSON data (set limit to 100000 if Downloadable=true) |
+| `getDownload(data, ctx)` | Convert data to Excel using excelize |
+
+#### get() Method Pattern
+
+**IMPORTANT**: When `Downloadable=true`, set `Limit` to 100000 to fetch all data for Excel export.
+
+```go
+func (r *getCustomerReportRequest) get() (*rest.ResponseBody, error) {
+	// Set limit to 100000 if downloadable
+	if r.Downloadable {
+		r.Limit = 100000
+	}
+
+	opts := r.BuildQueryOption()
+	opts.Session = r.session
+
+	data, total, err := r.uc.GetCustomerReport(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return rest.NewResponseBody(data, rest.BuildMeta(r.Page, r.Limit, total)), nil
+}
+
+func (r *getCustomerReportRequest) with(ctx context.Context, uc *usecase.ReportUsecase) *getCustomerReportRequest {
+	r.ctx = ctx
+	r.uc = uc.WithContext(ctx)
+	r.session = common.GetContextSessionGeneric[entity.TMSSessionClaims](ctx)
+	return r
+}
+```
+
+#### getDownload() Method Pattern
+
+```go
+func (r *getCustomerReportRequest) getDownload(data any, c *rest.Context) error {
+	items, ok := data.([]*usecase.CustomerReportItem)
+	if !ok {
+		return fmt.Errorf("invalid data type")
+	}
+
+	f := excelize.NewFile()
+	sheet := "Sheet1" // Use default sheet name
+
+	// Create header style (bold + center align)
+	headerStyle, _ := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{Bold: true},
+		Alignment: &excelize.Alignment{Horizontal: "center"},
+	})
+
+	// Create headers starting from row 1
+	headers := []string{"Customer Name", "Order Count", "Total Revenue", "Completed Waypoints", "Failed Waypoints", "Success Rate"}
+	for i, h := range headers {
+		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
+		f.SetCellValue(sheet, cell, h)
+		f.SetCellStyle(sheet, cell, cell, headerStyle)
+	}
+
+	// Fill data starting from row 2
+	for i, item := range items {
+		row := i + 2
+		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), item.CustomerName)
+		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), item.OrderCount)
+		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), item.TotalRevenue)
+		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), item.CompletedWaypoints)
+		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), item.FailedWaypoints)
+		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), item.SuccessRate)
+	}
+
+	// Set headers for download
+	c.Response.Header().Set("Content-Type", "application/octet-stream")
+	c.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=Customer-Report-%s.xlsx", time.Now().Format("20060102150405")))
+	c.Response.Header().Set("Content-Transfer-Encoding", "binary")
+	c.Response.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
+
+	buf, _ := f.WriteToBuffer()
+	v, _ := ioutil.ReadAll(strings.NewReader(buf.String()))
+	c.Response.Write(v)
+
+	return nil
+}
+```
+
+#### Handler Pattern
+
+**File:** `src/handler/rest/report/handler.go`
+
+```go
+// getCustomerReport handles GET /reports/customer
+func (h *handler) getCustomerReport(ctx *rest.Context) (err error) {
+	var req getCustomerReportRequest
+	var res *rest.ResponseBody
+
+	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
+		if res, err = req.get(); err == nil && req.Downloadable {
+			return req.getDownload(res.Data, ctx)
+		}
+	}
+
+	return ctx.Respond(res, err)
+}
+```
+
+**Flow:**
+1. Bind request with context and usecase
+2. Call `req.get()` to fetch data (returns `*rest.ResponseBody`)
+3. If `Downloadable=true` and no error → call `getDownload(res.Data, ctx)` to convert to Excel
+4. Otherwise → return JSON response normally
+
 ---
 
 ## Usecase Layer

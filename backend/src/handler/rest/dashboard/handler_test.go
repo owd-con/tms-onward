@@ -127,7 +127,7 @@ func createTestUser(t *testing.T, companyID uuid.UUID) *entity.User {
 	return user
 }
 
-func TestHandler_GetSummary_Success(t *testing.T) {
+func TestHandler_Get_Success(t *testing.T) {
 	uc := usecase.NewFactory()
 	h := &handler{uc: uc}
 
@@ -136,7 +136,7 @@ func TestHandler_GetSummary_Success(t *testing.T) {
 
 	ctx := createTestContext("GET", "/dashboard", nil, user.ID.String(), company.ID.String())
 
-	err := h.getSummary(ctx)
+	err := h.get(ctx)
 
 	assert.NoError(t, err)
 
@@ -149,13 +149,19 @@ func TestHandler_GetSummary_Success(t *testing.T) {
 	assert.NotNil(t, response["data"])
 
 	data := response["data"].(map[string]interface{})
-	assert.Contains(t, data, "today_orders_count")
-	assert.Contains(t, data, "active_trips_count")
-	assert.Contains(t, data, "pending_waypoints_count")
-	assert.Contains(t, data, "completed_trips_count")
+	assert.Contains(t, data, "stats")
+	assert.Contains(t, data, "map_waypoints_by_area")
+	assert.Contains(t, data, "expired_vehicles")
+	assert.Contains(t, data, "expired_drivers")
+
+	stats := data["stats"].(map[string]interface{})
+	assert.Contains(t, stats, "total_orders")
+	assert.Contains(t, stats, "active_trips")
+	assert.Contains(t, stats, "pending_orders")
+	assert.Contains(t, stats, "completed_orders")
 }
 
-func TestHandler_GetSummary_Unauthorized(t *testing.T) {
+func TestHandler_Get_Unauthorized(t *testing.T) {
 	uc := usecase.NewFactory()
 	h := &handler{uc: uc}
 
@@ -170,7 +176,7 @@ func TestHandler_GetSummary_Unauthorized(t *testing.T) {
 		Request:  req,
 	}
 
-	err := h.getSummary(ctx)
+	err := h.get(ctx)
 
 	// Should still return no error (handled by middleware)
 	assert.NoError(t, err)

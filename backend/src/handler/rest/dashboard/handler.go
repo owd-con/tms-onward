@@ -15,12 +15,12 @@ type handler struct {
 func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 	h := &handler{uc: factory}
 
-	s.GET("/dashboard", h.getSummary, middleware.WithActiveCheck(s))
+	s.GET("/dashboard", h.get, middleware.WithActiveCheck(s))
 }
 
-// getSummary handles GET /dashboard
-// @Summary Get dashboard summary
-// @Description Get dashboard summary statistics including active orders, trips, drivers, vehicles
+// get handles GET /dashboard
+// @Summary Get dashboard
+// @Description Get complete dashboard data including stats, map waypoints, expired vehicles/drivers, and failed orders
 // @Tags dashboard
 // @Accept json
 // @Produce json
@@ -30,8 +30,8 @@ func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
 // @Router /dashboard [get]
-func (h *handler) getSummary(ctx *rest.Context) (err error) {
-	var req getSummaryRequest
+func (h *handler) get(ctx *rest.Context) (err error) {
+	var req getRequest
 	var res *rest.ResponseBody
 
 	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {

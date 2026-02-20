@@ -10,18 +10,19 @@ import (
 	"github.com/logistics-id/engine/transport/rest"
 )
 
-type getSummaryRequest struct {
+type getRequest struct {
+	usecase.DashboardQueryOptions
+
 	uc      *usecase.Factory
 	ctx     context.Context
 	session *entity.TMSSessionClaims
 }
 
-func (r *getSummaryRequest) get() (*rest.ResponseBody, error) {
-	req := &usecase.DashboardQueryOptions{
-		Session: r.session,
-	}
+func (r *getRequest) get() (*rest.ResponseBody, error) {
+	// Set session
+	r.Session = r.session
 
-	summary, err := r.uc.Dashboard.GetSummary(r.ctx, req)
+	summary, err := r.uc.Dashboard.Get(&r.DashboardQueryOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +30,7 @@ func (r *getSummaryRequest) get() (*rest.ResponseBody, error) {
 	return rest.NewResponseBody(summary), nil
 }
 
-func (r *getSummaryRequest) with(ctx context.Context, uc *usecase.Factory) *getSummaryRequest {
+func (r *getRequest) with(ctx context.Context, uc *usecase.Factory) *getRequest {
 	r.ctx = ctx
 	r.uc = uc.WithContext(ctx)
 	r.session = common.GetContextSessionGeneric[entity.TMSSessionClaims](ctx)

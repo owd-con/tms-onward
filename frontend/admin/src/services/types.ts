@@ -475,15 +475,61 @@ export interface DashboardStats {
   active_trips: number;
   pending_orders: number;
   completed_orders: number;
-  total_customers: number;
-  total_drivers: number;
-  total_vehicles: number;
-  today_orders: number;
-  today_trips: number;
 }
 
-// Alias for backward compatibility
-export type Dashboard = DashboardStats;
+export interface MapWaypoint {
+  order_id: string;
+  order_number: string;
+  customer_name: string;
+  address: string;
+  city: string;
+  lat: number;
+  lng: number;
+  status: string;
+  waypoint_type: string;
+}
+
+export interface MapWaypointsByArea {
+  address: string;
+  city: string;
+  lat: number;
+  lng: number;
+  waypoints: MapWaypoint[];
+}
+
+export interface ExpiredVehicle {
+  id: string;
+  plate_number: string;
+  year: number;
+  expired_year: number;
+  brand: string;
+  model: string;
+}
+
+export interface ExpiredDriver {
+  id: string;
+  name: string;
+  license_type: string;
+  license_expiry: string;
+  phone_number: string;
+}
+
+export interface FailedOrder {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  failed_reason: string;
+  status: string;
+  failed_at?: string;
+}
+
+export interface Dashboard {
+  stats: DashboardStats;
+  map_waypoints_by_area: MapWaypointsByArea[];
+  expired_vehicles: ExpiredVehicle[];
+  expired_drivers: ExpiredDriver[];
+  failed_orders: FailedOrder[];
+}
 
 // ============================================================================
 // Warehouse Management (Location Layout)

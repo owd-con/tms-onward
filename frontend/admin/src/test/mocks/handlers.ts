@@ -14,13 +14,11 @@ interface LoginResponse {
   };
 }
 
-interface DashboardResponse {
-  data: {
-    total_orders: number;
-    active_trips: number;
-    pending_orders: number;
-    completed_orders: number;
-  };
+interface DashboardData {
+  total_orders: number;
+  active_trips: number;
+  pending_orders: number;
+  completed_orders: number;
 }
 
 export const handlers = [
@@ -58,7 +56,7 @@ export const handlers = [
         pending_orders: 12,
         completed_orders: 133,
       },
-    } satisfies DashboardResponse);
+    } satisfies { data: DashboardData });
   }),
 
   // GET /api/customers

@@ -135,6 +135,16 @@ type CustomerReport struct {
 	Limit int                   `json:"limit"`
 }
 
+// RevenueReportItem represents a single order revenue record
+type RevenueReportItem struct {
+	OrderNumber  string  `json:"order_number"`
+	CustomerName string  `json:"customer_name"`
+	OrderType    string  `json:"order_type"`
+	TotalPrice   float64 `json:"total_price"`
+	Status       string  `json:"status"`
+	CreatedAt    string  `json:"created_at"`
+}
+
 // ReportQueryOptions provides query parameters for report endpoints
 type ReportQueryOptions struct {
 	common.QueryOption
@@ -178,8 +188,8 @@ func (u *ReportUsecase) GetCustomerReport(opts *ReportQueryOptions) ([]*Customer
 		ColumnExpr("c.name AS customer_name").
 		ColumnExpr("COALESCE(COUNT(DISTINCT o.id), 0) AS order_count").
 		ColumnExpr("COALESCE(SUM(o.total_price), 0) AS total_revenue").
-		ColumnExpr("COALESCE(SUM(CASE WHEN ow.dispatch_status = ? THEN 1 ELSE 0 END), 0) AS completed_waypoints", "Completed").
-		ColumnExpr("COALESCE(SUM(CASE WHEN ow.dispatch_status = ? THEN 1 ELSE 0 END), 0) AS failed_waypoints", "Failed").
+		ColumnExpr("COALESCE(SUM(CASE WHEN ow.dispatch_status = ? THEN 1 ELSE 0 END), 0) AS completed_waypoints", "completed").
+		ColumnExpr("COALESCE(SUM(CASE WHEN ow.dispatch_status = ? THEN 1 ELSE 0 END), 0) AS failed_waypoints", "failed").
 		Join("LEFT JOIN orders AS o ON o.customer_id = c.id AND o.company_id = ? AND o.is_deleted = false", opts.Session.CompanyID).
 		Join("LEFT JOIN order_waypoints AS ow ON ow.order_id = o.id AND ow.is_deleted = false").
 		Where("c.company_id = ?", opts.Session.CompanyID).
@@ -444,6 +454,78 @@ func (u *ReportUsecase) GetOrderTripWaypointReport(opts *ReportQueryOptions) ([]
 	var items []*OrderTripWaypointReportItem
 	if err := query.Scan(u.ctx, &items); err != nil {
 		return nil, 0, err
+	}
+
+	return items, totalCount, nil
+}
+
+// GetRevenueReport retrieves order revenue report
+func (u *ReportUsecase) GetRevenueReport(opts *ReportQueryOptions) ([]*RevenueReportItem, int64, error) {
+	query := u.db.NewSelect().
+		TableExpr("orders AS o").
+		ColumnExpr("o.order_number").
+		ColumnExpr("c.name AS customer_name").
+		ColumnExpr("o.order_type").
+		ColumnExpr("o.total_price").
+		ColumnExpr("o.status").
+		ColumnExpr("TO_CHAR(o.created_at, 'YYYY-MM-DD HH24:MI:SS') AS created_at").
+		Join("LEFT JOIN customers AS c ON c.id = o.customer_id AND c.is_deleted = false").
+		Where("o.company_id = ?", opts.Session.CompanyID).
+		Where("o.is_deleted = false")
+
+	// Filter by date range
+	if opts.StartDate != "" {
+		query = query.Where("o.created_at >= ?", opts.StartDate+" 00:00:00")
+	}
+	if opts.EndDate != "" {
+		query = query.Where("o.created_at <= ?", opts.EndDate+" 23:59:59")
+	}
+
+	// Filter by specific customer
+	if opts.CustomerID != "" {
+		query = query.Where("o.customer_id = ?", opts.CustomerID)
+	}
+
+	// Get total count
+	var totalCount int64
+	countQuery := u.db.NewSelect().
+		TableExpr("orders AS o").
+		ColumnExpr("COUNT(*)").
+		Join("LEFT JOIN customers AS c ON c.id = o.customer_id AND c.is_deleted = false").
+		Where("o.company_id = ?", opts.Session.CompanyID).
+		Where("o.is_deleted = false")
+
+	// Apply same filters to count query
+	if opts.StartDate != "" {
+		countQuery = countQuery.Where("o.created_at >= ?", opts.StartDate+" 00:00:00")
+	}
+	if opts.EndDate != "" {
+		countQuery = countQuery.Where("o.created_at <= ?", opts.EndDate+" 23:59:59")
+	}
+	if opts.CustomerID != "" {
+		countQuery = countQuery.Where("o.customer_id = ?", opts.CustomerID)
+	}
+
+	if err := countQuery.Scan(u.ctx, &totalCount); err != nil {
+		return nil, 0, err
+	}
+
+	// Apply sorting by created_at desc
+	query = query.OrderExpr("o.created_at DESC")
+
+	// Apply pagination
+	if opts.Limit > 0 {
+		query = query.Limit(int(opts.Limit))
+		if opts.Page > 0 {
+			offset := (opts.Page - 1) * opts.Limit
+			query = query.Offset(int(offset))
+		}
+	}
+
+	// Execute query
+	var items []*RevenueReportItem
+	if err := query.Scan(u.ctx, &items); err != nil {
+		return nil, totalCount, err
 	}
 
 	return items, totalCount, nil

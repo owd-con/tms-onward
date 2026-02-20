@@ -2,12 +2,16 @@ package report
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
+	"strings"
+	"time"
 
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/usecase"
-
 	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/engine/transport/rest"
+	"github.com/xuri/excelize/v2"
 )
 
 type getCustomerReportRequest struct {
@@ -22,6 +26,11 @@ type getCustomerReportRequest struct {
 }
 
 func (r *getCustomerReportRequest) get() (*rest.ResponseBody, error) {
+	// Set limit to 100000 if downloadable to fetch all data for Excel export
+	if r.Downloadable {
+		r.Limit = 100000
+	}
+
 	opts := r.BuildQueryOption()
 	opts.Session = r.session
 
@@ -38,4 +47,51 @@ func (r *getCustomerReportRequest) with(ctx context.Context, uc *usecase.ReportU
 	r.uc = uc.WithContext(ctx)
 	r.session = common.GetContextSessionGeneric[entity.TMSSessionClaims](ctx)
 	return r
+}
+
+func (r *getCustomerReportRequest) getDownload(data any, c *rest.Context) error {
+	items, ok := data.([]*usecase.CustomerReportItem)
+	if !ok {
+		return fmt.Errorf("invalid data type")
+	}
+
+	f := excelize.NewFile()
+	sheet := "Sheet1" // Use default sheet name
+
+	// Create header style (bold + center align)
+	headerStyle, _ := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{Bold: true},
+		Alignment: &excelize.Alignment{Horizontal: "center"},
+	})
+
+	// Create headers starting from row 1
+	headers := []string{"Customer Name", "Order Count", "Total Revenue", "Completed Waypoints", "Failed Waypoints", "Success Rate"}
+	for i, h := range headers {
+		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
+		f.SetCellValue(sheet, cell, h)
+		f.SetCellStyle(sheet, cell, cell, headerStyle)
+	}
+
+	// Fill data starting from row 2
+	for i, item := range items {
+		row := i + 2
+		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), item.CustomerName)
+		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), item.OrderCount)
+		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), item.TotalRevenue)
+		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), item.CompletedWaypoints)
+		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), item.FailedWaypoints)
+		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), item.SuccessRate)
+	}
+
+	// Set headers for download
+	c.Response.Header().Set("Content-Type", "application/octet-stream")
+	c.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=Customer-Report-%s.xlsx", time.Now().Format("20060102150405")))
+	c.Response.Header().Set("Content-Transfer-Encoding", "binary")
+	c.Response.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
+
+	buf, _ := f.WriteToBuffer()
+	v, _ := ioutil.ReadAll(strings.NewReader(buf.String()))
+	c.Response.Write(v)
+
+	return nil
 }
