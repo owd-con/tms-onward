@@ -1,0 +1,27 @@
+replicaCount: 1
+
+image:
+  repository: enivent/svc-tms
+  tag: latest
+
+service:
+  type: ClusterIP
+  restPort: 80
+  grpcPort: 40
+
+containerPort: 80
+containerGRPCPort: 40
+
+global:
+  domain: ""
+  tlsSecret: ""
+
+env:
+  - name: DEBUG_MODE
+    value: "true"
+  - name: PLATFORM
+    value: "logistics-id"
+  - name: POSTGRES_DATABASE
+    value: "dev_tms"
+  - name: MONGODB_DATABASE
+    value: "dev_tms"

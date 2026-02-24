@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shared-env
+  namespace: dev-warehouse
+data:
+  PLATFORM: "logistics-id"
+  POSTGRES_SERVER: "10.0.11.21:5432"
+  POSTGRES_AUTH_USERNAME: "postgres"
+  POSTGRES_AUTH_PASSWORD: "Crypto007!"
+  MONGODB_SERVER: "10.0.11.21:27017"
+  MONGODB_AUTH_USERNAME: "admin"
+  MONGODB_AUTH_PASSWORD: "Crypto007!"
+  REDIS_SERVER: "10.0.11.21:6379"
+  REDIS_AUTH_PASSWORD: "Crypto007!"
+  RABBIT_SERVER: "rabbitmq:5672"
+  RABBIT_AUTH_USERNAME: "admin"
+  RABBIT_AUTH_PASSWORD: "Crypto007!"
+  JWT_SECRET: "s3xr3t"

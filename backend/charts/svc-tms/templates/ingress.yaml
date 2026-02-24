@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: svc-tms-dev
+  labels:
+    app: svc-tms-dev
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/protocols: "https"
+spec:
+  ingressClassName: kong
+  tls:
+    - hosts:
+        - {{ required "global.domain is required" .Values.global.domain }}
+      secretName:
+        {{ required "global.tlsSecret is required" .Values.global.tlsSecret }}
+  rules:
+    - host: {{ .Values.global.domain }}
+      http:
+        paths:
+          - path: /tms-dev
+            pathType: Prefix
+            backend:
+              service:
+                name: svc-tms-dev
+                port:
+                  number: 80

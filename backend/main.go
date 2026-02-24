@@ -23,13 +23,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
+	regionid "github.com/enigma-id/region-id"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src"
-	regionid "github.com/enigma-id/region-id"
 	"github.com/logistics-id/onward-tms/src/region"
 
 	"github.com/joho/godotenv"
@@ -46,6 +47,9 @@ import (
 func init() {
 	godotenv.Load()
 	engine.Init("onward-tms", "1.0.0", true)
+
+	fmt.Println("====================", os.Getenv("REST_SERVER"))
+	fmt.Println("====================", os.Getenv("GRPC_SERVER"))
 
 	// Set custom claim factory for TMSSessionClaims
 	common.SetClaimFactory(func() jwt.Claims {

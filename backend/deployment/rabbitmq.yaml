@@ -1,0 +1,21 @@
+auth:
+  username: admin
+  password: "Crypto007!"
+  erlangCookie: "rabbitmq_cookiee"
+  enableLoopbackUser: false
+  securePassword: false
+
+loopback_users:
+  guest: true
+
+persistence:
+  enabled: true
+  existingClaim: "ds-rabbitmq"
+  size: "5Gi"
+
+persistentVolumeClaimRetentionPolicy:
+  enabled: true
+  whenDeleted: Delete
+
+architecture: standalone
+replicaCount: 1

@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: svc-tms-dev
+  labels:
+    app: svc-tms-dev
+    devspace.dev/app: svc-tms-dev
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: svc-tms-dev
+  template:
+    metadata:
+      labels:
+        app: svc-tms-dev
+        devspace.dev/app: svc-tms-dev
+    spec:
+      containers:
+        - name: svc-tms-dev
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: shared-env
+          env:
+            {{- range .Values.env }}
+            - name: {{ .name }}
+              value: "{{ .value }}"
+            {{- end }}
+          ports:
+            - containerPort: {{ .Values.containerPort }}
+            - containerPort: {{ .Values.containerGRPCPort }}

@@ -1,10 +1,10 @@
 # Makefile
 
 # Variables
-SERVICE_NAME := onward-tms
-IMAGE_REPO := logistics-id/$(SERVICE_NAME)
+SERVICE_NAME := svc-tms
+IMAGE_REPO := enivent/svc-tms
 GIT_COMMIT := $(shell git rev-parse HEAD)
-CHART_PATH := ./charts/$(SERVICE_NAME)
+CHART_PATH := ./charts/svc-tms
 
 ENV ?= dev
 NAMESPACE ?= default
@@ -35,7 +35,7 @@ help:
 .PHONY: build
 build:
 	@echo "> Building Go binary..."
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(SERVICE_NAME) main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o onward-tms main.go
 
 # Build and push Docker image with Git SHA tag
 .PHONY: docker
@@ -89,6 +89,7 @@ migrate-up:
 	fi; \
 	migrate -path ./migrations -database "$$DATABASE_URL" up
 
+
 migrate-down:
 	@export $$(grep -v '^#' .env | xargs); \
 	if [ -z "$$DATABASE_URL" ]; then \
@@ -97,12 +98,13 @@ migrate-down:
 	fi; \
 	migrate -path ./migrations -database "$$DATABASE_URL" down
 
+
 migrate-create:
 	@if [ -z "$$name" ]; then \
 		echo "❌ Please provide a migration name: make migrate create name=create_users_table"; \
 		exit 1; \
 	fi; \
-	@export $$(grep -v '^#' .env | xargs); \
+	export $$(grep -v '^#' .env | xargs); \
 	if [ -z "$$DATABASE_URL" ]; then \
 		echo "DATABASE_URL is not set in .env"; \
 		exit 1; \
