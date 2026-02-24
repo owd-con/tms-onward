@@ -1,5 +1,5 @@
 export { handlers } from './handlers';
-export { worker } from './browser';
+export { getWorker } from './browser';
 export { server } from './server';
 
 // Re-export MSW utilities

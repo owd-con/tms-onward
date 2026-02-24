@@ -24,9 +24,9 @@ interface DashboardData {
 export const handlers = [
   // POST /auth/login
   http.post('/api/auth/login', async ({ request }) => {
-    const body = await request.json() as { email: string; password: string };
+    const body = await request.json() as { email: string; password: string } | null;
 
-    if (body.email === 'admin@example.com' && body.password === 'password123') {
+    if (body && body.email === 'admin@example.com' && body.password === 'password123') {
       return HttpResponse.json({
         data: {
           token: 'mock-jwt-token-12345',
@@ -89,11 +89,12 @@ export const handlers = [
 
   // POST /api/customers (create)
   http.post('/api/customers', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown> | null;
+    const bodyData = body ?? {};
     return HttpResponse.json({
       data: {
         id: 'mock-new-customer',
-        ...body,
+        ...bodyData,
         is_active: true,
       },
     });
@@ -114,11 +115,12 @@ export const handlers = [
 
   // PUT /api/customers/:id
   http.put('/api/customers/:id', async ({ request, params }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown> | null;
+    const bodyData = body ?? {};
     return HttpResponse.json({
       data: {
         id: params.id,
-        ...body,
+        ...bodyData,
       },
     });
   }),
@@ -205,11 +207,12 @@ export const handlers = [
 
   // POST /api/vehicles (create)
   http.post('/api/vehicles', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown> | null;
+    const bodyData = body ?? {};
     return HttpResponse.json({
       data: {
         id: 'mock-new-vehicle',
-        ...body,
+        ...bodyData,
         is_active: true,
       },
     });
@@ -239,11 +242,12 @@ export const handlers = [
 
   // POST /api/drivers (create)
   http.post('/api/drivers', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown> | null;
+    const bodyData = body ?? {};
     return HttpResponse.json({
       data: {
         id: 'mock-new-driver',
-        ...body,
+        ...bodyData,
         is_active: true,
       },
     });
@@ -251,12 +255,13 @@ export const handlers = [
 
   // POST /api/orders (create)
   http.post('/api/orders', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown> | null;
+    const bodyData = body ?? {};
     return HttpResponse.json({
       data: {
         id: 'mock-new-order',
         order_number: 'ORD-NEW-001',
-        ...body,
+        ...bodyData,
         status: 'pending',
         total_price: 0,
       },
@@ -265,12 +270,13 @@ export const handlers = [
 
   // POST /api/trips (create)
   http.post('/api/trips', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown> | null;
+    const bodyData = body ?? {};
     return HttpResponse.json({
       data: {
         id: 'mock-new-trip',
         trip_number: 'TRIP-NEW-001',
-        ...body,
+        ...bodyData,
         status: 'planned',
       },
     });

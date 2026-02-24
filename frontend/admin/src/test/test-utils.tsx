@@ -1,27 +1,25 @@
-import { render, RenderOptions } from '@testing-library/react';
-import { ReactElement } from 'react';
+import { render, type RenderOptions } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
-import { PreloadedState, Store } from '@reduxjs/toolkit';
+import type { Store } from '@reduxjs/toolkit';
 import { EnigmaProvider } from '@/components/enigma/provider';
-import { store, type RootState } from '@/services/store';
+import { store } from '@/services/store';
 
 // Mock store
-export function createMockStore(preloadedState?: PreloadedState<RootState>) {
+export function createMockStore() {
   return store;
 }
 
 // Custom render function with providers
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
-  preloadedState?: PreloadedState<RootState>;
   store?: Store;
 }
 
 export function renderWithProviders(
   ui: ReactElement,
   {
-    preloadedState = {},
-    store = createMockStore(preloadedState),
+    store = createMockStore(),
     ...renderOptions
   }: CustomRenderOptions = {}
 ) {

@@ -6,8 +6,8 @@ import { http, HttpResponse } from 'msw';
 const server = setupServer(
   // Auth - Login
   http.post('/api/auth/login', async ({ request }) => {
-    const body = await request.json();
-    if (body.email === 'admin@example.com' && body.password === 'password123') {
+    const body = await request.json() as { email?: string; password?: string } | null;
+    if (body && body.email === 'admin@example.com' && body.password === 'password123') {
       return HttpResponse.json({
         data: {
           token: 'mock-jwt-token-12345',
@@ -74,11 +74,12 @@ const server = setupServer(
 
   // Customers - Create
   http.post('/api/customers', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown> | null;
+    const bodyData = body ?? {};
     return HttpResponse.json({
       data: {
         id: 'mock-new-customer',
-        ...body,
+        ...bodyData,
         is_active: true,
       },
     });
@@ -99,11 +100,12 @@ const server = setupServer(
 
   // Customers - Update
   http.put('/api/customers/:id', async ({ request, params }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown> | null;
+    const bodyData = body ?? {};
     return HttpResponse.json({
       data: {
         id: params.id,
-        ...body,
+        ...bodyData,
       },
     });
   }),
@@ -142,11 +144,12 @@ const server = setupServer(
 
   // Vehicles - Create
   http.post('/api/vehicles', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown> | null;
+    const bodyData = body ?? {};
     return HttpResponse.json({
       data: {
         id: 'mock-new-vehicle',
-        ...body,
+        ...bodyData,
         is_active: true,
       },
     });
@@ -176,11 +179,12 @@ const server = setupServer(
 
   // Drivers - Create
   http.post('/api/drivers', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown> | null;
+    const bodyData = body ?? {};
     return HttpResponse.json({
       data: {
         id: 'mock-new-driver',
-        ...body,
+        ...bodyData,
         is_active: true,
       },
     });
@@ -212,12 +216,13 @@ const server = setupServer(
 
   // Orders - Create
   http.post('/api/orders', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown> | null;
+    const bodyData = body ?? {};
     return HttpResponse.json({
       data: {
         id: 'mock-new-order',
         order_number: 'ORD-NEW-001',
-        ...body,
+        ...bodyData,
         status: 'pending',
         total_price: 0,
       },
@@ -250,12 +255,13 @@ const server = setupServer(
 
   // Trips - Create
   http.post('/api/trips', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown> | null;
+    const bodyData = body ?? {};
     return HttpResponse.json({
       data: {
         id: 'mock-new-trip',
         trip_number: 'TRIP-NEW-001',
-        ...body,
+        ...bodyData,
         status: 'planned',
       },
     });
