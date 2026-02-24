@@ -45,7 +45,7 @@ jobs:
 
       # Deploy Admin
       - name: Deploy Admin to S3
-        run: aws s3 sync ./frontend/admin/dist/ s3://onward.dev/client/tms --delete
+        run: aws s3 sync ./frontend/admin/dist/ s3://onward.dev/clients/tms --delete
 
       # Deploy Driver
       - name: Deploy Driver to S3
