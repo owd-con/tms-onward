@@ -105,10 +105,10 @@ const WaypointTimeline = memo(
                       {/* Recipient name for completed delivery */}
                       {log.status === "completed" &&
                         log.type === "delivery" &&
-                        podImage?.recipient_name && (
+                        podImage?.received_by && (
                           <p className='mt-1 text-sm text-gray-600'>
                             <span className='font-medium'>Received by:</span>{" "}
-                            {podImage.recipient_name}
+                            {podImage.received_by}
                           </p>
                         )}
 

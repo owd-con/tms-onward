@@ -1,33 +1,36 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Button } from "./button";
 
 describe("Button", () => {
   it("should render button with children", () => {
-    render(<Button>Click me</Button>);
-    expect(screen.getByText("Click me")).toBeInTheDocument();
+    const { container } = render(<Button>Click me</Button>);
+    expect(container.textContent).toContain("Click me");
   });
 
   it("should handle click events", async () => {
     const handleClick = vi.fn();
     const user = userEvent.setup();
 
-    render(<Button onClick={handleClick}>Click me</Button>);
+    const { container } = render(<Button onClick={handleClick}>Click me</Button>);
 
-    await user.click(screen.getByText("Click me"));
+    const button = container.querySelector("button");
+    if (button) {
+      await user.click(button);
+    }
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
 
   it("should be disabled when disabled prop is true", () => {
-    render(<Button disabled>Disabled Button</Button>);
-    const button = screen.getByText("Disabled Button");
+    const { container } = render(<Button disabled>Disabled Button</Button>);
+    const button = container.querySelector("button");
     expect(button).toBeDisabled();
   });
 
   it("should be disabled when isLoading is true", () => {
-    render(<Button isLoading>Loading Button</Button>);
-    const button = screen.getByText("Loading Button");
+    const { container } = render(<Button isLoading>Loading Button</Button>);
+    const button = container.querySelector("button");
     expect(button).toBeDisabled();
   });
 

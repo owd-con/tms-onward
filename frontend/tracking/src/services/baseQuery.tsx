@@ -39,7 +39,7 @@ export const baseQuery: BaseQueryFn<
 
   // Handle errors with specific messages for common cases
   if (result.error) {
-    const status = result.error.status;
+    const status = (result.error as FetchBaseQueryError).status;
 
     // Network error (e.g., server not reachable)
     if (status === "FETCH_ERROR") {
@@ -47,12 +47,9 @@ export const baseQuery: BaseQueryFn<
       return {
         error: {
           status: "FETCH_ERROR",
-          data: {
-            message:
-              "Unable to connect to server. Please check your connection.",
-          },
-        },
-      };
+          error: "Unable to connect to server. Please check your connection.",
+        } as FetchBaseQueryError,
+      } as any;
     }
 
     // 404 - Order not found
@@ -62,8 +59,8 @@ export const baseQuery: BaseQueryFn<
         error: {
           status: 404,
           data: { message: "Order not found" },
-        },
-      };
+        } as FetchBaseQueryError,
+      } as any;
     }
 
     // 500 - Server error
@@ -73,8 +70,8 @@ export const baseQuery: BaseQueryFn<
         error: {
           status: 500,
           data: { message: "Server error. Please try again later." },
-        },
-      };
+        } as FetchBaseQueryError,
+      } as any;
     }
 
     // Other errors

@@ -29,5 +29,6 @@ export interface WaypointImageInfo {
   note?: string;
   photos?: string[];
   signature_url?: string;
+  received_by?: string; // Name of person who received the delivery
   submitted_at: string;
 }

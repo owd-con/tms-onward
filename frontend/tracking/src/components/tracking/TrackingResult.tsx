@@ -76,7 +76,7 @@ const TrackingResult = memo(
 
     // Error state
     if (getTrackingByOrderNumberResult?.isError || !data) {
-      const isNotFound = getTrackingByOrderNumberResult?.error?.status === 500;
+      const isNotFound = (getTrackingByOrderNumberResult?.error as any)?.status === 500;
 
       return (
         <div className='flex flex-col items-center justify-center py-12'>

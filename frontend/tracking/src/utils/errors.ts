@@ -10,51 +10,10 @@ import { isApiError } from "../services/types/api";
 /**
  * Extract user-friendly error message from various error formats
  * Handles ApiError, Error instances, and string errors
- *
- * @param error - Error object of unknown type
- * @returns User-friendly error message string
- * @example
- * ```tsx
- * try {
- *   await apiCall();
- * } catch (err) {
- *   const message = extractErrorMessage(err);
- *   showToast(message);
- * }
- * ```
  */
 export function extractErrorMessage(error: unknown): string {
   if (isApiError(error)) {
-    // Try different error message locations
-    const errorMessage =
-      error.data?.errors?.id ||
-      error.data?.message ||
-      error.data?.error ||
-      error.message;
-
-    if (typeof errorMessage === "string") {
-      return errorMessage;
-    }
-
-    // If errors is an object, try to get first error
-    if (error.data?.errors && typeof error.data.errors === "object") {
-      const errors = error.data.errors;
-      const firstKey = Object.keys(errors)[0];
-      if (firstKey) {
-        const firstError = errors[firstKey];
-        if (typeof firstError === "string") {
-          return firstError;
-        }
-        if (Array.isArray(firstError) && firstError.length > 0) {
-          return String(firstError[0]);
-        }
-      }
-    }
-
-    // Fallback to status code message
-    if (error.status) {
-      return getHttpStatusMessage(error.status);
-    }
+    return error.message;
   }
 
   // Handle Error instances
@@ -74,9 +33,6 @@ export function extractErrorMessage(error: unknown): string {
 /**
  * Get user-friendly HTTP status messages
  * Maps HTTP status codes to readable error messages
- *
- * @param status - HTTP status code
- * @returns User-friendly status message
  */
 export function getHttpStatusMessage(status: number): string {
   const statusMessages: Record<number, string> = {
@@ -101,13 +57,10 @@ export function getHttpStatusMessage(status: number): string {
 
 /**
  * Check if error is a network error (no status code or fetch failure)
- *
- * @param error - Error object to check
- * @returns True if error is a network error
  */
 export function isNetworkError(error: unknown): boolean {
   if (isApiError(error)) {
-    return error.status === undefined || error.status === 0;
+    return error.status === 0;
   }
 
   if (error instanceof Error) {
@@ -123,9 +76,6 @@ export function isNetworkError(error: unknown): boolean {
 
 /**
  * Check if error is an authentication error (401 Unauthorized or 403 Forbidden)
- *
- * @param error - Error object to check
- * @returns True if error is an authentication error
  */
 export function isAuthError(error: unknown): boolean {
   if (isApiError(error)) {
@@ -152,10 +102,10 @@ export function isValidationError(error: unknown): boolean {
 export function getValidationErrors(
   error: unknown
 ): Record<string, string | string[]> | null {
-  if (isApiError(error) && error.data?.errors) {
-    const errors = error.data.errors;
-    if (typeof errors === "object" && errors !== null) {
-      return errors as Record<string, string | string[]>;
+  if (isApiError(error) && error.details) {
+    const details = error.details;
+    if (typeof details === "object" && details !== null) {
+      return details as Record<string, string | string[]>;
     }
   }
 
@@ -164,18 +114,6 @@ export function getValidationErrors(
 
 /**
  * Format error for display to user with title, message, and optional details
- *
- * @param error - Error object to format
- * @returns Formatted error object with title, message, and optional validation details
- * @example
- * ```tsx
- * const formatted = formatErrorForUser(error);
- * showModal({
- *   title: formatted.title,
- *   message: formatted.message,
- *   details: formatted.details
- * });
- * ```
  */
 export function formatErrorForUser(error: unknown): {
   title: string;
