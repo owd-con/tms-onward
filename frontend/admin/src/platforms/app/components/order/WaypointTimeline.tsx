@@ -343,13 +343,13 @@ const WaypointTimeline = ({
                 )}
 
                 {/* Price for Delivery - only for OrderWaypoint (not TripWaypoint) */}
-                {!isTripWp && wpData?.price > 0 && (
+                {!isTripWp && (wpData?.price ?? 0) > 0 && (
                   <div className='mt-2 text-sm'>
                     <span className='font-medium text-base-content/70'>
                       Price:{" "}
                     </span>
                     <span className='font-semibold text-success'>
-                      {formatCurrency(wpData?.price)}
+                      {formatCurrency(wpData.price ?? 0)}
                     </span>
                   </div>
                 )}
