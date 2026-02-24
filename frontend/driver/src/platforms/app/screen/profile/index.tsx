@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import {
   HiArrowRightOnRectangle,
   HiEnvelope,
-  HiIdentification,
   HiPhone,
   HiUser,
 } from "react-icons/hi2";

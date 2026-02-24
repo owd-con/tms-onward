@@ -1,7 +1,7 @@
 import type { MouseEvent } from "react";
 import { FiMapPin, FiTruck, FiChevronRight } from "react-icons/fi";
-import type { Trip } from "../../services/types/entities";
-import { Badge } from "../ui/badge";
+import type { Trip } from "@/services/types";
+import { Badge } from "@/components/ui/badge";
 import { formatStatus, getStatusVariant } from "@/utils/status";
 
 export interface TripCardProps {
@@ -30,7 +30,7 @@ export function TripCard({ trip, onPress }: TripCardProps) {
   // Calculate waypoint progress
   const totalWaypoints = trip.trip_waypoints?.length || 0;
   const completedWaypoints =
-    trip.trip_waypoints?.filter((wp) => wp.status === "completed").length || 0;
+    trip.trip_waypoints?.filter((wp: { status: string }) => wp.status === "completed").length || 0;
 
   return (
     <div
@@ -69,7 +69,7 @@ export function TripCard({ trip, onPress }: TripCardProps) {
                 {trip.vehicle.plate_number}
               </span>
               <span className="text-base-content/50">•</span>
-              <span className="text-base-content/70">{trip.vehicle.type}</span>
+              <span className="text-base-content/70">{trip.vehicle.vehicle_type}</span>
             </div>
           </div>
         )}

@@ -18,13 +18,13 @@ function TableRender<T>({
   onRowClick,
 }: TableRenderProps<T>) {
   const StateTable = useSelector(
-    (state: RootState) => state?.table?.data[name]?.data
+    (state: RootState) => (state as any)?.table?.data[name]?.data
   );
   const StateSorting = useSelector(
-    (state: RootState) => state?.table?.data[name]?.sorting
+    (state: RootState) => (state as any)?.table?.data[name]?.sorting
   );
   const StateEmpty = useSelector(
-    (state: RootState) => state?.table?.data[name]?.isEmpty
+    (state: RootState) => (state as any)?.table?.data[name]?.isEmpty
   );
 
   const rows: T[] = Array.isArray(StateTable) ? (StateTable as T[]) : [];

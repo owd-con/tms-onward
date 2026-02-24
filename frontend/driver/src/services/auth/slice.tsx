@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import type { User, Session } from "../types/entities";
+import type { Session } from "../types/entities";
 
 interface AuthState {
   authenticated: boolean;

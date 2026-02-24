@@ -44,7 +44,7 @@ export const useAuth = () => {
    */
   const logout = async () => {
     try {
-      await logoutMutation().unwrap();
+      await logoutMutation(undefined).unwrap();
       dispatch(signout());
     } catch (err) {
       dispatch(signout());
@@ -58,7 +58,7 @@ export const useAuth = () => {
    */
   const getMe = async () => {
     try {
-      const res = await getProfile().unwrap();
+      const res = await getProfile(undefined).unwrap();
       return res;
     } catch (err) {
       throw err;

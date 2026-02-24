@@ -17,13 +17,13 @@ const TablePagination: React.FC<PaginationProps> = ({
   pageLimit = [25, 50, 100, 200],
 }) => {
   const StateLimit = useSelector(
-    (state: RootState) => state?.table?.data[name]?.limit
+    (state: RootState) => (state as any)?.table?.data[name]?.limit
   );
   const StateTotal = useSelector(
-    (state: RootState) => state?.table?.data[name]?.total
+    (state: RootState) => (state as any)?.table?.data[name]?.total
   );
   const StateCurrentPage = useSelector(
-    (state: RootState) => state?.table?.data[name]?.page
+    (state: RootState) => (state as any)?.table?.data[name]?.page
   );
 
   // Calculate number of pages using useMemo instead of useState + useEffect

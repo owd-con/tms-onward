@@ -105,7 +105,7 @@ const LoginPage = () => {
 
             <Button
               shape="block"
-              size="large"
+              size="lg"
               isLoading={loginResult?.isLoading}
               type="submit"
               className="mt-6"

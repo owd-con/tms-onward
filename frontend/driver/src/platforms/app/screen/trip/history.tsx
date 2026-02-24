@@ -5,9 +5,6 @@ import { useNavigate } from "react-router-dom";
 import {
   HiArrowPath,
   HiCalendar,
-  HiCheckCircle,
-  HiClock,
-  HiExclamationCircle,
 } from "react-icons/hi2";
 import { useTrip } from "@/services/driver/hooks";
 import { Page } from "@/platforms/app/components/page";
@@ -24,19 +21,6 @@ export const TripHistory = () => {
     getHistory({ page: 1, limit: 50 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return <HiCheckCircle size={16} className='text-green-600' />;
-      case "Cancelled":
-        return <HiExclamationCircle size={16} className='text-red-600' />;
-      case "InProgress":
-        return <HiClock size={16} className='text-yellow-600' />;
-      default:
-        return null;
-    }
-  };
 
   const trips = getHistoryResult.data?.data || [];
 
@@ -117,7 +101,6 @@ export const TripHistory = () => {
                   key={trip.id}
                   trip={trip}
                   onTripClick={handleTripClick}
-                  getStatusIcon={getStatusIcon}
                   formatDate={formatDate}
                   formatTime={formatTime}
                 />

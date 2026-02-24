@@ -22,7 +22,7 @@ const TableTool: React.FC<TableToolProps> = ({
   onDownload,
 }) => {
   const StateSearch = useSelector(
-    (state: RootState) => state?.table?.data[name]?.textSearch
+    (state: RootState) => (state as any)?.table?.data[name]?.textSearch
   );
 
   const [searchTerm, setSearchTerm] = React.useState("");

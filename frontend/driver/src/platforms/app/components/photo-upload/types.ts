@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 export interface PhotoUploadProps {
   /** Currently uploaded photo URLs */
   photos: string[];
