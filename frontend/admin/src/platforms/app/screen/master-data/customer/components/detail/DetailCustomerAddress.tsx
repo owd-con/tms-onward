@@ -1,8 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import { useEffect, useRef, useState } from "react";
-import type { RootState } from "@/services/store";
-import { useSelector } from "react-redux";
 
 import { Button, Modal, useEnigmaUI } from "@/components";
 import { useAddress } from "@/services/address/hooks";

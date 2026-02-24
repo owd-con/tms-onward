@@ -32,7 +32,6 @@ const roleOptions = [
 ];
 
 const Step2AddUsers = ({ onNext, onBack, onSkip, onUpdate }: Step2AddUsersProps) => {
-  const Profile = useSelector((state: RootState) => state.userProfile);
   const FormState = useSelector((state: RootState) => state.form);
 
   const [users, setUsers] = useState<UserFormData[]>([
@@ -45,7 +44,7 @@ const Step2AddUsers = ({ onNext, onBack, onSkip, onUpdate }: Step2AddUsersProps)
       role: "dispatcher",
     },
   ]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, setIsLoading] = useState(false);
 
   const { onboardingStep2, onboardingStep2Result } = useOnboarding();
   const { get } = useUser();

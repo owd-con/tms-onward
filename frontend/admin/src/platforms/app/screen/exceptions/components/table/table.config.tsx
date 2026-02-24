@@ -9,7 +9,7 @@ import config from "@/services/table/const";
 const FailedWaypointsCell = ({ failedWaypoints }: { failedWaypoints?: any[] }) => {
   const [expanded, setExpanded] = useState(false);
 
-  if (failedWaypoints || failedWaypoints.length === 0) {
+  if (!failedWaypoints || failedWaypoints.length === 0) {
     return <span className="text-base-content/60">-</span>;
   }
 
@@ -18,16 +18,16 @@ const FailedWaypointsCell = ({ failedWaypoints }: { failedWaypoints?: any[] }) =
       {failedWaypoints.length === 1 ? (
         // Single waypoint - show directly without expand
         <div>
-          <span className="font-medium">{failedWaypoints[0].type}</span>
+          <span className="font-medium">{failedWaypoints[0]?.type}</span>
           <div className="text-base-content/70 mt-1">
-            {failedWaypoints[0].location_name || failedWaypoints[0].location_address || "-"}
+            {failedWaypoints[0]?.location_name || failedWaypoints[0]?.location_address || "-"}
           </div>
         </div>
       ) : (
         // Multiple waypoints - expandable
         <div>
           <button
-            onClick={() => setExpanded(expanded)}
+            onClick={() => setExpanded(!expanded)}
             className="flex items-center gap-1 text-base-content hover:text-base-content/80 transition-colors"
           >
             <span className="font-medium">
@@ -40,11 +40,11 @@ const FailedWaypointsCell = ({ failedWaypoints }: { failedWaypoints?: any[] }) =
 
           {expanded && (
             <div className="mt-2 space-y-2 pl-2 border-l-2 border-error">
-              {failedWaypoints.map((wp, idx) => (
+              {failedWaypoints.map((wp: any, idx: number) => (
                 <div key={idx} className="space-y-1">
-                  <span className="font-medium">{wp.type}</span>
+                  <span className="font-medium">{wp?.type}</span>
                   <div className="text-base-content/70">
-                    {wp.location_name || wp.location_address || "-"}
+                    {wp?.location_name || wp?.location_address || "-"}
                   </div>
                 </div>
               ))}

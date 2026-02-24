@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Button, Modal, Steps, Alert } from "@/components";
-import { DriverVehicleSelector } from "@/platforms/app/components/trip/DriverVehicleSelector";
 import { useException } from "@/services/exception/hooks";
 import type { RootState } from "@/services/store";
 import { useSelector } from "react-redux";
 import type { Driver, Vehicle } from "@/services/types";
+import { DriverVehicleSelector } from "@/platforms/app/components/trip/DriverVehicleSelector";
 
 /**
  * Order Type
@@ -39,6 +39,17 @@ interface RescheduleModalProps {
  * Step Type
  */
 type Step = 1 | 2;
+
+/**
+ * Failed Waypoint Type
+ */
+interface FailedWaypoint {
+  id: string;
+  type: string;
+  location_name?: string;
+  location_address?: string;
+  failure_reason?: string;
+}
 
 /**
  * TMS Onward - Reschedule Modal Component
@@ -83,11 +94,8 @@ export const RescheduleModal = ({
   // Close modal on success
   useEffect(() => {
     if (batchRescheduleResult?.isSuccess && batchRescheduleResult?.data) {
-      // Handle both response structures: { id: ... } or { data: { id: ... } }
       const responseData = batchRescheduleResult.data as any;
       const newTripId = responseData?.id || responseData?.data?.id;
-      console.log("batchRescheduleResult.data:", batchRescheduleResult.data);
-      console.log("Extracted newTripId:", newTripId);
       if (newTripId) {
         onSuccess?.(newTripId);
         onClose();
@@ -151,7 +159,7 @@ export const RescheduleModal = ({
   ];
 
   // Get failed waypoints from order
-  const failedWaypoints = order?.failed_waypoints || [];
+  const failedWaypoints: FailedWaypoint[] = order?.failed_waypoints || [];
 
   return (
     <Modal.Wrapper
@@ -235,14 +243,10 @@ export const RescheduleModal = ({
                   vehicle: selectedVehicle,
                 }}
                 onChange={handleDriverVehicleChange}
-                error={
-                  FormState?.errors?.driver_id as string ||
-                  FormState?.errors?.vehicle_id as string
-                }
               />
             </div>
 
-            {FormState?.errors?.waypoint_ids && (
+            {!!FormState?.errors?.waypoint_ids && (
               <div className="text-sm text-error">
                 {FormState.errors.waypoint_ids as string}
               </div>

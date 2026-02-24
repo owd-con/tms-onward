@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 // Export types for external use
 export interface AlertItem {
   id: string;

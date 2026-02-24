@@ -17,7 +17,7 @@ export const TripStep4Confirm = ({
   vehicle,
   notes,
   orderType,
-  waypointSequences,
+  waypointSequences: _waypointSequences,
 }: TripStep4ConfirmProps) => {
   return (
     <div className="space-y-4">

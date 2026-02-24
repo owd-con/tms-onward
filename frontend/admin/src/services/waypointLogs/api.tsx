@@ -7,7 +7,6 @@
 
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "@/services/baseQuery";
-import type { WaypointLog } from "@/services/types";
 
 export const waypointLogsApi = createApi({
   reducerPath: "waypointLogsApi",

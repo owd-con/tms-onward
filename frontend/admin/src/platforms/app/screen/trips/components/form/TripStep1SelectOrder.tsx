@@ -1,4 +1,4 @@
-import { RemoteSelect, useEnigmaUI } from "@/components";
+import { RemoteSelect } from "@/components";
 import type { Order } from "@/services/types";
 import type { RootState } from "@/services/store";
 import { useSelector } from "react-redux";
@@ -8,7 +8,7 @@ interface TripStep1SelectOrderProps {
   onOrderChange: (order: Order | null) => void;
   onReset: () => void; // Reset subsequent steps when order changes
   getOrdersResult: any;
-  onFetchOrders: (page: number, search?: string) => void;
+  onFetchOrders: (page?: number, search?: string) => void;
 }
 
 const TripStep1SelectOrder: React.FC<TripStep1SelectOrderProps> = ({

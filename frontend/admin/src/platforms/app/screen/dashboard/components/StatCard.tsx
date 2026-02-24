@@ -7,7 +7,7 @@ interface StatCardProps {
   onClick?: () => void;
 }
 
-export default function StatCard({ label, value, icon, onClick }: StatCardProps) {
+export default function StatCard({ label, value, icon: _icon, onClick }: StatCardProps) {
   return (
     <div
       className="bg-white rounded-xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer"

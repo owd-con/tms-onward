@@ -7,7 +7,6 @@
 
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "@/services/baseQuery";
-import type { WaypointImage } from "@/services/types";
 
 export const waypointImagesApi = createApi({
   reducerPath: "waypointImagesApi",

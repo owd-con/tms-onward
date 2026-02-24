@@ -35,7 +35,7 @@ const Step3AddVehicles = ({ onNext, onBack, onSkip, onUpdate }: Step3AddVehicles
       capacityVolume: "",
     },
   ]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, setIsLoading] = useState(false);
 
   const { onboardingStep3, onboardingStep3Result } = useOnboarding();
   const { get } = useVehicle();

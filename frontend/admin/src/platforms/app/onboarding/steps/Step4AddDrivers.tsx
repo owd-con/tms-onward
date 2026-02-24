@@ -35,7 +35,7 @@ const Step4AddDrivers = ({ onNext, onBack, onSkip, onUpdate }: Step4AddDriversPr
       licenseType: "",
     },
   ]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, setIsLoading] = useState(false);
 
   const { onboardingStep4, onboardingStep4Result } = useOnboarding();
   const { get } = useDriver();

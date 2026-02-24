@@ -42,7 +42,7 @@ const CompanyDetailPage = () => {
       id: "edit-company",
       content: (
         <CompanyEditModal
-          data={company}
+          data={company ?? undefined}
           onClose={() => closeModal("edit-company")}
           onReload={async () => {
             try {

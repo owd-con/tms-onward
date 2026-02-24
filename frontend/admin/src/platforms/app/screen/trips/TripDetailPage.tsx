@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Fragment, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { HiSignal, HiTrash, HiPencil } from "react-icons/hi2";
+import { HiSignal, HiTrash } from "react-icons/hi2";
 import { FaEdit } from "react-icons/fa";
 
 import { Button, Modal, useEnigmaUI } from "@/components";
@@ -38,7 +38,6 @@ const TripDetailPage = () => {
   } = useTrip();
 
   const [trip, setTrip] = useState<Trip | null>(null);
-  const [updateModalOpen, setUpdateModalOpen] = useState(false);
 
   // Load trip detail
   useEffect(() => {
@@ -62,7 +61,7 @@ const TripDetailPage = () => {
         message: "Trip dispatched successfully",
         type: "success",
       });
-      showTrip({ id: tripId });
+      if (tripId) showTrip({ id: tripId });
     }
   }, [dispatchTripResult?.isSuccess]);
 
@@ -90,7 +89,7 @@ const TripDetailPage = () => {
         <TripUpdateModal
           open={true}
           onClose={() => closeModal("update-trip")}
-          onSuccess={() => showTrip({ id: tripId })}
+          onSuccess={() => tripId && showTrip({ id: tripId })}
           trip={trip}
         />
       ),

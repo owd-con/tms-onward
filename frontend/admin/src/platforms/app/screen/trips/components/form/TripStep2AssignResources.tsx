@@ -33,8 +33,8 @@ export const TripStep2AssignResources = ({
         }}
         onChange={(selection) => {
           onChange({
-            driver: selection.driver,
-            vehicle: selection.vehicle,
+            driver: selection.driver ?? null,
+            vehicle: selection.vehicle ?? null,
             notes,
           });
         }}

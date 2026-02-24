@@ -14,7 +14,6 @@ import { Button, Input, Modal, useEnigmaUI } from "@/components";
 import { RegionSearchInput } from "@/platforms/app/components/region/RegionSearchInput";
 import { usePricingMatrix } from "@/services/pricingMatrix/hooks";
 import type { PricingMatrix, RegionSearchResult } from "@/services/types";
-import { getDisplayPath } from "@/utils/common";
 
 interface CustomerPricingFormModalProps {
   onClose: () => void;

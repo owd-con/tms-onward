@@ -343,13 +343,13 @@ const WaypointTimeline = ({
                 )}
 
                 {/* Price for Delivery - only for OrderWaypoint (not TripWaypoint) */}
-                {!isTripWp && (wpData?.price ?? 0) > 0 && (
+                {!isTripWp && wpData && wpData.price && wpData.price > 0 && (
                   <div className='mt-2 text-sm'>
                     <span className='font-medium text-base-content/70'>
                       Price:{" "}
                     </span>
                     <span className='font-semibold text-success'>
-                      {formatCurrency(wpData.price ?? 0)}
+                      {formatCurrency(wpData.price)}
                     </span>
                   </div>
                 )}
@@ -371,9 +371,9 @@ const WaypointTimeline = ({
                             <span>{item.name}</span>
                             <span className='text-base-content/50'>x</span>
                             <span>{item.quantity}</span>
-                            {item?.weight > 0 && (
+                            {item.weight && item.weight > 0 && (
                               <span className='text-base-content/50'>
-                                ({item?.weight} kg)
+                                ({item.weight} kg)
                               </span>
                             )}
                           </div>

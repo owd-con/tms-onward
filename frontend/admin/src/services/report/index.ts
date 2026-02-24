@@ -7,11 +7,10 @@
 // Export API hooks
 export {
   reportApi,
-  useLazyGetOrderReportQuery,
-  useLazyGetTripReportQuery,
+  useLazyGetOrderTripWaypointReportQuery,
   useLazyGetRevenueReportQuery,
-  useLazyGetExceptionReportQuery,
   useLazyGetDriverPerformanceReportQuery,
+  useLazyGetCustomerReportQuery,
 } from "./api";
 
 // Export custom hook

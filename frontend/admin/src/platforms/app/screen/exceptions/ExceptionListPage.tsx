@@ -6,7 +6,6 @@ import { HiExclamationTriangle } from "react-icons/hi2";
 import useTable from "@/services/table/hooks";
 import type { TableConfig } from "@/services/table/const";
 
-import { Button } from "@/components";
 import { Page } from "../../components/layout";
 import createTableConfig from "./components/table/table.config";
 import TableFilter from "./components/table/filter";

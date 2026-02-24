@@ -41,7 +41,7 @@ export const AddressSelector = ({
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
 
   // Use address hook
-  const { get, getResult, create, createResult } = useAddress();
+  const { get, getResult } = useAddress();
 
   // Track success agar hanya handle sekali per submit
   const successHandledRef = useRef(false);

@@ -130,7 +130,7 @@ export const TripUpdateModal = ({
           {canEditSequence && orderWaypoints && orderWaypoints.length > 0 && (
             <div>
               <WaypointSequenceEditor
-                orderType={trip.order.order_type}
+                orderType={trip?.order?.order_type || "FTL"}
                 waypoints={orderWaypoints}
                 value={waypointSequences}
                 onChange={handleWaypointSequenceChange}
@@ -143,7 +143,7 @@ export const TripUpdateModal = ({
           {!canEditSequence && orderWaypoints && orderWaypoints.length > 0 && (
             <div>
               <WaypointSequenceEditor
-                orderType={trip.order.order_type}
+                orderType={trip?.order?.order_type || "FTL"}
                 waypoints={orderWaypoints}
                 value={waypointSequences}
                 onChange={handleWaypointSequenceChange}

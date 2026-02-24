@@ -35,8 +35,8 @@ export const DriverVehicleSelector = memo(({
   onChange,
   error,
   disabled = false,
-  excludeDriverIds = [],
-  excludeVehicleIds = [],
+  excludeDriverIds: _excludeDriverIds = [],
+  excludeVehicleIds: _excludeVehicleIds = [],
 }: DriverVehicleSelectorProps) => {
   // State untuk selected driver & vehicle
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
@@ -93,18 +93,6 @@ export const DriverVehicleSelector = memo(({
       vehicle,
     });
   };
-
-  // Filter driver yang available (exclude yang sudah ditugaskan)
-  const drivers = getDriversResult?.data?.data as Driver[] | undefined;
-  const availableDrivers = drivers?.filter(
-    (d: Driver) => !excludeDriverIds.includes(d.id)
-  ) || [];
-
-  // Filter vehicle yang available (exclude yang sudah ditugaskan)
-  const vehicles = getVehiclesResult?.data?.data as Vehicle[] | undefined;
-  const availableVehicles = vehicles?.filter(
-    (v: Vehicle) => !excludeVehicleIds.includes(v.id)
-  ) || [];
 
   // Type casting for RemoteSelect compatibility
   // PaginatedResponse has structure { data: T[], meta: PaginationMeta }

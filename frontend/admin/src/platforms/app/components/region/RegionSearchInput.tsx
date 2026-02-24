@@ -39,7 +39,7 @@ export const RegionSearchInput = ({
 }) => {
   const [selectedRegion, setSelectedRegion] =
     useState<RegionSearchResult | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [, setSearchQuery] = useState("");
 
   const { searchRegions, searchRegionsResult } = useRegion();
 

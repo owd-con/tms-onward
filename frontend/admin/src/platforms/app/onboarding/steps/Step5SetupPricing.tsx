@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/services/store";
-import { Button, Input, Modal, RemoteSelect, useEnigmaUI } from "@/components";
+import { Button, Input, RemoteSelect } from "@/components";
 import { RegionSearchInput } from "@/platforms/app/components/region/RegionSearchInput";
 import { useOnboarding } from "@/services/onboarding/hooks";
 import { usePricingMatrix } from "@/services/pricingMatrix/hooks";
@@ -39,7 +39,7 @@ const Step5SetupPricing = ({ onNext, onBack, onSkip, onUpdate, isLoading }: Step
       price: "",
     },
   ]);
-  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [_isLoadingData, setIsLoadingData] = useState(false);
 
   const { onboardingStep5, onboardingStep5Result } = useOnboarding();
   const { get } = usePricingMatrix();
@@ -266,7 +266,7 @@ const Step5SetupPricing = ({ onNext, onBack, onSkip, onUpdate, isLoading }: Step
 
                 <RegionSearchInput
                   label="Origin City/Region"
-                  value={pricing.originRegionId}
+                  value={pricing.originRegion}
                   onChange={(id, region) => handleOriginRegionChange(index, id, region)}
                   placeholder="Search origin (e.g., 'Jakarta Selatan')"
                   error={(FormState?.errors as any)?.[`pricing.${index}.origin_city_id`]}
@@ -274,7 +274,7 @@ const Step5SetupPricing = ({ onNext, onBack, onSkip, onUpdate, isLoading }: Step
 
                 <RegionSearchInput
                   label="Destination City/Region"
-                  value={pricing.destinationRegionId}
+                  value={pricing.destinationRegion}
                   onChange={(id, region) => handleDestRegionChange(index, id, region)}
                   placeholder="Search destination (e.g., 'Surabaya')"
                   error={(FormState?.errors as any)?.[`pricing.${index}.dest_city_id`]}

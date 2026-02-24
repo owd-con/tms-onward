@@ -12,7 +12,6 @@ import {
 } from "react-icons/hi2";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Navigate,
   Route,
   Routes,
   useMatch,
