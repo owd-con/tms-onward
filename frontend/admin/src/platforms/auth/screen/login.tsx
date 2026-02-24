@@ -55,7 +55,7 @@ const LoginPage = () => {
             type='email'
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            error={FormState?.errors?.credentials as string}
+            error={FormState?.errors?.email as string}
             required
           />
 

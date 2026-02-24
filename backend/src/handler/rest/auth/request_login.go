@@ -26,7 +26,7 @@ func (r *loginRequest) Validate() *validate.Response {
 		var err error
 		if r.uc != nil {
 			if r.user, err = r.uc.ValidLogin(r.Email, r.Password); err != nil {
-				v.SetError("credentials.invalid", "email or password is not valid.")
+				v.SetError("email.invalid", "email or password is not valid.")
 			}
 		}
 	}
