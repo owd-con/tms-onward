@@ -1096,3 +1096,20 @@ Per blueprint.md line 496 & 1658, entity `OrderWaypoint` harus memiliki field `r
 - 📈 Updated P1 progress: 75% → 100% complete
 - 📈 Updated P2 progress: 75% → 100% complete
 - 📈 Updated overall progress: ~88% → ~92% (MongoDB scope removed)
+
+
+---
+
+**Note:** 🚚 **Shipment Concept Refactoring** (Phase 14) telah dipindah ke `docs/feedbackV1/07_implementation_checklist.md`
+
+Dokumen tersebut berisi **18 Phase lengkap** untuk implementasi Shipment Concept:
+- **Backend** (Phase 1-5): Entity, Repository, Usecase, Handler, Testing
+- **Frontend** (Phase 6-15): API Service, Components, Pages, Types, Testing
+- **Additional** (Phase 16-18): Event Publishing, Data Migration, Cleanup
+
+Keputusan final feedbackV1:
+- ✅ Tanpa Exception entity - Gunakan status di Shipment untuk tracking failed delivery
+- ✅ Tanpa standalone shipment GET/list API - Shipments selalu include di Order response
+- ✅ Retry/Return handled via existing `/exception/reschedule` endpoint
+- ✅ TripWaypoint sebagai source of truth untuk sync Shipment status
+
