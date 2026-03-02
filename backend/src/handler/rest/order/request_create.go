@@ -2,7 +2,6 @@ package order
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/logistics-id/onward-tms/entity"
@@ -19,7 +18,7 @@ type createRequest struct {
 	ReferenceCode       string             `json:"reference_code"`
 	SpecialInstructions string             `json:"special_instructions"`
 	ManualOverridePrice float64            `json:"manual_override_price"`
-	Waypoints           []*WaypointRequest `json:"waypoints" valid:"required"`
+	Shipments           []*ShipmentRequest `json:"shipments" valid:"required"`
 
 	customer *entity.Customer
 
@@ -47,19 +46,16 @@ func (r *createRequest) Validate() *validate.Response {
 		}
 	}
 
-	// Validate order type
-	// For FTL, waypoints must have sequence numbers
-	for i, wp := range r.Waypoints {
-		// Set the uc field for waypoint validation
-		wp.uc = r.uc
+	// Validate shipments
+	// For FTL/LTL, shipments must have at least 2 items
+	if len(r.Shipments) < 1 {
+		v.SetError("shipments.invalid", "at least one shipment is required")
+	}
 
-		if r.OrderType == "FTL" {
-			if wp.SequenceNumber == 0 {
-				v.SetError(fmt.Sprintf("waypoints.%d.sequence_number.required", i), "sequence_number is required for FTL orders")
-			}
-		}
-
-		wp.Validate(v, i)
+	// Set uc field for each shipment and validate
+	for i, sp := range r.Shipments {
+		sp.uc = r.uc
+		sp.Validate(v, i)
 	}
 
 	return v
@@ -73,13 +69,15 @@ func (r *createRequest) toEntity() *entity.Order {
 	// Parse company ID
 	companyID, _ := uuid.Parse(r.session.CompanyID)
 
-	// Calculate total price from waypoints
+	// Calculate total price from shipments (LTL only, FTL uses manual_override_price)
 	totalPrice := 0.0
-	for _, wp := range r.Waypoints {
-		totalPrice += wp.Price
+	if r.OrderType == "LTL" {
+		for _, sp := range r.Shipments {
+			totalPrice += sp.Price
+		}
 	}
 
-	// Use manual override price if provided (FTL only), otherwise sum waypoint prices
+	// Use manual override price if provided (FTL only), otherwise calculate price
 	finalPrice := totalPrice
 	if r.ManualOverridePrice > 0 {
 		finalPrice = r.ManualOverridePrice
@@ -98,46 +96,83 @@ func (r *createRequest) toEntity() *entity.Order {
 	}
 }
 
-func (r *createRequest) toWaypointEntities() ([]*entity.OrderWaypoint, error) {
-	var waypoints []*entity.OrderWaypoint
-
-	for _, wp := range r.Waypoints {
-
-		// Calculate weight from items
-		weight := 0.0
-		for _, item := range wp.Items {
-			weight += item.Weight
-		}
-
-		waypoint := &entity.OrderWaypoint{
-			Type:            wp.Type,
-			AddressID:       wp.address.ID, // Required field - populated from selected address
-			LocationName:    wp.LocationName,
-			LocationAddress: wp.LocationAddress,
-			ContactName:     wp.ContactName,
-			ContactPhone:    wp.ContactPhone,
-			ScheduledDate:   wp.scheduleAt,
-			ScheduledTime:   wp.scheduleTimeAt.Format("15:04"),
-			Price:           wp.Price,
-			Weight:          weight,
-			DispatchStatus:  "pending",
-			SequenceNumber:  wp.SequenceNumber,
-		}
-
-		if len(wp.Items) > 0 {
-			for _, i := range wp.Items {
-				waypoint.Items = append(waypoint.Items, &entity.OrderWaypointItem{
-					Name:   i.Name,
-					Qty:    i.Quantity,
-					Weight: i.Weight,
-				})
-			}
-		}
-
-		waypoints = append(waypoints, waypoint)
+// toShipmentEntity converts ShipmentRequest to Shipment entity with all required fields populated.
+func (r *createRequest) toShipmentEntity(sp *ShipmentRequest, orderID uuid.UUID, shipmentNumber string, companyID uuid.UUID) *entity.Shipment {
+	// Calculate total weight from items
+	totalWeight := 0.0
+	for _, item := range sp.Items {
+		totalWeight += item.Weight
 	}
 
-	return waypoints, nil
+	// Create Shipment entity with all required fields
+	shipment := &entity.Shipment{
+		// IDs
+		OrderID:        orderID,
+		CompanyID:      companyID,
+		ShipmentNumber: shipmentNumber,
+		// Route
+		OriginAddressID:      sp.originAddress.ID,
+		DestinationAddressID: sp.destAddress.ID,
+		// Snapshot fields - Origin
+		OriginLocationName: sp.originAddress.Name,
+		OriginAddress:      sp.originAddress.Address,
+		OriginContactName:  sp.originAddress.ContactName,
+		OriginContactPhone: sp.originAddress.ContactPhone,
+		// Snapshot fields - Destination
+		DestLocationName: sp.destAddress.Name,
+		DestAddress:      sp.destAddress.Address,
+		DestContactName:  sp.destAddress.ContactName,
+		DestContactPhone: sp.destAddress.ContactPhone,
+		// Items
+		Items:       make([]*entity.ShipmentItem, len(sp.Items)),
+		TotalWeight: totalWeight,
+		Volume:      0, // TODO: Calculate volume if needed
+		// Pricing
+		Price: sp.Price,
+		// Schedule
+		ScheduledPickupDate:   sp.pickupScheduleAt,
+		ScheduledPickupTime:   sp.PickupScheduledTime,
+		ScheduledDeliveryDate: sp.deliveryScheduleAt,
+		ScheduledDeliveryTime: sp.DeliveryScheduledTime,
+		// Status
+		Status: "pending",
+		// Audit
+		CreatedBy: r.session.DisplayName,
+	}
+
+	// Add items to shipment
+	for i, item := range sp.Items {
+		shipment.Items[i] = &entity.ShipmentItem{
+			Name:   item.Name,
+			SKU:    "",
+			Qty:    item.Quantity,
+			Weight: item.Weight,
+			Price:  0, // Calculated based on pricing logic
+		}
+	}
+
+	return shipment
+}
+
+// toShipmentEntities converts shipments array to Shipment entities.
+// Each ShipmentRequest directly maps to 1 Shipment.
+func (r *createRequest) toShipmentEntities() ([]*entity.Shipment, error) {
+	var shipments []*entity.Shipment
+
+	// Get company ID
+	companyID, _ := uuid.Parse(r.session.CompanyID)
+
+	for _, sp := range r.Shipments {
+		// Generate shipment number
+		shipmentNumber := r.uc.Shipment.GenerateShipmentNumber()
+
+		// Convert ShipmentRequest to Shipment entity
+		shipment := r.toShipmentEntity(sp, uuid.Nil, shipmentNumber, companyID)
+
+		shipments = append(shipments, shipment)
+	}
+
+	return shipments, nil
 }
 
 func (r *createRequest) execute() (*rest.ResponseBody, error) {
@@ -148,14 +183,14 @@ func (r *createRequest) execute() (*rest.ResponseBody, error) {
 	order := r.toEntity()
 	order.OrderNumber = orderNumber
 
-	// Create waypoint entities
-	waypoints, err := r.toWaypointEntities()
+	// Convert shipments to Shipment entities
+	shipments, err := r.toShipmentEntities()
 	if err != nil {
 		return nil, err
 	}
 
-	// Create order with waypoints
-	if err := r.uc.Order.CreateWithWaypoints(order, waypoints); err != nil {
+	// Create order with shipments
+	if err := r.uc.Order.CreateWithShipments(order, shipments); err != nil {
 		return nil, err
 	}
 

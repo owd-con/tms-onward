@@ -254,51 +254,42 @@ func createTestOrder(t *testing.T, companyID, customerID uuid.UUID) *entity.Orde
 	err := repository.NewOrderRepository().WithContext(ctx).Insert(order)
 	require.NoError(t, err)
 
-	// Create test addresses for waypoints (pickup and delivery)
+	// Create test addresses for shipments (pickup and delivery)
 	pickupAddress := createTestAddress(t, companyID)
 	deliveryAddress := createTestAddress(t, companyID)
 
-	// Create order waypoints for FTL order (pickup and delivery)
+	// Create shipment for FTL order
 	now := time.Now()
 	sd, _ := time.Parse("2006-01-02", now.Format("2006-01-02"))
 	st, _ := time.Parse("15:04 -07:00", now.Format("15:04 -07:00"))
 
-	// Pickup waypoint
-	pickup := &entity.OrderWaypoint{
-		OrderID:         order.ID,
-		Type:            "pickup",
-		AddressID:       pickupAddress.ID,
-		LocationName:    pickupAddress.Name,
-		LocationAddress: pickupAddress.Address,
-		ContactName:     pickupAddress.ContactName,
-		ContactPhone:    pickupAddress.ContactPhone,
-		ScheduledDate:   sd,
-		ScheduledTime:   st.Format("15:04"),
-		Price:           50000,
-		Weight:          100,
-		DispatchStatus:  "pending",
-		SequenceNumber:  1,
-	}
-	err = repository.NewOrderWaypointRepository().WithContext(ctx).Insert(pickup)
-	require.NoError(t, err)
+	// Generate shipment number
+	shipmentNumber := fmt.Sprintf("SHP-%s", uuid.New().String())
 
-	// Delivery waypoint
-	delivery := &entity.OrderWaypoint{
-		OrderID:         order.ID,
-		Type:            "delivery",
-		AddressID:       deliveryAddress.ID,
-		LocationName:    deliveryAddress.Name,
-		LocationAddress: deliveryAddress.Address,
-		ContactName:     deliveryAddress.ContactName,
-		ContactPhone:    deliveryAddress.ContactPhone,
-		ScheduledDate:   sd,
-		ScheduledTime:   st.Format("15:04"),
-		Price:           50000,
-		Weight:          100,
-		DispatchStatus:  "pending",
-		SequenceNumber:  2,
+	// Create single shipment for FTL order
+	shipment := &entity.Shipment{
+		OrderID:               order.ID,
+		CompanyID:             companyID,
+		ShipmentNumber:        shipmentNumber,
+		OriginAddressID:       pickupAddress.ID,
+		OriginLocationName:    pickupAddress.Name,
+		OriginAddress:         pickupAddress.Address,
+		OriginContactName:     pickupAddress.ContactName,
+		OriginContactPhone:    pickupAddress.ContactPhone,
+		DestinationAddressID:  deliveryAddress.ID,
+		DestLocationName:      deliveryAddress.Name,
+		DestAddress:           deliveryAddress.Address,
+		DestContactName:       deliveryAddress.ContactName,
+		DestContactPhone:      deliveryAddress.ContactPhone,
+		ScheduledPickupDate:   sd,
+		ScheduledPickupTime:   st.Format("15:04"),
+		ScheduledDeliveryDate: sd, // Same day for test
+		ScheduledDeliveryTime: st.Format("15:04"),
+		Price:                 0, // FTL price at order level
+		Status:                "pending",
+		CreatedBy:             "Test User",
 	}
-	err = repository.NewOrderWaypointRepository().WithContext(ctx).Insert(delivery)
+	err = repository.NewShipmentRepository().WithContext(ctx).Insert(shipment)
 	require.NoError(t, err)
 
 	return order
@@ -318,27 +309,48 @@ func createTestTripWithWaypoints(t *testing.T, companyID uuid.UUID, order *entit
 	err := repository.NewTripRepository().WithContext(ctx).Insert(trip)
 	require.NoError(t, err)
 
-	// Create trip waypoints using raw SQL to get order waypoints
-	orderWaypoints := []*entity.OrderWaypoint{}
-	err = postgres.GetDB().NewSelect().
-		Model(&orderWaypoints).
-		Where("order_id = ?", order.ID).
-		Where("is_deleted = false").
-		Order("sequence_number ASC").
-		Scan(ctx)
+	// Get shipments for this order
+	shipmentRepo := repository.NewShipmentRepository().WithContext(ctx).(*repository.ShipmentRepository)
+	shipments, err := shipmentRepo.FindByOrderID(order.ID.String())
+	require.NoError(t, err)
+	require.Greater(t, len(shipments), 0, "Order should have at least one shipment")
+
+	// Get addresses for pickup and delivery
+	// Re-create addresses for test (simplified approach)
+	pickupAddress := createTestAddress(t, companyID)
+	deliveryAddress := createTestAddress(t, companyID)
+
+	// Create pickup trip waypoint
+	pickupWaypoint := &entity.TripWaypoint{
+		TripID:         trip.ID,
+		ShipmentIDs:    []string{shipments[0].ID.String()},
+		Type:           "pickup",
+		AddressID:      pickupAddress.ID,
+		LocationName:   pickupAddress.Name,
+		Address:        pickupAddress.Address,
+		ContactName:    pickupAddress.ContactName,
+		ContactPhone:   pickupAddress.ContactPhone,
+		SequenceNumber: 1,
+		Status:         "pending",
+	}
+	err = repository.NewTripWaypointRepository().WithContext(ctx).Insert(pickupWaypoint)
 	require.NoError(t, err)
 
-	// Create trip waypoints for each order waypoint
-	for _, ow := range orderWaypoints {
-		tw := &entity.TripWaypoint{
-			TripID:          trip.ID,
-			OrderWaypointID: ow.ID,
-			SequenceNumber:  ow.SequenceNumber,
-			Status:          "pending",
-		}
-		err = repository.NewTripWaypointRepository().WithContext(ctx).Insert(tw)
-		require.NoError(t, err)
+	// Create delivery trip waypoint
+	deliveryWaypoint := &entity.TripWaypoint{
+		TripID:         trip.ID,
+		ShipmentIDs:    []string{shipments[0].ID.String()},
+		Type:           "delivery",
+		AddressID:      deliveryAddress.ID,
+		LocationName:   deliveryAddress.Name,
+		Address:        deliveryAddress.Address,
+		ContactName:    deliveryAddress.ContactName,
+		ContactPhone:   deliveryAddress.ContactPhone,
+		SequenceNumber: 2,
+		Status:         "pending",
 	}
+	err = repository.NewTripWaypointRepository().WithContext(ctx).Insert(deliveryWaypoint)
+	require.NoError(t, err)
 
 	return trip
 }
@@ -370,7 +382,10 @@ func cleanupTestData() {
 	// 4. Delete trips with test trip numbers
 	db.ExecContext(ctx, "DELETE FROM trips WHERE trip_number LIKE 'TRP-%'")
 
-	// 5. Delete order_waypoints
+	// 5. Delete shipments
+	db.ExecContext(ctx, "DELETE FROM shipments WHERE shipment_number LIKE 'SHP-%'")
+
+	// 6. Delete order_waypoints (legacy cleanup)
 	db.ExecContext(ctx, "DELETE FROM order_waypoints WHERE order_id IN (SELECT id FROM orders WHERE order_number LIKE 'ORD-%')")
 
 	// 6. Delete test orders

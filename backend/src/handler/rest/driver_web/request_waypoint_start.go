@@ -58,9 +58,9 @@ func (r *startWaypointRequest) Validate() *validate.Response {
 				}
 			}
 
-			// Validate orderWaypoint is loaded
-			if tripWaypoint.OrderWaypoint == nil {
-				v.SetError("id.invalid", "Order waypoint not found.")
+			// Validate shipments exist in waypoint
+			if len(tripWaypoint.ShipmentIDs) == 0 {
+				v.SetError("id.invalid", "No shipments found in this waypoint.")
 			}
 
 			// Validate current status

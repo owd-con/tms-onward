@@ -28,19 +28,24 @@ func TestHandler_GetLogsByOrderID_Success(t *testing.T) {
 	order := createTestOrder(t, company.ID, customer.ID)
 	trip := createTestTrip(t, company.ID, order.ID, driver.ID, vehicle.ID)
 
-	// Get order waypoints for this order
+	// Get shipments for this order
 	ctx := context.Background()
-	orderWaypointRepo := repository.NewOrderWaypointRepository().WithContext(ctx)
-	waypoints, err := orderWaypointRepo.(*repository.OrderWaypointRepository).GetByOrderID(order.ID.String())
+	shipmentRepo := repository.NewShipmentRepository().WithContext(ctx).(*repository.ShipmentRepository)
+	shipments, err := shipmentRepo.FindByOrderID(order.ID.String())
 	require.NoError(t, err)
-	require.Greater(t, len(waypoints), 0, "Order should have at least one waypoint")
+	require.Greater(t, len(shipments), 0, "Order should have at least one shipment")
 
-	// Create trip_waypoint for the first order_waypoint
-	tripWaypoint := createTestTripWaypoint(t, trip.ID, waypoints[0].ID)
+	// Get addresses for pickup and delivery
+	pickupAddress := createTestAddress(t, company.ID)
+	deliveryAddress := createTestAddress(t, company.ID)
+
+	// Create trip_waypoints for pickup and delivery
+	pickupWaypoint := createTestTripWaypoint(t, trip.ID, []string{shipments[0].ID.String()}, "pickup", pickupAddress)
+	deliveryWaypoint := createTestTripWaypoint(t, trip.ID, []string{shipments[0].ID.String()}, "delivery", deliveryAddress)
 
 	// Create waypoint logs
-	_ = createTestWaypointLog(t, waypoints[0].ID, tripWaypoint.ID)
-	_ = createTestWaypointLog(t, waypoints[0].ID, tripWaypoint.ID)
+	_ = createTestWaypointLog(t, order.ID, []string{shipments[0].ID.String()}, pickupWaypoint.ID)
+	_ = createTestWaypointLog(t, order.ID, []string{shipments[0].ID.String()}, deliveryWaypoint.ID)
 
 	// Create request context with order_id query parameter
 	path := fmt.Sprintf("/waypoint/logs?order_id=%s", order.ID.String())
@@ -82,19 +87,22 @@ func TestHandler_GetLogsByTripWaypointID_Success(t *testing.T) {
 	order := createTestOrder(t, company.ID, customer.ID)
 	trip := createTestTrip(t, company.ID, order.ID, driver.ID, vehicle.ID)
 
-	// Get order waypoints for this order
+	// Get shipments for this order
 	ctx := context.Background()
-	orderWaypointRepo := repository.NewOrderWaypointRepository().WithContext(ctx)
-	waypoints, err := orderWaypointRepo.(*repository.OrderWaypointRepository).GetByOrderID(order.ID.String())
+	shipmentRepo := repository.NewShipmentRepository().WithContext(ctx).(*repository.ShipmentRepository)
+	shipments, err := shipmentRepo.FindByOrderID(order.ID.String())
 	require.NoError(t, err)
-	require.Greater(t, len(waypoints), 0, "Order should have at least one waypoint")
+	require.Greater(t, len(shipments), 0, "Order should have at least one shipment")
 
-	// Create trip_waypoint for the first order_waypoint
-	tripWaypoint := createTestTripWaypoint(t, trip.ID, waypoints[0].ID)
+	// Get address for delivery
+	deliveryAddress := createTestAddress(t, company.ID)
+
+	// Create trip_waypoint for delivery
+	tripWaypoint := createTestTripWaypoint(t, trip.ID, []string{shipments[0].ID.String()}, "delivery", deliveryAddress)
 
 	// Create waypoint logs
-	_ = createTestWaypointLog(t, waypoints[0].ID, tripWaypoint.ID)
-	_ = createTestWaypointLog(t, waypoints[0].ID, tripWaypoint.ID)
+	_ = createTestWaypointLog(t, order.ID, []string{shipments[0].ID.String()}, tripWaypoint.ID)
+	_ = createTestWaypointLog(t, order.ID, []string{shipments[0].ID.String()}, tripWaypoint.ID)
 
 	// Create request context with trip_waypoint_id query parameter
 	path := fmt.Sprintf("/waypoint/logs?trip_waypoint_id=%s", tripWaypoint.ID.String())
@@ -162,16 +170,19 @@ func TestHandler_GetLogs_OrderNotBelongsToCompany_TenantIsolation(t *testing.T) 
 	orderA := createTestOrder(t, companyA.ID, customerA.ID)
 	tripA := createTestTrip(t, companyA.ID, orderA.ID, driverA.ID, vehicleA.ID)
 
-	// Get order waypoints for order A
+	// Get shipments for order A
 	ctx := context.Background()
-	orderWaypointRepoA := repository.NewOrderWaypointRepository().WithContext(ctx)
-	waypointsA, err := orderWaypointRepoA.(*repository.OrderWaypointRepository).GetByOrderID(orderA.ID.String())
+	shipmentRepoA := repository.NewShipmentRepository().WithContext(ctx).(*repository.ShipmentRepository)
+	shipmentsA, err := shipmentRepoA.FindByOrderID(orderA.ID.String())
 	require.NoError(t, err)
-	require.Greater(t, len(waypointsA), 0, "Order should have at least one waypoint")
+	require.Greater(t, len(shipmentsA), 0, "Order should have at least one shipment")
+
+	// Get address for delivery
+	deliveryAddress := createTestAddress(t, companyA.ID)
 
 	// Create trip_waypoint and logs for company A
-	tripWaypointA := createTestTripWaypoint(t, tripA.ID, waypointsA[0].ID)
-	_ = createTestWaypointLog(t, waypointsA[0].ID, tripWaypointA.ID)
+	tripWaypointA := createTestTripWaypoint(t, tripA.ID, []string{shipmentsA[0].ID.String()}, "delivery", deliveryAddress)
+	_ = createTestWaypointLog(t, orderA.ID, []string{shipmentsA[0].ID.String()}, tripWaypointA.ID)
 
 	// Create company B
 	companyB := createTestCompany(t)

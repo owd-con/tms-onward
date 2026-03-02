@@ -12,13 +12,13 @@ import (
 	"github.com/logistics-id/engine/validate"
 )
 
-type batchRescheduleWaypointsRequest struct {
-	WaypointIDs []string `json:"waypoint_ids" valid:"required"` // Array of failed waypoint IDs
+type batchRescheduleShipmentsRequest struct {
+	ShipmentIDs []string `json:"shipment_ids" valid:"required"` // Array of failed shipment IDs
 	DriverID    string   `json:"driver_id" valid:"required|uuid"`
 	VehicleID   string   `json:"vehicle_id" valid:"required|uuid"`
 
-	waypoints []*entity.OrderWaypoint
-	orderID   uuid.UUID       // Validate all waypoints belong to same order
+	shipments []*entity.Shipment
+	orderID   uuid.UUID       // Validate all shipments belong to same order
 	driver    *entity.Driver  // Fetched during validation
 	vehicle   *entity.Vehicle // Fetched during validation
 
@@ -27,40 +27,40 @@ type batchRescheduleWaypointsRequest struct {
 	session *entity.TMSSessionClaims
 }
 
-func (r *batchRescheduleWaypointsRequest) Validate() *validate.Response {
+func (r *batchRescheduleShipmentsRequest) Validate() *validate.Response {
 	v := validate.NewResponse()
 
-	// Validate waypoint_ids is not empty
-	if len(r.WaypointIDs) == 0 {
-		v.SetError("waypoint_ids.invalid", "at least one waypoint_id is required.")
+	// Validate shipment_ids is not empty
+	if len(r.ShipmentIDs) == 0 {
+		v.SetError("shipment_ids.invalid", "at least one shipment_id is required.")
 	}
 
-	// Fetch and validate all waypoints
-	r.waypoints = make([]*entity.OrderWaypoint, 0, len(r.WaypointIDs))
+	// Fetch and validate all shipments
+	r.shipments = make([]*entity.Shipment, 0, len(r.ShipmentIDs))
 	r.orderID = uuid.UUID{} // Initialize as zero UUID
 
-	for i, waypointID := range r.WaypointIDs {
-		waypoint, err := r.uc.Exception.GetByID(waypointID)
+	for i, shipmentID := range r.ShipmentIDs {
+		shipment, err := r.uc.Shipment.GetByID(shipmentID)
 		if err != nil {
-			v.SetError("waypoint_ids.invalid", "waypoint not found or invalid.")
-			continue // Skip remaining validation for this invalid waypoint
+			v.SetError("shipment_ids.invalid", "shipment not found or invalid.")
+			continue // Skip remaining validation for this invalid shipment
 		}
 
-		// Validate waypoint can be rescheduled
-		if waypoint.DispatchStatus != "failed" && waypoint.DispatchStatus != "returned" {
-			v.SetError("waypoint_ids.invalid", "only failed or returned waypoints can be rescheduled.")
-			continue // Skip this invalid waypoint
+		// Validate shipment can be rescheduled (only failed shipments)
+		if shipment.Status != "failed" {
+			v.SetError("shipment_ids.invalid", "only failed shipments can be rescheduled.")
+			continue // Skip this invalid shipment
 		}
 
-		// Validate all waypoints belong to the same order
+		// Validate all shipments belong to the same order
 		if i == 0 {
-			r.orderID = waypoint.OrderID
-		} else if waypoint.OrderID != r.orderID {
-			v.SetError("waypoint_ids.invalid", "all waypoints must belong to the same order.")
-			continue // Skip this invalid waypoint
+			r.orderID = shipment.OrderID
+		} else if shipment.OrderID != r.orderID {
+			v.SetError("shipment_ids.invalid", "all shipments must belong to the same order.")
+			continue // Skip this invalid shipment
 		}
 
-		r.waypoints = append(r.waypoints, waypoint)
+		r.shipments = append(r.shipments, shipment)
 	}
 
 	// Validate driver and vehicle belong to same company
@@ -91,71 +91,46 @@ func (r *batchRescheduleWaypointsRequest) Validate() *validate.Response {
 	}
 
 	// Validate old trip is "completed" before allowing reschedule
-	// AND validate waypoints are not already completed in the latest trip
-	if r.orderID != uuid.Nil && len(r.waypoints) > 0 {
-		// Get waypoint IDs as string array
-		waypointIDs := make([]string, len(r.waypoints))
-		for i, wp := range r.waypoints {
-			waypointIDs[i] = wp.ID.String()
-		}
-
-		// Single query to check both conditions:
-		// 1. Trip must be completed
-		// 2. Waypoints must not be already completed
-		hasIssue, err := r.uc.Trip.HasCompletedWaypoints(r.orderID.String(), waypointIDs)
+	// For shipments, we check if the order's last trip is completed
+	if r.orderID != uuid.Nil && len(r.shipments) > 0 {
+		// Check if there's a completed trip for this order
+		trip, err := r.uc.Trip.GetByOrderID(r.orderID.String())
 		if err != nil {
-			v.SetError("waypoint_ids.invalid", "failed to validate trip status.")
-		} else if hasIssue {
-			v.SetError("waypoint_ids.invalid", "old trip must be completed and waypoints cannot already be completed.")
+			// No trip found, this is OK (first reschedule)
+		} else if trip.Status != "completed" && trip.Status != "cancelled" {
+			v.SetError("shipment_ids.invalid", "previous trip must be completed or cancelled before rescheduling.")
 		}
 	}
 
 	return v
 }
 
-func (r *batchRescheduleWaypointsRequest) Messages() map[string]string {
+func (r *batchRescheduleShipmentsRequest) Messages() map[string]string {
 	return map[string]string{}
 }
 
-func (r *batchRescheduleWaypointsRequest) execute() (*rest.ResponseBody, error) {
-	// Gunakan toEntity() untuk convert request ke entity
-	trip := r.toEntity()
-
-	// Convert OrderWaypoints ke TripWaypoints
-	tripWaypoints := make([]*entity.TripWaypoint, 0, len(r.waypoints))
-	for i, ow := range r.waypoints {
-		twp := &entity.TripWaypoint{
-			OrderWaypointID: ow.ID,
-			SequenceNumber:  i + 1,
-			Status:          "pending",
-		}
-		tripWaypoints = append(tripWaypoints, twp)
+func (r *batchRescheduleShipmentsRequest) execute() (*rest.ResponseBody, error) {
+	// Convert shipment IDs to UUID array
+	shipmentUUIDs := make([]uuid.UUID, len(r.ShipmentIDs))
+	for i, id := range r.ShipmentIDs {
+		shipmentUUIDs[i], _ = uuid.Parse(id)
 	}
 
-	// Create trip dengan waypoints melalui usecase
-	err := r.uc.Trip.CreateWithWaypoints(trip, tripWaypoints)
+	driverID, _ := uuid.Parse(r.DriverID)
+	vehicleID, _ := uuid.Parse(r.VehicleID)
+
+	trip, err := r.uc.Exception.BatchRescheduleShipments(shipmentUUIDs, driverID, vehicleID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Set TripWaypoints untuk response
-	trip.TripWaypoints = tripWaypoints
-
 	return rest.NewResponseBody(trip), nil
 }
 
-func (r *batchRescheduleWaypointsRequest) toEntity() *entity.Trip {
-	// Get OrderID from first waypoint (all waypoints belong to same order)
-	var orderID uuid.UUID
-	if len(r.waypoints) > 0 && r.waypoints[0].Order != nil {
-		orderID = r.waypoints[0].Order.ID
-	} else {
-		orderID = r.orderID // Fallback ke orderID yang diset di Validate
-	}
-
+func (r *batchRescheduleShipmentsRequest) toEntity() *entity.Trip {
 	return &entity.Trip{
 		CompanyID:  r.driver.CompanyID,
-		OrderID:    orderID,
+		OrderID:    r.orderID,
 		TripNumber: r.uc.Trip.GenerateTripNumber(),
 		DriverID:   r.driver.ID,
 		VehicleID:  r.vehicle.ID,
@@ -164,7 +139,7 @@ func (r *batchRescheduleWaypointsRequest) toEntity() *entity.Trip {
 	}
 }
 
-func (r *batchRescheduleWaypointsRequest) with(ctx context.Context, uc *usecase.Factory) *batchRescheduleWaypointsRequest {
+func (r *batchRescheduleShipmentsRequest) with(ctx context.Context, uc *usecase.Factory) *batchRescheduleShipmentsRequest {
 	r.ctx = ctx
 	r.uc = uc.WithContext(ctx)
 	r.session = common.GetContextSessionGeneric[entity.TMSSessionClaims](ctx)

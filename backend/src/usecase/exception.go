@@ -15,37 +15,38 @@ import (
 )
 
 type ExceptionUsecase struct {
-	*common.BaseUsecase[entity.OrderWaypoint]
-	WaypointRepo     *repository.OrderWaypointRepository
+	ShipmentRepo     *repository.ShipmentRepository
 	OrderRepo        *repository.OrderRepository
 	TripRepo         *repository.TripRepository
 	TripWaypointRepo *repository.TripWaypointRepository
 	WaypointLogRepo  *repository.WaypointLogRepository
 	WaypointUsecase  *WaypointUsecase
+	ShipmentUsecase  *ShipmentUsecase
 
 	ctx context.Context
 }
 
-// FailedWaypointData - Failed waypoint data from SQL result
-type FailedWaypointData struct {
+// FailedShipmentData - Failed shipment data from SQL result
+type FailedShipmentData struct {
 	ID              string `json:"id"`
-	Type            string `json:"type"`
-	LocationName    string `json:"location_name"`
-	LocationAddress string `json:"location_address"`
+	ShipmentNumber  string `json:"shipment_number"`
+	OriginLocation  string `json:"origin_location"`
+	DestLocation    string `json:"dest_location"`
 	FailedAt        string `json:"failed_at"`
 	FailureReason   string `json:"failure_reason"`
+	RetryCount      int    `json:"retry_count"`
 }
 
 // ExceptionOrderResult - Result from GetFailedOrders raw SQL query
 type ExceptionOrderResult struct {
-	ID              uuid.UUID             `json:"id"`
-	OrderNumber     string                `json:"order_number"`
-	ReferenceCode   string                `json:"reference_code"`
-	CustomerID      uuid.UUID             `json:"customer_id"`
-	CustomerName    string                `json:"customer_name"`
-	FailedWaypoints []*FailedWaypointData `json:"failed_waypoints"`
-	FailureCount    int                   `json:"failure_count"`
-	LastFailedAt    time.Time             `json:"last_failed_at"`
+	ID              uuid.UUID              `json:"id"`
+	OrderNumber     string                 `json:"order_number"`
+	ReferenceCode   string                 `json:"reference_code"`
+	CustomerID      uuid.UUID              `json:"customer_id"`
+	CustomerName    string                 `json:"customer_name"`
+	FailedShipments []*FailedShipmentData  `json:"failed_shipments"`
+	FailureCount    int                    `json:"failure_count"`
+	LastFailedAt    time.Time              `json:"last_failed_at"`
 }
 
 type ExceptionQueryOptions struct {
@@ -63,18 +64,18 @@ func (o *ExceptionQueryOptions) BuildQueryOption() *ExceptionQueryOptions {
 
 func (u *ExceptionUsecase) WithContext(ctx context.Context) *ExceptionUsecase {
 	return &ExceptionUsecase{
-		BaseUsecase:      u.BaseUsecase.WithContext(ctx),
-		WaypointRepo:     u.WaypointRepo.WithContext(ctx).(*repository.OrderWaypointRepository),
+		ShipmentRepo:     u.ShipmentRepo.WithContext(ctx).(*repository.ShipmentRepository),
 		OrderRepo:        u.OrderRepo.WithContext(ctx).(*repository.OrderRepository),
 		TripRepo:         u.TripRepo.WithContext(ctx).(*repository.TripRepository),
 		TripWaypointRepo: u.TripWaypointRepo.WithContext(ctx).(*repository.TripWaypointRepository),
 		WaypointLogRepo:  u.WaypointLogRepo.WithContext(ctx).(*repository.WaypointLogRepository),
-
-		ctx: ctx,
+		WaypointUsecase:  u.WaypointUsecase.WithContext(ctx),
+		ShipmentUsecase:  u.ShipmentUsecase.WithContext(ctx),
+		ctx:              ctx,
 	}
 }
 
-// GetFailedOrders - List orders that have failed/returned waypoints
+// GetFailedOrders - List orders that have failed/returned shipments
 // Uses raw SQL with JSON aggregation for better performance
 func (u *ExceptionUsecase) GetFailedOrders(req *ExceptionQueryOptions) ([]*ExceptionOrderResult, int64, error) {
 	if req.Session == nil {
@@ -91,9 +92,9 @@ func (u *ExceptionUsecase) GetFailedOrders(req *ExceptionQueryOptions) ([]*Excep
 		FROM orders o
 		INNER JOIN customers c ON c.id = o.customer_id
 		INNER JOIN (
-			SELECT ow.order_id
-			FROM order_waypoints ow
-			WHERE ow.dispatch_status = 'failed'
+			SELECT s.order_id
+			FROM shipments s
+			WHERE s.status = 'failed'
 		) as x ON x.order_id = o.id
 		WHERE o.company_id = ?
 	`
@@ -117,24 +118,29 @@ func (u *ExceptionUsecase) GetFailedOrders(req *ExceptionQueryOptions) ([]*Excep
 			COALESCE(jsonb_agg(
 				jsonb_build_object(
 					'id', x.id,
-					'type', x.type,
-					'location_name', x.location_name,
-					'location_address', x.location_address
+					'shipment_number', x.shipment_number,
+					'origin_location', x.origin_location_name,
+					'dest_location', x.dest_location_name,
+					'failed_at', x.failed_at,
+					'failure_reason', x.failure_reason,
+					'retry_count', x.retry_count
 				)
-			) FILTER (WHERE x.id IS NOT NULL), '[]'::jsonb) as failed_waypoints,
+			) FILTER (WHERE x.id IS NOT NULL), '[]'::jsonb) as failed_shipments,
 			COUNT(x.id) FILTER (WHERE x.id IS NOT NULL) as failure_count
 		FROM orders o
 		INNER JOIN customers c ON c.id = o.customer_id
 		INNER JOIN (
 			SELECT
-				ow.order_id,
-				ow.id,
-				ow.type,
-				addr.name as location_name,
-				addr.address as location_address
-			FROM order_waypoints ow
-			INNER JOIN addresses addr ON addr.id = ow.address_id
-			WHERE ow.dispatch_status = 'failed'
+				s.order_id,
+				s.id,
+				s.shipment_number,
+				s.origin_location_name,
+				s.dest_location_name,
+				s.failed_at,
+				s.failure_reason,
+				s.retry_count
+			FROM shipments s
+			WHERE s.status = 'failed'
 		) as x ON x.order_id = o.id
 		WHERE o.company_id = ?
 		GROUP BY o.id, o.order_number, o.reference_code, c.id, c.name
@@ -151,8 +157,8 @@ func (u *ExceptionUsecase) GetFailedOrders(req *ExceptionQueryOptions) ([]*Excep
 	return results, totalCount, nil
 }
 
-// GetFailedWaypoints - List failed/returned waypoints
-func (u *ExceptionUsecase) GetFailedWaypoints(req *ExceptionQueryOptions) ([]*entity.OrderWaypoint, int64, error) {
+// GetFailedShipments - List failed/returned shipments
+func (u *ExceptionUsecase) GetFailedShipments(req *ExceptionQueryOptions) ([]*entity.Shipment, int64, error) {
 	if req.Session == nil {
 		return nil, 0, errors.New("session not found")
 	}
@@ -162,122 +168,137 @@ func (u *ExceptionUsecase) GetFailedWaypoints(req *ExceptionQueryOptions) ([]*en
 	}
 
 	if req.OrderBy == "" {
-		req.OrderBy = "-order_waypoints:created_at"
+		req.OrderBy = "-shipments:created_at"
 	}
 
-	return u.WaypointRepo.FindAll(req.BuildOption(), func(q *bun.SelectQuery) *bun.SelectQuery {
+	return u.ShipmentRepo.FindAll(req.BuildOption(), func(q *bun.SelectQuery) *bun.SelectQuery {
 		// Join with orders for multi-tenant isolation
 		q.Relation("Order")
 
 		// Multi-tenant isolation - join with orders table to filter by company
-		q.Join("INNER JOIN orders ON orders.id = order_waypoints.order_id")
+		q.Join("INNER JOIN orders ON orders.id = shipments.order_id")
 
 		if req.Session != nil {
 			q.Where("orders.company_id = ?", req.Session.CompanyID)
 		}
 
-		// Only failed or returned waypoints
-		q.Where("order_waypoints.dispatch_status IN = 'failed'")
+		// Only failed or returned shipments
+		q.Where("shipments.status IN ('failed', 'returned')")
 
 		// Filter by order_id if provided
 		if req.OrderID != "" {
-			q.Where("order_waypoints.order_id = ?", req.OrderID)
+			q.Where("shipments.order_id = ?", req.OrderID)
 		}
 
 		// Filter by status if provided
 		if req.Status != "" {
-			q.Where("order_waypoints.dispatch_status = ?", req.Status)
+			q.Where("shipments.status = ?", req.Status)
 		}
 
 		return q
 	})
 }
 
-// GetByID retrieves a waypoint by ID
-func (u *ExceptionUsecase) GetByID(id string) (*entity.OrderWaypoint, error) {
-	return u.WaypointRepo.FindByID(id)
+// GetShipmentByID retrieves a shipment by ID
+func (u *ExceptionUsecase) GetShipmentByID(id string) (*entity.Shipment, error) {
+	return u.ShipmentRepo.FindByID(id)
 }
 
-// BatchRescheduleWaypoints reschedules multiple failed waypoints in a single new trip.
+// BatchRescheduleShipments reschedules multiple failed shipments in a single new trip.
 // Requirements implemented:
-// 1. Reset order_waypoints: "failed"/"returned" -> "pending" (allow re-dispatch)
+// 1. Reset shipments: "failed"/"returned" -> "dispatched" (allow retry)
 // 2. Keep history: old trip_waypoints remain "failed" (audit trail)
-// 3. Create new trip with failed waypoints and their TripWaypoints
+// 3. Create new trip with failed shipments
 // 4. Return new trip info
 //
 // Note: Validation of old trip status is done at request level (Validate method)
-func (u *ExceptionUsecase) BatchRescheduleWaypoints(waypoints []*entity.OrderWaypoint, driverID, vehicleID uuid.UUID) (*entity.Trip, error) {
-	if len(waypoints) == 0 {
-		return nil, errors.New("no waypoints to reschedule")
+func (u *ExceptionUsecase) BatchRescheduleShipments(shipmentIDs []uuid.UUID, driverID, vehicleID uuid.UUID) (*entity.Trip, error) {
+	if len(shipmentIDs) == 0 {
+		return nil, errors.New("no shipments to reschedule")
 	}
 
-	// Use first waypoint to get order info (all waypoints validated to belong to same order)
-	firstWaypoint := waypoints[0]
+	// Get all shipments to reschedule
+	var shipments []*entity.Shipment
+	for _, shipmentID := range shipmentIDs {
+		shipment, err := u.ShipmentRepo.FindByID(shipmentID.String())
+		if err != nil {
+			return nil, fmt.Errorf("failed to find shipment %s: %w", shipmentID, err)
+		}
+		shipments = append(shipments, shipment)
+	}
+
+	if len(shipments) == 0 {
+		return nil, errors.New("no shipments found")
+	}
+
+	// Use first shipment to get order info (all shipments validated to belong to same order)
+	firstShipment := shipments[0]
 
 	// Load order relationship if not loaded
-	if firstWaypoint.Order == nil {
-		order, err := u.OrderRepo.FindByID(firstWaypoint.OrderID.String())
-		if err != nil {
-			return nil, err
-		}
-		firstWaypoint.Order = order
+	order, err := u.OrderRepo.FindByID(firstShipment.OrderID.String())
+	if err != nil {
+		return nil, fmt.Errorf("failed to find order: %w", err)
 	}
 
 	// Get old trip for notes and audit log (validation already done at request level)
-	oldTrip, err := u.TripRepo.FindByOrderID(firstWaypoint.OrderID.String())
+	oldTrip, err := u.TripRepo.FindByOrderID(firstShipment.OrderID.String())
 	if err != nil {
 		return nil, fmt.Errorf("failed to find old trip for order: %w", err)
 	}
 
-	// Create TripUsecase to handle new trip creation with waypoints
-	tripRepo := u.TripRepo.WithContext(u.Context).(*repository.TripRepository)
-
 	// Generate notes for the new trip with reference to old trip
-	waypointInfos := make([]string, len(waypoints))
-	for i, wp := range waypoints {
-		waypointInfos[i] = fmt.Sprintf("%s (%s)", wp.Type, wp.LocationName)
+	shipmentInfos := make([]string, len(shipments))
+	for i, s := range shipments {
+		shipmentInfos[i] = fmt.Sprintf("%s (%s → %s)", s.ShipmentNumber, s.OriginLocationName, s.DestLocationName)
 	}
-	notes := fmt.Sprintf("Rescheduled trip for waypoints %v (previous trip: %s)", waypointInfos, oldTrip.TripNumber)
+	notes := fmt.Sprintf("Rescheduled trip for shipments %v (previous trip: %s)", shipmentInfos, oldTrip.TripNumber)
 
-	// Use TripUsecase to create new trip with waypoints
+	// Create TripUsecase to handle new trip creation with shipments
+	tripRepo := u.TripRepo.WithContext(u.ctx).(*repository.TripRepository)
 	tripUsecase := (&TripUsecase{
 		BaseUsecase:      common.NewBaseUsecase(tripRepo),
 		Repo:             tripRepo,
-		DriverRepo:       repository.NewDriverRepository().WithContext(u.Context).(*repository.DriverRepository),
-		VehicleRepo:      repository.NewVehicleRepository().WithContext(u.Context).(*repository.VehicleRepository),
-		TripWaypointRepo: u.TripWaypointRepo.WithContext(u.Context).(*repository.TripWaypointRepository),
-	}).WithContext(u.Context)
+		DriverRepo:       repository.NewDriverRepository().WithContext(u.ctx).(*repository.DriverRepository),
+		VehicleRepo:      repository.NewVehicleRepository().WithContext(u.ctx).(*repository.VehicleRepository),
+		TripWaypointRepo: u.TripWaypointRepo.WithContext(u.ctx).(*repository.TripWaypointRepository),
+		ShipmentUsecase:  u.ShipmentUsecase.WithContext(u.ctx),
+	}).WithContext(u.ctx)
 
-	newTrip, err := tripUsecase.CreateForRescheduleWithWaypoints(firstWaypoint.Order.CompanyID, driverID, vehicleID, firstWaypoint.OrderID, waypoints, notes)
+	newTrip, err := tripUsecase.CreateForRescheduleWithShippoints(order.CompanyID, driverID, vehicleID, shipmentIDs, notes)
 	if err != nil {
 		return nil, err
 	}
 
-	// 4. Update all waypoint statuses and create logs (transactional)
-	if err := u.WaypointRepo.RunInTx(u.Context, func(ctx context.Context, tx bun.Tx) error {
-		waypointRepoWithTx := &repository.OrderWaypointRepository{
-			BaseRepository: u.WaypointRepo.BaseRepository.WithTx(ctx, tx),
+	// Update all shipment statuses to dispatched and create logs (transactional)
+	if err := u.ShipmentRepo.RunInTx(u.ctx, func(ctx context.Context, tx bun.Tx) error {
+		shipmentRepoWithTx := &repository.ShipmentRepository{
+			BaseRepository: u.ShipmentRepo.BaseRepository.WithTx(ctx, tx),
 		}
-		logRepo := repository.NewWaypointLogRepository().WithContext(u.Context).(*repository.WaypointLogRepository)
+		logRepo := repository.NewWaypointLogRepository().WithContext(u.ctx).(*repository.WaypointLogRepository)
 		logRepoWithTx := &repository.WaypointLogRepository{
 			BaseRepository: logRepo.BaseRepository.WithTx(ctx, tx),
 		}
 
-		for _, waypoint := range waypoints {
-			oldStatus := waypoint.DispatchStatus
+		for _, shipment := range shipments {
+			oldStatus := shipment.Status
 
-			// Reset waypoint status for new trip (failed/returned -> Pending)
-			waypoint.DispatchStatus = "pending"
-			if err := waypointRepoWithTx.Update(waypoint); err != nil {
-				return fmt.Errorf("failed to reset waypoint status: %w", err)
+			// Reset shipment status for new trip (failed/returned -> dispatched)
+			shipment.Status = "dispatched"
+			shipment.RetryCount++
+			if err := shipmentRepoWithTx.Update(shipment); err != nil {
+				return fmt.Errorf("failed to reset shipment status: %w", err)
 			}
 
 			// Create waypoint log for audit trail
 			log := &entity.WaypointLog{
-				OrderWaypointID: &waypoint.ID,
-				OldStatus:       oldStatus,
-				NewStatus:       "pending",
-				Notes:           fmt.Sprintf("Waypoint rescheduled from old trip %s to new trip %s", oldTrip.TripNumber, newTrip.TripNumber),
+				OrderID:     shipment.OrderID,
+				ShipmentIDs: []string{shipment.ID.String()},
+				EventType:   "shipment_retry",
+				Message:     fmt.Sprintf("Shipment %s rescheduled from old trip %s to new trip %s (retry #%d)", shipment.ShipmentNumber, oldTrip.TripNumber, newTrip.TripNumber, shipment.RetryCount),
+				OldStatus:   oldStatus,
+				NewStatus:   "dispatched",
+				Notes:       fmt.Sprintf("Shipment rescheduled for retry"),
+				CreatedBy:   "System",
 			}
 			if err := logRepoWithTx.Insert(log); err != nil {
 				return fmt.Errorf("failed to create waypoint log: %w", err)
@@ -292,45 +313,45 @@ func (u *ExceptionUsecase) BatchRescheduleWaypoints(waypoints []*entity.OrderWay
 	return newTrip, nil
 }
 
-// ReturnWaypoint marks a failed waypoint as returned to origin.
+// ReturnShipment marks a failed shipment as returned to origin.
 // Requirements implemented:
-// 1. Update order_waypoint.dispatch_status → "returned"
-// 2. Update order_waypoint.returned_note → input
-// 3. Create waypoint_log (event_type: waypoint_returned)
+// 1. Update shipments.status → "returned"
+// 2. Update shipments.returned_note → input
+// 3. Create waypoint_log (event_type: shipment_returned)
 // 4. Trip waypoint tetap failed (tidak diubah)
-// 5. Auto-complete order if all waypoints are now completed/returned
-func (u *ExceptionUsecase) ReturnWaypoint(ctx context.Context, waypoint *entity.OrderWaypoint, returnedNote, createdBy string) error {
+// 5. Auto-complete order if all shipments are now completed/returned
+func (u *ExceptionUsecase) ReturnShipment(ctx context.Context, shipment *entity.Shipment, returnedNote, createdBy string) error {
 	// Store old status for logging
-	oldStatus := waypoint.DispatchStatus
+	oldStatus := shipment.Status
 
-	// Update waypoint status and returned_note
-	waypoint.DispatchStatus = "returned"
-	waypoint.ReturnedNote = &returnedNote
+	// Update shipment status and returned_note
+	shipment.Status = "returned"
+	shipment.ReturnedNote = &returnedNote
 
 	// Save changes to database in transaction
-	if err := u.WaypointRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
-		waypointRepoWithTx := &repository.OrderWaypointRepository{
-			BaseRepository: u.WaypointRepo.BaseRepository.WithTx(ctx, tx),
+	if err := u.ShipmentRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
+		shipmentRepoWithTx := &repository.ShipmentRepository{
+			BaseRepository: u.ShipmentRepo.BaseRepository.WithTx(ctx, tx),
 		}
 		logRepoWithTx := &repository.WaypointLogRepository{
 			BaseRepository: u.WaypointLogRepo.BaseRepository.WithTx(ctx, tx),
 		}
 
-		// Update waypoint
-		if err := waypointRepoWithTx.Update(waypoint); err != nil {
-			return fmt.Errorf("failed to update waypoint: %w", err)
+		// Update shipment
+		if err := shipmentRepoWithTx.Update(shipment); err != nil {
+			return fmt.Errorf("failed to update shipment: %w", err)
 		}
 
 		// Create waypoint log for audit trail
 		log := &entity.WaypointLog{
-			OrderID:         &waypoint.OrderID,
-			OrderWaypointID: &waypoint.ID,
-			EventType:       "waypoint_returned",
-			Message:         fmt.Sprintf("Waypoint %s (%s) returned to origin", waypoint.Type, waypoint.LocationName),
-			OldStatus:       oldStatus,
-			NewStatus:       "returned",
-			Notes:           returnedNote,
-			CreatedBy:       createdBy,
+			OrderID:     shipment.OrderID,
+			ShipmentIDs: []string{shipment.ID.String()},
+			EventType:   "shipment_returned",
+			Message:     fmt.Sprintf("Shipment %s returned to origin", shipment.ShipmentNumber),
+			OldStatus:   oldStatus,
+			NewStatus:   "returned",
+			Notes:       returnedNote,
+			CreatedBy:   createdBy,
 		}
 		if err := logRepoWithTx.Insert(log); err != nil {
 			return fmt.Errorf("failed to create waypoint log: %w", err)
@@ -341,8 +362,8 @@ func (u *ExceptionUsecase) ReturnWaypoint(ctx context.Context, waypoint *entity.
 		return err
 	}
 
-	// Auto-complete order if all waypoints are now completed/returned
-	if err := u.WaypointUsecase.CheckAndUpdateOrderStatus(waypoint.OrderID); err != nil {
+	// Auto-complete order if all shipments are now completed/returned
+	if err := u.ShipmentUsecase.UpdateOrderStatusBasedOnShipments(shipment.OrderID.String()); err != nil {
 		return fmt.Errorf("failed to check and update order status: %w", err)
 	}
 
@@ -351,12 +372,12 @@ func (u *ExceptionUsecase) ReturnWaypoint(ctx context.Context, waypoint *entity.
 
 func NewExceptionUsecase() *ExceptionUsecase {
 	return &ExceptionUsecase{
-		BaseUsecase:      common.NewBaseUsecase(repository.NewOrderWaypointRepository()),
-		WaypointRepo:     repository.NewOrderWaypointRepository(),
+		ShipmentRepo:     repository.NewShipmentRepository(),
 		OrderRepo:        repository.NewOrderRepository(),
 		TripRepo:         repository.NewTripRepository(),
 		TripWaypointRepo: repository.NewTripWaypointRepository(),
 		WaypointLogRepo:  repository.NewWaypointLogRepository(),
 		WaypointUsecase:  NewWaypointUsecase(),
+		ShipmentUsecase:  NewShipmentUsecase(),
 	}
 }

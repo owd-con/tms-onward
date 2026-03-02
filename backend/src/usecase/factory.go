@@ -12,7 +12,7 @@ type Factory struct {
 	Driver        *DriverUsecase
 	PricingMatrix *PricingMatrixUsecase
 	Order         *OrderUsecase
-	OrderWaypoint *OrderWaypointUsecase
+	Shipment      *ShipmentUsecase
 	Waypoint      *WaypointUsecase
 	WaypointImage *WaypointImageUsecase
 	Trip          *TripUsecase
@@ -44,7 +44,7 @@ func NewFactory() *Factory {
 		Driver:        driverUsecase,
 		PricingMatrix: NewPricingMatrixUsecase(),
 		Order:         NewOrderUsecase(),
-		OrderWaypoint: NewOrderWaypointUsecase(),
+		Shipment:      NewShipmentUsecase(),
 		Waypoint:      NewWaypointUsecase(),
 		WaypointImage: NewWaypointImageUsecase(),
 		Trip:          NewTripUsecase(),
@@ -77,7 +77,7 @@ func (f *Factory) WithContext(ctx context.Context) *Factory {
 		Driver:        driver,
 		PricingMatrix: f.PricingMatrix.WithContext(ctx),
 		Order:         f.Order.WithContext(ctx),
-		OrderWaypoint: f.OrderWaypoint.WithContext(ctx),
+		Shipment:      f.Shipment.WithContext(ctx),
 		Waypoint:      f.Waypoint.WithContext(ctx),
 		WaypointImage: f.WaypointImage.WithContext(ctx),
 		Trip:          f.Trip.WithContext(ctx),

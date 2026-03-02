@@ -146,33 +146,25 @@ func createTestOrderForTracking(t *testing.T, companyID uuid.UUID, customerID uu
 		t.Skip("Cannot create test order")
 	}
 
-	// Create waypoints for the order (required for tracking)
-	pickupWaypoint := &entity.OrderWaypoint{
-		OrderID:         order.ID,
-		Type:            "pickup",
-		LocationName:    "Pickup Location",
-		LocationAddress: "Jl. Pickup No. 1",
-		ContactName:     "John Doe",
-		ContactPhone:    "08123456789",
-		DispatchStatus:  "pending",
-		SequenceNumber:  1,
+	// Create shipment for the order (required for tracking)
+	shipment := &entity.Shipment{
+		OrderID:               order.ID,
+		CompanyID:             companyID,
+		ShipmentNumber:        "SHP-" + uuid.New().String(),
+		OriginLocationName:    "Pickup Location",
+		OriginAddress:         "Jl. Pickup No. 1",
+		OriginContactName:     "John Doe",
+		OriginContactPhone:    "08123456789",
+		DestLocationName:      "Delivery Location",
+		DestAddress:           "Jl. Delivery No. 1",
+		DestContactName:       "Jane Doe",
+		DestContactPhone:      "08198765432",
+		Status:                status,
+		Price:                 0, // FTL pricing at order level
+		CreatedBy:             "test",
 	}
-	if err := repository.NewOrderWaypointRepository().WithContext(ctx).Insert(pickupWaypoint); err != nil {
-		t.Skip("Cannot create test pickup waypoint")
-	}
-
-	deliveryWaypoint := &entity.OrderWaypoint{
-		OrderID:         order.ID,
-		Type:            "delivery",
-		LocationName:    "Delivery Location",
-		LocationAddress: "Jl. Delivery No. 1",
-		ContactName:     "Jane Doe",
-		ContactPhone:    "08198765432",
-		DispatchStatus:  "pending",
-		SequenceNumber:  2,
-	}
-	if err := repository.NewOrderWaypointRepository().WithContext(ctx).Insert(deliveryWaypoint); err != nil {
-		t.Skip("Cannot create test delivery waypoint")
+	if err := repository.NewShipmentRepository().WithContext(ctx).Insert(shipment); err != nil {
+		t.Skip("Cannot create test shipment")
 	}
 
 	return order
@@ -227,32 +219,37 @@ func createTestTripForTracking(t *testing.T, companyID uuid.UUID, orderID uuid.U
 	return trip
 }
 
-func createTestWaypointLog(t *testing.T, orderWaypointID uuid.UUID, oldStatus, newStatus, notes string) {
+func createTestWaypointLog(t *testing.T, orderID uuid.UUID, shipmentIDs []string, oldStatus, newStatus, notes string) {
 	ctx := context.Background()
 	log := &entity.WaypointLog{
-		OrderWaypointID: &orderWaypointID,
-		EventType:       "status_change",
-		Message:         "Status changed",
-		OldStatus:       oldStatus,
-		NewStatus:       newStatus,
-		Notes:           notes,
-		CreatedBy:       "test",
+		OrderID:     orderID,
+		ShipmentIDs: shipmentIDs,
+		EventType:   "status_change",
+		Message:     "Status changed",
+		OldStatus:   oldStatus,
+		NewStatus:   newStatus,
+		Notes:       notes,
+		CreatedBy:   "test",
 	}
 	if err := repository.NewWaypointLogRepository().WithContext(ctx).Insert(log); err != nil {
 		t.Skip("Cannot create test waypoint log")
 	}
 }
 
-func createTestTripWaypoint(t *testing.T, tripID uuid.UUID, orderWaypointID uuid.UUID, sequenceNumber int, status string, receivedBy *string) *entity.TripWaypoint {
+func createTestTripWaypoint(t *testing.T, tripID uuid.UUID, shipmentIDs []string, waypointType string, sequenceNumber int, status string, receivedBy *string) *entity.TripWaypoint {
 	ctx := context.Background()
 	tripWaypoint := &entity.TripWaypoint{
-		TripID:          tripID,
-		OrderWaypointID: orderWaypointID,
-		SequenceNumber:  sequenceNumber,
-		Status:          status,
-		ReceivedBy:      receivedBy,
-		CreatedBy:       "test",
-		UpdatedBy:       "test",
+		TripID:         tripID,
+		ShipmentIDs:    shipmentIDs,
+		Type:           waypointType,
+		AddressID:      uuid.New(), // dummy address ID for test
+		LocationName:   "Test Location",
+		Address:        "Jl. Test No. 1",
+		SequenceNumber: sequenceNumber,
+		Status:         status,
+		ReceivedBy:     receivedBy,
+		CreatedBy:      "test",
+		UpdatedBy:      "test",
 	}
 	if err := repository.NewTripWaypointRepository().WithContext(ctx).Insert(tripWaypoint); err != nil {
 		t.Skip("Cannot create test trip waypoint")
@@ -286,8 +283,8 @@ func cleanupTestData() {
 	// 1. Delete waypoint_images first (they reference trip_waypoints)
 	db.ExecContext(ctx, "DELETE FROM waypoint_images WHERE trip_waypoint_id IN (SELECT id FROM trip_waypoints WHERE trip_id IN (SELECT id FROM trips WHERE order_id IN (SELECT id FROM orders WHERE order_number LIKE 'ORD-%')))")
 
-	// 2. Delete waypoint_logs first (they reference order_waypoints)
-	db.ExecContext(ctx, "DELETE FROM waypoint_logs WHERE order_waypoint_id IN (SELECT id FROM order_waypoints WHERE order_id IN (SELECT id FROM orders WHERE order_number LIKE 'ORD-%'))")
+	// 2. Delete waypoint_logs
+	db.ExecContext(ctx, "DELETE FROM waypoint_logs WHERE order_id IN (SELECT id FROM orders WHERE order_number LIKE 'ORD-%')")
 
 	// 3. Delete trip_waypoints
 	db.ExecContext(ctx, "DELETE FROM trip_waypoints WHERE trip_id IN (SELECT id FROM trips WHERE order_id IN (SELECT id FROM orders WHERE order_number LIKE 'ORD-%'))")
@@ -295,7 +292,10 @@ func cleanupTestData() {
 	// 4. Delete trips
 	db.ExecContext(ctx, "DELETE FROM trips WHERE order_id IN (SELECT id FROM orders WHERE order_number LIKE 'ORD-%')")
 
-	// 5. Delete order_waypoints
+	// 5. Delete shipments
+	db.ExecContext(ctx, "DELETE FROM shipments WHERE order_id IN (SELECT id FROM orders WHERE order_number LIKE 'ORD-%')")
+
+	// 6. Delete order_waypoints (legacy cleanup)
 	db.ExecContext(ctx, "DELETE FROM order_waypoints WHERE order_id IN (SELECT id FROM orders WHERE order_number LIKE 'ORD-%')")
 
 	// 6. Delete orders with test order numbers

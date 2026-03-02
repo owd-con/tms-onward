@@ -152,7 +152,7 @@ func (s *NotificationSubscriber) processFailedDelivery(ctx context.Context, uc *
 	}
 
 	// Fetch waypoint to get location name
-	waypoint, err := uc.Waypoint.GetByID(data.WaypointID)
+	waypoint, err := uc.Trip.GetTripWaypointByID(data.WaypointID)
 	if err != nil {
 		return err
 	}
@@ -173,7 +173,7 @@ func (s *NotificationSubscriber) processFailedDelivery(ctx context.Context, uc *
 		OrderNumber:  data.OrderNumber,
 		TripNumber:   data.TripNumber,
 		LocationName: waypoint.LocationName,
-		Address:      waypoint.LocationAddress,
+		Address:      waypoint.Address,
 		Timestamp:    time.Now().Format("2006-01-02 15:04:05"),
 		Notes:        "Delivery failed at this location. Please check with the driver.",
 		DashboardURL: "https://tms-onward.com/dashboard",
@@ -192,7 +192,7 @@ func (s *NotificationSubscriber) processDelivered(ctx context.Context, uc *useca
 	}
 
 	// Fetch waypoint to get location name
-	waypoint, err := uc.Waypoint.GetByID(data.WaypointID)
+	waypoint, err := uc.Trip.GetTripWaypointByID(data.WaypointID)
 	if err != nil {
 		return err
 	}
@@ -213,7 +213,7 @@ func (s *NotificationSubscriber) processDelivered(ctx context.Context, uc *useca
 		OrderNumber:   data.OrderNumber,
 		TripNumber:    data.TripNumber,
 		LocationName:  waypoint.LocationName,
-		Address:       waypoint.LocationAddress,
+		Address:       waypoint.Address,
 		RecipientName: data.RecipientName,
 		Timestamp:     time.Now().Format("2006-01-02 15:04:05"),
 		DashboardURL:  "https://tms-onward.com/dashboard",

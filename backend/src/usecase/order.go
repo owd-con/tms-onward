@@ -21,8 +21,8 @@ type OrderUsecase struct {
 	Repo              *repository.OrderRepository
 	CustomerRepo      *repository.CustomerRepository
 	PricingMatrixRepo *repository.PricingMatrixRepository
-	WaypointRepo      *repository.OrderWaypointRepository
 	WaypointLogRepo   *repository.WaypointLogRepository
+	ShipmentRepo      *repository.ShipmentRepository
 }
 
 type OrderQueryOptions struct {
@@ -45,8 +45,8 @@ func (u *OrderUsecase) WithContext(ctx context.Context) *OrderUsecase {
 		Repo:              u.Repo.WithContext(ctx).(*repository.OrderRepository),
 		CustomerRepo:      u.CustomerRepo.WithContext(ctx).(*repository.CustomerRepository),
 		PricingMatrixRepo: u.PricingMatrixRepo.WithContext(ctx).(*repository.PricingMatrixRepository),
-		WaypointRepo:      u.WaypointRepo.WithContext(ctx).(*repository.OrderWaypointRepository),
 		WaypointLogRepo:   u.WaypointLogRepo.WithContext(ctx).(*repository.WaypointLogRepository),
+		ShipmentRepo:      u.ShipmentRepo.WithContext(ctx).(*repository.ShipmentRepository),
 	}
 }
 
@@ -109,21 +109,21 @@ func (u *OrderUsecase) ValidateUnique(orderNumber string, companyID, excludeID s
 	return !exists // Return true if order_number is unique (doesn't exist)
 }
 
-// CreateWithWaypoints - Create order with waypoints in transaction
-func (u *OrderUsecase) CreateWithWaypoints(order *entity.Order, waypoints []*entity.OrderWaypoint) error {
+// CreateWithShipments - Create order with shipments in transaction
+func (u *OrderUsecase) CreateWithShipments(order *entity.Order, shipments []*entity.Shipment) error {
 	return u.Repo.RunInTx(u.Context, func(ctx context.Context, tx bun.Tx) error {
-		// 1. Create Order
+		// 1. Create Order first to get OrderID
 		orderRepo := u.Repo.WithTx(ctx, tx)
 		if err := orderRepo.Insert(order); err != nil {
-			return err
+			return fmt.Errorf("failed to create order: %w", err)
 		}
 
-		// 2. Create Order Waypoints
-		waypointRepo := u.WaypointRepo.WithTx(ctx, tx)
-		for _, wp := range waypoints {
-			wp.OrderID = order.ID
-			if err := waypointRepo.Insert(wp); err != nil {
-				return err
+		// 2. Create Shipments
+		shipmentRepo := u.ShipmentRepo.WithTx(ctx, tx)
+		for _, shipment := range shipments {
+			shipment.OrderID = order.ID
+			if err := shipmentRepo.Insert(shipment); err != nil {
+				return fmt.Errorf("failed to create shipment: %w", err)
 			}
 		}
 
@@ -134,12 +134,12 @@ func (u *OrderUsecase) CreateWithWaypoints(order *entity.Order, waypoints []*ent
 			companyName = order.Company.Name
 		}
 		log := &entity.WaypointLog{
-			OrderID:   &order.ID,
+			OrderID:   order.ID,
 			EventType: "order_created",
 			Message:   fmt.Sprintf("%s membuat order pengiriman", companyName),
 			OldStatus: "",
 			NewStatus: "pending",
-			Notes:     fmt.Sprintf("Order %s dibuat", order.OrderNumber),
+			Notes:     fmt.Sprintf("Order %s dibuat dengan %d shipment(s)", order.OrderNumber, len(shipments)),
 			CreatedBy: order.CreatedBy,
 		}
 		if err := waypointLogRepo.Insert(log); err != nil {
@@ -150,8 +150,8 @@ func (u *OrderUsecase) CreateWithWaypoints(order *entity.Order, waypoints []*ent
 	})
 }
 
-// UpdateWithWaypoints - Update order with waypoints in transaction
-func (u *OrderUsecase) UpdateWithWaypoints(order *entity.Order, waypoints []*entity.OrderWaypoint, fields ...string) error {
+// UpdateWithShipments - Update order with shipments in transaction
+func (u *OrderUsecase) UpdateWithShipments(order *entity.Order, shipments []*entity.Shipment, fields ...string) error {
 	return u.Repo.RunInTx(u.Context, func(ctx context.Context, tx bun.Tx) error {
 		// 1. Update Order
 		orderRepo := u.Repo.WithTx(ctx, tx)
@@ -159,35 +159,35 @@ func (u *OrderUsecase) UpdateWithWaypoints(order *entity.Order, waypoints []*ent
 			return err
 		}
 
-		// 2. Update Order Waypoints
-		waypointRepo := u.WaypointRepo.WithTx(ctx, tx)
-		oldWaypoints, _ := u.WaypointRepo.GetByOrderID(order.ID.String())
+		// 2. Update Shipments
+		shipmentRepo := u.ShipmentRepo.WithTx(ctx, tx)
+		oldShipments, _ := u.ShipmentRepo.FindByOrderID(order.ID.String())
 
-		// 2.1 Create Order Waypoints
-		for _, wp := range waypoints {
-			if wp.ID == uuid.Nil {
-				wp.OrderID = order.ID
-				if err := waypointRepo.Insert(wp); err != nil {
+		// 2.1 Create or Update Shipments
+		for _, sp := range shipments {
+			if sp.ID == uuid.Nil {
+				sp.OrderID = order.ID
+				if err := shipmentRepo.Insert(sp); err != nil {
 					return err
 				}
 			} else {
-				if err := waypointRepo.Update(wp); err != nil {
+				if err := shipmentRepo.Update(sp); err != nil {
 					return err
 				}
 			}
 		}
 
-		// 2.2 Delete removed waypoints
-		for _, oldWP := range oldWaypoints {
+		// 2.2 Delete removed shipments
+		for _, oldSP := range oldShipments {
 			found := false
-			for _, wp := range waypoints {
-				if oldWP.ID == wp.ID {
+			for _, sp := range shipments {
+				if oldSP.ID == sp.ID {
 					found = true
 					break
 				}
 			}
 			if !found {
-				if err := waypointRepo.SoftDelete(oldWP.ID); err != nil {
+				if err := shipmentRepo.SoftDelete(oldSP.ID); err != nil {
 					return err
 				}
 			}
@@ -248,7 +248,7 @@ func (u *OrderUsecase) GetByID(id string) (*entity.Order, error) {
 		return nil, err
 	}
 
-	mx.OrderWaypoints, err = u.WaypointRepo.GetByOrderID(id)
+	mx.Shipments, err = u.ShipmentRepo.FindByOrderID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +282,7 @@ func NewOrderUsecase() *OrderUsecase {
 		Repo:              repository.NewOrderRepository(),
 		CustomerRepo:      repository.NewCustomerRepository(),
 		PricingMatrixRepo: repository.NewPricingMatrixRepository(),
-		WaypointRepo:      repository.NewOrderWaypointRepository(),
 		WaypointLogRepo:   repository.NewWaypointLogRepository(),
+		ShipmentRepo:      repository.NewShipmentRepository(),
 	}
 }

@@ -12,12 +12,15 @@ import (
 )
 
 // failWaypointRequest handles PUT /driver/trips/waypoint/{id}/failed
-// Mark waypoint as failed (In Transit -> Completed/Failed)
+// Mark waypoint as failed with partial execution support (Shipment Concept)
+// - If pickup fails: all shipments in this waypoint are cancelled
+// - If delivery fails: affected shipments can be retried (specify failed_shipment_ids)
 type failWaypointRequest struct {
-	TripWaypointID string   `param:"id" valid:"required"`
-	FailedReason   string   `json:"failed_reason" valid:"required"`
-	Images         []string `json:"images" valid:"required"`
-	Note           string   `json:"note"`
+	TripWaypointID     string   `param:"id" valid:"required"`
+	FailedReason       string   `json:"failed_reason" valid:"required"`
+	FailedShipmentIDs  []string `json:"failed_shipment_ids"` // Optional: for partial delivery failures
+	Images             []string `json:"images" valid:"required"`
+	Note               string   `json:"note"`
 
 	tripWaypoint *entity.TripWaypoint
 
@@ -61,14 +64,29 @@ func (r *failWaypointRequest) Validate() *validate.Response {
 				}
 			}
 
-			// Validate orderWaypoint is loaded
-			if tripWaypoint.OrderWaypoint == nil {
-				v.SetError("id.invalid", "Order waypoint not found.")
+			// Validate shipments exist in waypoint
+			if len(tripWaypoint.ShipmentIDs) == 0 {
+				v.SetError("id.invalid", "No shipments found in this waypoint.")
 			}
 
 			// Validate current status
 			if tripWaypoint.Status != "in_transit" {
 				v.SetError("id.invalid", "Can only fail a waypoint that is in transit.")
+			}
+
+			// For delivery waypoints, validate failed_shipment_ids if provided
+			if tripWaypoint.Type == "delivery" && len(r.FailedShipmentIDs) > 0 {
+				// Validate all provided shipment IDs are in this waypoint
+				shipmentMap := make(map[string]bool)
+				for _, sid := range tripWaypoint.ShipmentIDs {
+					shipmentMap[sid] = true
+				}
+
+				for _, failedIDStr := range r.FailedShipmentIDs {
+					if !shipmentMap[failedIDStr] {
+						v.SetError("failed_shipment_ids.invalid", "Shipment ID is not in this waypoint.")
+					}
+				}
 			}
 		}
 	}
@@ -81,8 +99,26 @@ func (r *failWaypointRequest) Messages() map[string]string {
 }
 
 func (r *failWaypointRequest) execute() (*rest.ResponseBody, error) {
-	if err := r.uc.Waypoint.FailWaypoint(
+	// Determine which shipments failed
+	var failedShipmentIDs []string
+
+	if r.tripWaypoint.Type == "pickup" {
+		// If pickup fails, ALL shipments in this waypoint are cancelled/failed
+		failedShipmentIDs = r.tripWaypoint.ShipmentIDs
+	} else {
+		// If delivery fails
+		if len(r.FailedShipmentIDs) > 0 {
+			// Partial failure: only specified shipments failed
+			failedShipmentIDs = r.FailedShipmentIDs
+		} else {
+			// Full failure: all shipments in this waypoint failed
+			failedShipmentIDs = r.tripWaypoint.ShipmentIDs
+		}
+	}
+
+	if err := r.uc.Waypoint.FailTripWaypointWithShipments(
 		r.tripWaypoint,
+		failedShipmentIDs,
 		r.FailedReason,
 		r.Images,
 		r.session.UserID,

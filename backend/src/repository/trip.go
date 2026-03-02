@@ -54,7 +54,7 @@ func (r *TripRepository) FindWithWaypoints(id string) (*entity.Trip, error) {
 		Relation("Order.Customer").
 		Relation("Driver").
 		Relation("Vehicle").
-		Relation("TripWaypoints.OrderWaypoint.Address.Region").
+		Relation("TripWaypoints.AddressRel").
 		Where("trips.id = ?", id).
 		Where("trips.is_deleted = false").
 		Scan(r.Context)
@@ -64,10 +64,10 @@ func (r *TripRepository) FindWithWaypoints(id string) (*entity.Trip, error) {
 	return &trip, nil
 }
 
-// HasCompletedWaypoints checks if any of the given waypoints are already completed
+// HasCompletedWaypoints checks if any of the given trip waypoints are already completed
 // in the latest trip for the specified order. Returns true if trip is not completed
 // OR if any waypoints are already completed.
-func (r *TripRepository) HasCompletedWaypoints(orderID string, waypointIDs []string) (bool, error) {
+func (r *TripRepository) HasCompletedWaypoints(orderID string, tripWaypointIDs []string) (bool, error) {
 	// Single query to check:
 	// 1. If the latest trip is NOT completed
 	// 2. OR if any of the waypoints are already completed
@@ -78,7 +78,7 @@ func (r *TripRepository) HasCompletedWaypoints(orderID string, waypointIDs []str
 		Where("trips.is_deleted = false").
 		Where("trip_waypoints.is_deleted = false").
 		Where("(trips.status != 'completed' OR trip_waypoints.status = 'completed')").
-		Where("trip_waypoints.order_waypoint_id IN (?)", bun.In(waypointIDs)).
+		Where("trip_waypoints.id IN (?)", bun.In(tripWaypointIDs)).
 		Count(r.Context)
 
 	if err != nil {

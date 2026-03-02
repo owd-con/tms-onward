@@ -2,9 +2,7 @@ package trip
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/usecase"
 
@@ -18,8 +16,6 @@ type createRequest struct {
 	DriverID  string            `json:"driver_id" valid:"required|uuid"`
 	VehicleID string            `json:"vehicle_id" valid:"required|uuid"`
 	Notes     string            `json:"notes"`
-	Waypoints []WaypointRequest `json:"waypoints"` // LTL: required, FTL: optional (use order waypoints)
-
 	order   *entity.Order
 	driver  *entity.Driver
 	vehicle *entity.Vehicle
@@ -83,87 +79,15 @@ func (r *createRequest) Validate() *validate.Response {
 		}
 	}
 
-	// 6. Validate and build trip_waypoints based on order type
+	// 6. Fetch shipments for the order (Shipment Concept)
 	if r.order != nil {
-		// Check if waypoints array provided (LTL mode)
-		if len(r.Waypoints) > 0 {
-			// LTL mode: validate provided waypoints
-			if r.order.OrderType != "LTL" {
-				v.SetError("waypoints.invalid", "Waypoints array only allowed for LTL orders.")
-			}
-
-			// Collect waypoint IDs for batch fetch
-			orderWaypointIDs := make([]string, len(r.Waypoints))
-			for i, wp := range r.Waypoints {
-				orderWaypointIDs[i] = wp.OrderWaypointID
-			}
-
-			// Batch fetch all waypoints (1 query instead of N)
-			orderWaypoints, err := r.uc.OrderWaypoint.GetByIDs(orderWaypointIDs)
-			if err != nil {
-				v.SetError("waypoints.invalid", "Failed to validate waypoints.")
-			}
-
-			// Build map for O(1) lookup
-			orderWaypointMap := make(map[string]*entity.OrderWaypoint)
-			for _, ow := range orderWaypoints {
-				orderWaypointMap[ow.ID.String()] = ow
-			}
-
-			// Track duplicates
-			seenWaypointIDs := make(map[uuid.UUID]bool)
-			seqNumbers := make(map[int]bool)
-
-			// Validate all waypoints using pre-fetched map
-			for i, wp := range r.Waypoints {
-				// Validate waypoint (errors added directly to v)
-				wp.Validate(v, i, r.OrderID, r.uc, orderWaypointMap)
-
-				// Track uniqueness for order waypoint ID
-				wpUUID, parseErr := uuid.Parse(wp.OrderWaypointID)
-				if parseErr == nil {
-					if _, exists := seenWaypointIDs[wpUUID]; exists {
-						v.SetError(fmt.Sprintf("waypoints.%d.order_waypoint_id.duplicate", i), "Duplicate waypoint ID detected.")
-					}
-					seenWaypointIDs[wpUUID] = true
-				}
-
-				// Track uniqueness for sequence number
-				if seqNumbers[wp.SequenceNumber] {
-					v.SetError(fmt.Sprintf("waypoints.%d.sequence_number.duplicate", i), "Duplicate sequence number detected.")
-				}
-				seqNumbers[wp.SequenceNumber] = true
-			}
-
-			// Build trip_waypoints for LTL mode
-			r.tripWaypoints = make([]*entity.TripWaypoint, len(r.Waypoints))
-			for i, wp := range r.Waypoints {
-				wpUUID, _ := uuid.Parse(wp.OrderWaypointID)
-				r.tripWaypoints[i] = &entity.TripWaypoint{
-					OrderWaypointID: wpUUID,
-					SequenceNumber:  wp.SequenceNumber,
-					Status:          "pending",
-				}
-			}
-		} else {
-			// FTL mode or LTL without waypoints: fetch from order_waypoints
-			orderWaypoints, err := r.uc.OrderWaypoint.GetByOrderID(r.OrderID)
-			if err != nil {
-				v.SetError("waypoints.invalid", "Failed to fetch order waypoints.")
-			} else if len(orderWaypoints) == 0 {
-				v.SetError("waypoints.invalid", "Order has no waypoints.")
-			} else {
-				// Build trip_waypoints from order_waypoints.sequence_number
-				r.tripWaypoints = make([]*entity.TripWaypoint, len(orderWaypoints))
-				for i, ow := range orderWaypoints {
-					r.tripWaypoints[i] = &entity.TripWaypoint{
-						OrderWaypointID: ow.ID,
-						SequenceNumber:  ow.SequenceNumber,
-						Status:          "pending",
-					}
-				}
-			}
+		shipments, err := r.uc.Shipment.GetByOrderID(r.OrderID)
+		if err != nil {
+			v.SetError("shipments.invalid", "Failed to fetch shipments for order.")
+		} else if len(shipments) == 0 {
+			v.SetError("shipments.invalid", "Order has no shipments.")
 		}
+		// tripWaypoints will be created in execute() after trip is created
 	}
 
 	return v
@@ -189,8 +113,9 @@ func (r *createRequest) toEntity() *entity.Trip {
 func (r *createRequest) execute() (*rest.ResponseBody, error) {
 	trip := r.toEntity()
 
-	// Create trip with waypoints
-	err := r.uc.Trip.CreateWithWaypoints(trip, r.tripWaypoints)
+	// Create trip with shipments (shipment-based approach)
+	// CreateWithShipments will fetch shipments and create trip waypoints internally
+	err := r.uc.Trip.CreateWithShipments(trip, r.OrderID, r.order.OrderType)
 	if err != nil {
 		return nil, err
 	}

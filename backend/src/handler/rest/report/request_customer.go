@@ -65,7 +65,7 @@ func (r *getCustomerReportRequest) getDownload(data any, c *rest.Context) error 
 	})
 
 	// Create headers starting from row 1
-	headers := []string{"Customer Name", "Order Count", "Total Revenue", "Completed Waypoints", "Failed Waypoints", "Success Rate"}
+	headers := []string{"Customer Name", "Order Count", "Total Revenue", "Completed Shipments", "Failed Shipments", "Success Rate"}
 	for i, h := range headers {
 		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
 		f.SetCellValue(sheet, cell, h)
@@ -78,8 +78,8 @@ func (r *getCustomerReportRequest) getDownload(data any, c *rest.Context) error 
 		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), item.CustomerName)
 		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), item.OrderCount)
 		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), item.TotalRevenue)
-		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), item.CompletedWaypoints)
-		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), item.FailedWaypoints)
+		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), item.CompletedShipments)
+		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), item.FailedShipments)
 		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), item.SuccessRate)
 	}
 

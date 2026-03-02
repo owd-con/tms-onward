@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/repository"
 	"github.com/logistics-id/onward-tms/src/usecase"
 )
@@ -80,23 +79,19 @@ func TestHandler_TrackOrder_WithWaypointLogs(t *testing.T) {
 	customer := createTestCustomerForTracking(t, company.ID)
 	order := createTestOrderForTracking(t, company.ID, customer.ID, "in_transit")
 
-	// Get waypoints for this order
+	// Get shipment for this order
 	dbCtx := context.Background()
-	var waypoints []*entity.OrderWaypoint
-	db := repository.NewOrderWaypointRepository().DB
-	err := db.NewSelect().
-		Model(&waypoints).
-		Where("order_id = ?", order.ID).
-		Where("is_deleted = false").
-		Order("sequence_number ASC").
-		Scan(dbCtx)
+	shipmentRepo := repository.NewShipmentRepository().WithContext(dbCtx).(*repository.ShipmentRepository)
+	shipments, err := shipmentRepo.FindByOrderID(order.ID.String())
 	require.NoError(t, err)
-	require.Len(t, waypoints, 2)
+	require.Len(t, shipments, 1)
+
+	shipmentID := shipments[0].ID
 
 	// Create waypoint logs
-	createTestWaypointLog(t, waypoints[0].ID, "Pending", "Arrived", "Arrived at pickup location")
-	createTestWaypointLog(t, waypoints[0].ID, "Arrived", "Completed", "Pickup completed successfully")
-	createTestWaypointLog(t, waypoints[1].ID, "Pending", "InTransit", "On the way to delivery")
+	createTestWaypointLog(t, order.ID, []string{shipmentID.String()}, "Pending", "Arrived", "Arrived at pickup location")
+	createTestWaypointLog(t, order.ID, []string{shipmentID.String()}, "Arrived", "Completed", "Pickup completed successfully")
+	createTestWaypointLog(t, order.ID, []string{shipmentID.String()}, "Pending", "InTransit", "On the way to delivery")
 
 	pathParams := map[string]string{"orderNumber": order.OrderNumber}
 	testCtx := createTestContext("GET", "/public/tracking/"+order.OrderNumber, nil, pathParams)
@@ -134,16 +129,10 @@ func TestHandler_TrackOrder_WithWaypointImages(t *testing.T) {
 	customer := createTestCustomerForTracking(t, company.ID)
 	order := createTestOrderForTracking(t, company.ID, customer.ID, "completed")
 
-	// Get waypoints
+	// Get shipment for this order
 	dbCtx := context.Background()
-	var waypoints []*entity.OrderWaypoint
-	db := repository.NewOrderWaypointRepository().DB
-	err := db.NewSelect().
-		Model(&waypoints).
-		Where("order_id = ?", order.ID).
-		Where("is_deleted = false").
-		Order("sequence_number ASC").
-		Scan(dbCtx)
+	shipmentRepo := repository.NewShipmentRepository().WithContext(dbCtx).(*repository.ShipmentRepository)
+	shipments, err := shipmentRepo.FindByOrderID(order.ID.String())
 	require.NoError(t, err)
 
 	// Create trip, trip_waypoints, and waypoint images
@@ -159,8 +148,8 @@ func TestHandler_TrackOrder_WithWaypointImages(t *testing.T) {
 	}
 
 	// Create trip waypoints
-	tripWaypoint1 := createTestTripWaypoint(t, trip.ID, waypoints[0].ID, 1, "Completed", &recipientName)
-	tripWaypoint2 := createTestTripWaypoint(t, trip.ID, waypoints[1].ID, 2, "Completed", &recipientName)
+	tripWaypoint1 := createTestTripWaypoint(t, trip.ID, []string{shipments[0].ID.String()}, "pickup", 1, "Completed", &recipientName)
+	tripWaypoint2 := createTestTripWaypoint(t, trip.ID, []string{shipments[0].ID.String()}, "delivery", 2, "Completed", &recipientName)
 
 	// Create waypoint images (POD)
 	createTestWaypointImage(t, tripWaypoint1.ID, "pod", &signatureURL, photos)
@@ -203,16 +192,10 @@ func TestHandler_TrackOrder_WithFailedWaypointImages(t *testing.T) {
 	customer := createTestCustomerForTracking(t, company.ID)
 	order := createTestOrderForTracking(t, company.ID, customer.ID, "in_transit")
 
-	// Get waypoints
+	// Get shipment for this order
 	dbCtx := context.Background()
-	var waypoints []*entity.OrderWaypoint
-	db := repository.NewOrderWaypointRepository().DB
-	err := db.NewSelect().
-		Model(&waypoints).
-		Where("order_id = ?", order.ID).
-		Where("is_deleted = false").
-		Order("sequence_number ASC").
-		Scan(dbCtx)
+	shipmentRepo := repository.NewShipmentRepository().WithContext(dbCtx).(*repository.ShipmentRepository)
+	shipments, err := shipmentRepo.FindByOrderID(order.ID.String())
 	require.NoError(t, err)
 
 	// Create trip and trip_waypoints
@@ -227,7 +210,7 @@ func TestHandler_TrackOrder_WithFailedWaypointImages(t *testing.T) {
 	}
 
 	// Create trip waypoint for failed delivery
-	tripWaypoint := createTestTripWaypoint(t, trip.ID, waypoints[1].ID, 2, "Failed", &recipientName)
+	tripWaypoint := createTestTripWaypoint(t, trip.ID, []string{shipments[0].ID.String()}, "delivery", 2, "Failed", &recipientName)
 
 	// Create waypoint image (failed type)
 	createTestWaypointImage(t, tripWaypoint.ID, "failed", nil, failedPhotos)

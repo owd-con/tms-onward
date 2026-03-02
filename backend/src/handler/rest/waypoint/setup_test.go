@@ -255,51 +255,41 @@ func createTestOrder(t *testing.T, companyID, customerID uuid.UUID) *entity.Orde
 	err := repository.NewOrderRepository().WithContext(ctx).Insert(order)
 	require.NoError(t, err)
 
-	// Create test addresses for waypoints (pickup and delivery)
+	// Create test addresses for shipments (pickup and delivery)
 	pickupAddress := createTestAddress(t, companyID)
 	deliveryAddress := createTestAddress(t, companyID)
 
-	// Create order waypoints for FTL order (pickup and delivery)
+	// Create shipment for FTL order
 	now := time.Now()
 	sd, _ := time.Parse("2006-01-02", now.Format("2006-01-02"))
 	st, _ := time.Parse("15:04 -07:00", now.Format("15:04 -07:00"))
 
-	// Pickup waypoint
-	pickup := &entity.OrderWaypoint{
-		OrderID:         order.ID,
-		Type:            "pickup",
-		AddressID:       pickupAddress.ID,
-		LocationName:    pickupAddress.Name,
-		LocationAddress: pickupAddress.Address,
-		ContactName:     pickupAddress.ContactName,
-		ContactPhone:    pickupAddress.ContactPhone,
-		ScheduledDate:   sd,
-		ScheduledTime:   st.Format("15:04"),
-		Price:           50000,
-		Weight:          100,
-		DispatchStatus:  "pending",
-		SequenceNumber:  1,
-	}
-	err = repository.NewOrderWaypointRepository().WithContext(ctx).Insert(pickup)
-	require.NoError(t, err)
+	// Generate shipment number
+	shipmentNumber := fmt.Sprintf("SHP-%s", uuid.New().String())
 
-	// Delivery waypoint
-	delivery := &entity.OrderWaypoint{
-		OrderID:         order.ID,
-		Type:            "delivery",
-		AddressID:       deliveryAddress.ID,
-		LocationName:    deliveryAddress.Name,
-		LocationAddress: deliveryAddress.Address,
-		ContactName:     deliveryAddress.ContactName,
-		ContactPhone:    deliveryAddress.ContactPhone,
-		ScheduledDate:   sd,
-		ScheduledTime:   st.Format("15:04"),
-		Price:           50000,
-		Weight:          100,
-		DispatchStatus:  "pending",
-		SequenceNumber:  2,
+	// Create single shipment for FTL order
+	shipment := &entity.Shipment{
+		OrderID:               order.ID,
+		ShipmentNumber:        shipmentNumber,
+		OriginAddressID:       pickupAddress.ID,
+		OriginLocationName:    pickupAddress.Name,
+		OriginAddress:         pickupAddress.Address,
+		OriginContactName:     pickupAddress.ContactName,
+		OriginContactPhone:    pickupAddress.ContactPhone,
+		DestinationAddressID:  deliveryAddress.ID,
+		DestLocationName:      deliveryAddress.Name,
+		DestAddress:           deliveryAddress.Address,
+		DestContactName:       deliveryAddress.ContactName,
+		DestContactPhone:      deliveryAddress.ContactPhone,
+		ScheduledPickupDate:   sd,
+		ScheduledPickupTime:   st.Format("15:04"),
+		ScheduledDeliveryDate: sd, // Same day for test
+		ScheduledDeliveryTime: st.Format("15:04"),
+		Price:                 0, // FTL price at order level
+		Status:                "pending",
+		CreatedBy:             "Test User",
 	}
-	err = repository.NewOrderWaypointRepository().WithContext(ctx).Insert(delivery)
+	err = repository.NewShipmentRepository().WithContext(ctx).Insert(shipment)
 	require.NoError(t, err)
 
 	return order
@@ -322,15 +312,21 @@ func createTestTrip(t *testing.T, companyID, orderID, driverID, vehicleID uuid.U
 	return trip
 }
 
-func createTestTripWaypoint(t *testing.T, tripID, orderWaypointID uuid.UUID) *entity.TripWaypoint {
+func createTestTripWaypoint(t *testing.T, tripID uuid.UUID, shipmentIDs []string, waypointType string, address *entity.Address) *entity.TripWaypoint {
 	ctx := context.Background()
 
 	tripWaypoint := &entity.TripWaypoint{
-		TripID:          tripID,
-		OrderWaypointID: orderWaypointID,
-		Status:          "pending",
-		SequenceNumber:  1,
-		CreatedBy:       "Test User",
+		TripID:         tripID,
+		ShipmentIDs:    shipmentIDs,
+		Type:           waypointType,
+		AddressID:      address.ID,
+		LocationName:   address.Name,
+		Address:        address.Address,
+		ContactName:    address.ContactName,
+		ContactPhone:   address.ContactPhone,
+		Status:         "pending",
+		SequenceNumber: 1,
+		CreatedBy:      "Test User",
 	}
 	err := repository.NewTripWaypointRepository().WithContext(ctx).Insert(tripWaypoint)
 	require.NoError(t, err)
@@ -338,18 +334,19 @@ func createTestTripWaypoint(t *testing.T, tripID, orderWaypointID uuid.UUID) *en
 	return tripWaypoint
 }
 
-func createTestWaypointLog(t *testing.T, orderWaypointID, tripWaypointID uuid.UUID) *entity.WaypointLog {
+func createTestWaypointLog(t *testing.T, orderID uuid.UUID, shipmentIDs []string, tripWaypointID uuid.UUID) *entity.WaypointLog {
 	ctx := context.Background()
 
 	log := &entity.WaypointLog{
-		OrderWaypointID: &orderWaypointID,
-		TripWaypointID:  &tripWaypointID,
-		EventType:       "waypoint_started",
-		Message:         "Test waypoint log message",
-		OldStatus:       "pending",
-		NewStatus:       "in_transit",
-		Notes:           "Test notes",
-		CreatedBy:       "Test User",
+		OrderID:        orderID,
+		ShipmentIDs:    shipmentIDs,
+		TripWaypointID: &tripWaypointID,
+		EventType:      "waypoint_started",
+		Message:        "Test waypoint log message",
+		OldStatus:      "pending",
+		NewStatus:      "in_transit",
+		Notes:          "Test notes",
+		CreatedBy:      "Test User",
 	}
 	err := repository.NewWaypointLogRepository().WithContext(ctx).Insert(log)
 	require.NoError(t, err)
@@ -396,7 +393,10 @@ func cleanupTestData() {
 	// 4. Delete dispatches (they reference trips)
 	db.ExecContext(ctx, "DELETE FROM dispatches WHERE trip_id IN (SELECT id FROM trips WHERE trip_number LIKE 'TRP-%')")
 
-	// 5. Delete order_waypoints
+	// 5. Delete shipments
+	db.ExecContext(ctx, "DELETE FROM shipments WHERE shipment_number LIKE 'SHP-%'")
+
+	// 6. Delete order_waypoints (legacy cleanup)
 	db.ExecContext(ctx, "DELETE FROM order_waypoints WHERE order_id IN (SELECT id FROM orders WHERE order_number LIKE 'ORD-%')")
 
 	// 6. Delete trips with test trip numbers

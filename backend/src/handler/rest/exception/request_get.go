@@ -34,10 +34,11 @@ func (r *getExceptionsRequest) listFailedOrders() (*rest.ResponseBody, error) {
 }
 
 // listFailedWaypoints handles GET /exceptions/waypoints
+// Note: Now returns failed shipments instead of waypoints
 func (r *getExceptionsRequest) listFailedWaypoints() (*rest.ResponseBody, error) {
 	opts := r.BuildQueryOption()
 	opts.Session = r.session
-	data, total, err := r.uc.Exception.GetFailedWaypoints(opts)
+	data, total, err := r.uc.Exception.GetFailedShipments(opts)
 	if err != nil {
 		return nil, err
 	}

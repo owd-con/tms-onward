@@ -16,7 +16,7 @@ func NewWaypointImageRepository() *WaypointImageRepository {
 	base := postgres.NewBaseRepository[entity.WaypointImage](postgres.GetDB(),
 		"waypoint_images",
 		[]string{},
-		[]string{"TripWaypoint.OrderWaypoint"},
+		[]string{"TripWaypoint"},
 		true,
 	)
 

@@ -74,12 +74,12 @@ func (r *getOrderTripWaypointRequest) getDownload(data any, c *rest.Context) err
 		"Trip Status",
 		"Driver Name",
 		"Vehicle Plate Number",
-		"Waypoint Sequence",
-		"Waypoint Type",
+		"Shipment Number",
+		"Shipment Sequence",
 		"Address",
 		"Recipient Name",
-		"Waypoint Status",
-		"Completed At",
+		"Shipment Status",
+		"Actual Delivery Time",
 	}
 	for i, h := range headers {
 		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
@@ -97,13 +97,13 @@ func (r *getOrderTripWaypointRequest) getDownload(data any, c *rest.Context) err
 		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), item.TripStatus)
 		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), item.DriverName)
 		f.SetCellValue(sheet, fmt.Sprintf("G%d", row), item.VehiclePlateNumber)
-		f.SetCellValue(sheet, fmt.Sprintf("H%d", row), item.WaypointSequence)
-		f.SetCellValue(sheet, fmt.Sprintf("I%d", row), item.WaypointType)
+		f.SetCellValue(sheet, fmt.Sprintf("H%d", row), item.ShipmentNumber)
+		f.SetCellValue(sheet, fmt.Sprintf("I%d", row), item.ShipmentSequence)
 		f.SetCellValue(sheet, fmt.Sprintf("J%d", row), item.Address)
 		f.SetCellValue(sheet, fmt.Sprintf("K%d", row), item.RecipientName)
-		f.SetCellValue(sheet, fmt.Sprintf("L%d", row), item.WaypointStatus)
-		if item.CompletedAt != nil {
-			f.SetCellValue(sheet, fmt.Sprintf("M%d", row), *item.CompletedAt)
+		f.SetCellValue(sheet, fmt.Sprintf("L%d", row), item.ShipmentStatus)
+		if item.ActualDeliveryTime != nil {
+			f.SetCellValue(sheet, fmt.Sprintf("M%d", row), *item.ActualDeliveryTime)
 		} else {
 			f.SetCellValue(sheet, fmt.Sprintf("M%d", row), "")
 		}
@@ -111,7 +111,7 @@ func (r *getOrderTripWaypointRequest) getDownload(data any, c *rest.Context) err
 
 	// Set headers for download
 	c.Response.Header().Set("Content-Type", "application/octet-stream")
-	c.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=Order-Trip-Waypoint-Report-%s.xlsx", time.Now().Format("20060102150405")))
+	c.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=Order-Trip-Shipment-Report-%s.xlsx", time.Now().Format("20060102150405")))
 	c.Response.Header().Set("Content-Transfer-Encoding", "binary")
 	c.Response.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
 

@@ -18,8 +18,8 @@ func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 
 	s.GET("/exceptions/orders", h.getFailedOrders, middleware.WithActiveCheck(s))
 	s.GET("/exceptions/waypoints", h.getFailedWaypoints, middleware.WithActiveCheck(s))
-	s.POST("/exceptions/waypoints/batch-reschedule", h.batchRescheduleWaypoints, middleware.WithActiveCheck(s))
-	s.PUT("/exceptions/waypoints/{id}/return", h.returnWaypoint, middleware.WithActiveCheck(s))
+	s.POST("/exceptions/shipments/batch-reschedule", h.batchRescheduleShipments, middleware.WithActiveCheck(s))
+	s.PUT("/exceptions/shipments/{id}/return", h.returnShipment, middleware.WithActiveCheck(s))
 }
 
 // getFailedOrders handles GET /exceptions/orders
@@ -69,19 +69,19 @@ func (h *handler) getFailedWaypoints(ctx *rest.Context) (err error) {
 	return ctx.Respond(res, err)
 }
 
-// batchRescheduleWaypoints handles POST /exceptions/waypoints/batch-reschedule
-// @Summary Batch reschedule failed waypoints
-// @Description Reschedule multiple failed waypoints to a single new trip
+// batchRescheduleShipments handles POST /exceptions/shipments/batch-reschedule
+// @Summary Batch reschedule failed shipments
+// @Description Reschedule multiple failed shipments to a single new trip
 // @Tags exception
 // @Accept json
 // @Produce json
-// @Param request body exception.batchRescheduleWaypointsRequest true "Batch reschedule request"
+// @Param request body exception.batchRescheduleShipmentsRequest true "Batch reschedule request"
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Router /exceptions/waypoints/batch-reschedule [post]
-func (h *handler) batchRescheduleWaypoints(ctx *rest.Context) (err error) {
-	var req batchRescheduleWaypointsRequest
+// @Router /exceptions/shipments/batch-reschedule [post]
+func (h *handler) batchRescheduleShipments(ctx *rest.Context) (err error) {
+	var req batchRescheduleShipmentsRequest
 	var res *rest.ResponseBody
 
 	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
@@ -90,20 +90,20 @@ func (h *handler) batchRescheduleWaypoints(ctx *rest.Context) (err error) {
 	return ctx.Respond(res, err)
 }
 
-// returnWaypoint handles PUT /exceptions/waypoints/:id/return
-// @Summary Return waypoint to origin
-// @Description Mark a failed waypoint as returned to origin
+// returnShipment handles PUT /exceptions/shipments/:id/return
+// @Summary Return shipment to origin
+// @Description Mark a failed shipment as returned to origin
 // @Tags exception
 // @Accept json
 // @Produce json
-// @Param id path string true "Waypoint ID"
-// @Param request body exception.returnWaypointRequest true "Return waypoint request"
+// @Param id path string true "Shipment ID"
+// @Param request body exception.returnShipmentRequest true "Return shipment request"
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Router /exceptions/waypoints/{id}/return [put]
-func (h *handler) returnWaypoint(ctx *rest.Context) (err error) {
-	var req returnWaypointRequest
+// @Router /exceptions/shipments/{id}/return [put]
+func (h *handler) returnShipment(ctx *rest.Context) (err error) {
+	var req returnShipmentRequest
 	var res *rest.ResponseBody
 
 	// Get ID from URL parameter

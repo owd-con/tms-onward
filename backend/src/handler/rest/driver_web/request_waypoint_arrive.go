@@ -38,7 +38,7 @@ func (r *arriveWaypointRequest) Validate() *validate.Response {
 		v.SetError("session.invalid", "This session is invalid.")
 	}
 
-	// Fetch trip_waypoint (includes orderWaypoint via preload)
+	// Fetch trip_waypoint
 	if r.TripWaypointID != "" {
 		tripWaypoint, err := r.uc.Trip.GetTripWaypointByID(r.TripWaypointID)
 		if err != nil {
@@ -63,12 +63,14 @@ func (r *arriveWaypointRequest) Validate() *validate.Response {
 				v.SetError("id.invalid", "Can only arrive at a waypoint that is in transit.")
 			}
 
-			// Validate order_waypoint exists and type is pickup
-			// (already loaded via tripWaypoint.OrderWaypoint)
-			if tripWaypoint.OrderWaypoint == nil {
-				v.SetError("id.invalid", "Order waypoint not found.")
-			} else if tripWaypoint.OrderWaypoint.Type != "pickup" {
+			// Validate type is pickup
+			if tripWaypoint.Type != "pickup" {
 				v.SetError("id.invalid", "Arrive action is only for pickup waypoints.")
+			}
+
+			// Validate shipments exist in waypoint
+			if len(tripWaypoint.ShipmentIDs) == 0 {
+				v.SetError("id.invalid", "No shipments found in this waypoint.")
 			}
 		}
 	}

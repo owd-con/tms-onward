@@ -28,5 +28,5 @@ type Order struct {
 
 	Company        *Company         `bun:"rel:belongs-to,join:company_id=id" json:"company,omitempty"`
 	Customer       *Customer        `bun:"rel:belongs-to,join:customer_id=id" json:"customer,omitempty"`
-	OrderWaypoints []*OrderWaypoint `bun:"rel:has-many,join:id=order_id" json:"order_waypoints,omitempty"`
+	Shipments      []*Shipment      `bun:"rel:has-many,join:id=order_id" json:"shipments,omitempty"`
 }

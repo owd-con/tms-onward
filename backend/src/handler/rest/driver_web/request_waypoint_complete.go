@@ -68,8 +68,13 @@ func (r *completeWaypointRequest) Validate() *validate.Response {
 			}
 
 			// Validate this is a delivery waypoint
-			if tripWaypoint.OrderWaypoint == nil || tripWaypoint.OrderWaypoint.Type != "delivery" {
+			if tripWaypoint.Type != "delivery" {
 				v.SetError("id.invalid", "Complete action is only for delivery waypoints.")
+			}
+
+			// Validate shipments exist in waypoint
+			if len(tripWaypoint.ShipmentIDs) == 0 {
+				v.SetError("id.invalid", "No shipments found in this waypoint.")
 			}
 		}
 	}

@@ -29,15 +29,18 @@ func TestGetWaypointImages_ByTripID_Success(t *testing.T) {
 	order := createTestOrder(t, company.ID, customer.ID)
 	trip := createTestTrip(t, company.ID, order.ID, driver.ID, vehicle.ID)
 
-	// Get order waypoints for this order
+	// Get shipments for this order
 	ctx := context.Background()
-	orderWaypointRepo := repository.NewOrderWaypointRepository().WithContext(ctx)
-	waypoints, err := orderWaypointRepo.(*repository.OrderWaypointRepository).GetByOrderID(order.ID.String())
+	shipmentRepo := repository.NewShipmentRepository().WithContext(ctx).(*repository.ShipmentRepository)
+	shipments, err := shipmentRepo.FindByOrderID(order.ID.String())
 	require.NoError(t, err)
-	require.Greater(t, len(waypoints), 0, "Order should have at least one waypoint")
+	require.Greater(t, len(shipments), 0, "Order should have at least one shipment")
 
-	// Create trip_waypoint for the first order_waypoint
-	tripWaypoint := createTestTripWaypoint(t, trip.ID, waypoints[0].ID)
+	// Get address for delivery
+	deliveryAddress := createTestAddress(t, company.ID)
+
+	// Create trip_waypoint for delivery
+	tripWaypoint := createTestTripWaypoint(t, trip.ID, []string{shipments[0].ID.String()}, "delivery", deliveryAddress)
 
 	// Create waypoint images for the trip waypoint
 	createTestWaypointImage(t, tripWaypoint.ID, "pod")
@@ -80,15 +83,18 @@ func TestGetWaypointImages_ByTripWaypointID_Success(t *testing.T) {
 	order := createTestOrder(t, company.ID, customer.ID)
 	trip := createTestTrip(t, company.ID, order.ID, driver.ID, vehicle.ID)
 
-	// Get order waypoints for this order
+	// Get shipments for this order
 	ctx := context.Background()
-	orderWaypointRepo := repository.NewOrderWaypointRepository().WithContext(ctx)
-	waypoints, err := orderWaypointRepo.(*repository.OrderWaypointRepository).GetByOrderID(order.ID.String())
+	shipmentRepo := repository.NewShipmentRepository().WithContext(ctx).(*repository.ShipmentRepository)
+	shipments, err := shipmentRepo.FindByOrderID(order.ID.String())
 	require.NoError(t, err)
-	require.Greater(t, len(waypoints), 0, "Order should have at least one waypoint")
+	require.Greater(t, len(shipments), 0, "Order should have at least one shipment")
 
-	// Create trip_waypoint for the first order_waypoint
-	tripWaypoint := createTestTripWaypoint(t, trip.ID, waypoints[0].ID)
+	// Get address for delivery
+	deliveryAddress := createTestAddress(t, company.ID)
+
+	// Create trip_waypoint for delivery
+	tripWaypoint := createTestTripWaypoint(t, trip.ID, []string{shipments[0].ID.String()}, "delivery", deliveryAddress)
 
 	// Create waypoint image for the specific trip waypoint
 	createTestWaypointImage(t, tripWaypoint.ID, "pod")
@@ -164,15 +170,18 @@ func TestGetWaypointImages_TripNotBelongsToCompany_TenantIsolation(t *testing.T)
 	orderA := createTestOrder(t, companyA.ID, customerA.ID)
 	tripA := createTestTrip(t, companyA.ID, orderA.ID, driverA.ID, vehicleA.ID)
 
-	// Get order waypoints for order A
+	// Get shipments for order A
 	ctx := context.Background()
-	orderWaypointRepoA := repository.NewOrderWaypointRepository().WithContext(ctx)
-	waypointsA, err := orderWaypointRepoA.(*repository.OrderWaypointRepository).GetByOrderID(orderA.ID.String())
+	shipmentRepoA := repository.NewShipmentRepository().WithContext(ctx).(*repository.ShipmentRepository)
+	shipmentsA, err := shipmentRepoA.FindByOrderID(orderA.ID.String())
 	require.NoError(t, err)
-	require.Greater(t, len(waypointsA), 0, "Order should have at least one waypoint")
+	require.Greater(t, len(shipmentsA), 0, "Order should have at least one shipment")
+
+	// Get address for delivery
+	deliveryAddress := createTestAddress(t, companyA.ID)
 
 	// Create trip_waypoint and images for Company A
-	tripWaypointA := createTestTripWaypoint(t, tripA.ID, waypointsA[0].ID)
+	tripWaypointA := createTestTripWaypoint(t, tripA.ID, []string{shipmentsA[0].ID.String()}, "delivery", deliveryAddress)
 	createTestWaypointImage(t, tripWaypointA.ID, "pod")
 	createTestWaypointImage(t, tripWaypointA.ID, "failed")
 
@@ -222,15 +231,18 @@ func TestGetWaypointImages_EmptyResult_Success(t *testing.T) {
 	order := createTestOrder(t, company.ID, customer.ID)
 	trip := createTestTrip(t, company.ID, order.ID, driver.ID, vehicle.ID)
 
-	// Get order waypoints for this order
+	// Get shipments for this order
 	ctx := context.Background()
-	orderWaypointRepo := repository.NewOrderWaypointRepository().WithContext(ctx)
-	waypoints, err := orderWaypointRepo.(*repository.OrderWaypointRepository).GetByOrderID(order.ID.String())
+	shipmentRepo := repository.NewShipmentRepository().WithContext(ctx).(*repository.ShipmentRepository)
+	shipments, err := shipmentRepo.FindByOrderID(order.ID.String())
 	require.NoError(t, err)
-	require.Greater(t, len(waypoints), 0, "Order should have at least one waypoint")
+	require.Greater(t, len(shipments), 0, "Order should have at least one shipment")
+
+	// Get address for delivery
+	deliveryAddress := createTestAddress(t, company.ID)
 
 	// Create trip_waypoint but DO NOT create any waypoint images - testing empty result
-	_ = createTestTripWaypoint(t, trip.ID, waypoints[0].ID)
+	_ = createTestTripWaypoint(t, trip.ID, []string{shipments[0].ID.String()}, "delivery", deliveryAddress)
 
 	// Create request with trip_id query parameter
 	path := fmt.Sprintf("/waypoint/images?trip_id=%s", trip.ID.String())
