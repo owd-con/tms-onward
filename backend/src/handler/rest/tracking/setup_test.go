@@ -148,20 +148,19 @@ func createTestOrderForTracking(t *testing.T, companyID uuid.UUID, customerID uu
 
 	// Create shipment for the order (required for tracking)
 	shipment := &entity.Shipment{
-		OrderID:               order.ID,
-		CompanyID:             companyID,
-		ShipmentNumber:        "SHP-" + uuid.New().String(),
-		OriginLocationName:    "Pickup Location",
-		OriginAddress:         "Jl. Pickup No. 1",
-		OriginContactName:     "John Doe",
-		OriginContactPhone:    "08123456789",
-		DestLocationName:      "Delivery Location",
-		DestAddress:           "Jl. Delivery No. 1",
-		DestContactName:       "Jane Doe",
-		DestContactPhone:      "08198765432",
-		Status:                status,
-		Price:                 0, // FTL pricing at order level
-		CreatedBy:             "test",
+		OrderID:            order.ID,
+		CompanyID:          companyID,
+		ShipmentNumber:     "SHP-" + uuid.New().String(),
+		OriginLocationName: "Pickup Location",
+		OriginAddress:      "Jl. Pickup No. 1",
+		OriginContactName:  "John Doe",
+		OriginContactPhone: "08123456789",
+		DestLocationName:   "Delivery Location",
+		DestAddress:        "Jl. Delivery No. 1",
+		DestContactName:    "Jane Doe",
+		DestContactPhone:   "08198765432",
+		Status:             status,
+		Price:              0, // FTL pricing at order level
 	}
 	if err := repository.NewShipmentRepository().WithContext(ctx).Insert(shipment); err != nil {
 		t.Skip("Cannot create test shipment")
@@ -248,8 +247,6 @@ func createTestTripWaypoint(t *testing.T, tripID uuid.UUID, shipmentIDs []string
 		SequenceNumber: sequenceNumber,
 		Status:         status,
 		ReceivedBy:     receivedBy,
-		CreatedBy:      "test",
-		UpdatedBy:      "test",
 	}
 	if err := repository.NewTripWaypointRepository().WithContext(ctx).Insert(tripWaypoint); err != nil {
 		t.Skip("Cannot create test trip waypoint")

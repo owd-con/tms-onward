@@ -37,7 +37,7 @@ func TestUserUsecase_Get(t *testing.T) {
 	users := []*entity.User{
 		{
 			CompanyID:    company.ID,
-			Name:         "Admin User",
+			Name:         "admin User",
 			Email:        adminEmail,
 			PasswordHash: "hashedpassword",
 			Role:         "admin",
@@ -111,7 +111,7 @@ func TestUserUsecase_Get(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, int64(1), total)
 		assert.Len(t, result, 1)
-		assert.Equal(t, "Admin User", result[0].Name)
+		assert.Equal(t, "admin User", result[0].Name)
 	})
 
 	t.Run("Filter by role", func(t *testing.T) {

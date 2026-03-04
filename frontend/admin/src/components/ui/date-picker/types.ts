@@ -2,9 +2,11 @@ import type { Dayjs } from "dayjs";
 import type { ReactNode } from "react";
 
 export type DatePickerMode = "single" | "range";
+export type DatePickerPickerMode = "date" | "year";
 
 export type DatePickerProps = {
   mode?: DatePickerMode;
+  pickerMode?: DatePickerPickerMode;
   value?: Dayjs | [Dayjs | null, Dayjs | null];
   onChange?: (date: Dayjs | [Dayjs | null, Dayjs | null] | null) => void;
   placeholder?: string;

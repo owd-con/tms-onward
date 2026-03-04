@@ -4,8 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Page } from "../../components/layout";
 import { useEnigmaUI } from "@/components";
-import { FormGeneral, type OrderFormValues, type FormGeneralRef } from "./components/form/formGeneral";
-import { FormWaypoint, type WaypointFormData, type FormWaypointRef } from "./components/form/formWaypoint";
+import {
+  FormGeneral,
+  type OrderFormValues,
+  type FormGeneralRef,
+} from "./components/form/formGeneral";
+import {
+  FormShipment,
+  type FormShipmentRef,
+} from "./components/form/formShipment";
 
 /**
  * TMS Onward - Order Create Page
@@ -17,58 +24,50 @@ const OrderCreatePage = () => {
 
   // Refs for form components
   const formGeneralRef = useRef<FormGeneralRef>(null);
-  const formWaypointRef = useRef<FormWaypointRef>(null);
+  const formShipmentRef = useRef<FormShipmentRef>(null);
 
   // Track form values from FormGeneral
   const [formValues, setFormValues] = useState<OrderFormValues>({
     selectedCustomer: null,
-    orderType: "FTL",
+    orderType: { label: "FTL (Full Truck Load)", value: "FTL" },
     referenceCode: "",
     specialInstructions: "",
     manualOverridePrice: "",
   });
 
-  // Track waypoints from FormWaypoint
-  const [waypoints, setWaypoints] = useState<WaypointFormData[]>([]);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
   const handleSubmit = async () => {
     // Get values from FormGeneral
     const values = formGeneralRef.current?.getValues();
-    if (!values?.selectedCustomer) {
-      alert("Please select a customer");
-      return;
-    }
 
-    // Get waypoints from FormWaypoint
-    const currentWaypoints = formWaypointRef.current?.getWaypoints() || [];
-    const validWaypoints = currentWaypoints.filter((wp) => wp.address_id);
-    if (validWaypoints.length < 2) {
-      alert("Please add at least one pickup and one delivery address");
-      return;
-    }
+    // Get shipments from FormShipment
+    const currentShipments = formShipmentRef.current?.getShipments() || [];
 
     // Build payload
     const payload = {
-      customer_id: values.selectedCustomer.id,
-      order_type: values.orderType,
-      reference_code: values.referenceCode || undefined,
-      special_instructions: values.specialInstructions || undefined,
-      manual_override_price: values.manualOverridePrice
-        ? parseFloat(values.manualOverridePrice)
-        : undefined,
-      waypoints: validWaypoints.map((wp, index) => ({
-        type: wp.type,
-        address_id: wp.address_id!,
-        scheduled_date: wp.scheduled_date,
-        scheduled_time: wp.scheduled_time ? `${wp.scheduled_time} +07:00` : undefined,
-        price: wp.price || undefined,
-        items: wp.items.filter((item) => item.name.trim()),
-        sequence_number: values.orderType === "FTL" ? index + 1 : undefined,
+      customer_id: values?.selectedCustomer?.id,
+      order_type: values?.orderType?.value,
+      reference_code: values?.referenceCode,
+      special_instructions: values?.specialInstructions,
+      manual_override_price:
+        values?.orderType?.value === "FTL" && values?.manualOverridePrice
+          ? parseFloat(values.manualOverridePrice)
+          : undefined,
+      shipments: currentShipments.map((shp) => ({
+        origin_address_id: shp.origin_address_id!,
+        destination_address_id: shp.destination_address_id!,
+        pickup_scheduled_date: shp.pickup_scheduled_date,
+        pickup_scheduled_time: shp.pickup_scheduled_time
+          ? shp.pickup_scheduled_time
+          : undefined,
+        delivery_scheduled_date: shp.delivery_scheduled_date,
+        delivery_scheduled_time: shp.delivery_scheduled_time
+          ? shp.delivery_scheduled_time
+          : undefined,
+        price: shp.price,
+        items: shp.items?.filter((item) => item.name?.trim()) || [],
       })),
     };
 
-    setSubmitError(null);
     await create(payload);
   };
 
@@ -85,34 +84,20 @@ const OrderCreatePage = () => {
     }
   }, [createResult?.isSuccess]);
 
-  useEffect(() => {
-    if (createResult?.isError) {
-      setSubmitError("Failed to create order. Please check your input and try again.");
-    }
-  }, [createResult?.isError]);
-
-  // Clear waypoints handler for FormGeneral
-  const handleClearWaypoints = () => {
-    formWaypointRef.current?.clearWaypoints();
+  // Clear shipments handler for FormGeneral
+  const handleClearShipments = () => {
+    formShipmentRef.current?.clearShipments();
   };
-
-  const isFormValid =
-    formValues.selectedCustomer && waypoints.filter((wp) => wp.address_id).length >= 2;
 
   return (
     <Page className='h-full flex flex-col min-h-0'>
       <Page.Header
         title='Create Order'
         titleClassName='!text-2xl'
-        subtitle='Create a new order with waypoints'
+        subtitle='Create a new order with shipments'
       />
 
       <Page.Body className='flex-1 flex flex-col min-h-0 overflow-y-auto'>
-        {submitError && (
-          <div className='alert alert-error mx-6 mt-4'>
-            <span>{submitError}</span>
-          </div>
-        )}
         <div className='w-full p-6 pb-20'>
           <div className='space-y-6'>
             <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
@@ -121,18 +106,16 @@ const OrderCreatePage = () => {
                 ref={formGeneralRef}
                 onValuesChange={setFormValues}
                 onCancel={() => navigate("/a/orders")}
-                isFormValid={isFormValid}
                 isLoading={createResult?.isLoading}
-                onClearWaypoints={handleClearWaypoints}
+                onClearWaypoints={handleClearShipments}
                 onSubmit={handleSubmit}
               />
 
-              {/* Right Column - Waypoints Section */}
-              <FormWaypoint
-                ref={formWaypointRef}
-                orderType={formValues.orderType}
+              {/* Right Column - Shipments Section */}
+              <FormShipment
+                ref={formShipmentRef}
+                orderType={formValues.orderType?.value}
                 selectedCustomerId={formValues.selectedCustomer?.id}
-                onValuesChange={setWaypoints}
               />
             </div>
           </div>

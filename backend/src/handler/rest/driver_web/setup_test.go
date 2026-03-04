@@ -136,13 +136,13 @@ func createTestUser(t *testing.T, companyID uuid.UUID) *entity.User {
 	ctx := context.Background()
 
 	user := &entity.User{
-		CompanyID:     companyID,
-		Name:          fmt.Sprintf("Test User %s", uuid.New().String()),
-		Email:         fmt.Sprintf("test%s@example.com", uuid.New().String()),
-		PasswordHash:  "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy", // "password" hashed
-		Role:          "Driver",
-		Phone:         fmt.Sprintf("081%d56789", uuid.New().ID()%1000000000),
-		IsActive:      true,
+		CompanyID:    companyID,
+		Name:         fmt.Sprintf("Test User %s", uuid.New().String()),
+		Email:        fmt.Sprintf("test%s@example.com", uuid.New().String()),
+		PasswordHash: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy", // "password" hashed
+		Role:         "Driver",
+		Phone:        fmt.Sprintf("081%d56789", uuid.New().ID()%1000000000),
+		IsActive:     true,
 	}
 	err := repository.NewUserRepository().WithContext(ctx).Insert(user)
 	require.NoError(t, err)
@@ -287,7 +287,6 @@ func createTestOrder(t *testing.T, companyID, customerID uuid.UUID) *entity.Orde
 		ScheduledDeliveryTime: st.Format("15:04"),
 		Price:                 0, // FTL price at order level
 		Status:                "pending",
-		CreatedBy:             "Test User",
 	}
 	err = repository.NewShipmentRepository().WithContext(ctx).Insert(shipment)
 	require.NoError(t, err)

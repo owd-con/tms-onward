@@ -62,7 +62,7 @@ func (r *startTripRequest) Messages() map[string]string {
 }
 
 func (r *startTripRequest) execute() (*rest.ResponseBody, error) {
-	err := r.uc.Trip.StartWithCascade(r.trip)
+	err := r.uc.Trip.Start(r.trip)
 	if err != nil {
 		return nil, err
 	}

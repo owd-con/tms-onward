@@ -287,7 +287,6 @@ func createTestOrder(t *testing.T, companyID, customerID uuid.UUID) *entity.Orde
 		ScheduledDeliveryTime: st.Format("15:04"),
 		Price:                 0, // FTL price at order level
 		Status:                "pending",
-		CreatedBy:             "Test User",
 	}
 	err = repository.NewShipmentRepository().WithContext(ctx).Insert(shipment)
 	require.NoError(t, err)
@@ -326,7 +325,6 @@ func createTestTripWaypoint(t *testing.T, tripID uuid.UUID, shipmentIDs []string
 		ContactPhone:   address.ContactPhone,
 		Status:         "pending",
 		SequenceNumber: 1,
-		CreatedBy:      "Test User",
 	}
 	err := repository.NewTripWaypointRepository().WithContext(ctx).Insert(tripWaypoint)
 	require.NoError(t, err)

@@ -169,32 +169,147 @@
 
 ---
 
-### 4. Update TripWaypoint (Driver Operations)
+### 4. Driver Waypoint Operations
 
-**PUT** `/api/v1/trip-waypoints/:id`
+#### 4.1 PUT /driver/trips/waypoint/{id}/loading (Complete Pickup)
 
-**Complete Delivery:**
+**Description:** Complete pickup dengan partial execution support. **Khusus untuk Pickup type.**
+
+**Validation Rules:**
+- TripWaypoint harus ada dan milik driver yang login
+- Type harus `pickup`
+- Status harus `in_transit`
+- `loaded_shipment_ids` REQUIRED, minimal 1 item
+- `loaded_by` REQUIRED (warehouse staff name)
+- `images` REQUIRED (minimal 1 foto)
+
+**Request Body:**
 ```json
 {
-  "status": "completed",
-  "actual_arrival_time": "2026-02-27T10:30:00Z",
-  "actual_completion_time": "2026-02-27T10:45:00Z",
-  "received_by": "John Doe"
+  "loaded_shipment_ids": ["uuid-1", "uuid-2"],
+  "loaded_by": "Budi (Warehouse Staff)",
+  "images": ["https://s3.amazonaws.com/bucket/uploads/loading.jpg"]
 }
 ```
 
-**Fail Delivery:**
-```json
-{
-  "status": "failed",
-  "actual_arrival_time": "2026-02-27T14:30:00Z",
-  "failed_reason": "Customer not available"
-}
-```
+**Fields:**
+- `loaded_shipment_ids`: Array shipment ID yang BERHASIL dipickup (wajib, min 1)
+- `loaded_by`: Nama staff warehouse yang menyerahkan barang (wajib)
+- `images`: Array foto URL sebagai bukti loading (wajib, min 1)
 
 **Behavior:**
-- TripWaypoint update → sync ke Shipment status
-- WaypointLog created for audit
+- Shipment di `loaded_shipment_ids` → status `picked_up`
+- Shipment TIDAK di `loaded_shipment_ids` → status `cancelled` (dihapus dari delivery waypoint)
+- TripWaypoint.Status → `completed`
+- TripWaypoint.LoadedBy → input
+- Create WaypointImage (type: `loading`, with images)
+- Create WaypointLog
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Pickup completed successfully"
+}
+```
+
+---
+
+#### 4.2 PUT /driver/trips/waypoint/{id}/complete (Complete Delivery)
+
+**Description:** Complete delivery dengan POD. **Khusus untuk Delivery type.**
+
+**Validation Rules:**
+- TripWaypoint harus ada dan milik driver yang login
+- Type harus `delivery`
+- Status harus `in_transit`
+- `received_by` REQUIRED
+- `signature_url` REQUIRED
+- `images` REQUIRED (minimal 1 foto)
+
+**Request Body:**
+```json
+{
+  "received_by": "John Doe",
+  "signature_url": "https://s3.amazonaws.com/bucket/uploads/signature.jpg",
+  "images": ["https://s3.amazonaws.com/bucket/uploads/pod1.jpg"],
+  "note": "Package received in good condition"
+}
+```
+
+**Fields:**
+- `received_by`: Nama penerima (wajib)
+- `signature_url`: URL foto signature (wajib)
+- `images`: Array foto URL POD (wajib, min 1)
+- `note`: Catatan opsional
+
+**Behavior:**
+- SEMUA shipment di TripWaypoint → status `delivered` (all-or-nothing)
+- TripWaypoint.Status → `completed`
+- TripWaypoint.ReceivedBy → input
+- Create WaypointImage (type: `pod`, with signature_url, images, note)
+- Create WaypointLog
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Delivery completed successfully"
+}
+```
+
+---
+
+#### 4.3 PUT /driver/trips/waypoint/{id}/failed (Report Failed Waypoint)
+
+**Description:** Laporkan total failure waypoint. **Untuk Pickup & Delivery.**
+
+**Validation Rules:**
+- TripWaypoint harus ada dan milik driver yang login
+- Type harus `pickup` atau `delivery`
+- Status harus `in_transit`
+- `failed_reason` REQUIRED
+- `images` REQUIRED (minimal 1 foto sebagai bukti)
+
+**Request Body:**
+```json
+{
+  "failed_reason": "Warehouse closed - tidak bisa pickup",
+  "images": ["https://s3.amazonaws.com/bucket/uploads/failed1.jpg"],
+  "note": "Sudah konfirmasi dengan pihak warehouse"
+}
+```
+
+**Fields:**
+- `failed_reason`: Alasan gagal (wajib)
+- `images`: Array foto URL sebagai bukti (wajib, min 1)
+- `note`: Catatan tambahan (opsional)
+
+**Behavior:**
+
+| Waypoint Type | Shipment Status | Bisa Retry? |
+|---------------|-----------------|-------------|
+| `pickup` | `cancelled` | ❌ TIDAK |
+| `delivery` | `failed` | ✅ YA |
+
+- **Pickup failed**: SEMUA shipments → `cancelled`, FailedReason SET, TIDAK bisa retry
+- **Delivery failed**: SEMUA shipments → `failed`, FailedReason SET, BISA retry
+- TripWaypoint.Status → `completed`
+- TripWaypoint.FailedReason → input
+- Create WaypointImage (type: `failed`, with images)
+- Create WaypointLog
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Waypoint marked as failed"
+}
+```
+
+**Note:**
+- Gunakan `/loading` dengan `loaded_shipment_ids` untuk partial pickup success (minimal 1 shipment berhasil)
+- Gunakan `/failed` untuk total failure (SEMUA shipment gagal)
 
 ---
 

@@ -63,7 +63,7 @@ func (r *onboardingRequest) execute() (*rest.ResponseBody, error) {
 	}
 
 	// Update onboarding status via usecase
-	if err := r.uc.CompleteOnboarding(r.session.CompanyID); err != nil {
+	if err := r.uc.CompleteOnboarding(r.existing); err != nil {
 		return nil, err
 	}
 

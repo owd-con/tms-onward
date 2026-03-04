@@ -10,7 +10,7 @@ import Step1CompanyProfile from "./steps/Step1CompanyProfile";
 import Step2AddUsers from "./steps/Step2AddUsers";
 import Step3AddVehicles from "./steps/Step3AddVehicles";
 import Step4AddDrivers from "./steps/Step4AddDrivers";
-import Step5SetupPricing from "./steps/Step5SetupPricing";
+import Step5AddCustomers from "./steps/Step5AddCustomers";
 import OnboardingCompletePage from "./OnboardingCompletePage";
 
 export type OnboardingData = {
@@ -28,7 +28,7 @@ export type OnboardingData = {
     driversCreated: number;
   };
   step5: {
-    pricingRulesCreated: number;
+    customersCreated: number;
   };
 };
 
@@ -47,7 +47,7 @@ const OnboardingWizard = () => {
     step2: { usersCreated: 0 },
     step3: { vehiclesCreated: 0 },
     step4: { driversCreated: 0 },
-    step5: { pricingRulesCreated: 0 },
+    step5: { customersCreated: 0 },
   });
   const [isCompleted, setIsCompleted] = useState(false);
 
@@ -150,7 +150,7 @@ const OnboardingWizard = () => {
         );
       case 5:
         return (
-          <Step5SetupPricing
+          <Step5AddCustomers
             onNext={handleCompleteOnboarding}
             onBack={handleBack}
             onSkip={handleCompleteOnboarding}
@@ -174,30 +174,30 @@ const OnboardingWizard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-base-200 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className='min-h-screen bg-base-200 py-8 px-4'>
+      <div className='max-w-4xl mx-auto'>
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-base-content mb-2">
+        <div className='text-center mb-8'>
+          <h1 className='text-3xl font-bold text-base-content mb-2'>
             Welcome to TMS Onward
           </h1>
-          <p className="text-base-content/70">
+          <p className='text-base-content/70'>
             Let's set up your account in a few simple steps
           </p>
         </div>
 
         {/* Progress Indicator */}
-        <div className="bg-base-100 rounded-xl p-6 mb-8 shadow-sm">
-          <div className="flex items-center justify-between">
+        <div className='bg-base-100 rounded-xl p-6 mb-8 shadow-sm'>
+          <div className='flex items-center justify-between'>
             {Array.from({ length: totalSteps }).map((_, index) => {
               const stepNumber = index + 1;
               const isCompleted = stepNumber < currentStep;
               const isCurrent = stepNumber === currentStep;
 
               return (
-                <div key={stepNumber} className="flex items-center flex-1">
+                <div key={stepNumber} className='flex items-center flex-1'>
                   {/* Step Circle */}
-                  <div className="flex flex-col items-center flex-1">
+                  <div className='flex flex-col items-center flex-1'>
                     <div
                       className={`
                         w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm
@@ -205,16 +205,12 @@ const OnboardingWizard = () => {
                           isCompleted
                             ? "bg-success text-success-content"
                             : isCurrent
-                            ? "bg-primary text-primary-content"
-                            : "bg-base-300 text-base-content/50"
+                              ? "bg-primary text-primary-content"
+                              : "bg-base-300 text-base-content/50"
                         }
                       `}
                     >
-                      {isCompleted ? (
-                        <HiCheckCircle size={20} />
-                      ) : (
-                        stepNumber
-                      )}
+                      {isCompleted ? <HiCheckCircle size={20} /> : stepNumber}
                     </div>
                     <span
                       className={`
@@ -223,8 +219,8 @@ const OnboardingWizard = () => {
                           isCurrent
                             ? "text-primary"
                             : isCompleted
-                            ? "text-success"
-                            : "text-base-content/50"
+                              ? "text-success"
+                              : "text-base-content/50"
                         }
                       `}
                     >
@@ -232,7 +228,7 @@ const OnboardingWizard = () => {
                       {stepNumber === 2 && "Users"}
                       {stepNumber === 3 && "Vehicles"}
                       {stepNumber === 4 && "Drivers"}
-                      {stepNumber === 5 && "Pricing"}
+                      {stepNumber === 5 && "Customer"}
                     </span>
                   </div>
 
@@ -256,9 +252,7 @@ const OnboardingWizard = () => {
         </div>
 
         {/* Step Content */}
-        <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
-          {renderStep()}
-        </div>
+        <div className='bg-base-100 rounded-xl shadow-sm'>{renderStep()}</div>
       </div>
     </div>
   );

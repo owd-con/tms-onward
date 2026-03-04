@@ -14,10 +14,12 @@ import (
 
 // driverRequest represents a single driver in step 4
 type driverRequest struct {
-	ID            string `json:"id"`
-	Name          string `json:"name"`
-	Phone         string `json:"phone"`
-	LicenseNumber string `json:"license_number"`
+	ID            string     `json:"id"`
+	Name          string     `json:"name"`
+	Phone         string     `json:"phone"`
+	LicenseNumber string     `json:"license_number"`
+	LicenseType   string     `json:"license_type"`
+	LicenseExpiry *time.Time `json:"license_expiry"`
 
 	driver *entity.Driver `json:"-"` // Fetched driver entity for update operations
 }
@@ -73,6 +75,14 @@ func (r *step4Request) Validate() *validate.Response {
 			v.SetError(fmt.Sprintf("drivers.%d.license_number.required", i), "Driver license number is required.")
 		}
 
+		if driverReq.LicenseType == "" {
+			v.SetError(fmt.Sprintf("drivers.%d.license_type.required", i), "Driver license type is required.")
+		}
+
+		if driverReq.LicenseExpiry == nil {
+			v.SetError(fmt.Sprintf("drivers.%d.license_expiry.required", i), "Driver license expiry date is required.")
+		}
+
 		// Validate ID exists for update operations
 		if driverReq.ID != "" {
 			if driverReq.driver, err = r.uc.Driver.GetByID(driverReq.ID); err != nil {
@@ -126,6 +136,8 @@ func (r *step4Request) execute() (*rest.ResponseBody, error) {
 			Name:          driverReq.Name,
 			Phone:         driverReq.Phone,
 			LicenseNumber: driverReq.LicenseNumber,
+			LicenseType:   driverReq.LicenseType,
+			LicenseExpiry: driverReq.LicenseExpiry,
 			IsActive:      true,
 		}
 
@@ -138,8 +150,8 @@ func (r *step4Request) execute() (*rest.ResponseBody, error) {
 		drivers = append(drivers, driver)
 	}
 
-	// Call usecase to create/update drivers
-	result, err := r.uc.Onboarding.Step4CreateDriversBatch(r.ctx, drivers)
+	// Call usecase to create/update drivers (with sync delete)
+	result, err := r.uc.Onboarding.Step4CreateDriversBatch(r.ctx, r.company.ID, drivers)
 	if err != nil {
 		return nil, err
 	}

@@ -62,7 +62,7 @@ export const onboardingApi = createApi({
 
     /**
      * POST /onboarding/step5
-     * Create/update pricing (now accepts array)
+     * Create/update customers (now accepts array)
      */
     onboardingStep5: builder.mutation({
       query: (payload) => ({

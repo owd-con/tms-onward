@@ -47,7 +47,7 @@ export const useAuth = () => {
   const register = async (
     companyName: string,
     companyType: '3PL' | 'Carrier',
-    userName: string,
+    name: string,
     email: string,
     password: string,
     phone?: string
@@ -56,7 +56,7 @@ export const useAuth = () => {
       await registerMutation({
         company_name: companyName,
         company_type: companyType,
-        name: userName,
+        name,
         email,
         password,
         confirm_password: password, // Frontend already validates match

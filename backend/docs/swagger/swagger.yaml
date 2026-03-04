@@ -165,47 +165,51 @@ definitions:
       phone:
         type: string
     type: object
-  exception.batchRescheduleWaypointsRequest:
+  exception.batchRescheduleShipmentsRequest:
     properties:
       driver_id:
         type: string
-      vehicle_id:
-        type: string
-      waypoint_ids:
-        description: Array of failed waypoint IDs
+      shipment_ids:
+        description: Array of failed shipment IDs
         items:
           type: string
         type: array
+      vehicle_id:
+        type: string
     type: object
-  exception.returnWaypointRequest:
+  exception.returnShipmentRequest:
     properties:
       returned_note:
         description: required - alasan barang dikembalikan ke origin
         type: string
     type: object
-  onboarding.driverRequest:
+  onboarding.customerRequest:
     properties:
-      id:
+      address:
         type: string
-      license_number:
+      email:
+        type: string
+      id:
         type: string
       name:
         type: string
       phone:
         type: string
     type: object
-  onboarding.pricingRequest:
+  onboarding.driverRequest:
     properties:
-      customer_id:
-        type: string
-      dest_city_id:
-        type: string
       id:
         type: string
-      origin_city_id:
+      license_expiry:
         type: string
-      price:
-        type: number
+      license_number:
+        type: string
+      license_type:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
     type: object
   onboarding.step1Request:
     properties:
@@ -240,9 +244,9 @@ definitions:
     type: object
   onboarding.step5Request:
     properties:
-      pricing:
+      customers:
         items:
-          $ref: '#/definitions/onboarding.pricingRequest'
+          $ref: '#/definitions/onboarding.customerRequest'
         type: array
     type: object
   onboarding.userRequest:
@@ -270,12 +274,18 @@ definitions:
         type: number
       id:
         type: string
+      make:
+        type: string
+      model:
+        type: string
       plate_number:
         type: string
       vehicle_type:
         type: string
+      year:
+        type: integer
     type: object
-  order.WaypointItem:
+  order.ShipmentItem:
     properties:
       name:
         type: string
@@ -284,35 +294,32 @@ definitions:
       weight:
         type: number
     type: object
-  order.WaypointRequest:
+  order.ShipmentRequest:
     properties:
-      address_id:
+      delivery_scheduled_date:
         type: string
-      contact_name:
+      delivery_scheduled_time:
         type: string
-      contact_phone:
+      destination_address_id:
+        description: Destination (Delivery)
         type: string
       id:
         type: string
       items:
+        description: Items (only for delivery shipments)
         items:
-          $ref: '#/definitions/order.WaypointItem'
+          $ref: '#/definitions/order.ShipmentItem'
         type: array
-      location_address:
+      origin_address_id:
+        description: Origin (Pickup)
         type: string
-      location_name:
-        description: Snapshot fields (read-only, populated from selected address)
+      pickup_scheduled_date:
+        type: string
+      pickup_scheduled_time:
         type: string
       price:
+        description: Pricing (LTL only - FTL uses 0)
         type: number
-      scheduled_date:
-        type: string
-      scheduled_time:
-        type: string
-      sequence_number:
-        type: integer
-      type:
-        type: string
     type: object
   order.createRequest:
     properties:
@@ -324,12 +331,12 @@ definitions:
         type: string
       reference_code:
         type: string
+      shipments:
+        items:
+          $ref: '#/definitions/order.ShipmentRequest'
+        type: array
       special_instructions:
         type: string
-      waypoints:
-        items:
-          $ref: '#/definitions/order.WaypointRequest'
-        type: array
     type: object
   order.updateRequest:
     properties:
@@ -341,12 +348,12 @@ definitions:
         type: number
       reference_code:
         type: string
+      shipments:
+        items:
+          $ref: '#/definitions/order.ShipmentRequest'
+        type: array
       special_instructions:
         type: string
-      waypoints:
-        items:
-          $ref: '#/definitions/order.WaypointRequest'
-        type: array
     type: object
   pricing_matrix.createRequest:
     properties:
@@ -450,12 +457,12 @@ definitions:
       success:
         type: boolean
     type: object
-  trip.WaypointRequest:
+  trip.ShipmentSequenceRequest:
     properties:
-      order_waypoint_id:
-        type: string
       sequence_number:
         type: integer
+      shipment_id:
+        type: string
     type: object
   trip.createRequest:
     properties:
@@ -465,13 +472,13 @@ definitions:
         type: string
       order_id:
         type: string
+      shipment_sequences:
+        description: Custom shipment ordering
+        items:
+          $ref: '#/definitions/trip.ShipmentSequenceRequest'
+        type: array
       vehicle_id:
         type: string
-      waypoints:
-        description: 'LTL: required, FTL: optional (use order waypoints)'
-        items:
-          $ref: '#/definitions/trip.WaypointRequest'
-        type: array
     type: object
   trip.updateRequest:
     properties:
@@ -479,10 +486,10 @@ definitions:
         type: string
       notes:
         type: string
-      waypoints:
-        description: Untuk sequence update (LTL only)
+      shipment_sequences:
+        description: Custom shipment ordering
         items:
-          $ref: '#/definitions/trip.WaypointRequest'
+          $ref: '#/definitions/trip.ShipmentSequenceRequest'
         type: array
     type: object
   upload.presignedURLRequest:
@@ -1282,8 +1289,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get dashboard summary statistics including active orders, trips,
-        drivers, vehicles
+      description: Get complete dashboard data including stats, map waypoints, expired
+        vehicles/drivers, and failed orders
       parameters:
       - description: Start date filter (YYYY-MM-DD)
         in: query
@@ -1309,7 +1316,7 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/rest.HTTPError'
-      summary: Get dashboard summary
+      summary: Get dashboard
       tags:
       - dashboard
   /docs/info:
@@ -1513,48 +1520,6 @@ paths:
       summary: Get my trip history
       tags:
       - driver_web
-  /driver/trips/waypoint/{id}/arrive:
-    put:
-      consumes:
-      - application/json
-      description: Complete pickup waypoint (In Transit → Completed)
-      parameters:
-      - description: Trip Waypoint ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Bearer jwt-token...
-        in: header
-        name: authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.ResponseBody'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-      summary: Arrive at pickup waypoint
-      tags:
-      - driver_web
   /driver/trips/waypoint/{id}/complete:
     put:
       consumes:
@@ -1629,8 +1594,8 @@ paths:
     put:
       consumes:
       - application/json
-      description: Mark waypoint as failed with reason and images (In Transit → Completed/Failed).
-        Provide a descriptive reason for the failure.
+      description: Mark delivery waypoint as failed. ALL shipments in this waypoint
+        will be marked as failed (all-or-nothing).
       parameters:
       - description: Trip Waypoint ID
         in: path
@@ -1652,6 +1617,11 @@ paths:
           items:
             type: string
           type: array
+      - description: Optional note about the failure
+        in: body
+        name: note
+        schema:
+          type: string
       - description: Bearer jwt-token...
         in: header
         name: authorization
@@ -1680,7 +1650,79 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.HTTPError'
-      summary: Fail waypoint
+      summary: Fail delivery waypoint
+      tags:
+      - driver_web
+  /driver/trips/waypoint/{id}/loading:
+    put:
+      consumes:
+      - application/json
+      description: Complete pickup waypoint with partial execution support. Specify
+        which shipments were successfully loaded. Shipments not in list will be marked
+        as cancelled.
+      parameters:
+      - description: Trip Waypoint ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Array of successfully loaded shipment IDs (others will be cancelled)
+        in: body
+        name: loaded_shipment_ids
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      - description: Name of warehouse staff who handed over the items
+        in: body
+        name: loaded_by
+        required: true
+        schema:
+          type: string
+      - description: Array of presigned S3 URLs for loading photos
+        in: body
+        minLength: 1
+        name: images
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      - description: Optional note about the loading
+        in: body
+        name: note
+        schema:
+          type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Complete pickup waypoint
       tags:
       - driver_web
   /driver/trips/waypoint/{id}/start:
@@ -2008,6 +2050,73 @@ paths:
       summary: Get failed orders
       tags:
       - exception
+  /exceptions/shipments/{id}/return:
+    put:
+      consumes:
+      - application/json
+      description: Mark a failed shipment as returned to origin
+      parameters:
+      - description: Shipment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Return shipment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/exception.returnShipmentRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Return shipment to origin
+      tags:
+      - exception
+  /exceptions/shipments/batch-reschedule:
+    post:
+      consumes:
+      - application/json
+      description: Reschedule multiple failed shipments to a single new trip
+      parameters:
+      - description: Batch reschedule request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/exception.batchRescheduleShipmentsRequest'
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Batch reschedule failed shipments
+      tags:
+      - exception
   /exceptions/waypoints:
     get:
       consumes:
@@ -2045,73 +2154,6 @@ paths:
           schema:
             $ref: '#/definitions/rest.HTTPError'
       summary: Get failed waypoints
-      tags:
-      - exception
-  /exceptions/waypoints/{id}/return:
-    put:
-      consumes:
-      - application/json
-      description: Mark a failed waypoint as returned to origin
-      parameters:
-      - description: Waypoint ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Return waypoint request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/exception.returnWaypointRequest'
-      - description: Bearer jwt-token...
-        in: header
-        name: authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.ResponseBody'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-      summary: Return waypoint to origin
-      tags:
-      - exception
-  /exceptions/waypoints/batch-reschedule:
-    post:
-      consumes:
-      - application/json
-      description: Reschedule multiple failed waypoints to a single new trip
-      parameters:
-      - description: Batch reschedule request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/exception.batchRescheduleWaypointsRequest'
-      - description: Bearer jwt-token...
-        in: header
-        name: authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.ResponseBody'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-      summary: Batch reschedule failed waypoints
       tags:
       - exception
   /me:
@@ -2331,9 +2373,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create initial pricing matrix
+      description: Create initial customers
       parameters:
-      - description: Create pricing matrix request
+      - description: Create customers request
         in: body
         name: request
         required: true
@@ -2355,7 +2397,7 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/rest.HTTPError'
-      summary: 'Onboarding Step 5: Create pricing matrix'
+      summary: 'Onboarding Step 5: Create customers'
       tags:
       - onboarding
   /orders:

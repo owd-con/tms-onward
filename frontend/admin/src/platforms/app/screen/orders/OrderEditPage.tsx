@@ -4,13 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
 import { Page } from "../../components/layout";
-import { FormGeneral, type OrderFormValues, type FormGeneralRef } from "./components/form/formGeneral";
-import { FormWaypoint, type WaypointFormData, type FormWaypointRef } from "./components/form/formWaypoint";
+import {
+  FormGeneral,
+  type OrderFormValues,
+  type FormGeneralRef,
+} from "./components/form/formGeneral";
+import {
+  FormShipment,
+  type ShipmentFormData,
+  type FormShipmentRef,
+} from "./components/form/formShipment";
 
 /**
  * TMS Onward - Order Edit Page
  *
- * Allows editing of order information and waypoints.
+ * Allows editing of order information and shipments.
  * Only orders with Pending status can be edited.
  */
 const OrderEditPage = () => {
@@ -20,19 +28,19 @@ const OrderEditPage = () => {
 
   // Refs for form components
   const formGeneralRef = useRef<FormGeneralRef>(null);
-  const formWaypointRef = useRef<FormWaypointRef>(null);
+  const formShipmentRef = useRef<FormShipmentRef>(null);
 
   // Track form values from FormGeneral
   const [formValues, setFormValues] = useState<OrderFormValues>({
     selectedCustomer: null,
-    orderType: "FTL",
+    orderType: { label: "FTL (Full Truck Load)", value: "FTL" },
     referenceCode: "",
     specialInstructions: "",
     manualOverridePrice: "",
   });
 
-  // Track waypoints from FormWaypoint
-  const [waypoints, setWaypoints] = useState<WaypointFormData[]>([]);
+  // Track shipments from FormShipment
+  const [shipments, setShipments] = useState<ShipmentFormData[]>([]);
 
   // Order data from API
   const [orderData, setOrderData] = useState<any>(null);
@@ -53,7 +61,9 @@ const OrderEditPage = () => {
       // Set form values
       const initialValues: OrderFormValues = {
         selectedCustomer: data?.customer || null,
-        orderType: data?.order_type || "FTL",
+        orderType: data?.order_type === "LTL"
+          ? { label: "LTL (Less Than Truck Load)", value: "LTL" }
+          : { label: "FTL (Full Truck Load)", value: "FTL" },
         referenceCode: data?.reference_code || "",
         specialInstructions: data?.special_instructions || "",
         manualOverridePrice: data?.manual_override_price?.toString() || "",
@@ -65,44 +75,57 @@ const OrderEditPage = () => {
         formGeneralRef.current.setValues(initialValues);
       }
 
-      // Parse and populate waypoints
-      if (data?.order_waypoints && Array.isArray(data.order_waypoints)) {
-        const parsedWaypoints = data.order_waypoints.map((wp: any, index: number) => {
-          // Parse items JSON
-          let items: Array<{ name: string; quantity: number; weight?: number }> = [];
-          try {
-            if (typeof wp.items === "string") {
-              items = JSON.parse(wp.items);
-            } else if (Array.isArray(wp.items)) {
-              items = wp.items;
+      // Parse and populate shipments
+      if (data?.shipments && Array.isArray(data.shipments)) {
+        const parsedShipments = data.shipments.map(
+          (shp: any, index: number) => {
+            // Parse items JSON
+            let items: Array<{
+              name: string;
+              quantity: number;
+              weight?: number;
+              sku?: string;
+            }> = [];
+            try {
+              if (typeof shp.items === "string") {
+                items = JSON.parse(shp.items);
+              } else if (Array.isArray(shp.items)) {
+                items = shp.items;
+              }
+            } catch (e) {
+              console.error("Failed to parse items:", e);
             }
-          } catch (e) {
-            console.error("Failed to parse items:", e);
-          }
 
-          return {
-            id: `wp-${wp.id || Date.now()}-${index}`,
-            waypointId: wp.id, // Keep original ID for update
-            type: wp.type as "pickup" | "delivery",
-            address_id: wp.address_id,
-            address: wp.address, // Include full address object for edit mode
-            scheduled_date: wp.scheduled_date
-              ? dayjs(wp.scheduled_date).format("YYYY-MM-DD")
-              : dayjs().format("YYYY-MM-DD"),
-            scheduled_time: wp.scheduled_time || "",
-            price: wp.price || undefined,
-            items: items.length > 0
-              ? items
-              : [{ name: "", quantity: 1, weight: 0 }],
-            sequence_number: wp.sequence_number || index + 1,
-          } as WaypointFormData;
-        });
+            return {
+              id: `shp-${shp.id || Date.now()}-${index}`,
+              shipmentId: shp.id,
+              origin_address_id: shp.origin_address_id,
+              origin_address: shp.origin_address_rel,
+              destination_address_id: shp.destination_address_id,
+              destination_address: shp.destination_address_rel,
+              pickup_scheduled_date: shp.scheduled_pickup_date
+                ? dayjs(shp.scheduled_pickup_date).format("YYYY-MM-DD")
+                : dayjs().format("YYYY-MM-DD"),
+              pickup_scheduled_time: shp.scheduled_pickup_time || "",
+              delivery_scheduled_date: shp.scheduled_delivery_date
+                ? dayjs(shp.scheduled_delivery_date).format("YYYY-MM-DD")
+                : dayjs().format("YYYY-MM-DD"),
+              delivery_scheduled_time: shp.scheduled_delivery_time || "",
+              price: shp.price || undefined,
+              items:
+                items.length > 0
+                  ? items
+                  : [{ name: "", quantity: 1, weight: 0 }],
+              sorting_id: shp.sorting_id || index + 1,
+            } as ShipmentFormData;
+          },
+        );
 
-        setWaypoints(parsedWaypoints);
+        setShipments(parsedShipments);
 
-        // Update FormWaypoint via ref
-        if (formWaypointRef.current?.setWaypoints) {
-          formWaypointRef.current.setWaypoints(parsedWaypoints);
+        // Update FormShipment via ref
+        if (formShipmentRef.current?.setShipments) {
+          formShipmentRef.current.setShipments(parsedShipments);
         }
       }
     }
@@ -118,34 +141,33 @@ const OrderEditPage = () => {
   const handleSubmit = async () => {
     // Get values from FormGeneral
     const values = formGeneralRef.current?.getValues();
-    if (!values?.selectedCustomer) {
-      alert("Please select a customer");
-      return;
-    }
 
-    // Get waypoints from FormWaypoint
-    const currentWaypoints = formWaypointRef.current?.getWaypoints() || [];
-    const validWaypoints = currentWaypoints.filter((wp) => wp.address_id);
-    if (validWaypoints.length < 2) {
-      alert("Please add at least one pickup and one delivery address");
-      return;
-    }
+    // Get shipments from FormShipment
+    const currentShipments = formShipmentRef.current?.getShipments() || [];
 
     // Build payload
     const payload = {
-      customer_id: values.selectedCustomer.id,
-      reference_code: values.referenceCode || undefined,
-      special_instructions: values.specialInstructions || undefined,
-      manual_override_price: values.manualOverridePrice ? parseFloat(values.manualOverridePrice) : undefined,
-      waypoints: validWaypoints.map((wp, index) => ({
-        id: wp.waypointId, // Include ID for existing waypoints
-        type: wp.type,
-        address_id: wp.address_id!,
-        scheduled_date: wp.scheduled_date,
-        scheduled_time: wp.scheduled_time ? `${wp.scheduled_time} +07:00` : undefined,
-        price: wp.price || undefined,
-        items: wp.items.filter((item) => item.name.trim()),
-        sequence_number: values.orderType === "FTL" ? index + 1 : undefined,
+      customer_id: values?.selectedCustomer?.id,
+      reference_code: values?.referenceCode,
+      special_instructions: values?.specialInstructions,
+      manual_override_price:
+        values?.orderType?.value === "FTL" && values?.manualOverridePrice
+          ? parseFloat(values.manualOverridePrice)
+          : undefined,
+      shipments: currentShipments.map((shp) => ({
+        id: shp.shipmentId, // Include ID for existing shipments
+        origin_address_id: shp.origin_address_id!,
+        destination_address_id: shp.destination_address_id!,
+        pickup_scheduled_date: shp.pickup_scheduled_date,
+        pickup_scheduled_time: shp.pickup_scheduled_time
+          ? shp.pickup_scheduled_time
+          : undefined,
+        delivery_scheduled_date: shp.delivery_scheduled_date,
+        delivery_scheduled_time: shp.delivery_scheduled_time
+          ? shp.delivery_scheduled_time
+          : undefined,
+        price: shp.price,
+        items: shp.items?.filter((item) => item.name?.trim()) || [],
       })),
     };
 
@@ -154,21 +176,18 @@ const OrderEditPage = () => {
     }
   };
 
-  // Clear waypoints handler for FormGeneral
-  const handleClearWaypoints = () => {
-    formWaypointRef.current?.clearWaypoints();
+  // Clear shipments handler for FormGeneral
+  const handleClearShipments = () => {
+    formShipmentRef.current?.clearShipments();
   };
-
-  const isFormValid =
-    formValues.selectedCustomer && waypoints.filter((wp) => wp.address_id).length >= 2;
 
   if (!orderData) {
     return (
       <Page>
-        <Page.Header title="Edit Order" />
+        <Page.Header title='Edit Order' />
         <Page.Body>
-          <div className="flex justify-center items-center h-64">
-            <div className="loading loading-spinner loading-lg"></div>
+          <div className='flex justify-center items-center h-64'>
+            <div className='loading loading-spinner loading-lg'></div>
           </div>
         </Page.Body>
       </Page>
@@ -176,41 +195,40 @@ const OrderEditPage = () => {
   }
 
   return (
-    <Page className="h-full flex flex-col min-h-0">
+    <Page className='h-full flex flex-col min-h-0'>
       <Page.Header
-        title="Edit Order"
-        titleClassName="!text-2xl"
+        title='Edit Order'
+        titleClassName='!text-2xl'
         subtitle={orderData.order_number}
       />
 
-      <Page.Body className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-        <div className="w-full p-6 pb-20">
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <Page.Body className='flex-1 flex flex-col min-h-0 overflow-y-auto'>
+        <div className='w-full p-6 pb-20'>
+          <div className='space-y-6'>
+            <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
               {/* Left Column - Order Information */}
               <FormGeneral
                 ref={formGeneralRef}
                 onValuesChange={setFormValues}
                 onCancel={() => navigate(`/a/orders/${orderId}`)}
-                isFormValid={isFormValid}
                 isLoading={updateResult?.isLoading}
-                onClearWaypoints={handleClearWaypoints}
+                onClearWaypoints={handleClearShipments}
                 onSubmit={handleSubmit}
                 initialValues={formValues}
                 readOnlyFields={{
                   orderNumber: orderData.order_number,
                   status: orderData.status,
                 }}
-                submitLabel="Save Changes"
+                submitLabel='Save Changes'
               />
 
-              {/* Right Column - Waypoints Section */}
-              <FormWaypoint
-                ref={formWaypointRef}
-                orderType={formValues.orderType}
+              {/* Right Column - Shipments Section */}
+              <FormShipment
+                ref={formShipmentRef}
+                orderType={formValues.orderType?.value}
                 selectedCustomerId={formValues.selectedCustomer?.id}
-                onValuesChange={setWaypoints}
-                initialWaypoints={waypoints}
+                onValuesChange={setShipments}
+                initialShipments={shipments}
               />
             </div>
           </div>

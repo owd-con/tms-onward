@@ -35,6 +35,7 @@ func (r *TripWaypointRepository) GetByTripID(tripID string) (mx []*entity.TripWa
 	qs := r.DB.NewSelect().Model(&mx)
 
 	qs.Relation("AddressRel")
+	qs.Relation("Trip")
 
 	qs.Where("trip_waypoints.is_deleted = false")
 	qs.Where("trip_id = ?", tripID)
@@ -74,12 +75,24 @@ func (r *TripWaypointRepository) UpdateStatus(waypointID string, status string, 
 	return
 }
 
-// DeleteByTripID soft deletes all trip_waypoints for a trip (for sequence update)
+// DeleteByTripID hard deletes all trip_waypoints for a trip (for update trip waypoints)
+// Called before creating new waypoints, so no need to cascade delete waypoint_images
 func (r *TripWaypointRepository) DeleteByTripID(tripID string) (err error) {
+	_, err = r.DB.NewDelete().
+		Model(&entity.TripWaypoint{}).
+		Where("trip_id = ?", tripID).
+		Where("is_deleted = false").
+		Exec(r.Context)
+	return
+}
+
+// SoftDeleteByTripID soft deletes all trip_waypoints for a trip (for delete trip)
+func (r *TripWaypointRepository) SoftDeleteByTripID(tripID string) (err error) {
 	_, err = r.DB.NewUpdate().
-		Model((*entity.TripWaypoint)(nil)).
+		Model(&entity.TripWaypoint{}).
 		Set("is_deleted = ?", true).
 		Where("trip_id = ?", tripID).
+		Where("is_deleted = false").
 		Exec(r.Context)
 	return
 }

@@ -157,53 +157,6 @@ func (u *ExceptionUsecase) GetFailedOrders(req *ExceptionQueryOptions) ([]*Excep
 	return results, totalCount, nil
 }
 
-// GetFailedShipments - List failed/returned shipments
-func (u *ExceptionUsecase) GetFailedShipments(req *ExceptionQueryOptions) ([]*entity.Shipment, int64, error) {
-	if req.Session == nil {
-		return nil, 0, errors.New("session not found")
-	}
-
-	if req.Session.CompanyID == "" {
-		return nil, 0, errors.New("user is not a tenant")
-	}
-
-	if req.OrderBy == "" {
-		req.OrderBy = "-shipments:created_at"
-	}
-
-	return u.ShipmentRepo.FindAll(req.BuildOption(), func(q *bun.SelectQuery) *bun.SelectQuery {
-		// Join with orders for multi-tenant isolation
-		q.Relation("Order")
-
-		// Multi-tenant isolation - join with orders table to filter by company
-		q.Join("INNER JOIN orders ON orders.id = shipments.order_id")
-
-		if req.Session != nil {
-			q.Where("orders.company_id = ?", req.Session.CompanyID)
-		}
-
-		// Only failed or returned shipments
-		q.Where("shipments.status IN ('failed', 'returned')")
-
-		// Filter by order_id if provided
-		if req.OrderID != "" {
-			q.Where("shipments.order_id = ?", req.OrderID)
-		}
-
-		// Filter by status if provided
-		if req.Status != "" {
-			q.Where("shipments.status = ?", req.Status)
-		}
-
-		return q
-	})
-}
-
-// GetShipmentByID retrieves a shipment by ID
-func (u *ExceptionUsecase) GetShipmentByID(id string) (*entity.Shipment, error) {
-	return u.ShipmentRepo.FindByID(id)
-}
-
 // BatchRescheduleShipments reschedules multiple failed shipments in a single new trip.
 // Requirements implemented:
 // 1. Reset shipments: "failed"/"returned" -> "dispatched" (allow retry)
@@ -212,33 +165,9 @@ func (u *ExceptionUsecase) GetShipmentByID(id string) (*entity.Shipment, error) 
 // 4. Return new trip info
 //
 // Note: Validation of old trip status is done at request level (Validate method)
-func (u *ExceptionUsecase) BatchRescheduleShipments(shipmentIDs []uuid.UUID, driverID, vehicleID uuid.UUID) (*entity.Trip, error) {
-	if len(shipmentIDs) == 0 {
-		return nil, errors.New("no shipments to reschedule")
-	}
-
-	// Get all shipments to reschedule
-	var shipments []*entity.Shipment
-	for _, shipmentID := range shipmentIDs {
-		shipment, err := u.ShipmentRepo.FindByID(shipmentID.String())
-		if err != nil {
-			return nil, fmt.Errorf("failed to find shipment %s: %w", shipmentID, err)
-		}
-		shipments = append(shipments, shipment)
-	}
-
-	if len(shipments) == 0 {
-		return nil, errors.New("no shipments found")
-	}
-
+func (u *ExceptionUsecase) BatchRescheduleShipments(shipments []*entity.Shipment, driver *entity.Driver, vehicle *entity.Vehicle) (*entity.Trip, error) {
 	// Use first shipment to get order info (all shipments validated to belong to same order)
 	firstShipment := shipments[0]
-
-	// Load order relationship if not loaded
-	order, err := u.OrderRepo.FindByID(firstShipment.OrderID.String())
-	if err != nil {
-		return nil, fmt.Errorf("failed to find order: %w", err)
-	}
 
 	// Get old trip for notes and audit log (validation already done at request level)
 	oldTrip, err := u.TripRepo.FindByOrderID(firstShipment.OrderID.String())
@@ -261,10 +190,11 @@ func (u *ExceptionUsecase) BatchRescheduleShipments(shipmentIDs []uuid.UUID, dri
 		DriverRepo:       repository.NewDriverRepository().WithContext(u.ctx).(*repository.DriverRepository),
 		VehicleRepo:      repository.NewVehicleRepository().WithContext(u.ctx).(*repository.VehicleRepository),
 		TripWaypointRepo: u.TripWaypointRepo.WithContext(u.ctx).(*repository.TripWaypointRepository),
+		OrderRepo:        repository.NewOrderRepository().WithContext(u.ctx).(*repository.OrderRepository),
 		ShipmentUsecase:  u.ShipmentUsecase.WithContext(u.ctx),
 	}).WithContext(u.ctx)
 
-	newTrip, err := tripUsecase.CreateForRescheduleWithShippoints(order.CompanyID, driverID, vehicleID, shipmentIDs, notes)
+	newTrip, err := tripUsecase.CreateForReschedule(driver, vehicle, shipments, notes)
 	if err != nil {
 		return nil, err
 	}

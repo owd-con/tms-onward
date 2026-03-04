@@ -87,20 +87,31 @@ export const WaypointCard = ({
             </span>
           )}
         </div>
-        <div className='flex-1 min-w-0'>
+        <div className='flex-1'>
           <div className='flex items-center gap-2 mb-1 flex-wrap'>
             <h3 className='typo-card-title font-semibold text-content-primary'>
               {isPickup ? "Pickup Point" : "Delivery Point"}
             </h3>
             {statusBadge(waypoint.status)}
           </div>
-          <div className='flex items-center gap-1 typo-small text-content-secondary'>
-            <HiMapPin size={14} />
-            <span className='truncate'>
-              Waypoint #{waypoint.sequence_number}{" "}
-              <span className='capitalize font-semibold'>
-                {`(${waypoint.order_waypoint?.address?.name})`}
-              </span>
+          <div className='flex items-start gap-1 typo-small text-content-secondary'>
+            <HiMapPin size={14} className='mt-0.5 flex-shrink-0' />
+            <span className='break-words'>
+              Waypoint #{waypoint.sequence_number}
+              {waypoint.location_name && (
+                <>
+                  {" - "}
+                  <span className='font-semibold'>
+                    {waypoint.location_name}
+                  </span>
+                </>
+              )}
+              {waypoint.address && (
+                <span className='text-content-tertiary'>
+                  {" "}
+                  ({waypoint.address})
+                </span>
+              )}
             </span>
           </div>
         </div>
@@ -152,11 +163,11 @@ export const WaypointCard = ({
       {waypoint.status === "pending" &&
         tripStatus === "in_transit" &&
         canStartWaypoint && (
-          <div className="mt-5 pl-11">
+          <div className='mt-5 pl-11'>
             <Button
-              variant="primary"
-              size="xs"
-              shape="block"
+              variant='primary'
+              size='xs'
+              shape='block'
               isLoading={isLoading}
               onClick={() => onStartWaypoint?.(waypoint.id)}
             >

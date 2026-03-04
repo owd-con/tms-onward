@@ -131,8 +131,6 @@ const CustomerFormModal = forwardRef<
     onClose();
   };
 
-  // 12. Validation
-  const isFormValid = name.trim() !== "";
   const isLoading = createResult?.isLoading || updateResult?.isLoading;
 
   // 12. Render
@@ -224,7 +222,6 @@ const CustomerFormModal = forwardRef<
               type='submit'
               variant='primary'
               isLoading={isLoading}
-              disabled={!isFormValid}
               className='w-full sm:w-auto'
             >
               {mode === "create" ? "Create Customer" : "Update Customer"}

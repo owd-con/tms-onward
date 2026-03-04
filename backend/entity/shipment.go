@@ -9,11 +9,11 @@ import (
 
 // ShipmentItem represents an item within a shipment
 type ShipmentItem struct {
-	Name   string  `json:"name"`
-	SKU    string  `json:"sku"`
-	Qty    int     `json:"qty"`
-	Weight float64 `json:"weight"`
-	Price  float64 `json:"price"`
+	Name     string  `json:"name"`
+	SKU      string  `json:"sku"`
+	Quantity int     `json:"quantity"`
+	Weight   float64 `json:"weight"`
+	Price    float64 `json:"price"`
 }
 
 // Shipment represents a single origin -> destination shipment
@@ -83,14 +83,12 @@ type Shipment struct {
 	ReturnedAt   *time.Time `bun:"returned_at" json:"returned_at,omitempty"`
 
 	// Audit
-	CreatedBy string    `bun:"created_by" json:"created_by"`
-	UpdatedBy string    `bun:"updated_by" json:"updated_by"`
 	CreatedAt time.Time `bun:"created_at,default:current_timestamp" json:"created_at"`
 	UpdatedAt time.Time `bun:"updated_at,default:current_timestamp" json:"updated_at"`
 	IsDeleted bool      `bun:"is_deleted,default:false" json:"is_deleted,omitempty"`
 
 	// Relations
-	Order           *Order   `bun:"rel:belongs-to,join:order_id=id" json:"order,omitempty"`
+	Order            *Order   `bun:"rel:belongs-to,join:order_id=id" json:"order,omitempty"`
 	OriginAddressRel *Address `bun:"rel:belongs-to,join:origin_address_id=id" json:"origin_address_rel,omitempty"`
 	DestAddressRel   *Address `bun:"rel:belongs-to,join:destination_address_id=id" json:"destination_address_rel,omitempty"`
 }

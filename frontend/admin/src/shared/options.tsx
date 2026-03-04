@@ -18,10 +18,10 @@ export const entitiesOptions = [
  */
 export const licenseTypeOptions = [
   { label: "Select License Type", value: "" },
-  { label: "SIM A", value: "SIM_A" },
-  { label: "SIM B1", value: "SIM_B1" },
-  { label: "SIM B2", value: "SIM_B2" },
-  { label: "SIM C", value: "SIM_C" },
+  { label: "SIM A", value: "sim_a" },
+  { label: "SIM B1", value: "sim_b1" },
+  { label: "SIM B2", value: "sim_b2" },
+  { label: "SIM C", value: "sim_c" },
 ];
 
 /**
@@ -57,4 +57,12 @@ export const orderTypeOptions = [
   { label: "All Types", value: "" },
   { label: "FTL", value: "FTL" },
   { label: "LTL", value: "LTL" },
+];
+
+/**
+ * Company Type Options
+ */
+export const companyTypeOptions: Array<{ label: string; value: "3PL" | "Carrier" }> = [
+  { value: "3PL", label: "3PL - Third Party Logistics" },
+  { value: "Carrier", label: "Carrier - Transportation Company" },
 ];

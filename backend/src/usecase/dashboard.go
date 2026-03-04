@@ -22,26 +22,31 @@ type DashboardStats struct {
 	CompletedOrders int64 `json:"completed_orders"`
 }
 
-// MapWaypoint - Waypoint data for map visualization
-type MapWaypoint struct {
-	OrderID      string  `json:"order_id"`
-	OrderNumber  string  `json:"order_number"`
-	CustomerName string  `json:"customer_name"`
-	Address      string  `json:"address"`
-	City         string  `json:"city"`
-	Latitude     float64 `json:"lat"`
-	Longitude    float64 `json:"lng"`
-	Status       string  `json:"status"`
-	WaypointType string  `json:"waypoint_type"`
+// MapShipment - Shipment data for map visualization (origin + destination)
+type MapShipment struct {
+	ShipmentID        string  `json:"shipment_id"`
+	ShipmentNumber    string  `json:"shipment_number"`
+	OrderID           string  `json:"order_id"`
+	OrderNumber       string  `json:"order_number"`
+	CustomerName      string  `json:"customer_name"`
+	OriginAddress     string  `json:"origin_address"`
+	OriginCity        string  `json:"origin_city"`
+	OriginLatitude    float64 `json:"origin_lat"`
+	OriginLongitude   float64 `json:"origin_lng"`
+	DestAddress       string  `json:"dest_address"`
+	DestCity          string  `json:"dest_city"`
+	DestLatitude      float64 `json:"dest_lat"`
+	DestLongitude     float64 `json:"dest_lng"`
+	Status            string  `json:"status"`
 }
 
-// MapWaypointsByArea - Waypoints grouped by address
-type MapWaypointsByArea struct {
-	Address   string        `json:"address"`
-	City      string        `json:"city"`
-	Latitude  float64       `json:"lat"`
-	Longitude float64       `json:"lng"`
-	Waypoints []MapWaypoint `json:"waypoints"`
+// MapShipmentsByArea - Shipments grouped by area (for map visualization)
+type MapShipmentsByArea struct {
+	OriginAddress  string       `json:"origin_address"`
+	OriginCity     string       `json:"origin_city"`
+	OriginLatitude float64      `json:"origin_lat"`
+	OriginLongitude float64     `json:"origin_lng"`
+	Shipments      []MapShipment `json:"shipments"`
 }
 
 // ExpiredVehicle - Vehicle with expired year
@@ -63,23 +68,24 @@ type ExpiredDriver struct {
 	PhoneNumber   string `json:"phone_number"`
 }
 
-// FailedOrder - Order with failed status
+// FailedOrder - Order with failed shipments
 type FailedOrder struct {
-	ID           string  `json:"id"`
-	OrderNumber  string  `json:"order_number"`
-	CustomerName string  `json:"customer_name"`
-	FailedReason string  `json:"failed_reason"`
-	Status       string  `json:"status"`
-	FailedAt     *string `json:"failed_at"`
+	ID                   string  `json:"id"`
+	OrderNumber          string  `json:"order_number"`
+	CustomerName         string  `json:"customer_name"`
+	FailedShipmentsCount int     `json:"failed_shipments_count"`
+	FailedReason         string  `json:"failed_reason"`
+	Status               string  `json:"status"`
+	FailedAt             *string `json:"failed_at"`
 }
 
 // DashboardResponse - Complete dashboard response
 type DashboardResponse struct {
-	Stats              DashboardStats       `json:"stats"`
-	MapWaypointsByArea []MapWaypointsByArea `json:"map_waypoints_by_area"`
-	ExpiredVehicles    []ExpiredVehicle     `json:"expired_vehicles"`
-	ExpiredDrivers     []ExpiredDriver      `json:"expired_drivers"`
-	FailedOrders       []FailedOrder        `json:"failed_orders"`
+	Stats                DashboardStats        `json:"stats"`
+	MapShipmentsByArea   []MapShipmentsByArea  `json:"map_shipments_by_area"`
+	ExpiredVehicles      []ExpiredVehicle      `json:"expired_vehicles"`
+	ExpiredDrivers       []ExpiredDriver       `json:"expired_drivers"`
+	FailedOrders         []FailedOrder         `json:"failed_orders"`
 }
 
 type DashboardQueryOptions struct {
@@ -125,12 +131,12 @@ func (u *DashboardUsecase) Get(req *DashboardQueryOptions) (*DashboardResponse, 
 	}
 	response.Stats = *stats
 
-	// 2. Get Map Waypoints by Area (filtered by date)
-	mapWaypoints, err := u.getMapWaypointsByArea(req)
+	// 2. Get Map Shipments by Area (filtered by date)
+	mapShipments, err := u.getMapShipmentsByArea(req)
 	if err != nil {
 		return nil, err
 	}
-	response.MapWaypointsByArea = mapWaypoints
+	response.MapShipmentsByArea = mapShipments
 
 	// 3. Get Expired Vehicles (no filter)
 	expiredVehicles, err := u.getExpiredVehicles(req)
@@ -220,94 +226,111 @@ func (u *DashboardUsecase) getStats(req *DashboardQueryOptions) (*DashboardStats
 	return stats, nil
 }
 
-// getMapWaypointsByArea - Get waypoints grouped by address (filtered by date)
-func (u *DashboardUsecase) getMapWaypointsByArea(req *DashboardQueryOptions) ([]MapWaypointsByArea, error) {
+// getMapShipmentsByArea - Get shipments grouped by origin address (filtered by date)
+func (u *DashboardUsecase) getMapShipmentsByArea(req *DashboardQueryOptions) ([]MapShipmentsByArea, error) {
 	ctx := context.Background()
 	// Parse date range
 	startDate, endDate := parseDateRange(req.StartDate, req.EndDate)
 
-	// Query waypoints grouped by address
-	type WaypointResult struct {
-		Address      string  `bun:"address"`
-		City         string  `bun:"city"`
-		OrderID      string  `bun:"order_id"`
-		OrderNumber  string  `bun:"order_number"`
-		CustomerName string  `bun:"customer_name"`
-		Latitude     float64 `bun:"latitude"`
-		Longitude    float64 `bun:"longitude"`
-		Status       string  `bun:"status"`
-		WaypointType string  `bun:"waypoint_type"`
+	// Query shipments with origin and destination coordinates
+	type ShipmentResult struct {
+		ShipmentID       string  `bun:"shipment_id"`
+		ShipmentNumber   string  `bun:"shipment_number"`
+		OrderID          string  `bun:"order_id"`
+		OrderNumber      string  `bun:"order_number"`
+		CustomerName     string  `bun:"customer_name"`
+		OriginAddress    string  `bun:"origin_address"`
+		OriginCity       string  `bun:"origin_city"`
+		OriginLatitude   float64 `bun:"origin_latitude"`
+		OriginLongitude  float64 `bun:"origin_longitude"`
+		DestAddress      string  `bun:"dest_address"`
+		DestCity         string  `bun:"dest_city"`
+		DestLatitude     float64 `bun:"dest_latitude"`
+		DestLongitude    float64 `bun:"dest_longitude"`
+		Status           string  `bun:"status"`
 	}
 
-	var results []WaypointResult
+	var results []ShipmentResult
 	query := u.db.NewSelect().
-		ColumnExpr("a.address").
-		ColumnExpr("coalesce(r.name, '') as city").
-		ColumnExpr("o.id as order_id").
+		ColumnExpr("s.id as shipment_id").
+		ColumnExpr("s.shipment_number").
+		ColumnExpr("s.order_id").
 		ColumnExpr("o.order_number").
 		ColumnExpr("c.name as customer_name").
-		ColumnExpr("coalesce(r.latitude, 0) as latitude").
-		ColumnExpr("coalesce(r.longitude, 0) as longitude").
-		ColumnExpr("ow.dispatch_status as status").
-		ColumnExpr("ow.type as waypoint_type").
-		TableExpr("order_waypoints ow").
-		Join("INNER JOIN orders o ON o.id = ow.order_id").
+		ColumnExpr("s.origin_address").
+		ColumnExpr("coalesce(ro.name, '') as origin_city").
+		ColumnExpr("coalesce(ro.latitude, 0) as origin_latitude").
+		ColumnExpr("coalesce(ro.longitude, 0) as origin_longitude").
+		ColumnExpr("s.dest_address").
+		ColumnExpr("coalesce(rd.name, '') as dest_city").
+		ColumnExpr("coalesce(rd.latitude, 0) as dest_latitude").
+		ColumnExpr("coalesce(rd.longitude, 0) as dest_longitude").
+		ColumnExpr("s.status").
+		TableExpr("shipments s").
+		Join("INNER JOIN orders o ON o.id = s.order_id").
 		Join("INNER JOIN customers c ON c.id = o.customer_id").
-		Join("INNER JOIN addresses a ON a.id = ow.address_id").
-		Join("LEFT JOIN regions r ON r.id = a.region_id").
-		Where("o.company_id = ?", req.Session.CompanyID).
-		Where("o.is_deleted = false").
-		Where("ow.is_deleted = false").
-		Where("r.latitude != 0 AND r.longitude != 0") // Only waypoints with valid coordinates
+		Join("INNER JOIN addresses ao ON ao.id = s.origin_address_id").
+		Join("LEFT JOIN regions ro ON ro.id = ao.region_id").
+		Join("INNER JOIN addresses ad ON ad.id = s.destination_address_id").
+		Join("LEFT JOIN regions rd ON rd.id = ad.region_id").
+		Where("s.company_id = ?", req.Session.CompanyID).
+		Where("s.is_deleted = false").
+		Where("ro.latitude != 0 AND ro.longitude != 0"). // Only shipments with valid origin coordinates
+		Where("rd.latitude != 0 AND rd.longitude != 0")  // Only shipments with valid destination coordinates
 
 	// Add date filters only if provided (skip if zero value)
 	if !startDate.IsZero() {
-		query.Where("o.created_at >= ?", startDate)
+		query.Where("s.created_at >= ?", startDate)
 	}
 	if !endDate.IsZero() {
-		query.Where("o.created_at <= ?", endDate)
+		query.Where("s.created_at <= ?", endDate)
 	}
 
 	err := query.
-		OrderExpr("a.address ASC, r.name ASC").
+		OrderExpr("s.origin_address ASC, ro.name ASC").
 		Scan(ctx, &results)
 	if err != nil {
 		return nil, err
 	}
 
-	// Group by address
-	areaMap := make(map[string]*MapWaypointsByArea)
+	// Group by origin address
+	areaMap := make(map[string]*MapShipmentsByArea)
 	for _, r := range results {
-		key := r.Address
-		if r.City != "" {
-			key = r.Address + ", " + r.City
+		key := r.OriginAddress
+		if r.OriginCity != "" {
+			key = r.OriginAddress + ", " + r.OriginCity
 		}
 
 		if _, exists := areaMap[key]; !exists {
-			areaMap[key] = &MapWaypointsByArea{
-				Address:   r.Address,
-				City:      r.City,
-				Latitude:  r.Latitude,
-				Longitude: r.Longitude,
-				Waypoints: []MapWaypoint{},
+			areaMap[key] = &MapShipmentsByArea{
+				OriginAddress:  r.OriginAddress,
+				OriginCity:     r.OriginCity,
+				OriginLatitude: r.OriginLatitude,
+				OriginLongitude: r.OriginLongitude,
+				Shipments:      []MapShipment{},
 			}
 		}
 
-		areaMap[key].Waypoints = append(areaMap[key].Waypoints, MapWaypoint{
-			OrderID:      r.OrderID,
-			OrderNumber:  r.OrderNumber,
-			CustomerName: r.CustomerName,
-			Address:      r.Address,
-			City:         r.City,
-			Latitude:     r.Latitude,
-			Longitude:    r.Longitude,
-			Status:       r.Status,
-			WaypointType: r.WaypointType,
+		areaMap[key].Shipments = append(areaMap[key].Shipments, MapShipment{
+			ShipmentID:      r.ShipmentID,
+			ShipmentNumber:  r.ShipmentNumber,
+			OrderID:         r.OrderID,
+			OrderNumber:     r.OrderNumber,
+			CustomerName:    r.CustomerName,
+			OriginAddress:   r.OriginAddress,
+			OriginCity:      r.OriginCity,
+			OriginLatitude:  r.OriginLatitude,
+			OriginLongitude: r.OriginLongitude,
+			DestAddress:     r.DestAddress,
+			DestCity:        r.DestCity,
+			DestLatitude:    r.DestLatitude,
+			DestLongitude:   r.DestLongitude,
+			Status:          r.Status,
 		})
 	}
 
 	// Convert map to slice
-	result := make([]MapWaypointsByArea, 0, len(areaMap))
+	result := make([]MapShipmentsByArea, 0, len(areaMap))
 	for _, area := range areaMap {
 		result = append(result, *area)
 	}
@@ -406,38 +429,40 @@ func (u *DashboardUsecase) getExpiredDrivers(req *DashboardQueryOptions) ([]Expi
 	return expired, nil
 }
 
-// getFailedOrders - Get failed orders from trip_waypoints with failed_reason
+// getFailedOrders - Get orders with failed shipments, grouped by order with failed_shipments_count
 func (u *DashboardUsecase) getFailedOrders(req *DashboardQueryOptions) ([]FailedOrder, error) {
 	ctx := context.Background()
 
 	type FailedOrderResult struct {
-		ID                  string     `bun:"id"`
-		OrderNumber         string     `bun:"order_number"`
-		CustomerName        string     `bun:"customer_name"`
-		Status              string     `bun:"status"`
-		FailedReason        *string    `bun:"failed_reason"`
-		ActualCompletionTime *time.Time `bun:"actual_completion_time"`
-		CreatedAt           time.Time  `bun:"created_at"` // For ordering only
+		ID                   string     `bun:"id"`
+		OrderNumber          string     `bun:"order_number"`
+		CustomerName         string     `bun:"customer_name"`
+		Status               string     `bun:"status"`
+		FailedShipmentsCount int        `bun:"failed_shipments_count"`
+		FailedReason         *string    `bun:"failed_reason"`
+		FailedAt             *time.Time `bun:"failed_at"`
+		CreatedAt            time.Time  `bun:"created_at"` // For ordering only
 	}
 
 	var results []FailedOrderResult
 	err := u.db.NewSelect().
-		ColumnExpr("DISTINCT o.id").
+		ColumnExpr("o.id").
 		ColumnExpr("o.order_number").
 		ColumnExpr("c.name as customer_name").
 		ColumnExpr("o.status").
-		ColumnExpr("tw.failed_reason").
-		ColumnExpr("tw.actual_completion_time").
-		ColumnExpr("o.created_at").
-		TableExpr("trip_waypoints tw").
-		Join("INNER JOIN order_waypoints ow ON ow.id = tw.order_waypoint_id").
-		Join("INNER JOIN orders o ON o.id = ow.order_id").
+		ColumnExpr("COUNT(s.id) as failed_shipments_count").
+		ColumnExpr("MAX(s.failed_reason) as failed_reason").
+		ColumnExpr("MAX(s.failed_at) as failed_at").
+		ColumnExpr("MAX(o.created_at) as created_at").
+		TableExpr("shipments s").
+		Join("INNER JOIN orders o ON o.id = s.order_id").
 		Join("INNER JOIN customers c ON c.id = o.customer_id").
-		Where("o.company_id = ?", req.Session.CompanyID).
-		Where("o.is_deleted = false").
-		Where("tw.is_deleted = false").
-		Where("tw.failed_reason IS NOT NULL").
-		OrderExpr("tw.actual_completion_time DESC").
+		Where("s.company_id = ?", req.Session.CompanyID).
+		Where("s.is_deleted = false").
+		Where("s.status IN (?)", []string{"failed", "cancelled"}).
+		Where("s.failed_reason IS NOT NULL").
+		GroupExpr("o.id, o.order_number, c.name, o.status").
+		OrderExpr("failed_at DESC").
 		Scan(ctx, &results)
 	if err != nil {
 		return nil, err
@@ -451,18 +476,19 @@ func (u *DashboardUsecase) getFailedOrders(req *DashboardQueryOptions) ([]Failed
 		}
 
 		var failedAt *string
-		if r.ActualCompletionTime != nil {
-			formatted := r.ActualCompletionTime.Format("2006-01-02 15:04")
+		if r.FailedAt != nil {
+			formatted := r.FailedAt.Format("2006-01-02 15:04")
 			failedAt = &formatted
 		}
 
 		failed[i] = FailedOrder{
-			ID:           r.ID,
-			OrderNumber:  r.OrderNumber,
-			CustomerName: r.CustomerName,
-			FailedReason: reason,
-			Status:       r.Status,
-			FailedAt:     failedAt,
+			ID:                   r.ID,
+			OrderNumber:          r.OrderNumber,
+			CustomerName:         r.CustomerName,
+			FailedShipmentsCount: r.FailedShipmentsCount,
+			FailedReason:         reason,
+			Status:               r.Status,
+			FailedAt:             failedAt,
 		}
 	}
 

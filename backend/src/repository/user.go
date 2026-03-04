@@ -16,7 +16,7 @@ type UserRepository struct {
 func NewUserRepository() *UserRepository {
 	base := postgres.NewBaseRepository[entity.User](postgres.GetDB(),
 		"users",
-		[]string{"name", "email"},
+		[]string{"users.name"},
 		[]string{"Company"},
 		true,
 	)

@@ -11,7 +11,6 @@ import (
 )
 
 // getExceptionsRequest handles GET requests for exception data
-// Supports: failed orders list, failed waypoints list
 type getExceptionsRequest struct {
 	usecase.ExceptionQueryOptions
 
@@ -30,18 +29,6 @@ func (r *getExceptionsRequest) listFailedOrders() (*rest.ResponseBody, error) {
 	}
 
 	// ExceptionOrderResult sudah dalam format yang benar untuk JSON response
-	return rest.NewResponseBody(data, rest.BuildMeta(r.Page, r.Limit, total)), nil
-}
-
-// listFailedWaypoints handles GET /exceptions/waypoints
-// Note: Now returns failed shipments instead of waypoints
-func (r *getExceptionsRequest) listFailedWaypoints() (*rest.ResponseBody, error) {
-	opts := r.BuildQueryOption()
-	opts.Session = r.session
-	data, total, err := r.uc.Exception.GetFailedShipments(opts)
-	if err != nil {
-		return nil, err
-	}
 	return rest.NewResponseBody(data, rest.BuildMeta(r.Page, r.Limit, total)), nil
 }
 

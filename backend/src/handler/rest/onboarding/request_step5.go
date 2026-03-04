@@ -3,29 +3,29 @@ package onboarding
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/engine/transport/rest"
 	"github.com/logistics-id/engine/validate"
 	"github.com/logistics-id/onward-tms/entity"
-	"github.com/logistics-id/onward-tms/src/region"
 	"github.com/logistics-id/onward-tms/src/usecase"
 )
 
-// pricingRequest represents a single pricing entry in step 5
-type pricingRequest struct {
-	ID           string  `json:"id"`
-	CustomerID   string  `json:"customer_id"`
-	OriginCityID string  `json:"origin_city_id"`
-	DestCityID   string  `json:"dest_city_id"`
-	Price        float64 `json:"price"`
+// customerRequest represents a single customer entry in step 5
+type customerRequest struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Email   string `json:"email"`
+	Phone   string `json:"phone"`
+	Address string `json:"address"`
 
-	pricing *entity.PricingMatrix `json:"-"` // Fetched pricing entity for update operations
+	customer *entity.Customer `json:"-"` // Fetched customer entity for update operations
 }
 
 type step5Request struct {
-	Pricing []*pricingRequest `json:"pricing"`
+	Customers []*customerRequest `json:"customers"`
 
 	ctx     context.Context
 	uc      *usecase.Factory
@@ -58,74 +58,46 @@ func (r *step5Request) Validate() *validate.Response {
 		}
 	}
 
-	// Allow empty pricing array (skip step)
-	// But if pricing entries are provided, validate them
-	for i, pricingReq := range r.Pricing {
+	// Allow empty customers array (skip step)
+	// But if customers entries are provided, validate them
+	for i, customerReq := range r.Customers {
 		// Basic field validations
-
-		if pricingReq.CustomerID == "" {
-			v.SetError(fmt.Sprintf("pricing.%d.customer_id.required", i), "Customer ID is required.")
-		}
-
-		if pricingReq.OriginCityID == "" {
-			v.SetError(fmt.Sprintf("pricing.%d.origin_city_id.required", i), "Origin city ID is required.")
-		}
-
-		if pricingReq.DestCityID == "" {
-			v.SetError(fmt.Sprintf("pricing.%d.dest_city_id.required", i), "Destination city ID is required.")
-		}
-
-		if pricingReq.Price <= 0 {
-			v.SetError(fmt.Sprintf("pricing.%d.price.invalid", i), "Price must be greater than zero.")
+		if customerReq.Name == "" {
+			v.SetError(fmt.Sprintf("customers.%d.name.required", i), "Customer name is required.")
 		}
 
 		// Validate ID exists for update operations
-		if pricingReq.ID != "" {
-			if pricingReq.pricing, err = r.uc.PricingMatrix.GetByID(pricingReq.ID); err != nil {
-				v.SetError(fmt.Sprintf("pricing.%d.id.not_found", i), "Pricing not found.")
+		if customerReq.ID != "" {
+			if customerReq.customer, err = r.uc.Customer.GetByID(customerReq.ID); err != nil {
+				v.SetError(fmt.Sprintf("customers.%d.id.not_found", i), "Customer not found.")
 			}
 		}
 
-		// Validate CustomerID exists
-		if pricingReq.CustomerID != "" {
-			_, err = r.uc.Customer.GetByID(pricingReq.CustomerID)
-			if err != nil {
-				v.SetError(fmt.Sprintf("pricing.%d.customer_id.not_found", i), "Customer not found.")
+		// Validate email uniqueness
+		if customerReq.Email != "" {
+			if !r.uc.Customer.ValidateUnique("email", customerReq.Email, r.session.CompanyID, customerReq.ID) {
+				v.SetError(fmt.Sprintf("customers.%d.email.unique", i), "Email already exists.")
 			}
 		}
 
-		// Validate OriginCityID exists (using region-id library)
-		if pricingReq.OriginCityID != "" {
-			var originUUID uuid.UUID
-			originUUID, err = uuid.Parse(pricingReq.OriginCityID)
-			if err != nil {
-				v.SetError(fmt.Sprintf("pricing.%d.origin_city_id.invalid", i), "Invalid origin city ID format.")
-				continue
-			}
-			_, err = region.Repository.FindByID(r.ctx, originUUID)
-			if err != nil {
-				v.SetError(fmt.Sprintf("pricing.%d.origin_city_id.not_found", i), "Origin city not found.")
+		// Validate and format phone
+		if customerReq.Phone != "" {
+			if customerReq.Phone, err = validate.ValidPhone(customerReq.Phone); err != nil {
+				v.SetError(fmt.Sprintf("customers.%d.phone.invalid", i), "Phone number format is invalid.")
 			}
 		}
 
-		// Validate DestCityID exists (using region-id library)
-		if pricingReq.DestCityID != "" {
-			var destUUID uuid.UUID
-			destUUID, err = uuid.Parse(pricingReq.DestCityID)
-			if err != nil {
-				v.SetError(fmt.Sprintf("pricing.%d.dest_city_id.invalid", i), "Invalid destination city ID format.")
-				continue
-			}
-			_, err = region.Repository.FindByID(r.ctx, destUUID)
-			if err != nil {
-				v.SetError(fmt.Sprintf("pricing.%d.dest_city_id.not_found", i), "Destination city not found.")
+		// Validate phone uniqueness
+		if customerReq.Phone != "" {
+			if !r.uc.Customer.ValidateUnique("phone", customerReq.Phone, r.session.CompanyID, customerReq.ID) {
+				v.SetError(fmt.Sprintf("customers.%d.phone.unique", i), "Phone already exists.")
 			}
 		}
 
-		// Validate pricing uniqueness (customer + origin + destination combination)
-		if pricingReq.CustomerID != "" && pricingReq.OriginCityID != "" && pricingReq.DestCityID != "" {
-			if !r.uc.PricingMatrix.ValidateUnique(pricingReq.CustomerID, pricingReq.OriginCityID, pricingReq.DestCityID, r.company.ID.String(), pricingReq.ID) {
-				v.SetError(fmt.Sprintf("pricing.%d.unique", i), "Pricing for this route and customer already exists.")
+		// Validate name uniqueness
+		if customerReq.Name != "" {
+			if !r.uc.Customer.ValidateUnique("name", customerReq.Name, r.session.CompanyID, customerReq.ID) {
+				v.SetError(fmt.Sprintf("customers.%d.name.unique", i), "Customer name already exists.")
 			}
 		}
 	}
@@ -139,42 +111,41 @@ func (r *step5Request) Messages() map[string]string {
 }
 
 func (r *step5Request) execute() (*rest.ResponseBody, error) {
-	// If no pricing provided, return success with empty result
-	if len(r.Pricing) == 0 {
+	// If no customers provided, return success with empty result
+	if len(r.Customers) == 0 {
 		return rest.NewResponseBody(map[string]any{
-			"created": 0,
-			"updated": 0,
-			"pricing": []*entity.PricingMatrix{},
+			"created":   0,
+			"updated":   0,
+			"customers": []*entity.Customer{},
 		}), nil
 	}
 
 	// Transform requests to entities
-	pricingList := make([]*entity.PricingMatrix, 0, len(r.Pricing))
+	customers := make([]*entity.Customer, 0, len(r.Customers))
 
-	for _, pricingReq := range r.Pricing {
-		// Parse UUIDs
-		originUUID, _ := uuid.Parse(pricingReq.OriginCityID)
-		destUUID, _ := uuid.Parse(pricingReq.DestCityID)
-		customerUUID, _ := uuid.Parse(pricingReq.CustomerID)
+	for _, customerReq := range r.Customers {
+		companyID, _ := uuid.Parse(r.session.CompanyID)
 
-		pricing := &entity.PricingMatrix{
-			CompanyID:         r.company.ID,
-			CustomerID:        customerUUID,
-			OriginCityID:      originUUID,
-			DestinationCityID: destUUID,
-			Price:             pricingReq.Price,
+		customer := &entity.Customer{
+			CompanyID: companyID,
+			Name:      customerReq.Name,
+			Email:     customerReq.Email,
+			Phone:     customerReq.Phone,
+			Address:   customerReq.Address,
+			IsActive:  true,
 		}
 
-		// For update operations, use the existing ID
-		if pricingReq.pricing != nil {
-			pricing.ID = pricingReq.pricing.ID
+		// For update operations, use the existing ID and CreatedAt
+		if customerReq.customer != nil {
+			customer.ID = customerReq.customer.ID
+			customer.UpdatedAt = time.Now()
 		}
 
-		pricingList = append(pricingList, pricing)
+		customers = append(customers, customer)
 	}
 
-	// Call usecase to create/update pricing
-	result, err := r.uc.Onboarding.Step5CreatePricingBatch(r.ctx, pricingList)
+	// Call usecase to create/update customers (with sync delete)
+	result, err := r.uc.Onboarding.Step5CreateCustomersBatch(r.ctx, r.company.ID, customers)
 	if err != nil {
 		return nil, err
 	}

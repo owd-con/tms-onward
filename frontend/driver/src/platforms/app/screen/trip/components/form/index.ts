@@ -10,6 +10,11 @@
  */
 
 export {
+  LoadingWaypointForm,
+  type LoadingWaypointFormProps,
+  type LoadingWaypointFormRef,
+} from "./LoadingWaypointForm";
+export {
   CompleteWaypointForm,
   type CompleteWaypointFormProps,
   type CompleteWaypointFormRef,

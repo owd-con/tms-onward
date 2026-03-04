@@ -264,8 +264,22 @@ export interface Order {
   updated_at: string;
   is_deleted: boolean;
   customer?: Customer;
-  order_waypoints?: OrderWaypoint[];
+  order_waypoints?: OrderWaypoint[]; // DEPRECATED - use shipments instead
+  shipments?: Shipment[]; // v2.11 - Shipment concept
   trip?: Trip; // v2.10 - Associated trip (if order is dispatched)
+  failed_shipments?: FailedShipment[]; // For exception reschedule
+}
+
+// Failed shipment for exception handling
+export interface FailedShipment {
+  id: string;
+  shipment_number: string;
+  sorting_id: number;
+  origin_location_name?: string;
+  origin_address?: string;
+  dest_location_name?: string;
+  dest_address?: string;
+  failed_reason?: string;
 }
 
 export type OrderType = "FTL" | "LTL";
@@ -318,6 +332,103 @@ export interface WaypointItem {
   quantity: number;
   weight?: number; // kg
   volume?: number; // m3
+}
+
+// ============================================================================
+// Shipment Management (v2.11) - Shipment Concept
+// ============================================================================
+
+export interface Shipment {
+  id: string;
+  order_id: string;
+  company_id: string;
+  shipment_number: string;
+  sorting_id: number; // sequence within order
+  // Route
+  origin_address_id: string;
+  destination_address_id: string;
+  // Snapshot address (for historical accuracy)
+  origin_location_name: string;
+  origin_address: string;
+  origin_contact_name: string;
+  origin_contact_phone: string;
+  dest_location_name: string;
+  dest_address: string;
+  dest_contact_name: string;
+  dest_contact_phone: string;
+  // Items
+  items: ShipmentItem[];
+  total_weight: number;
+  volume: number;
+  // Pricing
+  price: number;
+  // Schedule
+  scheduled_pickup_date: string; // YYYY-MM-DD
+  scheduled_pickup_time?: string; // HH:mm
+  scheduled_delivery_date: string; // YYYY-MM-DD
+  scheduled_delivery_time?: string; // HH:mm
+  // Status tracking
+  status: ShipmentStatus;
+  // Execution data
+  actual_pickup_time?: string;
+  actual_delivery_time?: string;
+  received_by?: string;
+  delivery_notes?: string;
+  // Failed/Cancelled tracking
+  failed_reason?: string;
+  failed_at?: string;
+  retry_count: number;
+  // Return tracking
+  returned_note?: string;
+  returned_at?: string;
+  // Audit
+  created_by?: string;
+  updated_by?: string;
+  created_at: string;
+  updated_at: string;
+  is_deleted: boolean;
+  // Relations
+  origin_address_rel?: Address;
+  destination_address_rel?: Address;
+}
+
+export type ShipmentStatus =
+  | "pending"
+  | "dispatched"
+  | "on_pickup"
+  | "picked_up"
+  | "on_delivery"
+  | "delivered"
+  | "failed"
+  | "returned"
+  | "cancelled";
+
+export interface ShipmentItem {
+  name: string;
+  sku: string;
+  quantity: number;
+  weight: number;
+  price: number;
+}
+
+// ============================================================================
+// Preview Trip Waypoint
+// ============================================================================
+
+/**
+ * Preview of trip waypoint before trip creation
+ * Used for displaying what waypoints will be created from shipments
+ */
+export interface PreviewTripWaypoint {
+  type: "pickup" | "delivery";
+  address_id: string;
+  location_name: string;
+  address: string;
+  contact_name: string;
+  contact_phone: string;
+  sequence_number: number;
+  shipment_ids: string[];
+  shipment_count: number;
 }
 
 // ============================================================================
@@ -443,8 +554,9 @@ export type DispatchWaypointStatus =
 export interface TripWaypoint {
   id: string;
   trip_id: string;
-  order_waypoint_id: string;
+  shipment_ids: string[]; // Array of shipment IDs handled by this waypoint
   sequence_number: number;
+  type: "pickup" | "delivery"; // Waypoint type
   status: TripWaypointStatus;
   arrived_at?: string;
   completed_at?: string;
@@ -453,10 +565,17 @@ export interface TripWaypoint {
   notes?: string;
   received_by?: string; // Nama penerima (delivery completed)
   failed_reason?: string; // Alasan gagal (waypoint failed)
+  // Location info (direct fields, no longer nested order_waypoint)
+  address_id?: string;
+  location_name?: string;
+  address?: string;
+  contact_name?: string;
+  contact_phone?: string;
   created_at: string;
   updated_at: string;
   is_deleted: boolean;
-  order_waypoint?: OrderWaypoint;
+  // Shipment details populated by backend (if included in response)
+  shipments?: Shipment[];
 }
 
 export type TripWaypointStatus =
@@ -477,24 +596,29 @@ export interface DashboardStats {
   completed_orders: number;
 }
 
-export interface MapWaypoint {
+export interface MapShipment {
+  shipment_id: string;
+  shipment_number: string;
   order_id: string;
   order_number: string;
   customer_name: string;
-  address: string;
-  city: string;
-  lat: number;
-  lng: number;
+  origin_address: string;
+  origin_city: string;
+  origin_lat: number;
+  origin_lng: number;
+  dest_address: string;
+  dest_city: string;
+  dest_lat: number;
+  dest_lng: number;
   status: string;
-  waypoint_type: string;
 }
 
-export interface MapWaypointsByArea {
-  address: string;
-  city: string;
-  lat: number;
-  lng: number;
-  waypoints: MapWaypoint[];
+export interface MapShipmentsByArea {
+  origin_address: string;
+  origin_city: string;
+  origin_lat: number;
+  origin_lng: number;
+  shipments: MapShipment[];
 }
 
 export interface ExpiredVehicle {
@@ -518,6 +642,7 @@ export interface FailedOrder {
   id: string;
   order_number: string;
   customer_name: string;
+  failed_shipments_count: number;
   failed_reason: string;
   status: string;
   failed_at?: string;
@@ -525,7 +650,7 @@ export interface FailedOrder {
 
 export interface Dashboard {
   stats: DashboardStats;
-  map_waypoints_by_area: MapWaypointsByArea[];
+  map_shipments_by_area: MapShipmentsByArea[];
   expired_vehicles: ExpiredVehicle[];
   expired_drivers: ExpiredDriver[];
   failed_orders: FailedOrder[];
@@ -612,10 +737,4 @@ export interface DriverPerformanceReport {
   total_trips: number;
   completed_trips: number;
   on_time_rate: number;
-}
-
-export interface ReportParams {
-  start_date?: string;
-  end_date?: string;
-  status?: string;
 }

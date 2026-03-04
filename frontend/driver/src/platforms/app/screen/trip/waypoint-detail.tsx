@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { HiCheck, HiExclamationTriangle, HiMapPin } from "react-icons/hi2";
 import { Button, useEnigmaUI } from "@/components";
 import { ErrorState } from "@/platforms/app/components";
-import { CompleteWaypointForm, FailWaypointForm } from "./components/form";
+import { LoadingWaypointForm, CompleteWaypointForm, FailWaypointForm } from "./components/form";
 import { LocationInfo, OrderInfo, WaypointItems } from "./components/detail";
 import { useTrip } from "@/services/driver/hooks";
 import { statusBadge } from "@/shared/helper";
@@ -26,8 +26,6 @@ export const WaypointDetail = () => {
     showResult,
     startWaypoint,
     startWaypointResult,
-    arriveWaypoint,
-    arriveWaypointResult,
     completeWaypointResult,
     failWaypointResult,
   } = useTrip();
@@ -49,11 +47,11 @@ export const WaypointDetail = () => {
 
   // Extract waypoint from trip data
   const waypoint = trip?.trip_waypoints?.find((wp) => wp.id === waypointId);
-  const orderWaypoint = waypoint?.order_waypoint;
-  const waypointType = (orderWaypoint?.type || "pickup") as
+  const waypointType = (waypoint?.type || "pickup") as
     | "pickup"
     | "delivery";
   const isPickup = waypointType === "pickup";
+  const shipments = waypoint?.shipments || [];
 
   // Success handling for start waypoint
   useEffect(() => {
@@ -62,14 +60,6 @@ export const WaypointDetail = () => {
       navigate(`/a/trips/${id}`);
     }
   }, [startWaypointResult?.isSuccess, id]);
-
-  // Success handling for arrive waypoint
-  useEffect(() => {
-    if (arriveWaypointResult?.isSuccess) {
-      toast.success("Pickup completed");
-      navigate(`/a/trips/${id}`);
-    }
-  }, [arriveWaypointResult?.isSuccess, id]);
 
   // Success handling for complete waypoint
   useEffect(() => {
@@ -98,15 +88,25 @@ export const WaypointDetail = () => {
     }
   };
 
-  // Handle arrive waypoint (Pickup: In Transit -> Completed) - v2.10
-  const handleArriveWaypoint = async () => {
+  // Handle loading waypoint (Pickup: opens LoadingWaypointForm modal) - v2.10
+  const handleLoadingWaypoint = () => {
     if (!waypointId) return;
-    try {
-      await arriveWaypoint({ id: waypointId });
-    } catch (error) {
-      toast.error("Failed to complete pickup. Please try again.");
-      logger.error("Failed to complete pickup", error);
-    }
+
+    openModal({
+      id: "loading-waypoint",
+      content: (
+        <LoadingWaypointForm
+          waypointId={waypointId}
+          shipments={shipments}
+          open={true}
+          onSuccess={() => {
+            closeModal("loading-waypoint");
+            navigate(`/a/trips/${id}`);
+          }}
+          onCancel={() => closeModal("loading-waypoint")}
+        />
+      ),
+    });
   };
 
   // Handle complete delivery (opens CompleteWaypointForm modal) - v2.10
@@ -139,6 +139,7 @@ export const WaypointDetail = () => {
         <FailWaypointForm
           waypointId={waypointId}
           waypointType={waypointType}
+          shipments={shipments}
           open={true}
           onSuccess={() => {
             closeModal("fail-waypoint");
@@ -225,6 +226,11 @@ export const WaypointDetail = () => {
                   <h3 className='font-semibold text-green-900 text-sm'>
                     Waypoint Completed
                   </h3>
+                  {isPickup && waypoint.loaded_by && (
+                    <p className='text-xs text-green-700 truncate'>
+                      Loaded by: {waypoint.loaded_by}
+                    </p>
+                  )}
                   {!isPickup && waypoint.received_by && (
                     <p className='text-xs text-green-700 truncate'>
                       Received by: {waypoint.received_by}
@@ -267,16 +273,16 @@ export const WaypointDetail = () => {
 
           {/* Location Info */}
           <LocationInfo
-            orderWaypoint={orderWaypoint}
+            waypoint={waypoint}
             waypointType={waypointType}
             notes={waypoint.notes}
           />
 
           {/* Order Info */}
-          <OrderInfo order={trip?.order} orderWaypoint={orderWaypoint} />
+          <OrderInfo order={trip?.order} waypoint={waypoint} />
 
           {/* Items List */}
-          <WaypointItems orderWaypoint={orderWaypoint} isPickup={isPickup} />
+          <WaypointItems shipments={shipments} isPickup={isPickup} />
         </Page.Body>
 
         {/* v2.10: Action Buttons in Footer - based on waypoint type and status */}
@@ -299,18 +305,17 @@ export const WaypointDetail = () => {
 
             {waypoint.status === "in_transit" && (
               <div className='flex gap-3'>
-                {/* Pickup: Arrive button (no POD needed) */}
+                {/* Pickup: Loading button (opens LoadingWaypointForm) */}
                 {isPickup && (
                   <Button
                     variant='success'
                     size='sm'
                     className='flex-1'
-                    isLoading={arriveWaypointResult.isLoading}
-                    onClick={handleArriveWaypoint}
+                    onClick={handleLoadingWaypoint}
                   >
                     <div className='flex items-center justify-center gap-2'>
                       <HiCheck size={16} />
-                      <span>Arrive</span>
+                      <span>Loading</span>
                     </div>
                   </Button>
                 )}

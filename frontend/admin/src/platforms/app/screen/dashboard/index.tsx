@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 
 import type { Dashboard } from "@/services/types";
 import {
-  WaypointMap,
+  ShipmentMap,
   StatCard,
   ExpiredVehiclesAlert,
   ExpiredDriversAlert,
@@ -40,7 +40,7 @@ const DashboardScreen = () => {
   const stats = data?.stats;
   const expiredVehicles = data?.expired_vehicles ?? [];
   const expiredDrivers = data?.expired_drivers ?? [];
-  const mapWaypoints = data?.map_waypoints_by_area ?? [];
+  const mapShipments = data?.map_shipments_by_area ?? [];
   const failedOrders = data?.failed_orders ?? [];
 
   return (
@@ -111,13 +111,13 @@ const DashboardScreen = () => {
             </div>
 
             {/* Map Section */}
-            {mapWaypoints.length > 0 && (
+            {mapShipments.length > 0 && (
               <div className='px-4'>
                 <div className='bg-white rounded-xl p-4 shadow-sm'>
                   <h3 className='text-lg font-semibold mb-4'>
-                    Order Waypoints Map
+                    Shipments Map
                   </h3>
-                  <WaypointMap waypointsByArea={mapWaypoints} height='450px' />
+                  <ShipmentMap shipmentsByArea={mapShipments} height='450px' />
                 </div>
               </div>
             )}
@@ -130,23 +130,6 @@ const DashboardScreen = () => {
 
             {/* Failed Orders - Parent fetches data, passes via props */}
             <FailedOrdersAlert orders={failedOrders} />
-
-            {/* Empty State - No Alerts */}
-            {expiredVehicles.length === 0 &&
-              expiredDrivers.length === 0 &&
-              failedOrders.length === 0 && (
-                <div className='px-4'>
-                  <div className='bg-green-50 border border-green-200 rounded-xl p-6 text-center'>
-                    <div className='text-4xl mb-2'>✅</div>
-                    <h3 className='text-lg font-semibold text-green-800'>
-                      All Clear!
-                    </h3>
-                    <p className='text-sm text-green-600 mt-1'>
-                      No expired vehicles, expired drivers, or failed orders.
-                    </p>
-                  </div>
-                </div>
-              )}
           </div>
         )}
       </Page.Body>

@@ -29,3 +29,14 @@ func (r *CustomerRepository) WithContext(ctx context.Context) common.BaseReposit
 		BaseRepository: r.BaseRepository.WithContext(ctx).(*postgres.BaseRepository[entity.Customer]),
 	}
 }
+
+// FindByCompanyID retrieves all customers for a given company
+func (r *CustomerRepository) FindByCompanyID(companyID string) ([]*entity.Customer, error) {
+	var customers []*entity.Customer
+	err := r.DB.NewSelect().
+		Model(&customers).
+		Where("company_id = ?", companyID).
+		Where("is_deleted = false").
+		Scan(r.Context)
+	return customers, err
+}

@@ -6,6 +6,7 @@ import {
   useUpdateOrderMutation,
   useRemoveOrderMutation,
   useCancelOrderMutation,
+  useLazyGetWaypointPreviewQuery,
 } from "./api";
 
 export const useOrder = createCrudHook({
@@ -18,6 +19,10 @@ export const useOrder = createCrudHook({
     cancel: {
       hook: useCancelOrderMutation,
       errorMessage: "Failed to cancel order",
+    },
+    getWaypointPreview: {
+      hook: useLazyGetWaypointPreviewQuery,
+      errorMessage: "Failed to fetch waypoint preview",
     },
   },
   entityName: "order",

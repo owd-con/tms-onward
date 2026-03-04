@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 
+	"github.com/logistics-id/engine/ds/postgres"
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/usecase"
 
 	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/engine/transport/rest"
+	"github.com/uptrace/bun"
 )
 
 // getTripsRequest handles GET requests for driver trips
@@ -21,6 +23,7 @@ type getTripsRequest struct {
 	uc      *usecase.Factory
 	ctx     context.Context
 	session *entity.TMSSessionClaims
+	db      bun.IDB
 }
 
 // getActiveTrips handles GET /driver/trips
@@ -58,7 +61,7 @@ func (r *getTripsRequest) getTripHistory() (*rest.ResponseBody, error) {
 }
 
 // getTripDetail handles GET /driver/trips/{id}
-// Get trip detail with waypoints (includes trip_waypoints)
+// Get trip detail with waypoints and shipments
 // Validates that the trip belongs to the current driver
 func (r *getTripsRequest) getTripDetail(id string) (*rest.ResponseBody, error) {
 	// Get trip with waypoints
@@ -72,12 +75,74 @@ func (r *getTripsRequest) getTripDetail(id string) (*rest.ResponseBody, error) {
 		return nil, errors.New("this trip is not assigned to you")
 	}
 
+	// Fetch shipments for all waypoints
+	if err := r.fetchShipmentsForWaypoints(trip.TripWaypoints); err != nil {
+		return nil, err
+	}
+
 	return rest.NewResponseBody(trip), nil
+}
+
+// fetchShipmentsForWaypoints fetches shipments and populates TripWaypoint.Shipments
+func (r *getTripsRequest) fetchShipmentsForWaypoints(waypoints []*entity.TripWaypoint) error {
+	if len(waypoints) == 0 {
+		return nil
+	}
+
+	// Collect all unique shipment IDs from all waypoints
+	shipmentIDMap := make(map[string]bool)
+	for _, wp := range waypoints {
+		for _, sid := range wp.ShipmentIDs {
+			shipmentIDMap[sid] = true
+		}
+	}
+
+	// If no shipment IDs, nothing to fetch
+	if len(shipmentIDMap) == 0 {
+		return nil
+	}
+
+	// Convert map to slice
+	shipmentIDs := make([]string, 0, len(shipmentIDMap))
+	for sid := range shipmentIDMap {
+		shipmentIDs = append(shipmentIDs, sid)
+	}
+
+	// Fetch all shipments in one query
+	var shipments []entity.Shipment
+	err := r.db.NewSelect().
+		Model(&shipments).
+		Where("id IN (?)", bun.In(shipmentIDs)).
+		Where("is_deleted = false").
+		Scan(r.ctx)
+	if err != nil {
+		return err
+	}
+
+	// Create map for quick lookup
+	shipmentMap := make(map[string]*entity.Shipment)
+	for i := range shipments {
+		shipmentMap[shipments[i].ID.String()] = &shipments[i]
+	}
+
+	// Populate Shipments field in each waypoint
+	for _, wp := range waypoints {
+		wp.Shipments = make([]*entity.Shipment, 0, len(wp.ShipmentIDs))
+		for _, sid := range wp.ShipmentIDs {
+			if shipment, exists := shipmentMap[sid]; exists {
+				wp.Shipments = append(wp.Shipments, shipment)
+			}
+		}
+	}
+
+	return nil
 }
 
 func (r *getTripsRequest) with(ctx context.Context, uc *usecase.Factory) *getTripsRequest {
 	r.ctx = ctx
 	r.uc = uc.WithContext(ctx)
 	r.session = common.GetContextSessionGeneric[entity.TMSSessionClaims](ctx)
+	// Initialize db from postgres
+	r.db = postgres.GetDB()
 	return r
 }

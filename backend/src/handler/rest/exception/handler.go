@@ -17,7 +17,6 @@ func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 	h := &handler{uc: factory}
 
 	s.GET("/exceptions/orders", h.getFailedOrders, middleware.WithActiveCheck(s))
-	s.GET("/exceptions/waypoints", h.getFailedWaypoints, middleware.WithActiveCheck(s))
 	s.POST("/exceptions/shipments/batch-reschedule", h.batchRescheduleShipments, middleware.WithActiveCheck(s))
 	s.PUT("/exceptions/shipments/{id}/return", h.returnShipment, middleware.WithActiveCheck(s))
 }
@@ -42,29 +41,6 @@ func (h *handler) getFailedOrders(ctx *rest.Context) (err error) {
 
 	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
 		res, err = req.listFailedOrders()
-	}
-	return ctx.Respond(res, err)
-}
-
-// getFailedWaypoints handles GET /exceptions/waypoints
-// @Summary Get failed waypoints
-// @Description Get list of waypoints with failed deliveries
-// @Tags exception
-// @Accept json
-// @Produce json
-// @Param page query int false "Page number" default(1)
-// @Param limit query int false "Items per page" default(10)
-// @Param order_id query string false "Filter by order ID"
-// @Param authorization header string true "Bearer jwt-token..."
-// @Success 200 {object} rest.ResponseBody
-// @Failure 400 {object} rest.HTTPError
-// @Router /exceptions/waypoints [get]
-func (h *handler) getFailedWaypoints(ctx *rest.Context) (err error) {
-	var req getExceptionsRequest
-	var res *rest.ResponseBody
-
-	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
-		res, err = req.listFailedWaypoints()
 	}
 	return ctx.Respond(res, err)
 }

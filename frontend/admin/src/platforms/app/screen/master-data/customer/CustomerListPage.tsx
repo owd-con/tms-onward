@@ -37,10 +37,16 @@ const CustomerListPage = () => {
         try {
           if (newStatus) {
             await customer.activate({ id: row.id });
-            showToast({ message: "Customer activated successfully", type: "success" });
+            showToast({
+              message: "Customer activated successfully",
+              type: "success",
+            });
           } else {
             await customer.deactivate({ id: row.id });
-            showToast({ message: "Customer deactivated successfully", type: "success" });
+            showToast({
+              message: "Customer deactivated successfully",
+              type: "success",
+            });
           }
           Table.boot();
         } catch (error) {
@@ -89,20 +95,21 @@ const CustomerListPage = () => {
           </div>
         </div>
         <div className='bg-base-100 rounded-xl shadow-sm w-full overflow-x-auto'>
-          {Table.State?.data && Table.State.data.length === 0 && !Table.State.loading ? (
-            <div className="flex flex-col items-center justify-center h-48 lg:h-64 gap-3 lg:gap-4 px-4">
-              <div className="text-base-content/40 text-4xl lg:text-6xl">
+          {Table.State?.data &&
+          Table.State.data.length === 0 &&
+          !Table.State.loading ? (
+            <div className='flex flex-col items-center justify-center h-48 lg:h-64 gap-3 lg:gap-4 px-4'>
+              <div className='text-base-content/40 text-4xl lg:text-6xl'>
                 <HiUser />
               </div>
-              <div className="text-center">
-                <h3 className="text-base lg:text-lg font-semibold">No Customers Found</h3>
-                <p className="text-base-content/60 mt-1 text-sm lg:text-base">
-                  Get started by creating your first customer.
+              <div className='text-center'>
+                <h3 className='text-base lg:text-lg font-semibold'>
+                  No Customers Found
+                </h3>
+                <p className='text-base-content/60 mt-1 text-sm lg:text-base'>
+                  Get started by creating your first customer using the button above.
                 </p>
               </div>
-              <Button variant="primary" onClick={openCreate} size="sm" className="lg:btn-md">
-                Create Customer
-              </Button>
             </div>
           ) : (
             <>

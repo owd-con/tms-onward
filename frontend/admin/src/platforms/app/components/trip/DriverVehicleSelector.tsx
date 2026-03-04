@@ -13,7 +13,8 @@ interface DriverVehicleSelection {
 interface DriverVehicleSelectorProps {
   value?: DriverVehicleSelection;
   onChange?: (selection: DriverVehicleSelection) => void;
-  error?: string;
+  errorDriver?: string;
+  errorVehicle?: string;
   disabled?: boolean;
   excludeDriverIds?: string[];
   excludeVehicleIds?: string[];
@@ -33,7 +34,8 @@ interface DriverVehicleSelectorProps {
 export const DriverVehicleSelector = memo(({
   value,
   onChange,
-  error,
+  errorDriver,
+  errorVehicle,
   disabled = false,
   excludeDriverIds: _excludeDriverIds = [],
   excludeVehicleIds: _excludeVehicleIds = [],
@@ -63,7 +65,8 @@ export const DriverVehicleSelector = memo(({
       status: "active",
       limit: 100,
     });
-  }, [getDrivers, getVehicles]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Sync with external value
   useEffect(() => {
@@ -142,7 +145,7 @@ export const DriverVehicleSelector = memo(({
             : "";
         }}
         getValue={(item: Driver) => item?.id || ""}
-        error={error}
+        error={errorDriver}
         required
         disabled={disabled}
         renderItem={(item: Driver) => (
@@ -177,7 +180,7 @@ export const DriverVehicleSelector = memo(({
             : "";
         }}
         getValue={(item: Vehicle) => item?.id || ""}
-        error={error}
+        error={errorVehicle}
         required
         disabled={disabled}
         renderItem={(item: Vehicle) => (

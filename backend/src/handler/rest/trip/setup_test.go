@@ -240,15 +240,15 @@ func createTestOrder(t *testing.T, companyID, customerID uuid.UUID) *entity.Orde
 	ctx := context.Background()
 
 	order := &entity.Order{
-		CompanyID:         companyID,
-		CustomerID:        customerID,
-		OrderNumber:       fmt.Sprintf("ORD-%s", uuid.New().String()),
-		OrderType:         "FTL",
-		ReferenceCode:     "REF-TEST",
-		Status:            "pending",
-		TotalPrice:        100000,
+		CompanyID:           companyID,
+		CustomerID:          customerID,
+		OrderNumber:         fmt.Sprintf("ORD-%s", uuid.New().String()),
+		OrderType:           "FTL",
+		ReferenceCode:       "REF-TEST",
+		Status:              "pending",
+		TotalPrice:          100000,
 		SpecialInstructions: "Test order",
-		CreatedBy:         "Test User",
+		CreatedBy:           "Test User",
 	}
 	err := repository.NewOrderRepository().WithContext(ctx).Insert(order)
 	require.NoError(t, err)
@@ -286,7 +286,6 @@ func createTestOrder(t *testing.T, companyID, customerID uuid.UUID) *entity.Orde
 		ScheduledDeliveryTime: st.Format("15:04"),
 		Price:                 0, // FTL price at order level
 		Status:                "pending",
-		CreatedBy:             "Test User",
 	}
 	err = repository.NewShipmentRepository().WithContext(ctx).Insert(shipment)
 	require.NoError(t, err)

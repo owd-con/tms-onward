@@ -17,7 +17,7 @@ type updateRequest struct {
 	ID            string     `param:"id"`
 	Name          string     `json:"name" valid:"required|gte:2|lte:128"`
 	LicenseNumber string     `json:"license_number" valid:"required|gte:2|lte:32"`
-	LicenseType   string     `json:"license_type" valid:"required|in:SIM_A,SIM_B1,SIM_B2,SIM_C"`
+	LicenseType   string     `json:"license_type" valid:"required|in:sim_a,sim_b1,sim_b2,sim_c"`
 	LicenseExpiry *time.Time `json:"license_expiry" valid:"required"`
 	Phone         string     `json:"phone" valid:"required"`
 	AvatarURL     string     `json:"avatar_url" valid:"omitempty|url"`

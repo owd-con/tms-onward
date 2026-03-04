@@ -8,7 +8,6 @@ import type { TableConfig } from "@/services/table/const";
 
 import { Page } from "../../components/layout";
 import createTableConfig from "./components/table/table.config";
-import TableFilter from "./components/table/filter";
 import { RescheduleModal } from "./components/form/RescheduleModal";
 
 /**
@@ -50,17 +49,10 @@ const ExceptionListPage = () => {
       <Page.Header
         title='Exceptions'
         titleClassName='!text-2xl'
-        subtitle='Manage failed waypoints and reschedule operations'
+        subtitle='Manage failed shipments and reschedule operations'
       />
 
       <Page.Body className='flex-1 flex flex-col space-y-3 lg:space-y-4 min-h-0'>
-        <div className='w-full flex gap-2 lg:gap-4 bg-base-100 p-2 rounded-xl'>
-          <div className='w-full'>
-            <Table.Tools>
-              <TableFilter table={Table} />
-            </Table.Tools>
-          </div>
-        </div>
         <div className='bg-base-100 rounded-xl shadow-sm w-full overflow-x-auto'>
           {Table.State?.data &&
           Table.State.data.length === 0 &&
@@ -74,7 +66,7 @@ const ExceptionListPage = () => {
                   No Exceptions Found
                 </h3>
                 <p className='text-base-content/60 mt-1 text-sm lg:text-base'>
-                  No failed waypoints at the moment. Your operations are running
+                  No failed shipments at the moment. Your operations are running
                   smoothly.
                 </p>
               </div>

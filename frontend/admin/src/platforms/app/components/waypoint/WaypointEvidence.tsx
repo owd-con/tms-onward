@@ -44,7 +44,7 @@ export const WaypointEvidence = memo<WaypointEvidenceProps>(({
       url: imgUrl,
       type: image.type,
       createdAt: image.created_at,
-      waypoint: image.trip_waypoint?.order_waypoint?.location_name,
+      waypoint: image.trip_waypoint?.location_name,
       sequenceNumber: image.trip_waypoint?.sequence_number,
     }))
   );

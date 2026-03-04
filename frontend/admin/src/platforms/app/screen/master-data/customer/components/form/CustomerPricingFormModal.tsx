@@ -147,7 +147,6 @@ const CustomerPricingFormModal = forwardRef<
     onClose();
   };
 
-  const isFormValid = originRegionId && destinationRegionId && price !== "";
   const isLoading = createResult?.isLoading || updateResult?.isLoading;
 
   return (
@@ -184,6 +183,7 @@ const CustomerPricingFormModal = forwardRef<
                   setSelectedOriginRegion(region);
                 }}
                 placeholder="Search origin (e.g., 'Jakarta Selatan')"
+                filterType="regency"
                 required
               />
 
@@ -195,6 +195,7 @@ const CustomerPricingFormModal = forwardRef<
                   setSelectedDestinationRegion(region);
                 }}
                 placeholder="Search destination (e.g., 'Surabaya')"
+                filterType="regency"
                 required
               />
 
@@ -227,7 +228,6 @@ const CustomerPricingFormModal = forwardRef<
               type='submit'
               variant='primary'
               isLoading={isLoading}
-              disabled={!isFormValid}
             >
               {mode === "create" ? "Create Pricing" : "Update Pricing"}
             </Button>

@@ -5,6 +5,7 @@ import {
   useLazyGetTripHistoryQuery,
   useStartTripMutation,
   useStartWaypointMutation,
+  useLoadingWaypointMutation,
   useArriveWaypointMutation,
   useCompleteWaypointMutation,
   useFailWaypointMutation,
@@ -34,9 +35,14 @@ export const useTrip = createCrudHook({
       errorMessage: "Failed to start waypoint",
       requiresId: true,
     },
+    loadingWaypoint: {
+      hook: useLoadingWaypointMutation,
+      errorMessage: "Failed to complete loading",
+      requiresId: false,
+    },
     arriveWaypoint: {
       hook: useArriveWaypointMutation,
-      errorMessage: "Failed to complete pickup",
+      errorMessage: "Failed to arrive at delivery",
       requiresId: true,
     },
     completeWaypoint: {

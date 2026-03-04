@@ -1,30 +1,26 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Button, useEnigmaUI } from "@/components";
+import { memo, useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+
+import { Button, Input, RemoteSelect, useEnigmaUI } from "@/components";
 import { useTrip } from "@/services/trip/hooks";
 import { useOrder } from "@/services/order/hooks";
 import type { RootState } from "@/services/store";
-import { useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { Page } from "../../components/layout";
-import TripStep1SelectOrder from "./components/form/TripStep1SelectOrder";
-import { TripStep2AssignResources } from "./components/form/TripStep2AssignResources";
-import TripStep3WaypointSequence from "./components/form/TripStep3WaypointSequence";
-import { TripStep4Confirm } from "./components/form/TripStep4Confirm";
-import type { Order, Driver, Vehicle } from "@/services/types";
+import type { Driver, Vehicle, Order } from "@/services/types";
 
-type Step = 1 | 2 | 3 | 4;
+import { Page } from "../../components/layout";
+import { DriverVehicleSelector } from "@/platforms/app/components/trip/DriverVehicleSelector";
+import { ShipmentSequenceEditor } from "./components/form/ShipmentSequenceEditor";
 
 /**
- * TMS Onward - Trip Create Page
+ * TMS Onward - Trip Create Page (Single Page Form)
  *
- * Multi-step wizard untuk Direct Assignment:
- * Step 1: Select Order (Pending status only)
- * Step 2: Assign Resources (driver + vehicle)
- * Step 3: Waypoint Sequence (LTL only, drag-and-drop)
- * Step 4: Confirm & Create
+ * Direct Assignment: Single-page form with auto-preview
+ * - Order selection + Driver/Vehicle assignment side-by-side
+ * - Auto-shows waypoint preview after order selected
  */
-const TripCreatePage = () => {
+const TripCreatePage = memo(() => {
   const navigate = useNavigate();
   const FormState = useSelector((state: RootState) => state.form);
   const { showToast } = useEnigmaUI();
@@ -34,98 +30,53 @@ const TripCreatePage = () => {
   const successHandledRef = useRef(false);
 
   // Fetch pending orders for dropdown
-  const { get: getOrders, getResult: getOrdersResult } = useOrder();
-
-  useEffect(() => {
-    getOrders({
-      status: "pending",
-      limit: 100,
-    });
-  }, [getOrders]);
-
-  // Step state
-  const [currentStep, setCurrentStep] = useState<Step>(1);
+  const {
+    get: getOrders,
+    getResult: getOrdersResult,
+    show: showOrder,
+    showResult: showOrderResult,
+  } = useOrder();
 
   // Form state
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [driver, setDriver] = useState<Driver | null>(null);
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [notes, setNotes] = useState("");
-  const [waypointSequences, setWaypointSequences] = useState<
-    Array<{ order_waypoint_id: string; sequence_number: number }>
-  >([]);
-
-  // Order detail
+  const [waypoints, setWaypoints] = useState<any[]>([]);
   const [orderDetail, setOrderDetail] = useState<Order | null>(null);
-  const [orderDetailError, setOrderDetailError] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Fetch order detail when order is selected
-  const { show: showOrder, showResult: showOrderResult } = useOrder();
-
+  // Fetch order detail when order is selected (for orderType)
   useEffect(() => {
     if (selectedOrder?.id) {
-      setOrderDetailError(null);
       showOrder({ id: selectedOrder.id });
     }
-  }, [selectedOrder, showOrder]);
+  }, [selectedOrder?.id, showOrder]);
 
   useEffect(() => {
     if (showOrderResult?.data) {
-      // showOrderResult.data is ApiResponse<Order>, which has {data: Order, meta: {...}}
       const apiResponse = showOrderResult.data as { data?: Order; meta?: any };
       const data = apiResponse.data;
       if (data) {
         setOrderDetail(data);
-        setOrderDetailError(null);
-        // Initialize waypoint sequences from order
-        if (data.order_waypoints && data.order_waypoints.length > 0) {
-          setWaypointSequences(
-            data.order_waypoints.map((wp: any) => ({
-              order_waypoint_id: wp.id,
-              sequence_number: wp.sequence_number || 0,
-            })),
-          );
-        }
       }
     }
   }, [showOrderResult]);
 
-  useEffect(() => {
-    if (showOrderResult?.isError) {
-      setOrderDetailError("Failed to load order details. Please try again.");
-    }
-  }, [showOrderResult?.isError]);
-
   const handleSubmit = async () => {
-    // Validate
-    if (!selectedOrder?.id) {
-      alert("Please select an order");
-      return;
-    }
-    if (!driver?.id) {
-      alert("Please select a driver");
-      return;
-    }
-    if (!vehicle?.id) {
-      alert("Please select a vehicle");
-      return;
-    }
-
-    // Build payload
+    // Build payload with waypoints
     const payload: any = {
-      order_id: selectedOrder.id,
-      driver_id: driver.id,
-      vehicle_id: vehicle.id,
+      order_id: selectedOrder?.id,
+      driver_id: driver?.id,
+      vehicle_id: vehicle?.id,
       notes: notes || undefined,
+      waypoints: waypoints.map((wp) => ({
+        type: wp.type,
+        address_id: wp.address_id,
+        shipment_ids: wp.shipment_ids,
+        sequence_number: wp.sequence_number,
+      })),
     };
 
-    // For LTL, include waypoint sequences
-    if (orderDetail?.order_type === "LTL" && waypointSequences.length > 0) {
-      payload.waypoints = waypointSequences;
-    }
-
-    setSubmitError(null);
     await create(payload);
   };
 
@@ -143,50 +94,13 @@ const TripCreatePage = () => {
     }
   }, [createResult?.isSuccess]);
 
-  useEffect(() => {
-    if (createResult?.isError) {
-      setSubmitError(
-        "Failed to create trip. Please check your input and try again.",
-      );
-    }
-  }, [createResult?.isError]);
-
-  // Navigation handlers
-  const goToStep = (step: Step) => {
-    // Validation before proceeding
-    if (currentStep === 1 && step === 2) {
-      if (!selectedOrder?.id) {
-        alert("Please select an order first");
-        return;
-      }
-    }
-    if (currentStep === 2 && step === 3) {
-      if (!driver?.id || !vehicle?.id) {
-        alert("Please select driver and vehicle first");
-        return;
-      }
-      // Skip step 3 for FTL (no sequence editing needed)
-      if (orderDetail?.order_type === "FTL") {
-        setCurrentStep(4);
-        return;
-      }
-    }
-    setCurrentStep(step);
-  };
-
-  const isStepValid = () => {
-    switch (currentStep) {
-      case 1:
-        return !!selectedOrder?.id;
-      case 2:
-        return !!driver?.id && !!vehicle?.id;
-      case 3:
-        return waypointSequences.length > 0;
-      case 4:
-        return true;
-      default:
-        return false;
-    }
+  // Handle driver & vehicle selection
+  const handleDriverVehicleChange = (selection: {
+    driver?: Driver | null;
+    vehicle?: Vehicle | null;
+  }) => {
+    setDriver(selection.driver || null);
+    setVehicle(selection.vehicle || null);
   };
 
   return (
@@ -198,93 +112,24 @@ const TripCreatePage = () => {
       />
 
       <Page.Body className='flex-1 flex flex-col min-h-0 overflow-y-auto'>
-        {submitError && (
-          <div className='alert alert-error mx-6 mt-4'>
-            <span>{submitError}</span>
-          </div>
-        )}
-        {orderDetailError && (
-          <div className='alert alert-warning mx-6 mt-4'>
-            <span>{orderDetailError}</span>
-          </div>
-        )}
         <div className='w-full p-6 pb-20'>
-          <div className='max-w-4xl mx-auto'>
-            {/* Steps Indicator */}
-            <div className='mb-8'>
-              <div className='flex items-center justify-center gap-2'>
-                {[1, 2, 3, 4]
-                  .filter(
-                    (step) =>
-                      !(step === 3 && orderDetail?.order_type === "FTL"),
-                  )
-                  .map((step, index, filteredSteps) => {
-                    const isFTL = orderDetail?.order_type === "FTL";
-
-                    // For FTL, renumber step 4 → 3
-                    const displayStep = isFTL && step === 4 ? 3 : step;
-                    const actualStep = step;
-
-                    const isCompleted = currentStep > actualStep;
-                    const isCurrent = currentStep === actualStep;
-
-                    // Show connector after step (except last visible step)
-                    const showConnector = index < filteredSteps.length - 1;
-
-                    return (
-                      <div key={step} className='flex items-center'>
-                        <div className='flex flex-col items-center'>
-                          <div
-                            className={`
-                              w-10 h-10 rounded-full flex items-center justify-center font-semibold
-                              ${
-                                isCompleted
-                                  ? "bg-success text-white"
-                                  : isCurrent
-                                    ? "bg-primary text-white"
-                                    : "bg-base-300 text-base-content/60"
-                              }
-                            `}
-                          >
-                            {isCompleted ? "✓" : displayStep}
-                          </div>
-                          <span
-                            className={`
-                              text-xs mt-2 font-medium whitespace-nowrap
-                              ${isCurrent ? "text-primary" : "text-base-content/60"}
-                            `}
-                          >
-                            {displayStep === 1 && "Select Order"}
-                            {displayStep === 2 && "Assign Resources"}
-                            {displayStep === 3 &&
-                              (isFTL ? "Confirm" : "Waypoint Sequence")}
-                            {displayStep === 4 && "Confirm"}
-                          </span>
-                        </div>
-                        {showConnector && (
-                          <div className='w-32 h-1 bg-base-300 rounded' />
-                        )}
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-
-            {/* Step Content */}
-            <div className='bg-base-100 rounded-xl shadow-sm p-6'>
-              {/* Step 1: Select Order */}
-              {currentStep === 1 && (
-                <TripStep1SelectOrder
-                  selectedOrder={selectedOrder}
-                  onOrderChange={setSelectedOrder}
-                  onReset={() => {
+          <div className='max-w-7xl mx-auto'>
+            {/* Top Row: Order Selection + Driver/Vehicle Assignment */}
+            <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+              {/* Left: Order Selection */}
+              <div className='bg-base-100 rounded-xl shadow-sm p-6 flex flex-col'>
+                <h3 className='text-lg font-semibold mb-4'>Select Order</h3>
+                <RemoteSelect<Order>
+                  label='Order'
+                  placeholder='Select a pending order'
+                  value={selectedOrder}
+                  onChange={setSelectedOrder}
+                  onClear={() => {
+                    setSelectedOrder(null);
                     setOrderDetail(null);
-                    setDriver(null);
-                    setVehicle(null);
-                    setNotes("");
+                    setWaypoints([]);
                   }}
-                  getOrdersResult={getOrdersResult}
-                  onFetchOrders={(page, search) =>
+                  fetchData={(page, search) =>
                     getOrders({
                       status: "pending",
                       search,
@@ -292,93 +137,87 @@ const TripCreatePage = () => {
                       limit: 20,
                     })
                   }
+                  hook={getOrdersResult as any}
+                  getLabel={(item: Order) =>
+                    `${item.order_number}${item.reference_code ? ` (${item.reference_code})` : ""}`
+                  }
+                  getValue={(item: Order) => item.id}
+                  required
                 />
-              )}
 
-              {/* Step 2: Assign Resources */}
-              {currentStep === 2 && (
-                <TripStep2AssignResources
-                  driver={driver}
-                  vehicle={vehicle}
-                  notes={notes}
-                  onChange={({ driver, vehicle, notes }) => {
-                    setDriver(driver);
-                    setVehicle(vehicle);
-                    setNotes(notes);
-                  }}
-                  FormState={FormState}
-                />
-              )}
+                {/* Spacer untuk push buttons ke bawah */}
+                <div className='flex-1' />
 
-              {/* Step 3: Waypoint Sequence (LTL only) */}
-              {currentStep === 3 && orderDetail?.order_type === "LTL" && (
-                <TripStep3WaypointSequence
-                  orderType={orderDetail.order_type}
-                  orderWaypoints={orderDetail.order_waypoints || []}
-                  waypointSequences={waypointSequences}
-                  onSequencesChange={setWaypointSequences}
-                />
-              )}
-
-              {/* Step 4: Confirm */}
-              {currentStep === 4 && (
-                <TripStep4Confirm
-                  selectedOrder={selectedOrder}
-                  orderDetail={orderDetail}
-                  driver={driver}
-                  vehicle={vehicle}
-                  notes={notes}
-                  orderType={orderDetail?.order_type || "LTL"}
-                  waypointSequences={waypointSequences}
-                />
-              )}
-
-              {/* Navigation Buttons */}
-              <div className='flex justify-between mt-6 pt-6 border-t border-base-content/10'>
-                <Button
-                  type='button'
-                  variant='secondary'
-                  onClick={() => {
-                    if (currentStep === 1) {
-                      navigate("/a/trips");
-                    } else {
-                      goToStep((currentStep - 1) as Step);
-                    }
-                  }}
-                >
-                  {currentStep === 1 ? "Cancel" : "Back"}
-                </Button>
-
-                {currentStep < 4 && (
+                {/* Action Buttons */}
+                <div className='flex gap-3 mt-6 pt-6 border-t border-base-200'>
                   <Button
-                    type='button'
-                    variant='primary'
-                    onClick={() => goToStep((currentStep + 1) as Step)}
-                    disabled={!isStepValid()}
+                    variant='secondary'
+                    onClick={() => navigate("/a/trips")}
+                    disabled={createResult?.isLoading}
+                    className='flex-1'
                   >
-                    {orderDetail?.order_type === "FTL" && currentStep === 2
-                      ? "Review"
-                      : "Next"}
+                    Cancel
                   </Button>
-                )}
-
-                {currentStep === 4 && (
                   <Button
-                    type='button'
                     variant='primary'
                     onClick={handleSubmit}
                     isLoading={createResult?.isLoading}
+                    disabled={false}
+                    className='flex-1'
                   >
                     Create Trip
                   </Button>
-                )}
+                </div>
+              </div>
+
+              {/* Right: Driver & Vehicle Assignment */}
+              <div className='bg-base-100 rounded-xl shadow-sm p-6'>
+                <h3 className='text-lg font-semibold mb-4'>Assign Resources</h3>
+                <DriverVehicleSelector
+                  value={{
+                    driver: driver,
+                    vehicle: vehicle,
+                  }}
+                  onChange={handleDriverVehicleChange}
+                  errorDriver={FormState?.errors?.driver_id as string}
+                  errorVehicle={FormState?.errors?.vehicle_id as string}
+                />
+
+                {/* Notes */}
+                <div className='mt-4'>
+                  <Input
+                    id='trip-notes'
+                    label='Notes (optional)'
+                    placeholder='Add any notes for this trip...'
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    type='textarea'
+                  />
+                </div>
               </div>
             </div>
+
+            {/* Waypoint Sequence Preview (auto-shows after order selected) */}
+            {selectedOrder && (
+              <div className='bg-base-100 rounded-xl shadow-sm p-6'>
+                <h3 className='text-lg font-semibold mb-4'>
+                  Waypoint Sequence Preview
+                </h3>
+                <p className='text-sm text-base-content/60 mb-4'>
+                  Preview of waypoints that will be created for this trip
+                </p>
+                <ShipmentSequenceEditor
+                  orderId={selectedOrder.id}
+                  orderType={orderDetail?.order_type || "LTL"}
+                  onChange={setWaypoints}
+                />
+              </div>
+            )}
           </div>
         </div>
       </Page.Body>
     </Page>
   );
-};
+});
 
 export default TripCreatePage;

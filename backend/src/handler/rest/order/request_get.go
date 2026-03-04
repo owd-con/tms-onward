@@ -2,6 +2,7 @@ package order
 
 import (
 	"context"
+	"errors"
 
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/usecase"
@@ -12,7 +13,6 @@ import (
 
 type getRequest struct {
 	ID         string `param:"id"`
-	Number     string `param:"number"`
 	CustomerID string `query:"customer_id"`
 	Status     string `query:"status"`
 	OrderType  string `query:"order_type"`
@@ -42,12 +42,25 @@ func (r *getRequest) list() (*rest.ResponseBody, error) {
 	return rest.NewResponseBody(data, rest.BuildMeta(r.Page, r.Limit, total)), nil
 }
 
-func (r *getRequest) getByNumber() (*rest.ResponseBody, error) {
-	data, err := r.uc.Order.GetByNumber(r.Number)
+func (r *getRequest) waypointPreview() (*rest.ResponseBody, error) {
+	// Fetch order with shipments
+	order, err := r.uc.Order.GetByID(r.ID)
 	if err != nil {
 		return nil, err
 	}
-	return rest.NewResponseBody(data), nil
+
+	// Validate tenant isolation
+	if r.session != nil && order.CompanyID.String() != r.session.CompanyID {
+		return nil, errors.New("order not found")
+	}
+
+	// Generate waypoint preview using usecase
+	waypoints, err := r.uc.Trip.GenerateWaypointPreview(order.Shipments, order.OrderType)
+	if err != nil {
+		return nil, err
+	}
+
+	return rest.NewResponseBody(waypoints), nil
 }
 
 func (r *getRequest) with(ctx context.Context, uc *usecase.Factory) *getRequest {

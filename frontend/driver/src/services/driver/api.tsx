@@ -74,9 +74,23 @@ export const driverApi = createApi({
     }),
 
     /**
-     * PUT /driver/trips/waypoint/:id/arrive
-     * Arrive at pickup point and complete pickup (In Transit → Completed)
+     * PUT /driver/trips/waypoint/:id/loading
+     * Complete pickup loading (In Transit → Loaded)
      * For Pickup type only.
+     * v2.10
+     */
+    loadingWaypoint: builder.mutation({
+      query: ({ id, payload }) => ({
+        url: `/driver/trips/waypoint/${id}/loading`,
+        method: "PUT",
+        body: payload,
+      }),
+    }),
+
+    /**
+     * PUT /driver/trips/waypoint/:id/arrive
+     * Arrive at delivery point (In Transit → Arrived)
+     * For Delivery type only.
      * v2.10
      */
     arriveWaypoint: builder.mutation({
@@ -125,6 +139,7 @@ export const {
   useLazyShowTripDetailQuery,
   useStartTripMutation,
   useStartWaypointMutation,
+  useLoadingWaypointMutation,
   useArriveWaypointMutation,
   useCompleteWaypointMutation,
   useFailWaypointMutation,

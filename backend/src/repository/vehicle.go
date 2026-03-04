@@ -29,3 +29,14 @@ func (r *VehicleRepository) WithContext(ctx context.Context) common.BaseReposito
 		BaseRepository: r.BaseRepository.WithContext(ctx).(*postgres.BaseRepository[entity.Vehicle]),
 	}
 }
+
+// FindByCompanyID retrieves all vehicles for a given company
+func (r *VehicleRepository) FindByCompanyID(companyID string) ([]*entity.Vehicle, error) {
+	var vehicles []*entity.Vehicle
+	err := r.DB.NewSelect().
+		Model(&vehicles).
+		Where("company_id = ?", companyID).
+		Where("is_deleted = false").
+		Scan(r.Context)
+	return vehicles, err
+}

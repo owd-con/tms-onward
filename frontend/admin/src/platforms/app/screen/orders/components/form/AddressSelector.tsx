@@ -76,8 +76,8 @@ export const AddressSelector = ({
 
   const handleAddressChange = (addr: Address) => {
     setSelectedAddress(addr);
-    const regionId = addr?.region_id;
-    onChange(addr.id, addr, regionId);
+    const regency_id = addr?.region?.administrative_area?.regency_id;
+    onChange(addr.id, addr, regency_id);
   };
 
   const handleCreateNewAddress = () => {
@@ -91,8 +91,8 @@ export const AddressSelector = ({
     // Select the newly created address
     setTimeout(() => {
       setSelectedAddress(newAddress);
-      const regionId = newAddress?.region_id;
-      onChange(newAddress.id, newAddress, regionId);
+      const regency_id = newAddress?.region?.administrative_area?.regency_id;
+      onChange(newAddress.id, newAddress, regency_id);
     }, 300);
   };
 

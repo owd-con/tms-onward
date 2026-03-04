@@ -166,7 +166,6 @@ export type {
   RevenueReport,
   ExceptionReport,
   DriverPerformanceReport,
-  ReportParams,
 } from "@/services/types";
 
 // ============================================================================

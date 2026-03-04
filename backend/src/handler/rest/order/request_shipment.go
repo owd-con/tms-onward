@@ -11,9 +11,9 @@ import (
 
 // ShipmentItem represents item structure for shipment
 type ShipmentItem struct {
-	Name   string  `json:"name" valid:"required"`
+	Name     string  `json:"name" valid:"required"`
 	Quantity int     `json:"quantity" valid:"required|gte:1"`
-	Weight float64 `json:"weight" valid:"required|gte:0"`
+	Weight   float64 `json:"weight" valid:"required|gte:0"`
 }
 
 // ShipmentRequest represents shipment data for create order
@@ -27,21 +27,21 @@ type ShipmentRequest struct {
 	PickupScheduledTime string `json:"pickup_scheduled_time"`
 
 	// Destination (Delivery)
-	DestAddressID         string `json:"dest_address_id" valid:"required|uuid"`
+	DestinationAddressID  string `json:"destination_address_id" valid:"required|uuid"`
 	DeliveryScheduledDate string `json:"delivery_scheduled_date" valid:"required"`
 	DeliveryScheduledTime string `json:"delivery_scheduled_time"`
 
 	// Items (only for delivery shipments)
-	Items []ShipmentItem `json:"items"`
+	Items []*ShipmentItem `json:"items"`
 
 	// Pricing (LTL only - FTL uses 0)
 	Price float64 `json:"price"`
 
-	shipment            *entity.Shipment
-	originAddress       *entity.Address
-	destAddress         *entity.Address
-	pickupScheduleAt    time.Time
-	deliveryScheduleAt  time.Time
+	shipment           *entity.Shipment
+	originAddress      *entity.Address
+	destAddress        *entity.Address
+	pickupScheduleAt   time.Time
+	deliveryScheduleAt time.Time
 
 	uc *usecase.Factory
 }
@@ -62,9 +62,9 @@ func (r *ShipmentRequest) Validate(v *validate.Response, key int) {
 		v.SetError(fmt.Sprintf("shipments.%d.origin_address_id.required", key), "origin address_id is required.")
 	}
 
-	// Validate dest_address_id is required
-	if r.DestAddressID == "" {
-		v.SetError(fmt.Sprintf("shipments.%d.dest_address_id.required", key), "dest address_id is required.")
+	// Validate destination_address_id is required
+	if r.DestinationAddressID == "" {
+		v.SetError(fmt.Sprintf("shipments.%d.destination_address_id.required", key), "destination address_id is required.")
 	}
 
 	// Validate items are required (delivery shipments always have items)
@@ -80,9 +80,9 @@ func (r *ShipmentRequest) Validate(v *validate.Response, key int) {
 	}
 
 	// Fetch destination address and populate snapshot fields
-	if r.DestAddressID != "" {
-		if r.destAddress, err = r.uc.Address.GetByID(r.DestAddressID); err != nil {
-			v.SetError(fmt.Sprintf("shipments.%d.dest_address_id.invalid", key), "destination address not found.")
+	if r.DestinationAddressID != "" {
+		if r.destAddress, err = r.uc.Address.GetByID(r.DestinationAddressID); err != nil {
+			v.SetError(fmt.Sprintf("shipments.%d.destination_address_id.invalid", key), "destination address not found.")
 		}
 	}
 

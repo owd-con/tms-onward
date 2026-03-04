@@ -1,8 +1,8 @@
-import type { Order, OrderWaypoint } from "@/services/types";
+import type { Order, TripWaypoint } from "@/services/types";
 
 interface OrderInfoProps {
   order?: Order | null;
-  orderWaypoint?: OrderWaypoint | null;
+  waypoint?: TripWaypoint | null;
 }
 
 /**
@@ -10,9 +10,11 @@ interface OrderInfoProps {
  *
  * Displays:
  * - Order ID/number
- * - Total weight (if available)
+ * - Shipment count
  */
-export const OrderInfo = ({ order, orderWaypoint }: OrderInfoProps) => {
+export const OrderInfo = ({ order, waypoint }: OrderInfoProps) => {
+  const shipmentCount = waypoint?.shipments?.length || 0;
+
   return (
     <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200 mb-4">
       <h3 className="typo-card-title font-semibold text-content-primary mb-4">
@@ -25,13 +27,13 @@ export const OrderInfo = ({ order, orderWaypoint }: OrderInfoProps) => {
             {order?.order_number || "N/A"}
           </span>
         </div>
-        {(orderWaypoint?.weight ?? 0) > 0 && (
+        {shipmentCount > 0 && (
           <div className="flex items-center justify-between">
             <span className="typo-small text-content-secondary">
-              Total Weight:
+              Shipments:
             </span>
             <span className="typo-small font-medium text-content-primary">
-              {orderWaypoint?.weight} kg
+              {shipmentCount}
             </span>
           </div>
         )}

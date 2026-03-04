@@ -14,6 +14,7 @@ import { useSelector } from "react-redux";
 import {
   Button,
   Checkbox,
+  DatePicker,
   Input,
   Modal,
   RemoteSelect,
@@ -23,6 +24,7 @@ import { licenseTypeOptions } from "@/shared/options";
 import type { SelectOptionValue } from "@/shared/types";
 import { useDriver } from "@/services/driver/hooks";
 import type { Driver } from "@/services/types";
+import dayjs from "dayjs";
 
 // 1. Type definitions untuk ref
 export interface DriverFormModalRef {
@@ -48,16 +50,6 @@ interface DriverFormModalProps {
   data?: Driver;
 }
 
-// Generate year options - user bebas memilih tahun berapa saja
-const generateYearOptions = () => {
-  const currentYear = new Date().getFullYear();
-  const options = [{ label: "Select Expiry Year", value: "" }];
-  // 5 tahun ke belakang dan 5 tahun ke depan
-  for (let y = currentYear - 5; y <= currentYear + 5; y++) {
-    options.push({ label: y.toString(), value: y.toString() });
-  }
-  return options;
-};
 
 // 3. Component dengan forwardRef
 const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
@@ -77,8 +69,7 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
     const [licenseType, setLicenseType] = useState<SelectOptionValue | null>(
       null,
     );
-    const [licenseExpiryYear, setLicenseExpiryYear] =
-      useState<SelectOptionValue | null>(null);
+    const [licenseExpiryYear, setLicenseExpiryYear] = useState<dayjs.Dayjs | undefined>(undefined);
     const [phone, setPhone] = useState("");
 
     // Login account fields
@@ -87,16 +78,12 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
-    // Generate year options memoized
-    const yearOptions = useMemo(() => generateYearOptions(), []);
-
     // 6. Build payload method
     const buildPayload = () => {
       // Convert year to ISO date format (Dec 31 of that year for expiry)
       let licenseExpiryISO: string | undefined = undefined;
-      if (licenseExpiryYear?.value) {
-        const year = parseInt(String(licenseExpiryYear.value), 10);
-        licenseExpiryISO = new Date(year, 11, 31).toISOString();
+      if (licenseExpiryYear) {
+        licenseExpiryISO = licenseExpiryYear.endOf("year").toISOString();
       }
 
       const payload: {
@@ -131,7 +118,7 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
       setName("");
       setLicenseNumber("");
       setLicenseType(null);
-      setLicenseExpiryYear(null);
+      setLicenseExpiryYear(undefined);
       setPhone("");
       setHasLogin(false);
       setEmail("");
@@ -157,13 +144,9 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
 
         // Extract year from ISO date string
         if (data.license_expiry) {
-          const date = new Date(data.license_expiry);
-          const year = date.getFullYear().toString();
-          setLicenseExpiryYear(
-            yearOptions.find((opt) => opt.value === year) ?? null,
-          );
+          setLicenseExpiryYear(dayjs(data.license_expiry));
         } else {
-          setLicenseExpiryYear(null);
+          setLicenseExpiryYear(undefined);
         }
 
         setPhone(data.phone ?? "");
@@ -175,7 +158,7 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
         // validate the email/password fields that are not shown
         // hasLogin stays false - checkbox/form controls won't show for drivers with existing login
       }
-    }, [data, mode, yearOptions]);
+    }, [data, mode]);
 
     // 10. Reset form saat modal open untuk create
     useEffect(() => {
@@ -231,44 +214,9 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
       onClose();
     };
 
-    // 14. Validation
-    // Helper function for email validation
-    const isValidEmail = (email: string): boolean => {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return emailRegex.test(email);
-    };
-
-    const isFormValid = (() => {
-      // Base fields validation
-      const baseValid =
-        name.trim() !== "" &&
-        licenseNumber.trim() !== "" &&
-        licenseType !== null &&
-        licenseType?.value !== "" &&
-        licenseExpiryYear !== null &&
-        licenseExpiryYear?.value !== "" &&
-        phone.trim() !== "";
-
-      if (!baseValid) return false;
-
-      // Login fields validation (only when hasLogin is true)
-      if (hasLogin) {
-        return (
-          email.trim() !== "" &&
-          isValidEmail(email) &&
-          password.trim() !== "" &&
-          password.length >= 8 &&
-          password.length <= 64 &&
-          confirmPassword.trim() !== "" &&
-          password === confirmPassword
-        );
-      }
-
-      return true;
-    })();
     const isLoading = createResult?.isLoading || updateResult?.isLoading;
 
-    // 15. Render
+    // 14. Render
     return (
       <Modal.Wrapper
         open={open}
@@ -417,14 +365,13 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
                   required
                 />
 
-                <RemoteSelect<SelectOptionValue>
+                <DatePicker
                   label='License Expiry Year'
-                  data={yearOptions}
+                  placeholder='Select year'
+                  pickerMode='year'
+                  format='YYYY'
                   value={licenseExpiryYear}
-                  onChange={setLicenseExpiryYear}
-                  onClear={() => setLicenseExpiryYear(null)}
-                  getLabel={(item) => item?.label ?? ""}
-                  renderItem={(item) => item?.label}
+                  onChange={(date) => setLicenseExpiryYear(date as dayjs.Dayjs | undefined)}
                   error={FormState?.errors?.license_expiry as string}
                   required
                 />
@@ -446,7 +393,6 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
                 type='submit'
                 variant='primary'
                 isLoading={isLoading}
-                disabled={!isFormValid}
               >
                 {mode === "create" ? "Create Driver" : "Update Driver"}
               </Button>

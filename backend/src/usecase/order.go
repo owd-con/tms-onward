@@ -129,14 +129,10 @@ func (u *OrderUsecase) CreateWithShipments(order *entity.Order, shipments []*ent
 
 		// 3. Create waypoint log (order_created)
 		waypointLogRepo := u.WaypointLogRepo.WithTx(ctx, tx)
-		companyName := "Perusahaan"
-		if order.Company != nil {
-			companyName = order.Company.Name
-		}
 		log := &entity.WaypointLog{
 			OrderID:   order.ID,
 			EventType: "order_created",
-			Message:   fmt.Sprintf("%s membuat order pengiriman", companyName),
+			Message:   fmt.Sprintf("%s membuat order pengiriman", order.CreatedBy),
 			OldStatus: "",
 			NewStatus: "pending",
 			Notes:     fmt.Sprintf("Order %s dibuat dengan %d shipment(s)", order.OrderNumber, len(shipments)),
@@ -233,14 +229,6 @@ func (u *OrderUsecase) UpdateStatus(orderID, status string) error {
 	return u.Repo.Update(order)
 }
 
-// UpdateStatusBasedOnWaypoints updates order status based on its waypoints dispatch status
-// Uses raw SQL UPDATE with INNER JOIN for efficiency
-// - If ALL waypoints are "pending" → order status = "pending"
-// - Otherwise (has any non-pending waypoints) → order status = "in_transit"
-func (u *OrderUsecase) UpdateStatusBasedOnWaypoints(orderID string) error {
-	return u.Repo.UpdateStatusBasedOnWaypoints(orderID)
-}
-
 // GetByID retrieves an order by ID
 func (u *OrderUsecase) GetByID(id string) (*entity.Order, error) {
 	mx, err := u.Repo.FindByID(id)
@@ -254,13 +242,6 @@ func (u *OrderUsecase) GetByID(id string) (*entity.Order, error) {
 	}
 
 	return mx, nil
-}
-
-// GetByNumber retrieves an order by order number
-func (u *OrderUsecase) GetByNumber(number string) (*entity.Order, error) {
-	return u.Repo.FindOne(func(q *bun.SelectQuery) *bun.SelectQuery {
-		return q.Where("order_number = ?", number)
-	})
 }
 
 // Cancel cancels an order

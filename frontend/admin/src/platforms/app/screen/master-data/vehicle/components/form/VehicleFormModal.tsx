@@ -11,11 +11,19 @@ import {
 import type { RootState } from "@/services/store";
 import { useSelector } from "react-redux";
 
-import { Button, Input, Modal, RemoteSelect, useEnigmaUI } from "@/components";
+import {
+  Button,
+  DatePicker,
+  Input,
+  Modal,
+  RemoteSelect,
+  useEnigmaUI,
+} from "@/components";
 import { vehicleTypeOptions } from "@/shared/options";
 import type { SelectOptionValue } from "@/shared/types";
 import { useVehicle } from "@/services/vehicle/hooks";
 import type { Vehicle } from "@/services/types";
+import dayjs from "dayjs";
 
 // 1. Type definitions untuk ref
 export interface VehicleFormModalRef {
@@ -40,25 +48,12 @@ interface VehicleFormModalProps {
   data?: Vehicle;
 }
 
-// Generate year options - 20 years range
-const generateYearOptions = () => {
-  const currentYear = new Date().getFullYear();
-  const options = [{ label: "Select Year", value: "" }];
-  // 20 years ke belakang dan 5 tahun ke depan
-  for (let y = currentYear - 20; y <= currentYear + 5; y++) {
-    options.push({ label: y.toString(), value: y.toString() });
-  }
-  return options;
-};
 
 // 3. Component dengan forwardRef
 const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
   ({ open, onClose, onSuccess, mode = "create", data }, ref) => {
     const FormState = useSelector((state: RootState) => state.form);
     const { showToast } = useEnigmaUI();
-
-    // Generate year options memoized
-    const yearOptions = useMemo(() => generateYearOptions(), []);
 
     // 4. Gunakan hook untuk CRUD operations
     const { create, update, createResult, updateResult } = useVehicle();
@@ -73,7 +68,7 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
     );
     const [capacityWeight, setCapacityWeight] = useState("");
     const [capacityVolume, setCapacityVolume] = useState("");
-    const [year, setYear] = useState<SelectOptionValue | null>(null);
+    const [year, setYear] = useState<dayjs.Dayjs | undefined>(undefined);
     const [make, setMake] = useState("");
     const [model, setModel] = useState("");
 
@@ -83,7 +78,7 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
       type: vehicleType?.value ? String(vehicleType.value) : "",
       capacity_weight: capacityWeight ? parseFloat(capacityWeight) : undefined,
       capacity_volume: capacityVolume ? parseFloat(capacityVolume) : undefined,
-      year: year?.value ? parseInt(String(year.value)) : undefined,
+      year: year ? year.year() : undefined,
       make: make || undefined,
       model: model || undefined,
     });
@@ -94,7 +89,7 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
       setVehicleType(null);
       setCapacityWeight("");
       setCapacityVolume("");
-      setYear(null);
+      setYear(undefined);
       setMake("");
       setModel("");
     };
@@ -114,14 +109,11 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
         );
         setCapacityWeight(data.capacity_weight?.toString() ?? "");
         setCapacityVolume(data.capacity_volume?.toString() ?? "");
-        setYear(
-          yearOptions.find((opt) => opt.value === data.year?.toString()) ??
-            null,
-        );
+        setYear(data.year ? dayjs().year(data.year) : undefined);
         setMake(data.make ?? "");
         setModel(data.model ?? "");
       }
-    }, [data, mode, yearOptions]);
+    }, [data, mode]);
 
     // 10. Reset form saat modal open untuk create
     useEffect(() => {
@@ -176,20 +168,9 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
       onClose();
     };
 
-    // 14. Validation
-    const isFormValid =
-      plateNumber.trim() !== "" &&
-      vehicleType !== null &&
-      vehicleType?.value !== "" &&
-      make.trim() !== "" &&
-      model.trim() !== "" &&
-      year !== null &&
-      year?.value !== "" &&
-      capacityWeight.trim() !== "" &&
-      capacityVolume.trim() !== "";
     const isLoading = createResult?.isLoading || updateResult?.isLoading;
 
-    // 15. Render
+    // 14. Render
     return (
       <Modal.Wrapper
         open={open}
@@ -241,14 +222,13 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
                     required
                   />
 
-                  <RemoteSelect<SelectOptionValue>
+                  <DatePicker
                     label='Year'
-                    data={yearOptions}
+                    placeholder='Select year'
+                    pickerMode='year'
+                    format='YYYY'
                     value={year}
-                    onChange={setYear}
-                    onClear={() => setYear(null)}
-                    getLabel={(item) => item?.label ?? ""}
-                    renderItem={(item) => item?.label}
+                    onChange={(date) => setYear(date as dayjs.Dayjs | undefined)}
                     error={FormState?.errors?.year as string}
                     required
                   />
@@ -320,7 +300,6 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
                 type='submit'
                 variant='primary'
                 isLoading={isLoading}
-                disabled={!isFormValid}
               >
                 {mode === "create" ? "Create Vehicle" : "Update Vehicle"}
               </Button>

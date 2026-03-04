@@ -67,7 +67,7 @@ func TestAuthUsecase_Signup_Success(t *testing.T) {
 		Name:         "Test User",
 		Email:        uuid.New().String() + "@example.com", // Unique email
 		PasswordHash: "hashed_password",
-		Role:         "Admin",
+		Role:         "admin",
 		Phone:        "08123456789",
 		IsActive:     true,
 	}
@@ -101,7 +101,7 @@ func TestAuthUsecase_Signup_InvalidCompanyType(t *testing.T) {
 		Name:         "Test User",
 		Email:        uuid.New().String() + "@example.com", // Unique email
 		PasswordHash: "hashed_password",
-		Role:         "Admin",
+		Role:         "admin",
 	}
 
 	company := &entity.Company{
@@ -233,7 +233,7 @@ func TestAuthUsecase_MakeSession_Success(t *testing.T) {
 		ID:       uuid.New(),
 		Name:     "Test User",
 		Email:    "test@example.com",
-		Role:     "Admin",
+		Role:     "admin",
 		IsActive: true,
 	}
 
@@ -257,7 +257,7 @@ func TestAuthUsecase_MakeSession_TokenGenerationError(t *testing.T) {
 		ID:    uuid.New(),
 		Name:  "Test User",
 		Email: "test@example.com",
-		Role:  "Admin",
+		Role:  "admin",
 	}
 
 	companyID := uuid.New()

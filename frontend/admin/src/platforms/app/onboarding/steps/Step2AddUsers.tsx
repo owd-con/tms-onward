@@ -3,7 +3,6 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/services/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { useUser } from "@/services/user/hooks";
 import { useOnboarding } from "@/services/onboarding/hooks";
 import { HiPlus, HiTrash } from "react-icons/hi2";
@@ -24,12 +23,6 @@ interface UserFormData {
   confirmPassword: string;
   role: "dispatcher" | "driver";
 }
-
-const roleOptions = [
-  { label: "Select Role", value: "" },
-  { label: "Dispatcher", value: "dispatcher" },
-  { label: "Driver", value: "driver" },
-];
 
 const Step2AddUsers = ({ onNext, onBack, onSkip, onUpdate }: Step2AddUsersProps) => {
   const FormState = useSelector((state: RootState) => state.form);
@@ -69,7 +62,7 @@ const Step2AddUsers = ({ onNext, onBack, onSkip, onUpdate }: Step2AddUsersProps)
               phone: user.phone || "",
               password: "",
               confirmPassword: "",
-              role: user.role,
+              role: (user.role || "dispatcher") as "dispatcher" | "driver",
             }));
 
           if (mappedUsers.length > 0) {
@@ -115,7 +108,7 @@ const Step2AddUsers = ({ onNext, onBack, onSkip, onUpdate }: Step2AddUsersProps)
     }
   };
 
-  const handleUserChange = (index: number, field: keyof UserFormData, value: string) => {
+  const handleUserChange = (index: number, field: keyof UserFormData, value: string | any) => {
     const newUsers = [...users];
     newUsers[index] = { ...newUsers[index], [field]: value };
     setUsers(newUsers);
@@ -280,14 +273,12 @@ const Step2AddUsers = ({ onNext, onBack, onSkip, onUpdate }: Step2AddUsersProps)
                   error={(FormState?.errors as any)?.[`users.${index}.confirm_password`]}
                 />
 
-                <Select
-                  id={`user-${index}-role`}
-                  label="Role"
-                  options={roleOptions}
-                  value={user.role}
-                  onChange={(e) => handleUserChange(index, "role", e.target.value as "dispatcher" | "driver")}
-                  error={(FormState?.errors as any)?.[`users.${index}.role`]}
-                />
+                <div>
+                  <label className="text-sm font-medium">Role</label>
+                  <div className="w-full px-3 py-2 bg-base-200 border border-base-300 rounded-lg text-base-content capitalize">
+                    {user.role}
+                  </div>
+                </div>
               </div>
             </div>
           ))}

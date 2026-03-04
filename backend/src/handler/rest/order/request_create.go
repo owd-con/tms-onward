@@ -136,18 +136,16 @@ func (r *createRequest) toShipmentEntity(sp *ShipmentRequest, orderID uuid.UUID,
 		ScheduledDeliveryTime: sp.DeliveryScheduledTime,
 		// Status
 		Status: "pending",
-		// Audit
-		CreatedBy: r.session.DisplayName,
 	}
 
 	// Add items to shipment
 	for i, item := range sp.Items {
 		shipment.Items[i] = &entity.ShipmentItem{
-			Name:   item.Name,
-			SKU:    "",
-			Qty:    item.Quantity,
-			Weight: item.Weight,
-			Price:  0, // Calculated based on pricing logic
+			Name:     item.Name,
+			SKU:      "",
+			Quantity: item.Quantity,
+			Weight:   item.Weight,
+			Price:    0, // Calculated based on pricing logic
 		}
 	}
 
@@ -193,8 +191,6 @@ func (r *createRequest) execute() (*rest.ResponseBody, error) {
 	if err := r.uc.Order.CreateWithShipments(order, shipments); err != nil {
 		return nil, err
 	}
-
-	// Removed: PublishOrderCreated - Not required per current notification requirements
 
 	return rest.NewResponseBody(order), nil
 }

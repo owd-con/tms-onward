@@ -80,6 +80,17 @@ export const orderApi = createApi({
         body: payload,
       }),
     }),
+
+    /**
+     * GET /orders/:id/waypoint-preview
+     * Get waypoint preview for trip creation
+     */
+    getWaypointPreview: builder.query({
+      query: ({ id }) => ({
+        url: `/orders/${id}/waypoint-preview`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -91,4 +102,5 @@ export const {
   useUpdateOrderMutation,
   useRemoveOrderMutation,
   useCancelOrderMutation,
+  useLazyGetWaypointPreviewQuery,
 } = orderApi;

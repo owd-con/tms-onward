@@ -30,19 +30,19 @@ func (r *OrderRepository) WithContext(ctx context.Context) common.BaseRepository
 	}
 }
 
-// UpdateStatusBasedOnWaypoints updates order status based on its waypoints dispatch status
-// - If ALL waypoints are "pending" → order status = "pending"
-// - Otherwise (has any non-pending waypoints) → order status = "in_transit"
+// UpdateStatusBasedOnWaypoints updates order status based on its shipments status
+// - If ALL shipments are "pending" → order status = "pending"
+// - Otherwise (has any non-pending shipments) → order status = "in_transit"
 // Uses raw SQL UPDATE with CASE for efficiency
 func (r *OrderRepository) UpdateStatusBasedOnWaypoints(orderID string) error {
 	query := `
 		UPDATE orders
 		SET status = CASE
 			WHEN NOT EXISTS (
-				SELECT 1 FROM order_waypoints
-				WHERE order_waypoints.order_id = orders.id
-				AND order_waypoints.is_deleted = false
-				AND order_waypoints.dispatch_status != 'pending'
+				SELECT 1 FROM shipments
+				WHERE shipments.order_id = orders.id
+				AND shipments.is_deleted = false
+				AND shipments.status != 'pending'
 			) THEN 'pending'
 			ELSE 'in_transit'
 		END,

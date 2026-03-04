@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Button, Divider, Input, Select } from "@/components";
+import { Button, Divider, Input, RemoteSelect } from "@/components";
 import { useAuth } from "@/services/auth/hooks";
 import type { RootState } from "@/services/store";
 import { useEffect, useState } from "react";
@@ -19,16 +19,18 @@ const RegisterPage = () => {
 
   // Company fields
   const [companyName, setCompanyName] = useState("");
-  const [companyType, setCompanyType] = useState<"3PL" | "Carrier">("3PL");
+  const [companyType, setCompanyType] = useState<{ label: string; value: "3PL" | "Carrier" }>(
+    { label: "3PL (Third Party Logistics)", value: "3PL" }
+  );
 
   // Admin user fields
-  const [userName, setUserName] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
 
-  const companyTypeOptions = [
+  const companyTypeOptions: Array<{ label: string; value: "3PL" | "Carrier" }> = [
     { label: "3PL (Third Party Logistics)", value: "3PL" },
     { label: "Carrier", value: "Carrier" },
   ];
@@ -41,7 +43,7 @@ const RegisterPage = () => {
       return;
     }
 
-    await register(companyName, companyType, userName, email, password, phone);
+    await register(companyName, companyType.value, name, email, password, phone);
   };
 
   useEffect(() => {
@@ -54,7 +56,7 @@ const RegisterPage = () => {
   const isFormValid =
     companyName &&
     companyType &&
-    userName &&
+    name &&
     email &&
     password &&
     confirmPassword &&
@@ -95,11 +97,13 @@ const RegisterPage = () => {
               required
             />
 
-            <Select
+            <RemoteSelect
               label="Company Type"
-              options={companyTypeOptions}
               value={companyType}
-              onChange={(e) => setCompanyType(e.target.value as "3PL" | "Carrier")}
+              onChange={(value) => setCompanyType(value)}
+              data={companyTypeOptions}
+              getLabel={(item) => item.label}
+              getValue={(item) => item.value}
               error={FormState?.errors?.company_type as string}
               required
             />
@@ -114,12 +118,12 @@ const RegisterPage = () => {
             </h4>
 
             <Input
-              label="Full Name"
-              placeholder="Admin full name"
+              label="Name"
+              placeholder="Full Name"
               type="text"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              error={FormState?.errors?.user_name as string}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              error={FormState?.errors?.name as string}
               required
             />
 

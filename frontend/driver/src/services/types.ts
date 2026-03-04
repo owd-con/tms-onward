@@ -81,18 +81,53 @@ export interface Order {
 }
 
 /**
- * Trip Waypoint Entity (v2.10)
+ * Shipment Item Entity
+ */
+export interface ShipmentItem {
+  name: string;
+  sku: string;
+  quantity: number;
+  weight: number;
+  price: number;
+}
+
+/**
+ * Driver Shipment Entity (for driver app)
+ * Simplified shipment data for driver display
+ */
+export interface DriverShipment {
+  id: string;
+  shipment_number: string;
+  sorting_id: number;
+  origin_location_name: string;
+  origin_address: string;
+  dest_location_name: string;
+  dest_address: string;
+  items: ShipmentItem[];
+  total_weight: number;
+  status: string;
+}
+
+/**
+ * Trip Waypoint Entity (v2.10) - Updated with shipments
  */
 export interface TripWaypoint {
   id: string;
   trip_id: string;
-  order_waypoint_id: string;
+  shipment_ids: string[];
   sequence_number: number;
+  type: string; // "pickup" | "delivery"
+  address_id: string;
+  location_name: string;
+  address: string;
+  contact_name?: string;
+  contact_phone?: string;
   status: string;
   actual_arrival_time?: string;
   actual_completion_time?: string;
   notes?: string;
   received_by?: string; // v2.10 - Nama penerima (delivery completed)
+  loaded_by?: string; // v2.10 - Nama staff warehouse (pickup loading completed)
   failed_reason?: string; // v2.10 - Alasan gagal (waypoint failed)
   created_by: string;
   updated_by: string;
@@ -100,11 +135,13 @@ export interface TripWaypoint {
   updated_at: string;
 
   trip?: Trip;
-  order_waypoint?: OrderWaypoint;
+  address_rel?: any; // Address relation
+  shipments?: DriverShipment[]; // Shipments at this waypoint
 }
 
 /**
- * Order Waypoint Entity
+ * Order Waypoint Entity (Legacy - kept for backward compatibility)
+ * @deprecated Use shipments instead
  */
 export interface OrderWaypoint {
   id: string;
@@ -130,7 +167,8 @@ export interface OrderWaypoint {
 }
 
 /**
- * Order Waypoint Item
+ * Order Waypoint Item (Legacy)
+ * @deprecated Use ShipmentItem instead
  */
 export interface OrderWaypointItem {
   name: string;

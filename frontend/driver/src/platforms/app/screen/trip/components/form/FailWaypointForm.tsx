@@ -8,6 +8,7 @@ import { PhotoUpload } from "@/platforms/app/components/photo-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTrip } from "@/services/driver/hooks";
+import type { DriverShipment } from "@/services/types";
 
 /**
  * Ref type for FailWaypointForm
@@ -16,7 +17,8 @@ export interface FailWaypointFormRef {
   buildPayload: () => {
     failed_reason: string;
     images: string[];
-    notes?: string;
+    note?: string;
+    failed_shipment_ids?: string[];
   };
   reset: () => void;
 }
@@ -29,6 +31,8 @@ export interface FailWaypointFormProps {
   waypointId: string;
   /** Type of waypoint for context */
   waypointType: "pickup" | "delivery";
+  /** Shipments at this waypoint (for delivery partial failure selection) */
+  shipments?: DriverShipment[];
   /** Callback when form is cancelled */
   onCancel: () => void;
   /** Callback when failed waypoint is successfully submitted */
@@ -44,6 +48,7 @@ export interface FailWaypointFormProps {
  * - Failed reason text input (required)
  * - Photo upload as evidence (required, min 1, max 3)
  * - Notes input (optional)
+ * - For delivery: Shipment selection for partial failure
  * - S3 upload via useUpload hook
  * - Form validation before submit
  * - Loading states during upload and submission
@@ -54,6 +59,7 @@ export interface FailWaypointFormProps {
  * <FailWaypointForm
  *   waypointId="wp-123"
  *   waypointType="delivery"
+ *   shipments={shipments}
  *   open={showFailForm}
  *   onSuccess={() => navigate('/trips')}
  *   onCancel={() => setShowFailForm(false)}
@@ -61,7 +67,7 @@ export interface FailWaypointFormProps {
  * ```
  */
 const FailWaypointForm = forwardRef<FailWaypointFormRef, FailWaypointFormProps>(
-  ({ waypointId, waypointType, open, onCancel, onSuccess }, ref) => {
+  ({ waypointId, waypointType, shipments = [], open, onCancel, onSuccess }, ref) => {
     const FormState = useSelector((state: RootState) => state.form);
 
     // Hook for mutation
@@ -69,25 +75,51 @@ const FailWaypointForm = forwardRef<FailWaypointFormRef, FailWaypointFormProps>(
 
     // Local form state
     const [failedReason, setFailedReason] = useState("");
-    const [notes, setNotes] = useState("");
+    const [note, setNote] = useState("");
     const [photos, setPhotos] = useState<string[]>([]);
+    // For delivery: track which shipments failed
+    const [failedShipmentIds, setFailedShipmentIds] = useState<Set<string>>(new Set());
+
+    // Initialize: for delivery, default to all shipments selected
+    useEffect(() => {
+      if (open && waypointType === "delivery" && shipments.length > 0) {
+        setFailedShipmentIds(new Set(shipments.map(s => s.id)));
+      } else {
+        setFailedShipmentIds(new Set());
+      }
+    }, [open, waypointType, shipments]);
 
     /**
      * Build payload for submission
      */
-    const buildPayload = () => ({
-      failed_reason: failedReason.trim(),
-      images: photos,
-      notes: notes.trim() || undefined,
-    });
+    const buildPayload = () => {
+      const payload: any = {
+        failed_reason: failedReason.trim(),
+        images: photos,
+      };
+
+      // Add note if provided
+      if (note.trim()) {
+        payload.note = note.trim();
+      }
+
+      // For delivery: add failed_shipment_ids (only selected shipments)
+      // For pickup: all shipments automatically failed (no selection)
+      if (waypointType === "delivery" && failedShipmentIds.size > 0) {
+        payload.failed_shipment_ids = Array.from(failedShipmentIds);
+      }
+
+      return payload;
+    };
 
     /**
      * Reset form to initial state
      */
     const reset = () => {
       setFailedReason("");
-      setNotes("");
+      setNote("");
       setPhotos([]);
+      setFailedShipmentIds(new Set());
     };
 
     // Expose methods via ref
@@ -112,6 +144,24 @@ const FailWaypointForm = forwardRef<FailWaypointFormRef, FailWaypointFormProps>(
     }, [failWaypointResult?.isSuccess]);
 
     /**
+     * Toggle shipment selection (for delivery only)
+     */
+    const toggleShipment = (shipmentId: string) => {
+      setFailedShipmentIds(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(shipmentId)) {
+          // Don't allow deselecting all shipments - at least one must be failed
+          if (newSet.size > 1) {
+            newSet.delete(shipmentId);
+          }
+        } else {
+          newSet.add(shipmentId);
+        }
+        return newSet;
+      });
+    };
+
+    /**
      * Handle form submission
      */
     const handleSubmit = async (e: any) => {
@@ -128,6 +178,9 @@ const FailWaypointForm = forwardRef<FailWaypointFormRef, FailWaypointFormProps>(
     // Validation: check if form is valid for submission
     const isFormValid = failedReason.trim() !== "" && photos.length > 0;
     const isLoading = failWaypointResult?.isLoading;
+
+    const isDelivery = waypointType === "delivery";
+    const showShipmentSelection = isDelivery && shipments.length > 1;
 
     return (
       <Modal.Wrapper
@@ -146,8 +199,9 @@ const FailWaypointForm = forwardRef<FailWaypointFormRef, FailWaypointFormProps>(
               </h2>
             </div>
             <p className='text-xs text-base-content/70'>
-              Laporkan kendala pada {waypointType.toLowerCase()} ini dengan
-              alasan dan bukti foto
+              {waypointType === "pickup"
+                ? "Laporkan kendala pada pickup ini. Semua shipment akan dibatalkan."
+                : "Laporkan kendala pada delivery ini. Pilih shipment yang gagal."}
             </p>
           </div>
 
@@ -165,6 +219,70 @@ const FailWaypointForm = forwardRef<FailWaypointFormRef, FailWaypointFormProps>(
                 disabled={isLoading}
               />
             </div>
+
+            {/* Shipment Selection (for delivery with multiple shipments) */}
+            {showShipmentSelection && (
+              <div className='mb-4'>
+                <label className='typo-small font-medium text-content-primary mb-2 block'>
+                  Pilih Shipment yang Gagal <span className='text-error'>*</span>
+                </label>
+                <div className='space-y-2'>
+                  {shipments.map((shipment) => (
+                    <div
+                      key={shipment.id}
+                      onClick={() => toggleShipment(shipment.id)}
+                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                        failedShipmentIds.has(shipment.id)
+                          ? 'bg-error/10 border-error'
+                          : 'bg-white border-base-200'
+                      }`}
+                    >
+                      <div className='flex items-start gap-2'>
+                        <input
+                          type='checkbox'
+                          checked={failedShipmentIds.has(shipment.id)}
+                          onChange={() => toggleShipment(shipment.id)}
+                          disabled={isLoading}
+                          className='mt-1'
+                        />
+                        <div className='flex-1'>
+                          <div className='flex items-center justify-between mb-1'>
+                            <span className='typo-small font-semibold text-primary'>
+                              {shipment.shipment_number}
+                            </span>
+                            <span className='typo-tiny text-content-secondary'>
+                              #{shipment.sorting_id}
+                            </span>
+                          </div>
+                          <div className='typo-tiny text-content-secondary'>
+                            {shipment.origin_location_name} → {shipment.dest_location_name}
+                          </div>
+                          {failedShipmentIds.has(shipment.id) && (
+                            <div className='mt-2 flex items-center gap-2'>
+                              <span className='badge badge-error badge-xs'>Akan Gagal</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {failedShipmentIds.size === 0 && (
+                  <p className='text-error text-xs mt-1'>
+                    Minimal 1 shipment harus dipilih
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Single shipment info message */}
+            {isDelivery && shipments.length === 1 && (
+              <div className='mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg'>
+                <p className='typo-tiny text-amber-800'>
+                  <strong>Info:</strong> 1 shipment akan ditandai gagal: {shipments[0].shipment_number}
+                </p>
+              </div>
+            )}
 
             {/* Photo Upload (Required) */}
             <PhotoUpload
@@ -192,11 +310,11 @@ const FailWaypointForm = forwardRef<FailWaypointFormRef, FailWaypointFormProps>(
                 label='Catatan Tambahan'
                 type='textarea'
                 placeholder={`Jelaskan detail kendala pada ${waypointType.toLowerCase()} ini...`}
-                value={notes}
-                onChange={(e) => setNotes(e?.target?.value || "")}
+                value={note}
+                onChange={(e) => setNote(e?.target?.value || "")}
                 error={
-                  typeof FormState?.errors?.notes === "string"
-                    ? FormState.errors.notes
+                  typeof FormState?.errors?.note === "string"
+                    ? FormState.errors.note
                     : undefined
                 }
                 disabled={isLoading}
@@ -221,7 +339,7 @@ const FailWaypointForm = forwardRef<FailWaypointFormRef, FailWaypointFormProps>(
                 type='submit'
                 variant='error'
                 size='sm'
-                disabled={!isFormValid || isLoading}
+                disabled={!isFormValid || isLoading || (showShipmentSelection && failedShipmentIds.size === 0)}
                 isLoading={isLoading}
                 className='flex-1'
                 onClick={handleSubmit}

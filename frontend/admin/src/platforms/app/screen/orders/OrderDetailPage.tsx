@@ -9,16 +9,15 @@ import { useOrder } from "@/services/order/hooks";
 import type { Order } from "@/services/types";
 
 import { Page } from "../../components/layout";
-import WaypointTimeline from "@/platforms/app/components/order/WaypointTimeline";
-import { WaypointLogsTimeline } from "./components/detail/WaypointLogsTimeline";
+import ShipmentTimeline from "./components/detail/ShipmentTimeline";
+import { OrderLogsTimeline } from "./components/detail/OrderLogsTimeline";
 import { OrderTripList } from "./components/detail/OrderTripList";
 import { OrderInformation } from "./components/detail/OrderInformation";
-import ReturnWaypointModal from "./components/ReturnWaypointModal";
 
 /**
  * TMS Onward - Order Detail Page
  *
- * Displays order information, customer details, waypoint timeline,
+ * Displays order information, customer details, shipment timeline,
  * status history, and available actions.
  */
 const OrderDetailPage = () => {
@@ -36,12 +35,6 @@ const OrderDetailPage = () => {
   } = useOrder();
 
   const [order, setOrder] = useState<Order | null>(null);
-
-  // State for ReturnWaypointModal
-  const [returnWaypointModal, setReturnWaypointModal] = useState<{
-    open: boolean;
-    waypoint: any;
-  }>({ open: false, waypoint: null });
 
   // Load order detail
   useEffect(() => {
@@ -179,13 +172,8 @@ const OrderDetailPage = () => {
     }
   };
 
-  const handleReturnWaypoint = (waypoint: any) => {
-    setReturnWaypointModal({ open: true, waypoint });
-  };
-
-  const handleReturnWaypointSuccess = () => {
-    setReturnWaypointModal({ open: false, waypoint: null });
-    // Refetch order data to update the UI
+  // Refetch order data after return success
+  const handleReturnSuccess = () => {
     if (orderId) {
       showOrder({ id: orderId });
     }
@@ -262,19 +250,25 @@ const OrderDetailPage = () => {
             <OrderInformation order={order} />
           </div>
 
-          {/* Tracking History (v2.10) */}
+          {/* Order Tracking History */}
           {orderId && (
-            <WaypointLogsTimeline orderId={orderId} className='lg:col-span-1' />
+            <OrderLogsTimeline
+              orderId={orderId}
+              className='lg:col-span-1'
+            />
           )}
 
-          {/* Waypoint Timeline */}
-          <div className='lg:col-span-3 bg-white rounded-xl p-4 lg:p-6 shadow-sm'>
-            <h3 className='text-base lg:text-lg font-semibold mb-4'>
-              Waypoints
-            </h3>
-            <WaypointTimeline
-              waypoints={order.order_waypoints || []}
-              onReturn={handleReturnWaypoint}
+          {/* Shipment Timeline */}
+          <div className='lg:col-span-3'>
+            <div className='mb-4'>
+              <h3 className='text-base lg:text-lg font-semibold'>
+                Shipments ({order.shipments?.length || 0})
+              </h3>
+            </div>
+            <ShipmentTimeline
+              shipments={order.shipments || []}
+              orderType={order.order_type}
+              onReturnSuccess={handleReturnSuccess}
             />
           </div>
 
@@ -284,14 +278,6 @@ const OrderDetailPage = () => {
           )}
         </div>
       </Page.Body>
-
-      {/* ReturnWaypointModal */}
-      <ReturnWaypointModal
-        open={returnWaypointModal.open}
-        waypoint={returnWaypointModal.waypoint}
-        onClose={() => setReturnWaypointModal({ open: false, waypoint: null })}
-        onSuccess={handleReturnWaypointSuccess}
-      />
     </Page>
   );
 };

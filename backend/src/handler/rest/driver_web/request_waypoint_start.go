@@ -67,6 +67,19 @@ func (r *startWaypointRequest) Validate() *validate.Response {
 			if tripWaypoint.Status != "pending" {
 				v.SetError("id.invalid", "Can only start a waypoint that is pending.")
 			}
+
+			// Validate no other waypoint in same trip is in_transit
+			tripWaypoints, err := r.uc.Trip.GetTripWaypointsByTripID(tripWaypoint.TripID.String())
+			if err != nil {
+				v.SetError("trip.invalid", "Failed to validate trip waypoints.")
+			} else {
+				for _, tw := range tripWaypoints {
+					if tw.Status == "in_transit" && tw.ID.String() != tripWaypoint.ID.String() {
+						v.SetError("id.invalid", "Another waypoint is already in progress. Please complete it first.")
+						break
+					}
+				}
+			}
 		}
 	}
 

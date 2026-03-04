@@ -1,4 +1,4 @@
-import { Button, Input, RemoteSelect, Select } from "@/components";
+import { Button, Input, RemoteSelect } from "@/components";
 import { useCustomer } from "@/services/customer/hooks";
 import type { RootState } from "@/services/store";
 import { useEffect, useState, useImperativeHandle, forwardRef } from "react";
@@ -6,7 +6,7 @@ import { useSelector } from "react-redux";
 
 export interface OrderFormValues {
   selectedCustomer: any;
-  orderType: "FTL" | "LTL";
+  orderType: { label: string; value: "FTL" | "LTL" };
   referenceCode: string;
   specialInstructions: string;
   manualOverridePrice: string;
@@ -25,7 +25,6 @@ interface ReadOnlyFields {
 interface FormGeneralProps {
   onValuesChange?: (values: OrderFormValues) => void;
   onCancel: () => void;
-  isFormValid: boolean;
   isLoading: boolean;
   onClearWaypoints?: () => void;
   onSubmit?: () => void;
@@ -47,7 +46,6 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
     {
       onValuesChange,
       onCancel,
-      isFormValid,
       isLoading,
       onClearWaypoints,
       onSubmit,
@@ -70,9 +68,19 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
     const [selectedCustomer, setSelectedCustomer] = useState<any>(
       initialValues?.selectedCustomer || null,
     );
-    const [orderType, setOrderType] = useState<"FTL" | "LTL">(
-      initialValues?.orderType || "FTL",
-    );
+
+    const orderTypeOptions: Array<{ label: string; value: "FTL" | "LTL" }> = [
+      { label: "FTL (Full Truck Load)", value: "FTL" },
+      { label: "LTL (Less Than Truck Load)", value: "LTL" },
+    ];
+
+    const [orderType, setOrderType] = useState<{ label: string; value: "FTL" | "LTL" }>(() => {
+      if (initialValues?.orderType) {
+        // initialValues.orderType is already an object
+        return initialValues.orderType;
+      }
+      return orderTypeOptions.find(opt => opt.value === "FTL") || orderTypeOptions[0];
+    });
     const [referenceCode, setReferenceCode] = useState(
       initialValues?.referenceCode || "",
     );
@@ -164,7 +172,7 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
                   <span className='text-xs text-base-content/60 block'>
                     Order Type
                   </span>
-                  <span className='font-semibold text-sm'>{orderType}</span>
+                  <span className='font-semibold text-sm'>{orderType.value}</span>
                 </div>
               </div>
             )}
@@ -191,14 +199,13 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
 
             {/* Order Type - only show in create mode */}
             {!isEditMode && (
-              <Select
+              <RemoteSelect
                 label='Order Type'
-                options={[
-                  { label: "FTL (Full Truck Load)", value: "FTL" },
-                  { label: "LTL (Less Than Truck Load)", value: "LTL" },
-                ]}
                 value={orderType}
-                onChange={(e) => setOrderType(e.target.value as "FTL" | "LTL")}
+                onChange={(value) => setOrderType(value)}
+                data={orderTypeOptions}
+                getLabel={(item) => item.label}
+                getValue={(item) => item.value}
                 required
               />
             )}
@@ -223,7 +230,7 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
             />
 
             {/* Manual Price (FTL only) */}
-            {orderType === "FTL" && (
+            {orderType.value === "FTL" && (
               <Input
                 label='Price'
                 placeholder='Enter price'
@@ -251,7 +258,6 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
                 variant='primary'
                 onClick={onSubmit}
                 isLoading={isLoading}
-                disabled={!isFormValid}
                 className='flex-1'
               >
                 {submitLabel}

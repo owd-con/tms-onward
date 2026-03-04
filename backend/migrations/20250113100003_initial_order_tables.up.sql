@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS shipments (
     order_id UUID NOT NULL REFERENCES orders(id),
     company_id UUID NOT NULL REFERENCES companies(id),
     shipment_number VARCHAR(50) UNIQUE NOT NULL,
+    sorting_id SERIAL NOT NULL, -- sequence within order (1, 2, 3, ...)
 
     -- Route
     origin_address_id UUID NOT NULL REFERENCES addresses(id),
@@ -105,25 +106,3 @@ CREATE INDEX idx_shipments_status ON shipments(status) WHERE is_deleted = false;
 CREATE INDEX idx_shipments_origin_address_id ON shipments(origin_address_id) WHERE is_deleted = false;
 CREATE INDEX idx_shipments_destination_address_id ON shipments(destination_address_id) WHERE is_deleted = false;
 CREATE INDEX idx_shipments_created_at ON shipments(created_at) WHERE is_deleted = false;
-
--- Waypoint Logs table
--- Tracks status changes for orders and shipments
-CREATE TABLE IF NOT EXISTS waypoint_logs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id UUID REFERENCES orders(id),
-    shipment_ids UUID[], -- Array of affected shipment IDs
-    trip_waypoint_id UUID REFERENCES trip_waypoints(id), -- Link to trip waypoint if applicable
-    event_type VARCHAR(100) NOT NULL DEFAULT '', -- order_created, waypoint_started, waypoint_arrived, etc.
-    message TEXT NOT NULL DEFAULT '',
-    metadata JSONB, -- Flexible metadata (driver, vehicle, location, etc.)
-    old_status VARCHAR(50),
-    new_status VARCHAR(50) NOT NULL,
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT NOW(),
-    created_by VARCHAR(255)
-);
-
-CREATE INDEX idx_waypoint_logs_order_id ON waypoint_logs(order_id);
-CREATE INDEX idx_waypoint_logs_trip_waypoint_id ON waypoint_logs(trip_waypoint_id);
-CREATE INDEX idx_waypoint_logs_created_at ON waypoint_logs(created_at);
-CREATE INDEX idx_waypoint_logs_event_type ON waypoint_logs(event_type);

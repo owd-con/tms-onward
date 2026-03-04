@@ -57,12 +57,9 @@ const OrderListPage = () => {
               <div className="text-center">
                 <h3 className="text-base lg:text-lg font-semibold">No Orders Found</h3>
                 <p className="text-base-content/60 mt-1 text-sm lg:text-base">
-                  Get started by creating your first order.
+                  Get started by creating your first order using the button above.
                 </p>
               </div>
-              <Button variant="primary" onClick={() => navigate("/a/orders/create")} size="sm" className="lg:btn-md">
-                Create Order
-              </Button>
             </div>
           ) : (
             <>

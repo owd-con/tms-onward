@@ -16,11 +16,11 @@ type createRequest struct {
 	DriverID  string            `json:"driver_id" valid:"required|uuid"`
 	VehicleID string            `json:"vehicle_id" valid:"required|uuid"`
 	Notes     string            `json:"notes"`
+	Waypoints []*WaypointRequest `json:"waypoints" valid:"required"`
+
 	order   *entity.Order
 	driver  *entity.Driver
 	vehicle *entity.Vehicle
-	// Fetched entities for validation and usecase call
-	tripWaypoints []*entity.TripWaypoint
 
 	ctx     context.Context
 	uc      *usecase.Factory
@@ -29,39 +29,36 @@ type createRequest struct {
 
 func (r *createRequest) Validate() *validate.Response {
 	v := validate.NewResponse()
+	var err error
 
 	// 1. Validate order exists and belongs to session company
 	if r.OrderID != "" {
-		order, err := r.uc.Order.GetByID(r.OrderID)
+		r.order, err = r.uc.Order.GetByID(r.OrderID)
 		if err != nil {
 			v.SetError("order_id.invalid", "Order not found or invalid.")
-		} else {
+		}
+		if r.order != nil {
 			// Validate order belongs to session company
-			if r.session != nil && order.CompanyID.String() != r.session.CompanyID {
+			if r.session != nil && r.order.CompanyID.String() != r.session.CompanyID {
 				v.SetError("order_id.invalid", "Order must belong to your company.")
-			} else {
-				r.order = order
+				r.order = nil
 			}
 		}
 	}
 
 	// 2. Validate driver exists
 	if r.DriverID != "" {
-		driver, err := r.uc.Driver.GetByID(r.DriverID)
+		r.driver, err = r.uc.Driver.GetByID(r.DriverID)
 		if err != nil {
 			v.SetError("driver_id.invalid", "Driver not found or invalid.")
-		} else {
-			r.driver = driver
 		}
 	}
 
 	// 3. Validate vehicle exists
 	if r.VehicleID != "" {
-		vehicle, err := r.uc.Vehicle.GetByID(r.VehicleID)
+		r.vehicle, err = r.uc.Vehicle.GetByID(r.VehicleID)
 		if err != nil {
 			v.SetError("vehicle_id.invalid", "Vehicle not found or invalid.")
-		} else {
-			r.vehicle = vehicle
 		}
 	}
 
@@ -72,22 +69,19 @@ func (r *createRequest) Validate() *validate.Response {
 		}
 	}
 
-	// 5. Validate driver and vehicle belong to session company
-	if r.driver != nil && r.session != nil {
-		if r.driver.CompanyID.String() != r.session.CompanyID {
-			v.SetError("driver_id.invalid", "Driver must belong to your company.")
-		}
-	}
+	// Track seen sequence numbers for uniqueness check
+	seenSequenceNumbers := make(map[int]bool)
 
-	// 6. Fetch shipments for the order (Shipment Concept)
-	if r.order != nil {
-		shipments, err := r.uc.Shipment.GetByOrderID(r.OrderID)
-		if err != nil {
-			v.SetError("shipments.invalid", "Failed to fetch shipments for order.")
-		} else if len(shipments) == 0 {
-			v.SetError("shipments.invalid", "Order has no shipments.")
+	for i, wp := range r.Waypoints {
+		wp.uc = r.uc
+		wp.session = r.session
+		wp.Validate(v, i)
+
+		// Cross-field validation: sequence_number is unique
+		if seenSequenceNumbers[wp.SequenceNumber] {
+			v.SetError("waypoints.sequence_number.duplicate", "Duplicate sequence number.")
 		}
-		// tripWaypoints will be created in execute() after trip is created
+		seenSequenceNumbers[wp.SequenceNumber] = true
 	}
 
 	return v
@@ -110,12 +104,33 @@ func (r *createRequest) toEntity() *entity.Trip {
 	}
 }
 
+// toTripWaypoints converts WaypointRequests to TripWaypoint entities
+func (r *createRequest) toTripWaypoints() []*entity.TripWaypoint {
+	tripWaypoints := make([]*entity.TripWaypoint, len(r.Waypoints))
+
+	for i, wp := range r.Waypoints {
+		tripWaypoints[i] = &entity.TripWaypoint{
+			ShipmentIDs:    wp.ShipmentIDs,
+			Type:           wp.Type,
+			AddressID:      wp.address.ID,
+			LocationName:   wp.address.Name,
+			Address:        wp.address.Address,
+			ContactName:    wp.address.ContactName,
+			ContactPhone:   wp.address.ContactPhone,
+			SequenceNumber: wp.SequenceNumber,
+			Status:         "pending",
+		}
+	}
+
+	return tripWaypoints
+}
+
 func (r *createRequest) execute() (*rest.ResponseBody, error) {
 	trip := r.toEntity()
+	tripWaypoints := r.toTripWaypoints()
 
-	// Create trip with shipments (shipment-based approach)
-	// CreateWithShipments will fetch shipments and create trip waypoints internally
-	err := r.uc.Trip.CreateWithShipments(trip, r.OrderID, r.order.OrderType)
+	// Create trip with waypoints
+	err := r.uc.Trip.CreateWithWaypoints(trip, r.OrderID, tripWaypoints)
 	if err != nil {
 		return nil, err
 	}

@@ -14,12 +14,12 @@ import (
 )
 
 type updateRequest struct {
-	ID                  string              `json:"id" param:"id"`
-	CustomerID          string              `json:"customer_id" valid:"required|uuid"`
-	ReferenceCode       string              `json:"reference_code"`
-	SpecialInstructions string              `json:"special_instructions"`
-	ManualOverridePrice float64             `json:"manual_override_price"`
-	Shipments           []*ShipmentRequest  `json:"shipments" valid:"required"`
+	ID                  string             `json:"id" param:"id"`
+	CustomerID          string             `json:"customer_id" valid:"required|uuid"`
+	ReferenceCode       string             `json:"reference_code"`
+	SpecialInstructions string             `json:"special_instructions"`
+	ManualOverridePrice float64            `json:"manual_override_price"`
+	Shipments           []*ShipmentRequest `json:"shipments" valid:"required"`
 
 	customer *entity.Customer
 	order    *entity.Order
@@ -147,7 +147,6 @@ func (r *updateRequest) toShipmentEntity(sp *ShipmentRequest, orderID uuid.UUID,
 		// Status
 		Status: "pending",
 		// Audit
-		CreatedBy: r.session.DisplayName,
 	}
 
 	// Use existing shipment ID if updating
@@ -155,20 +154,17 @@ func (r *updateRequest) toShipmentEntity(sp *ShipmentRequest, orderID uuid.UUID,
 		shipment.ID = sp.shipment.ID
 		shipment.ShipmentNumber = sp.shipment.ShipmentNumber
 		shipment.Status = sp.shipment.Status
-		shipment.CreatedBy = sp.shipment.CreatedBy
-		shipment.CreatedAt = sp.shipment.CreatedAt
-		shipment.UpdatedBy = sp.shipment.UpdatedBy
-		shipment.UpdatedAt = sp.shipment.UpdatedAt
+		shipment.UpdatedAt = time.Now()
 	}
 
 	// Add items to shipment
 	for i, item := range sp.Items {
 		shipment.Items[i] = &entity.ShipmentItem{
-			Name:   item.Name,
-			SKU:    "",
-			Qty:    item.Quantity,
-			Weight: item.Weight,
-			Price:  0, // Calculated based on pricing logic
+			Name:     item.Name,
+			SKU:      "",
+			Quantity: item.Quantity,
+			Weight:   item.Weight,
+			Price:    0, // Calculated based on pricing logic
 		}
 	}
 

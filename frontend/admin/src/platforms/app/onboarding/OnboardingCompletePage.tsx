@@ -34,10 +34,10 @@ const OnboardingCompletePage = ({ data, onGoToDashboard }: OnboardingCompletePag
       color: data.step4.driversCreated > 0 ? "text-success" : "text-base-content/40",
     },
     {
-      label: "Pricing Rules",
-      value: `${data.step5.pricingRulesCreated} routes`,
-      icon: data.step5.pricingRulesCreated > 0 ? <HiCheckCircle size={20} /> : null,
-      color: data.step5.pricingRulesCreated > 0 ? "text-success" : "text-base-content/40",
+      label: "Customers",
+      value: `${data.step5.customersCreated} added`,
+      icon: data.step5.customersCreated > 0 ? <HiCheckCircle size={20} /> : null,
+      color: data.step5.customersCreated > 0 ? "text-success" : "text-base-content/40",
     },
   ];
 
@@ -45,7 +45,7 @@ const OnboardingCompletePage = ({ data, onGoToDashboard }: OnboardingCompletePag
     data.step2.usersCreated +
     data.step3.vehiclesCreated +
     data.step4.driversCreated +
-    data.step5.pricingRulesCreated;
+    data.step5.customersCreated;
 
   return (
     <div className="min-h-screen bg-base-200 flex items-center justify-center py-8 px-4">
@@ -114,7 +114,7 @@ const OnboardingCompletePage = ({ data, onGoToDashboard }: OnboardingCompletePag
                     </div>
                     <div className="text-info/80 text-xs">
                       You skipped the optional setup steps. Don't worry, you can add team
-                      members, vehicles, drivers, and pricing rules anytime from the
+                      members, vehicles, drivers, and customers anytime from the
                       respective management pages.
                     </div>
                   </div>

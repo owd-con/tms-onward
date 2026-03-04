@@ -12,12 +12,12 @@ import { useSelector } from "react-redux";
 
 import { Button, Input, Modal, useEnigmaUI } from "@/components";
 import { useException } from "@/services/exception/hooks";
-import type { OrderWaypoint } from "@/services/types";
+import type { Shipment } from "@/services/types";
 
 /**
- * Ref interface for ReturnWaypointModal
+ * Ref interface for ReturnShipmentModal
  */
-export interface ReturnWaypointModalRef {
+export interface ReturnShipmentModalRef {
   buildPayload: () => {
     returned_note: string;
   };
@@ -27,28 +27,28 @@ export interface ReturnWaypointModalRef {
 /**
  * Props Interface
  */
-interface ReturnWaypointModalProps {
+interface ReturnShipmentModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  waypoint?: OrderWaypoint;
+  shipment?: Shipment;
 }
 
 /**
- * TMS Onward - ReturnWaypointModal Component
+ * TMS Onward - ReturnShipmentModal Component
  *
- * Modal form for marking a failed waypoint as returned to origin.
+ * Modal form for marking a failed shipment as returned to origin.
  * Uses forwardRef pattern for modal form with FormState error handling.
  */
-const ReturnWaypointModal = forwardRef<
-  ReturnWaypointModalRef,
-  ReturnWaypointModalProps
->(({ open, onClose, onSuccess, waypoint }, ref) => {
+const ReturnShipmentModal = forwardRef<
+  ReturnShipmentModalRef,
+  ReturnShipmentModalProps
+>(({ open, onClose, onSuccess, shipment }, ref) => {
   const FormState = useSelector((state: RootState) => state.form);
   const { showToast } = useEnigmaUI();
 
-  // Exception hook - returnWaypoint mutation
-  const { returnWaypoint, returnWaypointResult } = useException();
+  // Exception hook - returnShipment mutation
+  const { returnShipment, returnShipmentResult } = useException();
 
   // Track success agar hanya handle sekali per submit
   const successHandledRef = useRef(false);
@@ -86,17 +86,17 @@ const ReturnWaypointModal = forwardRef<
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!waypoint?.id) {
+    if (!shipment?.id) {
       showToast({
-        message: "Waypoint data is missing",
+        message: "Shipment data is missing",
         type: "error",
       });
       return;
     }
 
     const payload = buildPayload();
-    await returnWaypoint({
-      id: waypoint.id,
+    await returnShipment({
+      id: shipment.id,
       ...payload,
     });
   };
@@ -104,21 +104,21 @@ const ReturnWaypointModal = forwardRef<
   // Close modal on success
   useEffect(() => {
     if (
-      returnWaypointResult?.isSuccess &&
+      returnShipmentResult?.isSuccess &&
       !successHandledRef.current &&
       open
     ) {
       successHandledRef.current = true;
 
       showToast({
-        message: "Waypoint marked as returned successfully",
+        message: "Shipment marked as returned successfully",
         type: "success",
       });
 
       onSuccess?.();
       onClose();
     }
-  }, [returnWaypointResult?.isSuccess, open, onSuccess, onClose, showToast]);
+  }, [returnShipmentResult?.isSuccess, open, onSuccess, onClose, showToast]);
 
   // Handle close with reset
   const handleClose = () => {
@@ -128,7 +128,7 @@ const ReturnWaypointModal = forwardRef<
 
   // Validation
   const isFormValid = returnedNote.trim() !== "";
-  const isLoading = returnWaypointResult?.isLoading;
+  const isLoading = returnShipmentResult?.isLoading;
 
   return (
     <Modal.Wrapper
@@ -138,50 +138,60 @@ const ReturnWaypointModal = forwardRef<
       className="max-w-2xl w-full mx-4"
     >
       <Modal.Header className="mb-4">
-        <div className="text-xl font-bold">Mark Waypoint as Returned</div>
+        <div className="text-xl font-bold">Mark Shipment as Returned</div>
         <div className="text-sm text-base-content/60">
-          Mark this failed waypoint as returned to origin
+          Mark this failed shipment as returned to origin
         </div>
       </Modal.Header>
 
       <form onSubmit={handleSubmit}>
         <Modal.Body className="min-h-[300px]">
           <div className="space-y-4">
-            {/* Waypoint Info */}
-            {waypoint && (
+            {/* Shipment Info */}
+            {shipment && (
               <div className="p-4 bg-base-200 rounded-lg space-y-2">
                 <div className="text-sm">
                   <span className="font-semibold text-base-content/70">
-                    Type:
+                    Shipment Number:
                   </span>{" "}
-                  <span className="font-medium capitalize">
-                    {waypoint.type}
+                  <span className="font-medium text-primary">
+                    {shipment.shipment_number}
                   </span>
                 </div>
                 <div className="text-sm">
                   <span className="font-semibold text-base-content/70">
-                    Location:
+                    Route:
                   </span>{" "}
                   <span className="font-medium">
-                    {waypoint.location_name || waypoint.location_address || "-"}
+                    ▲ {shipment.origin_location_name || shipment.origin_address} → ▼ {shipment.dest_location_name || shipment.dest_address}
                   </span>
                 </div>
                 <div className="text-sm">
                   <span className="font-semibold text-base-content/70">
-                    Status:
+                    Current Status:
                   </span>{" "}
                   <span className="font-medium capitalize">
-                    {waypoint.dispatch_status}
+                    {shipment.status}
                   </span>
                 </div>
+                {shipment.failed_reason && (
+                  <div className="text-sm">
+                    <span className="font-semibold text-base-content/70">
+                      Failed Reason:
+                    </span>{" "}
+                    <span className="font-medium text-error">
+                      {shipment.failed_reason}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
 
             {/* Return Note */}
             <div>
               <Input
-                label="Reason"
-                placeholder="Explain why this waypoint is being returned to origin"
+                label="Return Reason"
+                placeholder="Explain why this shipment is being returned to origin"
                 type="textarea"
                 value={returnedNote}
                 onChange={(e) => setReturnedNote(e.target.value)}
@@ -191,9 +201,9 @@ const ReturnWaypointModal = forwardRef<
             </div>
 
             {/* Error Alert */}
-            {returnWaypointResult?.isError && (
+            {returnShipmentResult?.isError && (
               <div className="text-sm text-error">
-                Failed to mark waypoint as returned. Please try again.
+                Failed to mark shipment as returned. Please try again.
               </div>
             )}
           </div>
@@ -226,6 +236,6 @@ const ReturnWaypointModal = forwardRef<
   );
 });
 
-ReturnWaypointModal.displayName = "ReturnWaypointModal";
+ReturnShipmentModal.displayName = "ReturnShipmentModal";
 
-export default ReturnWaypointModal;
+export default ReturnShipmentModal;

@@ -24,11 +24,11 @@ func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 	s.GET("/driver/trips/{id}", h.getTripDetail, middleware.WithActiveCheck(s))
 	s.PUT("/driver/trips/{id}/start", h.startTrip, middleware.WithActiveCheck(s))
 
-	// New waypoint-specific endpoints (v2.10)
+	// Waypoint-specific endpoints
 	s.PUT("/driver/trips/waypoint/{id}/start", h.startWaypoint, middleware.WithActiveCheck(s))
-	s.PUT("/driver/trips/waypoint/{id}/arrive", h.arriveWaypoint, middleware.WithActiveCheck(s))
-	s.PUT("/driver/trips/waypoint/{id}/complete", h.completeWaypoint, middleware.WithActiveCheck(s))
-	s.PUT("/driver/trips/waypoint/{id}/failed", h.failWaypoint, middleware.WithActiveCheck(s))
+	s.PUT("/driver/trips/waypoint/{id}/loading", h.loadingWaypoint, middleware.WithActiveCheck(s)) // Pickup complete
+	s.PUT("/driver/trips/waypoint/{id}/complete", h.completeWaypoint, middleware.WithActiveCheck(s)) // Delivery with POD
+	s.PUT("/driver/trips/waypoint/{id}/failed", h.failWaypoint, middleware.WithActiveCheck(s))      // Delivery failed
 }
 
 // getMyTrips handles GET /driver/trips
@@ -156,22 +156,26 @@ func (h *handler) startWaypoint(ctx *rest.Context) (err error) {
 	return ctx.Respond(res, err)
 }
 
-// arriveWaypoint handles PUT /driver/trips/waypoint/{id}/arrive
-// @Summary Arrive at pickup waypoint
-// @Description Complete pickup waypoint (In Transit → Completed)
+// loadingWaypoint handles PUT /driver/trips/waypoint/{id}/loading
+// @Summary Complete pickup waypoint
+// @Description Complete pickup waypoint with partial execution support. Specify which shipments were successfully loaded. Shipments not in list will be marked as cancelled.
 // @Tags driver_web
 // @Accept json
 // @Produce json
 // @Param id path string true "Trip Waypoint ID"
+// @Param loaded_shipment_ids body []string true "Array of successfully loaded shipment IDs (others will be cancelled)"
+// @Param loaded_by body string true "Name of warehouse staff who handed over the items"
+// @Param images body []string true "Array of presigned S3 URLs for loading photos" minLength(1)
+// @Param note body string false "Optional note about the loading"
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
 // @Failure 401 {object} rest.HTTPError
 // @Failure 404 {object} rest.HTTPError
 // @Failure 500 {object} rest.HTTPError
-// @Router /driver/trips/waypoint/{id}/arrive [put]
-func (h *handler) arriveWaypoint(ctx *rest.Context) (err error) {
-	var req arriveWaypointRequest
+// @Router /driver/trips/waypoint/{id}/loading [put]
+func (h *handler) loadingWaypoint(ctx *rest.Context) (err error) {
+	var req loadingWaypointRequest
 	var res *rest.ResponseBody
 
 	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
@@ -209,14 +213,15 @@ func (h *handler) completeWaypoint(ctx *rest.Context) (err error) {
 }
 
 // failWaypoint handles PUT /driver/trips/waypoint/{id}/failed
-// @Summary Fail waypoint
-// @Description Mark waypoint as failed with reason and images (In Transit → Completed/Failed). Provide a descriptive reason for the failure.
+// @Summary Fail delivery waypoint
+// @Description Mark delivery waypoint as failed. ALL shipments in this waypoint will be marked as failed (all-or-nothing).
 // @Tags driver_web
 // @Accept json
 // @Produce json
 // @Param id path string true "Trip Waypoint ID"
 // @Param failed_reason body string true "Reason for failure"
 // @Param images body []string true "Array of presigned S3 URLs for failure documentation photos" minLength(1)
+// @Param note body string false "Optional note about the failure"
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError

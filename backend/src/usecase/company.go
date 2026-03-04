@@ -40,7 +40,7 @@ func NewCompanyUsecase() *CompanyUsecase {
 	}
 }
 
-// Get retrieves companies with optional status filter (Admin only)
+// Get retrieves companies with optional status filter (admin only)
 func (u *CompanyUsecase) Get(req *CompanyQueryOptions) ([]*entity.Company, int64, error) {
 	if req.OrderBy == "" {
 		req.OrderBy = "-companies:created_at"
@@ -73,11 +73,7 @@ func (u *CompanyUsecase) Update(company *entity.Company, fields ...string) error
 }
 
 // CompleteOnboarding marks company onboarding as complete
-func (u *CompanyUsecase) CompleteOnboarding(companyID string) error {
-	company, err := u.repo.FindByID(companyID)
-	if err != nil {
-		return err
-	}
+func (u *CompanyUsecase) CompleteOnboarding(company *entity.Company) error {
 	company.OnboardingCompleted = true
 	return u.repo.Update(company, "onboarding_completed")
 }

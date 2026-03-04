@@ -148,29 +148,3 @@ func TestExceptionHandler_GetFailedOrders_Success(t *testing.T) {
 	// Just check that the response structure is correct
 	assert.Contains(t, response, "data")
 }
-
-func TestExceptionHandler_GetFailedWaypoints_Success(t *testing.T) {
-	uc := usecase.NewFactory()
-	h := &handler{uc: uc}
-
-	company, _, _ := createTestCompanyDriverVehicle(t)
-
-	userID := uuid.New().String()
-	companyID := company.ID.String()
-
-	testCtx := createTestContext("GET", "/exceptions/waypoints", nil, userID, companyID, nil)
-
-	err := h.getFailedWaypoints(testCtx)
-
-	assert.NoError(t, err)
-
-	recorder := testCtx.Response.(*httptest.ResponseRecorder)
-	assert.Equal(t, http.StatusOK, recorder.Code)
-
-	var response map[string]interface{}
-	json.Unmarshal(recorder.Body.Bytes(), &response)
-	assert.True(t, response["success"].(bool))
-	// Data can be nil when there are no failed waypoints, which is expected
-	// Just check that the response structure is correct
-	assert.Contains(t, response, "data")
-}

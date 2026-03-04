@@ -109,12 +109,12 @@ func (h *handler) step4CreateDriver(ctx *rest.Context) (err error) {
 }
 
 // step5CreatePricing handles POST /onboarding/step5
-// @Summary Onboarding Step 5: Create pricing matrix
-// @Description Create initial pricing matrix
+// @Summary Onboarding Step 5: Create customers
+// @Description Create initial customers
 // @Tags onboarding
 // @Accept json
 // @Produce json
-// @Param request body onboarding.step5Request true "Create pricing matrix request"
+// @Param request body onboarding.step5Request true "Create customers request"
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError

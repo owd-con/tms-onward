@@ -56,16 +56,17 @@ export const TripInformation = ({ trip }: TripInformationProps) => {
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-base-content/10 grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        {trip.notes && (
-          <div className="col-span-1 lg:col-span-2">
-            <span className="text-xs text-base-content/60 block mb-1">
-              Notes
-            </span>
-            <p className="text-sm text-base-content/80">{trip.notes}</p>
-          </div>
-        )}
+      {trip.notes && (
+        <div className="mt-4 pt-4 border-t border-base-content/10">
+          <span className="text-xs text-base-content/60 block mb-1">
+            Notes
+          </span>
+          <p className="text-sm text-base-content/80">{trip.notes}</p>
+        </div>
+      )}
 
+      {/* Timestamps */}
+      <div className="mt-4 pt-4 border-t border-base-content/10 grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         {trip.created_at && trip.created_at !== "0001-01-01T00:00:00Z" && (
           <div>
             <span className="text-xs text-base-content/60 block">
@@ -94,82 +95,51 @@ export const TripInformation = ({ trip }: TripInformationProps) => {
         )}
       </div>
 
-      {/* Driver */}
-      <div className="mt-6 pt-4 border-t border-base-content/10">
-        <h4 className="text-sm font-semibold text-base-content mb-3">Driver</h4>
+      {/* Driver & Vehicle */}
+      <div className="mt-6 pt-4 border-t border-base-content/10 grid grid-cols-2 gap-6">
+        {/* Driver */}
+        <div>
+          <h4 className="text-sm font-semibold text-base-content mb-3">Driver</h4>
 
-        {trip.driver ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-base-content/60">Name</span>
-              <span className="font-medium text-sm">{trip.driver.name}</span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-base-content/60">
-                License Number
-              </span>
-              <span className="text-sm">{trip.driver.license_number}</span>
-            </div>
-            {trip.driver.phone && (
-              <div className="flex flex-col gap-1">
-                <span className="text-xs text-base-content/60">Phone</span>
-                <span className="text-sm">{trip.driver.phone}</span>
+          {trip.driver ? (
+            <div className="flex flex-col gap-2">
+              <div>
+                <span className="text-xs text-base-content/60 block">Name</span>
+                <span className="font-medium text-sm">{trip.driver.name}</span>
               </div>
-            )}
-            {trip.driver.license_type && (
-              <div className="flex flex-col gap-1">
-                <span className="text-xs text-base-content/60">
-                  License Type
+              <div>
+                <span className="text-xs text-base-content/60 block">
+                  License Number
                 </span>
-                <span className="text-sm capitalize">
-                  {trip.driver.license_type.replace(/_/g, " ")}
-                </span>
+                <span className="text-sm">{trip.driver.license_number}</span>
               </div>
-            )}
-          </div>
-        ) : (
-          <p className="text-sm text-base-content/60">No driver assigned</p>
-        )}
-      </div>
+            </div>
+          ) : (
+            <p className="text-sm text-base-content/60">No driver assigned</p>
+          )}
+        </div>
 
-      {/* Vehicle */}
-      <div className="mt-6 pt-4 border-t border-base-content/10">
-        <h4 className="text-sm font-semibold text-base-content mb-3">Vehicle</h4>
+        {/* Vehicle */}
+        <div>
+          <h4 className="text-sm font-semibold text-base-content mb-3">Vehicle</h4>
 
-        {trip.vehicle ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-base-content/60">
-                Plate Number
-              </span>
-              <span className="font-medium text-sm">
-                {trip.vehicle.plate_number}
-              </span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-base-content/60">Type</span>
-              <span className="text-sm capitalize">{trip.vehicle.type}</span>
-            </div>
-            {trip.vehicle.make && trip.vehicle.model && (
-              <div className="flex flex-col gap-1">
-                <span className="text-xs text-base-content/60">
-                  Make/Model
+          {trip.vehicle ? (
+            <div className="flex flex-col gap-2">
+              <div>
+                <span className="text-xs text-base-content/60 block">
+                  Plate Number
                 </span>
-                <span className="text-sm">
-                  {trip.vehicle.make} {trip.vehicle.model}
-                </span>
+                <span className="font-medium text-sm">{trip.vehicle.plate_number}</span>
               </div>
-            )}
-            {trip.vehicle.year && (
-              <div className="flex flex-col gap-1">
-                <span className="text-xs text-base-content/60">Year</span>
-                <span className="text-sm">{trip.vehicle.year}</span>
+              <div>
+                <span className="text-xs text-base-content/60 block">Type</span>
+                <span className="text-sm capitalize">{trip.vehicle.type}</span>
               </div>
-            )}
-          </div>
-        ) : (
-          <p className="text-sm text-base-content/60">No vehicle assigned</p>
-        )}
+            </div>
+          ) : (
+            <p className="text-sm text-base-content/60">No vehicle assigned</p>
+          )}
+        </div>
       </div>
     </div>
   );

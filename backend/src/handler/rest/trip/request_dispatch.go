@@ -48,7 +48,7 @@ func (r *dispatchRequest) Messages() map[string]string {
 }
 
 func (r *dispatchRequest) execute() (*rest.ResponseBody, error) {
-	err := r.uc.Trip.DispatchWithCascade(r.trip)
+	err := r.uc.Trip.Dispatch(r.trip)
 	if err != nil {
 		return nil, err
 	}

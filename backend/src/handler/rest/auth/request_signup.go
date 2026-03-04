@@ -76,7 +76,7 @@ func (r *signupRequest) toEntity() (user *entity.User, company *entity.Company) 
 		Name:         r.Name,
 		Email:        r.Email,
 		PasswordHash: r.PasswordHash, // Already hashed in Validate()
-		Role:         "Admin",
+		Role:         "admin",
 		Phone:        r.Phone,
 		Language:     r.Language,
 		IsActive:     true,

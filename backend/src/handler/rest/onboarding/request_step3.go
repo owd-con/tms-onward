@@ -19,6 +19,9 @@ type vehicleRequest struct {
 	VehicleType    string  `json:"vehicle_type"`
 	CapacityWeight float64 `json:"capacity_weight"`
 	CapacityVolume float64 `json:"capacity_volume"`
+	Year           *int    `json:"year"`
+	Make           string  `json:"make"`
+	Model          string  `json:"model"`
 
 	vehicle *entity.Vehicle `json:"-"` // Fetched vehicle entity for update operations
 }
@@ -74,6 +77,20 @@ func (r *step3Request) Validate() *validate.Response {
 			v.SetError(fmt.Sprintf("vehicles.%d.capacity_weight.min", i), "Capacity weight must be greater than 0.")
 		}
 
+		if vehicleReq.Make == "" {
+			v.SetError(fmt.Sprintf("vehicles.%d.make.required", i), "Make is required.")
+		}
+
+		if vehicleReq.Model == "" {
+			v.SetError(fmt.Sprintf("vehicles.%d.model.required", i), "Model is required.")
+		}
+
+		if vehicleReq.Year == nil {
+			v.SetError(fmt.Sprintf("vehicles.%d.year.required", i), "Year is required.")
+		} else if *vehicleReq.Year < 1900 || *vehicleReq.Year > 2100 {
+			v.SetError(fmt.Sprintf("vehicles.%d.year.invalid", i), "Year must be between 1900 and 2100.")
+		}
+
 		// Validate ID exists for update operations
 		if vehicleReq.ID != "" {
 			if vehicleReq.vehicle, err = r.uc.Vehicle.GetByID(vehicleReq.ID); err != nil {
@@ -117,6 +134,9 @@ func (r *step3Request) execute() (*rest.ResponseBody, error) {
 			Type:           vehicleReq.VehicleType,
 			CapacityWeight: vehicleReq.CapacityWeight,
 			CapacityVolume: vehicleReq.CapacityVolume,
+			Year:           *vehicleReq.Year,
+			Make:           vehicleReq.Make,
+			Model:          vehicleReq.Model,
 			IsActive:       true,
 		}
 
@@ -129,8 +149,8 @@ func (r *step3Request) execute() (*rest.ResponseBody, error) {
 		vehicles = append(vehicles, vehicle)
 	}
 
-	// Call usecase to create/update vehicles
-	result, err := r.uc.Onboarding.Step3CreateVehiclesBatch(r.ctx, vehicles)
+	// Call usecase to create/update vehicles (with sync delete)
+	result, err := r.uc.Onboarding.Step3CreateVehiclesBatch(r.ctx, r.company.ID, vehicles)
 	if err != nil {
 		return nil, err
 	}

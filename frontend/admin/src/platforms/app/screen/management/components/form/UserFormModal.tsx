@@ -10,7 +10,7 @@ import {
 import type { RootState } from "@/services/store";
 import { useSelector } from "react-redux";
 
-import { Button, Input, Modal, Select, useEnigmaUI } from "@/components";
+import { Button, Input, Modal, useEnigmaUI } from "@/components";
 import { useUser } from "@/services/user/hooks";
 import type { User, UserRole } from "@/services/types";
 
@@ -23,7 +23,6 @@ export interface UserFormModalRef {
     confirm_password?: string;
     phone?: string;
     role: UserRole;
-    language?: string;
   };
   reset: () => void;
 }
@@ -36,18 +35,6 @@ interface UserFormModalProps {
   mode: "create" | "update";
   data?: User;
 }
-
-// Role options (Driver is managed through Driver form with has_login option)
-const roleOptions: { label: string; value: UserRole }[] = [
-  { label: "Admin", value: "admin" },
-  { label: "Dispatcher", value: "dispatcher" },
-];
-
-// Language options
-const languageOptions: { label: string; value: string }[] = [
-  { label: "Indonesian", value: "id" },
-  { label: "English", value: "en" },
-];
 
 // 3. Component dengan forwardRef
 const UserFormModal = forwardRef<UserFormModalRef, UserFormModalProps>(
@@ -67,8 +54,7 @@ const UserFormModal = forwardRef<UserFormModalRef, UserFormModalProps>(
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [phone, setPhone] = useState("");
-    const [role, setRole] = useState<UserRole>("admin");
-    const [language, setLanguage] = useState("id");
+    const [role, setRole] = useState<UserRole>("dispatcher");
 
     // 6. Build payload method
     const buildPayload = () => {
@@ -79,12 +65,10 @@ const UserFormModal = forwardRef<UserFormModalRef, UserFormModalProps>(
         confirm_password?: string;
         phone?: string;
         role: UserRole;
-        language?: string;
       } = {
         name,
         email,
         role,
-        language,
       };
 
       // Include phone only if provided
@@ -108,8 +92,7 @@ const UserFormModal = forwardRef<UserFormModalRef, UserFormModalProps>(
       setPassword("");
       setConfirmPassword("");
       setPhone("");
-      setRole("admin");
-      setLanguage("id");
+      setRole("dispatcher");
     };
 
     // 8. Expose methods via ref
@@ -126,8 +109,7 @@ const UserFormModal = forwardRef<UserFormModalRef, UserFormModalProps>(
         setPassword(""); // Don't populate password on update
         setConfirmPassword("");
         setPhone(data.phone ?? "");
-        setRole(data.role ?? "admin");
-        setLanguage(data.language ?? "id");
+        setRole(data.role ?? "dispatcher");
       }
     }, [data, mode]);
 
@@ -185,43 +167,6 @@ const UserFormModal = forwardRef<UserFormModalRef, UserFormModalProps>(
       onClose();
     };
 
-    // 14. Validation
-    // Helper function for email validation
-    const isValidEmail = (email: string): boolean => {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return emailRegex.test(email);
-    };
-
-    const isFormValid = (() => {
-      // Base fields validation
-      const baseValid =
-        name.trim() !== "" && email.trim() !== "" && isValidEmail(email);
-
-      if (!baseValid) return false;
-
-      // Password validation (required on create)
-      if (mode === "create") {
-        return (
-          password.trim() !== "" &&
-          password.length >= 8 &&
-          password.length <= 64 &&
-          confirmPassword.trim() !== "" &&
-          password === confirmPassword
-        );
-      }
-
-      // Password validation on update (only if password is provided)
-      if (password.trim()) {
-        return (
-          password.length >= 8 &&
-          password.length <= 64 &&
-          confirmPassword.trim() !== "" &&
-          password === confirmPassword
-        );
-      }
-
-      return true;
-    })();
     const isLoading = createResult?.isLoading || updateResult?.isLoading;
 
     // 15. Render
@@ -280,22 +225,12 @@ const UserFormModal = forwardRef<UserFormModalRef, UserFormModalProps>(
                   error={FormState?.errors?.phone as string}
                 />
 
-                <Select
-                  label='Role'
-                  options={roleOptions}
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as UserRole)}
-                  error={FormState?.errors?.role as string}
-                  required
-                />
-
-                <Select
-                  label='Language'
-                  options={languageOptions}
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  error={FormState?.errors?.language as string}
-                />
+                <div>
+                  <label className='text-sm font-medium'>Role</label>
+                  <div className='w-full px-3 py-2 bg-base-200 border border-base-300 rounded-lg text-base-content capitalize'>
+                    {role}
+                  </div>
+                </div>
               </div>
 
               {/* Password Section - Conditional */}
@@ -354,7 +289,6 @@ const UserFormModal = forwardRef<UserFormModalRef, UserFormModalProps>(
                 type='submit'
                 variant='primary'
                 isLoading={isLoading}
-                disabled={!isFormValid}
               >
                 {mode === "create" ? "Create Account" : "Update Account"}
               </Button>

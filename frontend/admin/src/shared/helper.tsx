@@ -134,6 +134,53 @@ export function formatWaypointLogMessage(
   );
 }
 
+/**
+ * Shipment Status Badge Helper
+ * Returns a badge component for shipment status (reuses existing statusBadge)
+ * This is an alias for compatibility - statusBadge already works with any status string
+ *
+ * @param status - Shipment status string
+ * @returns Badge component with appropriate color
+ */
+export function shipmentStatusBadge(status: string | undefined): ReactNode {
+  return statusBadge(status);
+}
+
+/**
+ * Format Shipment Message
+ * Format shipment-specific messages with additional context
+ * Adds shipment context to log messages or status updates
+ *
+ * @param message - Base message from backend
+ * @param eventType - Event type for formatting
+ * @param shipmentNumber - Optional shipment number for context
+ * @returns Formatted message string
+ */
+export function formatShipmentMessage(
+  message: string | undefined,
+  eventType: string | undefined,
+  shipmentNumber?: string,
+): string {
+  if (message) {
+    // If message already exists and we have shipment number, prepend it
+    if (shipmentNumber && !message.toLowerCase().includes("shipment")) {
+      return `${shipmentNumber}: ${message}`;
+    }
+    return message;
+  }
+
+  // Convert event_type to readable format
+  const formattedEvent = eventType
+    ?.replace(/_/g, " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase()) || "";
+
+  if (shipmentNumber) {
+    return `${shipmentNumber}: ${formattedEvent}`;
+  }
+
+  return formattedEvent;
+}
+
 export function debounce<T extends (...args: unknown[]) => void>(
   fn: T,
   delay = 250,

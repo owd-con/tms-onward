@@ -12,12 +12,12 @@ import { dateFormat, formatWaypointLogMessage } from "@/shared/helper";
 import { useWaypointLogs } from "@/services/waypointLogs/hooks";
 import type { WaypointLog } from "@/services/types";
 
-interface WaypointLogsTimelineProps {
+interface OrderLogsTimelineProps {
   orderId: string;
   className?: string;
 }
 
-export const WaypointLogsTimeline = memo<WaypointLogsTimelineProps>(({
+export const OrderLogsTimeline = memo<OrderLogsTimelineProps>(({
   orderId,
   className,
 }) => {

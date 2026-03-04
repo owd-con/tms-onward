@@ -49,3 +49,14 @@ func (r *DriverRepository) WithContext(ctx context.Context) common.BaseRepositor
 		BaseRepository: r.BaseRepository.WithContext(ctx).(*postgres.BaseRepository[entity.Driver]),
 	}
 }
+
+// FindByCompanyID retrieves all drivers for a given company
+func (r *DriverRepository) FindByCompanyID(companyID string) ([]*entity.Driver, error) {
+	var drivers []*entity.Driver
+	err := r.DB.NewSelect().
+		Model(&drivers).
+		Where("company_id = ?", companyID).
+		Where("is_deleted = false").
+		Scan(r.Context)
+	return drivers, err
+}

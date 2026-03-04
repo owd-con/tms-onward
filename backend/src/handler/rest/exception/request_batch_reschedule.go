@@ -37,7 +37,7 @@ func (r *batchRescheduleShipmentsRequest) Validate() *validate.Response {
 
 	// Fetch and validate all shipments
 	r.shipments = make([]*entity.Shipment, 0, len(r.ShipmentIDs))
-	r.orderID = uuid.UUID{} // Initialize as zero UUID
+	r.orderID = uuid.Nil // Initialize as zero UUID
 
 	for i, shipmentID := range r.ShipmentIDs {
 		shipment, err := r.uc.Shipment.GetByID(shipmentID)
@@ -110,33 +110,12 @@ func (r *batchRescheduleShipmentsRequest) Messages() map[string]string {
 }
 
 func (r *batchRescheduleShipmentsRequest) execute() (*rest.ResponseBody, error) {
-	// Convert shipment IDs to UUID array
-	shipmentUUIDs := make([]uuid.UUID, len(r.ShipmentIDs))
-	for i, id := range r.ShipmentIDs {
-		shipmentUUIDs[i], _ = uuid.Parse(id)
-	}
-
-	driverID, _ := uuid.Parse(r.DriverID)
-	vehicleID, _ := uuid.Parse(r.VehicleID)
-
-	trip, err := r.uc.Exception.BatchRescheduleShipments(shipmentUUIDs, driverID, vehicleID)
+	trip, err := r.uc.Exception.BatchRescheduleShipments(r.shipments, r.driver, r.vehicle)
 	if err != nil {
 		return nil, err
 	}
 
 	return rest.NewResponseBody(trip), nil
-}
-
-func (r *batchRescheduleShipmentsRequest) toEntity() *entity.Trip {
-	return &entity.Trip{
-		CompanyID:  r.driver.CompanyID,
-		OrderID:    r.orderID,
-		TripNumber: r.uc.Trip.GenerateTripNumber(),
-		DriverID:   r.driver.ID,
-		VehicleID:  r.vehicle.ID,
-		Status:     "planned",
-		CreatedBy:  r.session.DisplayName,
-	}
 }
 
 func (r *batchRescheduleShipmentsRequest) with(ctx context.Context, uc *usecase.Factory) *batchRescheduleShipmentsRequest {

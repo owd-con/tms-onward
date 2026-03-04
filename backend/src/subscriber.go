@@ -1,17 +1,15 @@
 package src
 
 import (
-	"log"
-
+	"github.com/logistics-id/engine/broker/rabbitmq"
 	"github.com/logistics-id/onward-tms/src/event/subscriber"
 )
 
 // RegisterSubscriber registers all event subscribers
 func RegisterSubscriber() {
 	// Register notification subscribers
-	if err := subscriber.RegisterAllSubscribers(); err != nil {
-		log.Printf("Failed to register notification subscribers: %v", err)
-	}
+	rabbitmq.Subscribe("notification.failed_delivery", subscriber.SubscribeDeliveryFailed)
+	rabbitmq.Subscribe("notification.delivered", subscriber.SubscribeDeliveryCompleted)
 
 	// Register subscribers for order events
 	// rabbitmq.Subscribe("order.created", handleOrderCreated)

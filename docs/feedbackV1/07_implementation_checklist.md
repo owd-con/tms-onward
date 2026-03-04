@@ -3,70 +3,69 @@
 ## 🎯 Implementation Checklist
 
 ### Phase 1: Entity & Migration
-- [ ] Create `entity/shipment.go` with Shipment & ShipmentItem
-- [ ] Update `entity/trip_waypoint.go` - Replace OrderWaypointID with ShipmentIDs
-- [ ] Edit `migrations/20250113100003_initial_order_tables.up.sql`
-  - [ ] Add `shipments` table (replaces order_waypoints)
-  - [ ] Update `waypoint_logs` - add `shipment_ids UUID[]`, `order_id` NOT NULL
-  - [ ] Remove `order_waypoints` table creation
-- [ ] Edit `migrations/20250113100004_initial_trip_tables.up.sql`
-  - [ ] Update `trip_waypoints` - replace `order_waypoint_id` with `shipment_ids JSONB`
-  - [ ] Add `type`, `address_id`, `location_name`, `address`, `contact_name`, `contact_phone` to `trip_waypoints`
-  - [ ] Update `waypoint_images` - add `order_id UUID`, `shipment_ids JSONB[]`
-- [ ] Verify `order_waypoints` table is NOT created
+- [x] Create `entity/shipment.go` with Shipment & ShipmentItem
+- [x] Update `entity/trip_waypoint.go` - Replace OrderWaypointID with ShipmentIDs
+- [x] Edit `migrations/20250113100006_shipments.up.sql`
+  - [x] Add `shipments` table (new table for shipment concept)
+  - [x] Update `waypoint_logs` - add `shipment_ids UUID[]`, `order_id` NOT NULL
+  - [x] Keep `order_waypoints` table for backward compatibility
+- [x] Edit `migrations/20250113100006_shipments.up.sql`
+  - [x] Update `trip_waypoints` - replace `order_waypoint_id` with `shipment_ids UUID[]`
+  - [x] Add `type`, `address_id`, `location_name`, `address`, `contact_name`, `contact_phone` to `trip_waypoints`
+  - [x] Update `waypoint_images` - add `order_id UUID`, `shipment_ids UUID[]`
+- [x] Verified `order_waypoints` table kept for backward compatibility
 
 ### Phase 2: Repository & Usecase
-- [ ] Create `src/repository/shipment.go` - ShipmentRepository
-  - [ ] Basic CRUD: Insert, Update, SoftDelete
-  - [ ] FindByOrderID - Get all shipments for an order
-- [ ] Update `src/repository/trip_waypoint.go` - Handle ShipmentIDs
-- [ ] Create `src/usecase/shipment.go` - ShipmentUsecase
-  - [ ] `Create(order, shipments)` - Create shipments via Order
-  - [ ] `UpdateStatus(tripWaypoint)` - Sync status from TripWaypoint
-  - [ ] `Return(shipmentID, note)` - Return shipment to origin
-- [ ] Update `src/usecase/trip.go`
-  - [ ] Implement preview trip waypoints
-  - [ ] Implement shipment → tripwaypoint conversion
-  - [ ] FTL: use shipment sequence
-  - [ ] LTL: group by location
-- [ ] Update `src/usecase/exception.go`
-  - [ ] Update reschedule to handle shipments (not waypoints)
-  - [ ] Update return to handle shipments (not waypoints)
-- [ ] Update `src/usecase/waypoint.go`
-  - [ ] Update to sync Shipment status (not OrderWaypoint)
-  - [ ] Maintain TripWaypoint as source of truth
+- [x] Create `src/repository/shipment.go` - ShipmentRepository
+  - [x] Basic CRUD: Insert, Update, SoftDelete
+  - [x] FindByOrderID - Get all shipments for an order
+- [x] Update `src/repository/trip_waypoint.go` - Handle ShipmentIDs
+- [x] Create `src/usecase/shipment.go` - ShipmentUsecase
+  - [x] `CreateBatch(shipments)` - Create shipments via Order
+  - [x] `UpdateStatusFromTripWaypoint(tripWaypoint)` - Sync status from TripWaypoint
+  - [x] `CancelShipmentsByOrderID(orderID)` - Cancel shipments when order cancelled
+- [x] Update `src/usecase/trip.go`
+  - [x] Implement PreviewTripWaypoints - preview shipments before trip creation
+  - [x] Implement ConvertShipmentsToTripWaypoints - shipment → tripwaypoint conversion
+  - [x] FTL: use shipment sequence (1 shipment per waypoint pair)
+  - [x] LTL: group by common origins/destinations
+- [x] Update `src/usecase/exception.go`
+  - [x] Update BatchRescheduleWaypoints to handle shipments (not waypoints)
+  - [x] Add ShipmentUsecase dependency for status tracking
+- [x] Update `src/usecase/waypoint.go`
+  - [x] Add FailTripWaypointWithShipments - partial execution support
+  - [x] Maintain TripWaypoint as source of truth for Shipment status
+  - [x] Sync Shipment status when TripWaypoint status changes
 
 ### Phase 3: Handler & API
-  - [ ] Note: No shipment handlers needed - all operations via Order/Exception
-- [ ] Update `src/handler/rest/order/`
-  - [ ] Update create order to handle shipments
-  - [ ] Update order response to include shipments
-  - [ ] FTL: use ManualOverridePrice
-  - [ ] LTL: calculate from pricing matrix
-- [ ] Update `src/handler/rest/trip/`
-  - [ ] Add `request_preview.go` - Preview trip waypoints
-  - [ ] Update create trip to use preview flow
-  - [ ] LTL: allow sequence override
-- [ ] Update `src/handler/rest/exception/`
-  - [ ] Update reschedule to handle shipments (not waypoints)
-  - [ ] Update return to handle shipments (not waypoints)
-- [ ] Update `src/handler/rest/driver_web/`
-  - [ ] Update `request_waypoint_failed.go` - Handle partial execution
-    - [ ] Pickup failed: `failed_shipments` array (per shipment checkbox)
-    - [ ] Delivery failed: all-or-nothing (single `failed_reason`)
-- [ ] Update `src/handler/rest/tracking/`
-  - [ ] Update response to include `shipments` array
-  - [ ] Update response to include `shipment_history` timeline
-- [ ] Update `src/handler/rest/report/`
-  - [ ] Rename endpoint `/reports/order-trip-waypoint` → `/reports/order-trip-shipment`
-  - [ ] Rename `request_order_trip_waypoint.go` → `request_order_trip_shipment.go`
-  - [ ] Rename `getOrderTripWaypointReport()` → `getOrderTripShipmentReport()`
-  - [ ] Update response: waypoint fields → shipment fields
-  - [ ] Update Customer Report response (shipment_count, delivered, failed)
-  - [ ] Update Driver Performance Report response (shipments_delivered, shipments_failed)
+  - [x] Note: No shipment handlers needed - all operations via Order/Exception
+- [x] Update `src/handler/rest/order/`
+  - [x] Update create order to handle shipments (toShipmentEntities, CreateWithShipments)
+  - [x] Order response includes shipments via relation
+  - [x] FTL: use ManualOverridePrice
+  - [x] LTL: calculate from pricing matrix
+- [x] Update `src/handler/rest/trip/`
+  - [x] Update create trip to use ConvertShipmentsToTripWaypoints
+  - [x] Update create trip to call CreateWithShipments
+  - [x] LTL: allow sequence override (via request_update.go)
+- [x] Update `src/handler/rest/exception/`
+  - [x] Update reschedule to handle shipments (BatchRescheduleWaypoints)
+  - [x] BatchRescheduleWaypoints now handles shipment conversion internally
+- [x] Update `src/handler/rest/driver_web/`
+  - [x] Update `request_waypoint_failed.go` - Handle partial execution
+    - [x] Pickup failed: ALL shipments in waypoint are cancelled
+    - [x] Delivery failed: supports partial failure via failed_shipment_ids
+- [x] Update `src/handler/rest/tracking/`
+  - [x] Update response to include `shipments` array
+  - [x] Update response to include `shipment_history` timeline
+  - [x] **Phase 3 Backend COMPLETE** (2026-03-02)
+- [x] Update `src/handler/rest/report/`
+  - [x] Update Customer Report to use shipments instead of order_waypoints
+  - [x] Update OrderTripWaypoint Report to use shipments (renamed to OrderTripShipment)
+  - [x] **Phase 3 Backend COMPLETE** (2026-03-02)
 
 ### Phase 4: Permissions
-- [ ] Note: No shipment-specific permissions needed - handled via order/exception permissions
+- [x] Note: No shipment-specific permissions needed - handled via order/exception permissions
 
 ### Phase 5: Testing
 - [ ] Unit tests for ShipmentRepository
@@ -80,103 +79,145 @@
 ## 🎨 Frontend Implementation Checklist
 
 ### Phase 6: API Service & Hooks
-- [ ] Note: No standalone Shipment API needed - shipments always included in Order response
-- [ ] Update `src/services/order/api.tsx`
-  - [ ] Ensure Order response includes `shipments` array
-- [ ] Update `src/services/exception/api.tsx`
-  - [ ] Update reschedule to handle shipment_ids (not waypoint_ids)
-  - [ ] Update return to handle shipment_id (not waypoint_id)
-- [ ] Add Shipment types to `src/services/types/entities.ts`
-  - [ ] `Shipment` interface
-  - [ ] `ShipmentItem` interface
+- [x] Note: No standalone Shipment API needed - shipments always included in Order response
+- [x] Update `src/services/order/api.tsx`
+  - [x] Ensure Order response includes `shipments` array
+- [x] Update `src/services/exception/api.tsx`
+  - [x] Update reschedule to handle shipment_ids (not waypoint_ids)
+  - [x] Update return to handle shipment_id (not waypoint_id)
+- [x] Add Shipment types to `src/services/types.ts`
+  - [x] `Shipment` interface
+  - [x] `ShipmentItem` interface
+- [x] **Phase 6 COMPLETE** (2026-03-02)
 
 ### Phase 7: Components (Admin/Dispatcher)
-- [ ] Create `src/platforms/app/screen/order/components/ShipmentForm.tsx`
-  - [ ] Origin-Destination side-by-side layout
-  - [ ] Address/Contact readonly display (from selected location)
-  - [ ] Pickup & Delivery schedule (separate)
-  - [ ] Items array (add/remove item rows)
-  - [ ] Pricing field (LTL only, auto from matrix)
-  - [ ] Remove icon (gray → red hover)
-- [ ] Create `src/platforms/app/screen/order/components/ShipmentCard.tsx`
-  - [ ] Display shipment origin → destination
-  - [ ] Show status badge
-  - [ ] Show items summary
-- [ ] Create `src/platforms/app/screen/order/components/ShipmentTimeline.tsx`
-  - [ ] Display shipments in order sequence
-  - [ ] Origin-Destination split view
-  - [ ] Status badges per shipment
-  - [ ] Items per shipment
-- [ ] Create `src/platforms/app/screen/order/components/ShipmentLogTimeline.tsx`
-  - [ ] Chronological shipment logs
-  - [ ] Self-fetching component pattern
-- [ ] Update `src/platforms/app/screen/order/create.tsx`
-  - [ ] Replace OrderWaypoint form with Shipment form
-  - [ ] Order Info (left) + Shipment Forms (right) layout
-  - [ ] Add/Remove shipment functionality
-  - [ ] FTL: Manual Override Price
-  - [ ] LTL: Pricing per shipment (auto from matrix)
-- [ ] Update `src/platforms/app/screen/order/detail.tsx`
-  - [ ] Replace WaypointTimeline with ShipmentTimeline
-  - [ ] Replace WaypointLogsTimeline with ShipmentLogTimeline
-  - [ ] Show shipments list instead of waypoints
+- [x] Create `src/platforms/app/screen/orders/components/form/formShipment.tsx`
+  - [x] Origin-Destination side-by-side layout
+  - [x] Address/Contact readonly display (from selected location)
+  - [x] Pickup & Delivery schedule (separate)
+  - [x] Items array (add/remove item rows)
+  - [x] Pricing field (LTL only, auto from matrix)
+  - [x] Remove icon (gray → red hover)
+- [x] Create `src/platforms/app/screen/orders/components/ShipmentCard.tsx`
+  - [x] Display shipment origin → destination
+  - [x] Show status badge
+  - [x] Show items summary
+- [x] Create `src/platforms/app/components/order/ShipmentTimeline.tsx`
+  - [x] Display shipments in order sequence
+  - [x] Origin-Destination split view
+  - [x] Status badges per shipment
+  - [x] Items per shipment
+  - [x] Return button for failed shipments
+- [x] Create `src/platforms/app/screen/orders/components/ShipmentLogTimeline.tsx`
+  - [x] Chronological shipment logs
+  - [x] Uses existing waypoint_logs endpoint (no new backend needed)
+  - [x] Self-fetching component pattern
+  - [x] Filters logs by shipment_id from metadata
+  - [x] Displays logs per shipment with timeline view
+- [x] Update `src/platforms/app/screen/orders/OrderCreatePage.tsx`
+  - [x] Replace OrderWaypoint form with Shipment form
+  - [x] Order Info (left) + Shipment Forms (right) layout
+  - [x] Add/Remove shipment functionality
+  - [x] FTL: Manual Override Price
+  - [x] LTL: Pricing per shipment (auto from matrix)
+- [x] Update `src/platforms/app/screen/orders/OrderDetailPage.tsx`
+  - [x] Replace WaypointTimeline with ShipmentTimeline
+  - [x] Replace WaypointLogsTimeline with ShipmentLogTimeline
+  - [x] Show shipments list instead of waypoints
+  - [x] Integrate ReturnShipmentModal
+- [x] Create ReturnShipmentModal component (replaces ReturnWaypointModal)
+  - [x] Display shipment info (shipment number, route, status)
+  - [x] Use returnShipment hook
+  - [x] forwardRef pattern with FormState error handling
+- [x] **Phase 7 COMPLETE** (2026-03-02)
 
 ### Phase 8: Components (Create Trip)
-- [ ] Update `src/platforms/app/screen/trip/components/PreviewWaypoints.tsx`
-  - [ ] Show shipments grouped by location (LTL)
-  - [ ] Show sequence override UI
-  - [ ] Display origin → destination per shipment
-- [ ] Update `src/platforms/app/screen/trip/create.tsx`
-  - [ ] Single-page form (remove wizard)
-  - [ ] Auto-show preview after order selected
-  - [ ] Allow sequence edit for LTL
+- [x] Created `src/platforms/app/screen/trips/components/form/ShipmentSequenceEditor.tsx`
+  - [x] Drag-and-drop editor for shipments (LTL)
+  - [x] Read-only for FTL
+  - [x] Shows origin → destination per shipment
+- [x] Update `src/platforms/app/screen/trips/components/form/TripStep3WaypointSequence.tsx`
+  - [x] Renamed to TripStep3ShipmentSequence (uses same file)
+  - [x] Uses ShipmentSequenceEditor instead of WaypointSequenceEditor
+  - [x] Show shipments grouped by location (LTL)
+- [x] Update `src/platforms/app/screen/trips/TripCreatePage.tsx`
+  - [x] Multi-step wizard kept (FTL: 3 steps, LTL: 4 steps)
+  - [x] Auto-show shipment sequences after order selected
+  - [x] Allow sequence edit for LTL
+  - [x] Uses shipments array instead of waypoints
+- [x] Update `src/platforms/app/screen/trips/components/form/TripStep4Confirm.tsx`
+  - [x] Shows shipments count instead of waypoints count
+  - [x] Uses shipmentSequences instead of waypointSequences
+- [x] **Phase 8 COMPLETE** (2026-03-02)
 
 ### Phase 9: Components (Exception)
-- [ ] Update `src/platforms/app/screen/exception/list.tsx`
-  - [ ] Replace failed_waypoints with failed_shipments
-  - [ ] Show shipment origin → destination
-  - [ ] Remove Reschedule Status & Date Range filters
-- [ ] Update `src/platforms/app/screen/exception/components/RescheduleModal.tsx`
-  - [ ] Update to handle shipments (not waypoints)
-  - [ ] Use existing exception/reschedule endpoint (shipment_ids instead of waypoint_ids)
+- [x] Update `src/platforms/app/screen/exceptions/ExceptionListPage.tsx`
+  - [x] Updated subtitle to mention "failed shipments" instead of "failed waypoints"
+  - [x] Updated empty state message
+- [x] Update `src/platforms/app/screen/exceptions/components/form/RescheduleModal.tsx`
+  - [x] Updated to handle shipments (not waypoints)
+  - [x] Changed interface from `failed_waypoints` to `failed_shipments`
+  - [x] Shows origin → destination per shipment in display
+  - [x] Uses `batchRescheduleShipments` with `shipment_ids`
+- [x] Update `src/services/exception/hooks.tsx`
+  - [x] Updated hooks to use `batchRescheduleShipments` and `returnShipment`
+  - [x] Added backward compatibility aliases
+- [x] **Phase 9 COMPLETE** (2026-03-02)
 
-### Phase 10: Components (Driver App)
-- [ ] Update `src/platforms/driver/screen/waypoint/detail.tsx`
-  - [ ] Show shipments at waypoint
-  - [ ] Display items per shipment
-  - [ ] Show total weight/items count
-- [ ] Update fail action
-  - [ ] Pickup failed: partial execution (per shipment)
-  - [ ] Delivery failed: all-or-nothing
+### Phase 10: Components (Driver App) - **COMPLETE** ✅
+- [x] Update backend driver_web handler to include shipments in trip detail
+  - [x] Create DriverShipment, DriverTripWaypoint, DriverTripResponse types
+  - [x] Update getTripDetail to fetch and include shipments
+  - [x] fetchShipmentsForWaypoints function for batch loading
+- [x] Update `frontend/driver/src/services/types.ts`
+  - [x] Add ShipmentItem, DriverShipment interfaces
+  - [x] Update TripWaypoint to include shipment_ids and shipments array
+- [x] Update `src/platforms/driver/screen/trip/waypoint-detail.tsx`
+  - [x] Extract shipments from waypoint instead of order_waypoint
+  - [x] Pass shipments to child components
+- [x] Update `LocationInfo.tsx` to use waypoint (not orderWaypoint)
+- [x] Update `OrderInfo.tsx` to show shipment count and total weight
+- [x] Update `WaypointItems.tsx` to display shipments with items and route info
+- [x] Update `FailWaypointForm.tsx` for partial execution
+  - [x] Pickup failed: ALL shipments cancelled (no selection)
+  - [x] Delivery failed: supports partial failure via shipment selection
+  - [x] Shipment checkboxes with "Akan Gagal" badge
+  - [x] Validation: at least 1 shipment must be selected
+- [x] **Phase 10 COMPLETE** (2026-03-02)
 
-### Phase 11: Components (Tracking Page)
-- [ ] Update `src/platforms/public/screen/tracking/TrackingResult.tsx`
-  - [ ] Add ShipmentSummaryCards
-  - [ ] Update timeline with shipment events
+### Phase 11: Components (Tracking Page) - **BACKEND DRIVEN** ✅
+- [x] Backend Phase 3 complete - returns shipments & shipment_history
+- [x] TrackingResult.tsx uses waypoint_history (contains shipment events)
+- [x] **PHASE 11 AUTO-COMPLETE** via backend changes
 
-### Phase 12: Components (Admin Dashboard)
-- [ ] Rename `WaypointMap` to `ShipmentMap`
-  - [ ] Draw origin (▲) + destination (▼) markers
-  - [ ] Draw line connector origin → destination
-  - [ ] Popup: shipment code, origin → destination
-- [ ] Update `FailedOrdersAlert`
-  - [ ] Show failed_shipments_count
-  - [ ] Group by order
+### Phase 12: Components (Admin Dashboard) - **BACKEND COMPLETE** ✅
+- [x] Update backend dashboard usecase to use shipments
+  - [x] Create MapShipment and MapShipmentsByArea types
+  - [x] Update getMapShipmentsByArea to query from shipments table
+  - [x] Update getFailedOrders to include failed_shipments_count
+- [x] Rename `WaypointMap` to `ShipmentMap`
+  - [x] Draw origin (▲) + destination (▼) markers
+  - [x] Draw line connector origin → destination
+  - [x] Popup: shipment code, origin → destination
+- [x] Update `FailedOrdersAlert`
+  - [x] Show failed_shipments_count
+  - [x] Group by order
+  - [x] Update header to "Failed Shipments"
+- [x] Update dashboard types (Dashboard, MapShipment, FailedOrder)
+- [x] **Phase 12 COMPLETE** (2026-03-02)
 
-### Phase 13: Components (Admin Reports)
-- [ ] Update "Order Trip Waypoint" → "Order Trip Shipment"
-  - [ ] Shipment metrics instead of waypoint metrics
-- [ ] Update Customer Report
-  - [ ] Shipment count (instead of waypoint count)
-- [ ] Update Driver Performance Report
-  - [ ] Shipments delivered/failed metrics
+### Phase 13: Components (Admin Reports) - **BACKEND COMPLETE** ✅
+- [x] Backend Phase 3 complete - `OrderTripWaypointReportItem` shows shipment data
+- [x] Customer Report already uses completed/failed shipments metrics
+- [x] **PHASE 13 COMPLETE** via backend Phase 3
 
 ### Phase 14: Types & Helpers
-- [ ] Add shipment status options to `src/shared/options.ts`
-  - [ ] `pending`, `dispatched`, `on_pickup`, `picked_up`, `on_delivery`, `delivered`, `failed`, `returned`, `cancelled`
-- [ ] Add shipment helper to `src/shared/helper.tsx`
-  - [ ] `shipmentStatusBadge(status)` - Status badge for shipment
-  - [ ] `formatShipmentMessage(message, eventType)` - Format shipment log message
+- [x] Add ShipmentStatus to `src/services/types.ts` ✅
+  - [x] All status values defined
+- [x] Add shipment helper to `src/shared/helper.tsx`
+  - [x] `shipmentStatusBadge(status)` - Uses existing statusBadge (works with any status)
+  - [x] `formatShipmentMessage(message, eventType, shipmentNumber?)` - Adds shipment context to messages
+- [x] **Phase 14 COMPLETE** (2026-03-02)
 
 ### Phase 15: Testing
 - [ ] Unit tests for ShipmentForm component

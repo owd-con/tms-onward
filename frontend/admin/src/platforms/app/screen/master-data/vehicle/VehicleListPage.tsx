@@ -192,12 +192,9 @@ const VehicleListPage = () => {
               <div className="text-center">
                 <h3 className="text-base lg:text-lg font-semibold">No Vehicles Found</h3>
                 <p className="text-base-content/60 mt-1 text-sm lg:text-base">
-                  Get started by creating your first vehicle.
+                  Get started by creating your first vehicle using the button above.
                 </p>
               </div>
-              <Button variant="primary" onClick={openCreate} size="sm" className="lg:btn-md">
-                Create Vehicle
-              </Button>
             </div>
           ) : (
             <>

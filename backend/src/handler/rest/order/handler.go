@@ -22,7 +22,7 @@ func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 	s.PUT("/orders/{id}", h.update, middleware.WithActiveCheck(s))
 	s.DELETE("/orders/{id}", h.delete, middleware.WithActiveCheck(s))
 	s.PUT("/orders/{id}/cancel", h.cancel, middleware.WithActiveCheck(s))
-	s.GET("/orders/{number}/by-number", h.showByNumber, middleware.WithActiveCheck(s))
+	s.GET("/orders/{id}/waypoint-preview", h.waypointPreview, middleware.WithActiveCheck(s))
 }
 
 // get handles GET /orders
@@ -155,23 +155,23 @@ func (h *handler) cancel(ctx *rest.Context) (err error) {
 	return ctx.Respond(res, err)
 }
 
-// showByNumber handles GET /orders/{number}/by-number
-// @Summary Get order by number
-// @Description Get order by order number
+// waypointPreview handles GET /orders/{id}/waypoint-preview
+// @Summary Get waypoint preview for order
+// @Description Get initial waypoint preview for trip creation based on order type and shipments
 // @Tags order
 // @Accept json
 // @Produce json
-// @Param number path string true "Order number"
+// @Param id path string true "Order ID"
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Router /orders/{number}/by-number [get]
-func (h *handler) showByNumber(ctx *rest.Context) (err error) {
+// @Router /orders/{id}/waypoint-preview [get]
+func (h *handler) waypointPreview(ctx *rest.Context) (err error) {
 	var req getRequest
 	var res *rest.ResponseBody
 
 	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
-		res, err = req.getByNumber()
+		res, err = req.waypointPreview()
 	}
 	return ctx.Respond(res, err)
 }

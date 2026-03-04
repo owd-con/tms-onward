@@ -8,9 +8,8 @@ import { Button, Modal, useEnigmaUI } from "@/components";
 import { useTrip } from "@/services/trip/hooks";
 import type { Trip } from "@/services/types";
 import { Page } from "../../components/layout";
-import WaypointTimeline from "@/platforms/app/components/order/WaypointTimeline";
+import WaypointTimeline from "./components/detail/WaypointTimeline";
 import { WaypointEvidence } from "@/platforms/app/components/waypoint/WaypointEvidence";
-import TripUpdateModal from "./components/form/TripUpdateModal";
 import { TripInformation } from "./components/detail/TripInformation";
 import { TripOrderCard } from "./components/detail/TripOrderCard";
 
@@ -81,20 +80,6 @@ const TripDetailPage = () => {
       return () => clearTimeout(timer);
     }
   }, [removeTripResult?.isSuccess]);
-
-  const openUpdateTrip = (trip: Trip) => {
-    openModal({
-      id: "update-trip",
-      content: (
-        <TripUpdateModal
-          open={true}
-          onClose={() => closeModal("update-trip")}
-          onSuccess={() => tripId && showTrip({ id: tripId })}
-          trip={trip}
-        />
-      ),
-    });
-  };
 
   const openDeleteTrip = () => {
     openModal({
@@ -251,7 +236,7 @@ const TripDetailPage = () => {
               {canModify && (
                 <Button
                   variant='secondary'
-                  onClick={() => openUpdateTrip(trip)}
+                  onClick={() => navigate(`/a/trips/${trip.id}/edit`)}
                 >
                   <FaEdit className='w-4 h-4' />
                 </Button>

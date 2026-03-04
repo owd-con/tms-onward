@@ -1072,7 +1072,7 @@ const docTemplate = `{
         },
         "/dashboard": {
             "get": {
-                "description": "Get dashboard summary statistics including active orders, trips, drivers, vehicles",
+                "description": "Get complete dashboard data including stats, map waypoints, expired vehicles/drivers, and failed orders",
                 "consumes": [
                     "application/json"
                 ],
@@ -1082,7 +1082,7 @@ const docTemplate = `{
                 "tags": [
                     "dashboard"
                 ],
-                "summary": "Get dashboard summary",
+                "summary": "Get dashboard",
                 "parameters": [
                     {
                         "type": "string",
@@ -1292,69 +1292,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/driver/trips/waypoint/{id}/arrive": {
-            "put": {
-                "description": "Complete pickup waypoint (In Transit → Completed)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "driver_web"
-                ],
-                "summary": "Arrive at pickup waypoint",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Trip Waypoint ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer jwt-token...",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.ResponseBody"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
         "/driver/trips/waypoint/{id}/complete": {
             "put": {
                 "description": "Complete delivery waypoint with POD (In Transit → Completed). Only for delivery type waypoints.",
@@ -1460,7 +1397,7 @@ const docTemplate = `{
         },
         "/driver/trips/waypoint/{id}/failed": {
             "put": {
-                "description": "Mark waypoint as failed with reason and images (In Transit → Completed/Failed). Provide a descriptive reason for the failure.",
+                "description": "Mark delivery waypoint as failed. ALL shipments in this waypoint will be marked as failed (all-or-nothing).",
                 "consumes": [
                     "application/json"
                 ],
@@ -1470,7 +1407,7 @@ const docTemplate = `{
                 "tags": [
                     "driver_web"
                 ],
-                "summary": "Fail waypoint",
+                "summary": "Fail delivery waypoint",
                 "parameters": [
                     {
                         "type": "string",
@@ -1499,6 +1436,119 @@ const docTemplate = `{
                             "items": {
                                 "type": "string"
                             }
+                        }
+                    },
+                    {
+                        "description": "Optional note about the failure",
+                        "name": "note",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer jwt-token...",
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ResponseBody"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/rest.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/rest.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/rest.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/driver/trips/waypoint/{id}/loading": {
+            "put": {
+                "description": "Complete pickup waypoint with partial execution support. Specify which shipments were successfully loaded. Shipments not in list will be marked as cancelled.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "driver_web"
+                ],
+                "summary": "Complete pickup waypoint",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Trip Waypoint ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Array of successfully loaded shipment IDs (others will be cancelled)",
+                        "name": "loaded_shipment_ids",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "description": "Name of warehouse staff who handed over the items",
+                        "name": "loaded_by",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "minLength": 1,
+                        "description": "Array of presigned S3 URLs for loading photos",
+                        "name": "images",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "description": "Optional note about the loading",
+                        "name": "note",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     {
@@ -2154,6 +2204,107 @@ const docTemplate = `{
                 }
             }
         },
+        "/exceptions/shipments/batch-reschedule": {
+            "post": {
+                "description": "Reschedule multiple failed shipments to a single new trip",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exception"
+                ],
+                "summary": "Batch reschedule failed shipments",
+                "parameters": [
+                    {
+                        "description": "Batch reschedule request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/exception.batchRescheduleShipmentsRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer jwt-token...",
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ResponseBody"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/rest.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/exceptions/shipments/{id}/return": {
+            "put": {
+                "description": "Mark a failed shipment as returned to origin",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exception"
+                ],
+                "summary": "Return shipment to origin",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Shipment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Return shipment request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/exception.returnShipmentRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer jwt-token...",
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ResponseBody"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/rest.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/exceptions/waypoints": {
             "get": {
                 "description": "Get list of waypoints with failed deliveries",
@@ -2187,107 +2338,6 @@ const docTemplate = `{
                         "description": "Filter by order ID",
                         "name": "order_id",
                         "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer jwt-token...",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.ResponseBody"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/exceptions/waypoints/batch-reschedule": {
-            "post": {
-                "description": "Reschedule multiple failed waypoints to a single new trip",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "exception"
-                ],
-                "summary": "Batch reschedule failed waypoints",
-                "parameters": [
-                    {
-                        "description": "Batch reschedule request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/exception.batchRescheduleWaypointsRequest"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer jwt-token...",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.ResponseBody"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/exceptions/waypoints/{id}/return": {
-            "put": {
-                "description": "Mark a failed waypoint as returned to origin",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "exception"
-                ],
-                "summary": "Return waypoint to origin",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Waypoint ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Return waypoint request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/exception.returnWaypointRequest"
-                        }
                     },
                     {
                         "type": "string",
@@ -2636,7 +2686,7 @@ const docTemplate = `{
         },
         "/onboarding/step5": {
             "post": {
-                "description": "Create initial pricing matrix",
+                "description": "Create initial customers",
                 "consumes": [
                     "application/json"
                 ],
@@ -2646,10 +2696,10 @@ const docTemplate = `{
                 "tags": [
                     "onboarding"
                 ],
-                "summary": "Onboarding Step 5: Create pricing matrix",
+                "summary": "Onboarding Step 5: Create customers",
                 "parameters": [
                     {
-                        "description": "Create pricing matrix request",
+                        "description": "Create customers request",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -5241,25 +5291,25 @@ const docTemplate = `{
                 }
             }
         },
-        "exception.batchRescheduleWaypointsRequest": {
+        "exception.batchRescheduleShipmentsRequest": {
             "type": "object",
             "properties": {
                 "driver_id": {
                     "type": "string"
                 },
-                "vehicle_id": {
-                    "type": "string"
-                },
-                "waypoint_ids": {
-                    "description": "Array of failed waypoint IDs",
+                "shipment_ids": {
+                    "description": "Array of failed shipment IDs",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "vehicle_id": {
+                    "type": "string"
                 }
             }
         },
-        "exception.returnWaypointRequest": {
+        "exception.returnShipmentRequest": {
             "type": "object",
             "properties": {
                 "returned_note": {
@@ -5268,13 +5318,16 @@ const docTemplate = `{
                 }
             }
         },
-        "onboarding.driverRequest": {
+        "onboarding.customerRequest": {
             "type": "object",
             "properties": {
-                "id": {
+                "address": {
                     "type": "string"
                 },
-                "license_number": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
                     "type": "string"
                 },
                 "name": {
@@ -5285,23 +5338,26 @@ const docTemplate = `{
                 }
             }
         },
-        "onboarding.pricingRequest": {
+        "onboarding.driverRequest": {
             "type": "object",
             "properties": {
-                "customer_id": {
-                    "type": "string"
-                },
-                "dest_city_id": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "string"
                 },
-                "origin_city_id": {
+                "license_expiry": {
                     "type": "string"
                 },
-                "price": {
-                    "type": "number"
+                "license_number": {
+                    "type": "string"
+                },
+                "license_type": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
                 }
             }
         },
@@ -5356,10 +5412,10 @@ const docTemplate = `{
         "onboarding.step5Request": {
             "type": "object",
             "properties": {
-                "pricing": {
+                "customers": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/onboarding.pricingRequest"
+                        "$ref": "#/definitions/onboarding.customerRequest"
                     }
                 }
             }
@@ -5402,15 +5458,24 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "make": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                },
                 "plate_number": {
                     "type": "string"
                 },
                 "vehicle_type": {
                     "type": "string"
+                },
+                "year": {
+                    "type": "integer"
                 }
             }
         },
-        "order.WaypointItem": {
+        "order.ShipmentItem": {
             "type": "object",
             "properties": {
                 "name": {
@@ -5424,48 +5489,42 @@ const docTemplate = `{
                 }
             }
         },
-        "order.WaypointRequest": {
+        "order.ShipmentRequest": {
             "type": "object",
             "properties": {
-                "address_id": {
+                "delivery_scheduled_date": {
                     "type": "string"
                 },
-                "contact_name": {
+                "delivery_scheduled_time": {
                     "type": "string"
                 },
-                "contact_phone": {
+                "destination_address_id": {
+                    "description": "Destination (Delivery)",
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
                 "items": {
+                    "description": "Items (only for delivery shipments)",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/order.WaypointItem"
+                        "$ref": "#/definitions/order.ShipmentItem"
                     }
                 },
-                "location_address": {
+                "origin_address_id": {
+                    "description": "Origin (Pickup)",
                     "type": "string"
                 },
-                "location_name": {
-                    "description": "Snapshot fields (read-only, populated from selected address)",
+                "pickup_scheduled_date": {
+                    "type": "string"
+                },
+                "pickup_scheduled_time": {
                     "type": "string"
                 },
                 "price": {
+                    "description": "Pricing (LTL only - FTL uses 0)",
                     "type": "number"
-                },
-                "scheduled_date": {
-                    "type": "string"
-                },
-                "scheduled_time": {
-                    "type": "string"
-                },
-                "sequence_number": {
-                    "type": "integer"
-                },
-                "type": {
-                    "type": "string"
                 }
             }
         },
@@ -5484,14 +5543,14 @@ const docTemplate = `{
                 "reference_code": {
                     "type": "string"
                 },
-                "special_instructions": {
-                    "type": "string"
-                },
-                "waypoints": {
+                "shipments": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/order.WaypointRequest"
+                        "$ref": "#/definitions/order.ShipmentRequest"
                     }
+                },
+                "special_instructions": {
+                    "type": "string"
                 }
             }
         },
@@ -5510,14 +5569,14 @@ const docTemplate = `{
                 "reference_code": {
                     "type": "string"
                 },
-                "special_instructions": {
-                    "type": "string"
-                },
-                "waypoints": {
+                "shipments": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/order.WaypointRequest"
+                        "$ref": "#/definitions/order.ShipmentRequest"
                     }
+                },
+                "special_instructions": {
+                    "type": "string"
                 }
             }
         },
@@ -5661,14 +5720,14 @@ const docTemplate = `{
                 }
             }
         },
-        "trip.WaypointRequest": {
+        "trip.ShipmentSequenceRequest": {
             "type": "object",
             "properties": {
-                "order_waypoint_id": {
-                    "type": "string"
-                },
                 "sequence_number": {
                     "type": "integer"
+                },
+                "shipment_id": {
+                    "type": "string"
                 }
             }
         },
@@ -5684,15 +5743,15 @@ const docTemplate = `{
                 "order_id": {
                     "type": "string"
                 },
-                "vehicle_id": {
-                    "type": "string"
-                },
-                "waypoints": {
-                    "description": "LTL: required, FTL: optional (use order waypoints)",
+                "shipment_sequences": {
+                    "description": "Custom shipment ordering",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/trip.WaypointRequest"
+                        "$ref": "#/definitions/trip.ShipmentSequenceRequest"
                     }
+                },
+                "vehicle_id": {
+                    "type": "string"
                 }
             }
         },
@@ -5705,11 +5764,11 @@ const docTemplate = `{
                 "notes": {
                     "type": "string"
                 },
-                "waypoints": {
-                    "description": "Untuk sequence update (LTL only)",
+                "shipment_sequences": {
+                    "description": "Custom shipment ordering",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/trip.WaypointRequest"
+                        "$ref": "#/definitions/trip.ShipmentSequenceRequest"
                     }
                 }
             }

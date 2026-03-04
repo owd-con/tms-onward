@@ -1,0 +1,394 @@
+import { useEffect, useRef, useState } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import type { MapShipmentsByArea } from "@/services/types";
+
+// Set Mapbox access token
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || "";
+
+interface ShipmentMapProps {
+  shipmentsByArea: MapShipmentsByArea[];
+  height?: string;
+}
+
+// Status colors
+const STATUS_COLORS: Record<string, string> = {
+  pending: "#FBBF24",
+  dispatched: "#3B82F6",
+  on_pickup: "#8B5CF6",
+  picked_up: "#6366F1",
+  on_delivery: "#EC4899",
+  delivered: "#10B981",
+  failed: "#EF4444",
+  cancelled: "#6B7280",
+  returned: "#F59E0B",
+};
+
+const getStatusColor = (status: string) => STATUS_COLORS[status] || "#6B7280";
+
+export default function ShipmentMap({ shipmentsByArea, height = "400px" }: ShipmentMapProps) {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const popup = useRef<mapboxgl.Popup | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const hasInitializedLayers = useRef(false);
+
+  // Initialize map
+  useEffect(() => {
+    if (!mapContainer.current || !MAPBOX_TOKEN) return;
+
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      accessToken: MAPBOX_TOKEN,
+      style: "mapbox://styles/mapbox/streets-v12",
+      center: [106.8456, -6.2088], // Jakarta default center
+      zoom: 10,
+      // Enable all interactions
+      interactive: true,
+      dragPan: true,
+      dragRotate: true,
+      scrollZoom: { around: "center" }, // Enable trackpad pinch zoom
+      touchZoomRotate: true, // Enable touch pinch zoom
+      doubleClickZoom: true,
+      boxZoom: true,
+      touchPitch: true,
+      // Hide Mapbox attribution
+      attributionControl: false,
+    });
+
+    // Add navigation control (zoom buttons)
+    const navControl = new mapboxgl.NavigationControl({ showCompass: false });
+    map.current.addControl(navControl, "top-right");
+
+    // Initialize popup
+    popup.current = new mapboxgl.Popup({
+      closeButton: true,
+      closeOnClick: true,
+      offset: 15,
+    });
+
+    map.current.on("load", () => {
+      setIsLoaded(true);
+    });
+
+    return () => {
+      map.current?.remove();
+    };
+  }, []);
+
+  // Add/update shipments layer
+  useEffect(() => {
+    if (!map.current || !isLoaded) return;
+
+    const mapInstance = map.current;
+
+    // Collect all unique coordinates and routes
+    const originFeatures: GeoJSON.Feature[] = [];
+    const destFeatures: GeoJSON.Feature[] = [];
+    const routeFeatures: GeoJSON.Feature[] = [];
+
+    shipmentsByArea.forEach((area) => {
+      area.shipments.forEach((shipment) => {
+        // Only add if both origin and destination have valid coordinates
+        if (
+          shipment.origin_lat !== 0 &&
+          shipment.origin_lng !== 0 &&
+          shipment.dest_lat !== 0 &&
+          shipment.dest_lng !== 0
+        ) {
+          // Origin marker (▲)
+          originFeatures.push({
+            type: "Feature",
+            properties: {
+              id: shipment.shipment_id,
+              type: "origin",
+              shipmentNumber: shipment.shipment_number,
+              orderNumber: shipment.order_number,
+              customerName: shipment.customer_name,
+              originAddress: shipment.origin_address,
+              originCity: shipment.origin_city,
+              destAddress: shipment.dest_address,
+              destCity: shipment.dest_city,
+              status: shipment.status,
+              statusColor: getStatusColor(shipment.status),
+              icon: "▲",
+            },
+            geometry: {
+              type: "Point",
+              coordinates: [shipment.origin_lng, shipment.origin_lat],
+            },
+          });
+
+          // Destination marker (▼)
+          destFeatures.push({
+            type: "Feature",
+            properties: {
+              id: shipment.shipment_id,
+              type: "destination",
+              shipmentNumber: shipment.shipment_number,
+              orderNumber: shipment.order_number,
+              customerName: shipment.customer_name,
+              originAddress: shipment.origin_address,
+              originCity: shipment.origin_city,
+              destAddress: shipment.dest_address,
+              destCity: shipment.dest_city,
+              status: shipment.status,
+              statusColor: getStatusColor(shipment.status),
+              icon: "▼",
+            },
+            geometry: {
+              type: "Point",
+              coordinates: [shipment.dest_lng, shipment.dest_lat],
+            },
+          });
+
+          // Route line
+          routeFeatures.push({
+            type: "Feature",
+            properties: {
+              id: shipment.shipment_id,
+              statusColor: getStatusColor(shipment.status),
+            },
+            geometry: {
+              type: "LineString",
+              coordinates: [
+                [shipment.origin_lng, shipment.origin_lat],
+                [shipment.dest_lng, shipment.dest_lat],
+              ],
+            },
+          });
+        }
+      });
+    });
+
+    // Remove existing layers and sources
+    const layersToRemove = [
+      "shipment-origins",
+      "shipment-origins-labels",
+      "shipment-destinations",
+      "shipment-destinations-labels",
+      "shipment-routes",
+    ];
+    layersToRemove.forEach((layerId) => {
+      if (mapInstance.getLayer(layerId)) {
+        mapInstance.removeLayer(layerId);
+      }
+    });
+
+    const sourcesToRemove = ["shipment-origins", "shipment-destinations", "shipment-routes"];
+    sourcesToRemove.forEach((sourceId) => {
+      if (mapInstance.getSource(sourceId)) {
+        mapInstance.removeSource(sourceId);
+      }
+    });
+
+    if (originFeatures.length === 0) return;
+
+    // Add origins source
+    mapInstance.addSource("shipment-origins", {
+      type: "geojson",
+      data: {
+        type: "FeatureCollection",
+        features: originFeatures,
+      },
+    });
+
+    // Add destinations source
+    mapInstance.addSource("shipment-destinations", {
+      type: "geojson",
+      data: {
+        type: "FeatureCollection",
+        features: destFeatures,
+      },
+    });
+
+    // Add routes source
+    mapInstance.addSource("shipment-routes", {
+      type: "geojson",
+      data: {
+        type: "FeatureCollection",
+        features: routeFeatures,
+      },
+    });
+
+    // Add route lines (draw first so markers appear on top)
+    mapInstance.addLayer({
+      id: "shipment-routes",
+      type: "line",
+      source: "shipment-routes",
+      paint: {
+        "line-color": ["get", "statusColor"],
+        "line-width": 2,
+        "line-opacity": 0.6,
+      },
+    });
+
+    // Add origin markers
+    mapInstance.addLayer({
+      id: "shipment-origins",
+      type: "circle",
+      source: "shipment-origins",
+      paint: {
+        "circle-radius": 12,
+        "circle-color": ["get", "statusColor"],
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#ffffff",
+      },
+    });
+
+    // Add origin labels
+    mapInstance.addLayer({
+      id: "shipment-origins-labels",
+      type: "symbol",
+      source: "shipment-origins",
+      layout: {
+        "text-field": ["get", "icon"],
+        "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
+        "text-size": 10,
+        "text-anchor": "center",
+        "text-ignore-placement": true,
+      },
+      paint: {
+        "text-color": "#ffffff",
+      },
+    });
+
+    // Add destination markers
+    mapInstance.addLayer({
+      id: "shipment-destinations",
+      type: "circle",
+      source: "shipment-destinations",
+      paint: {
+        "circle-radius": 12,
+        "circle-color": ["get", "statusColor"],
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#ffffff",
+      },
+    });
+
+    // Add destination labels
+    mapInstance.addLayer({
+      id: "shipment-destinations-labels",
+      type: "symbol",
+      source: "shipment-destinations",
+      layout: {
+        "text-field": ["get", "icon"],
+        "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
+        "text-size": 10,
+        "text-anchor": "center",
+        "text-ignore-placement": true,
+      },
+      paint: {
+        "text-color": "#ffffff",
+      },
+    });
+
+    // Click handler for markers
+    const onMapClick = (e: mapboxgl.MapMouseEvent) => {
+      // Check if clicked on origin or destination feature
+      const features = mapInstance.queryRenderedFeatures(e.point, {
+        layers: ["shipment-origins", "shipment-destinations"],
+      });
+
+      if (!features || features.length === 0) return;
+
+      const feature = features[0];
+      const props = feature.properties as any;
+
+      const coordinates = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+
+      // Create popup content
+      const html = `
+        <div style="min-width: 220px; padding: 8px;">
+          <div style="font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 4px;">
+            ${props.shipmentNumber}
+          </div>
+          <div style="font-size: 12px; color: #6B7280; margin-bottom: 6px;">
+            ${props.orderNumber} - ${props.customerName}
+          </div>
+          <div style="padding-top: 6px; border-top: 1px solid #E5E7EB;">
+            <div style="display: flex; align-items: gap; 4px;">
+              <span style="color: #6B7280;">▲</span>
+              <span style="font-size: 12px; color: #374151;">${props.originAddress}</span>
+            </div>
+            ${props.originCity ? `<div style="font-size: 11px; color: #6B7280; margin-left: 14px;">${props.originCity}</div>` : ""}
+            <div style="display: flex; align-items: gap; 4px; margin-top: 4px;">
+              <span style="color: #6B7280;">▼</span>
+              <span style="font-size: 12px; color: #374151;">${props.destAddress}</span>
+            </div>
+            ${props.destCity ? `<div style="font-size: 11px; color: #6B7280; margin-left: 14px;">${props.destCity}</div>` : ""}
+          </div>
+        </div>
+      `;
+
+      if (popup.current) {
+        popup.current.setLngLat(coordinates).setHTML(html).addTo(mapInstance);
+      }
+    };
+
+    // Change cursor on hover
+    const onMapMouseMove = (e: mapboxgl.MapMouseEvent) => {
+      const features = mapInstance.queryRenderedFeatures(e.point, {
+        layers: ["shipment-origins", "shipment-destinations"],
+      });
+      mapInstance.getCanvas().style.cursor = features.length > 0 ? "pointer" : "";
+    };
+
+    mapInstance.on("click", onMapClick);
+    mapInstance.on("mousemove", onMapMouseMove);
+
+    // Fit map to show all markers (only once)
+    if (!hasInitializedLayers.current && originFeatures.length > 0) {
+      const bounds = new mapboxgl.LngLatBounds();
+      originFeatures.forEach((f) => {
+        const coords = (f.geometry as GeoJSON.Point).coordinates as [number, number];
+        bounds.extend(coords);
+      });
+      destFeatures.forEach((f) => {
+        const coords = (f.geometry as GeoJSON.Point).coordinates as [number, number];
+        bounds.extend(coords);
+      });
+      mapInstance.fitBounds(bounds, { padding: 50, maxZoom: 14 });
+      hasInitializedLayers.current = true;
+    }
+
+    // Cleanup function
+    return () => {
+      mapInstance.off("click", onMapClick);
+      mapInstance.off("mousemove", onMapMouseMove);
+    };
+  }, [shipmentsByArea, isLoaded]);
+
+  if (!MAPBOX_TOKEN) {
+    return (
+      <div
+        className="w-full bg-gray-100 rounded-xl flex items-center justify-center"
+        style={{ height }}
+      >
+        <div className="text-center p-6">
+          <p className="text-gray-500">Mapbox access token not configured</p>
+          <p className="text-sm text-gray-400 mt-1">Set VITE_MAPBOX_TOKEN in your environment</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full rounded-xl overflow-hidden shadow-sm">
+      <style>{`
+        .mapboxgl-ctrl-logo {
+          display: none !important;
+        }
+      `}</style>
+      <div
+        ref={mapContainer}
+        className="w-full"
+        style={{
+          height,
+          position: "relative",
+          touchAction: "pan-x pan-y", // Allow Mapbox to handle zoom gestures
+        }}
+      />
+    </div>
+  );
+}

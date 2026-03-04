@@ -33,17 +33,19 @@ type TripWaypoint struct {
 	ActualCompletionTime *time.Time `bun:"actual_completion_time" json:"actual_completion_time,omitempty"`
 	Notes                string     `bun:"notes,type:text" json:"notes"`
 
+	// For pickup
+	LoadedBy        *string `bun:"loaded_by,type:varchar(255)" json:"loaded_by,omitempty"`
+
 	// For delivery
 	ReceivedBy      *string `bun:"received_by,type:varchar(255)" json:"received_by,omitempty"`
 	FailedReason    *string `bun:"failed_reason,type:text" json:"failed_reason,omitempty"`
 
-	CreatedBy       string    `bun:"created_by,type:varchar(255)" json:"created_by"`
-	UpdatedBy       string    `bun:"updated_by,type:varchar(255)" json:"updated_by"`
-	CreatedAt       time.Time `bun:"created_at,default:current_timestamp" json:"created_at"`
-	UpdatedAt       time.Time `bun:"updated_at,default:current_timestamp" json:"updated_at"`
 	IsDeleted       bool      `bun:"is_deleted,default:false" json:"is_deleted,omitempty"`
 
 	// Relations
 	Trip       *Trip    `bun:"rel:belongs-to,join:trip_id=id" json:"trip,omitempty"`
 	AddressRel *Address `bun:"rel:belongs-to,join:address_id=id" json:"address_rel,omitempty"`
+
+	// Loaded manually (not persisted)
+	Shipments []*Shipment `bun:"-" json:"shipments,omitempty"`
 }

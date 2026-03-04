@@ -1100,16 +1100,145 @@ Per blueprint.md line 496 & 1658, entity `OrderWaypoint` harus memiliki field `r
 
 ---
 
-**Note:** 🚚 **Shipment Concept Refactoring** (Phase 14) telah dipindah ke `docs/feedbackV1/07_implementation_checklist.md`
+## Phase 14: Shipment Concept Refactoring (Backend) ✅ DONE
 
-Dokumen tersebut berisi **18 Phase lengkap** untuk implementasi Shipment Concept:
-- **Backend** (Phase 1-5): Entity, Repository, Usecase, Handler, Testing
-- **Frontend** (Phase 6-15): API Service, Components, Pages, Types, Testing
-- **Additional** (Phase 16-18): Event Publishing, Data Migration, Cleanup
+**Status:** Backend implementation completed (2026-03-02)
 
-Keputusan final feedbackV1:
-- ✅ Tanpa Exception entity - Gunakan status di Shipment untuk tracking failed delivery
-- ✅ Tanpa standalone shipment GET/list API - Shipments selalu include di Order response
-- ✅ Retry/Return handled via existing `/exception/reschedule` endpoint
-- ✅ TripWaypoint sebagai source of truth untuk sync Shipment status
+**Referensi:** `docs/feedbackV1/` folder berisi dokumentasi lengkap Shipment Concept
+
+### 14.1 Shipment Concept Overview
+Shipment Concept mengubah granularity dari OrderWaypoint ke Shipment:
+- **Shipment**: 1 origin → 1 destination (single route unit)
+- **FTL (Full Truckload)**: 1 order = multiple shipments, price di Order.TotalPrice
+- **LTL (Less Than Truckload)**: 1 order = multiple shipments, price per shipment dari matrix
+- **Partial Execution**: Pickup gagal → semua shipments cancelled; Delivery gagal → shipments bisa di-retry
+- **TripWaypoint**: Source of truth untuk status, berisi array ShipmentIDs
+
+### 14.2 Entity & Migration
+**Entity:**
+- [x] Create `entity/shipment.go` - Shipment & ShipmentItem entities
+- [x] Update `entity/trip_waypoint.go` - Replace OrderWaypointID with ShipmentIDs []uuid.UUID
+- [x] Add location snapshot fields to TripWaypoint (type, address_id, location_name, address, contact_name, contact_phone)
+
+**Migration:**
+- [x] Create `migrations/20250113100006_shipments.up.sql`
+  - [x] Create `shipments` table
+  - [x] Update `trip_waypoints` table - add shipment_ids array and snapshot fields
+  - [x] Update `waypoint_logs` table - add shipment_ids array, order_id NOT NULL
+  - [x] Update `waypoint_images` table - add order_id and shipment_ids
+  - [x] Keep `order_waypoints` table for backward compatibility
+
+### 14.3 Repository & Usecase
+**Repository:**
+- [x] Create `src/repository/shipment.go` - ShipmentRepository
+  - [x] Basic CRUD operations
+  - [x] FindByOrderID, FindByCompanyID, FindFailedShipments
+  - [x] UpdateStatus, UpdateStatusWithFailedInfo, UpdateRetryCount
+
+**Usecase:**
+- [x] Create `src/usecase/shipment.go` - ShipmentUsecase
+  - [x] CreateShipmentNumber - Format: SHP-YYYYMMDD-XXXX
+  - [x] Create, CreateBatch - Create single or multiple shipments
+  - [x] UpdateStatusFromTripWaypoint - Sync status from TripWaypoint
+  - [x] MarkDispatched - Mark shipments as dispatched
+  - [x] CancelShipmentsByOrderID - Cancel all shipments for an order
+  - [x] GetByTripID - Get shipments for a trip
+
+- [x] Update `src/usecase/trip.go` - TripUsecase
+  - [x] PreviewTripWaypoints - Preview trip waypoints before creation
+  - [x] ConvertShipmentsToTripWaypoints - Convert shipments to trip waypoints
+  - [x] CreateWithShipments - Create trip with shipments
+  - [x] CreateForRescheduleWithWaypoints - Create new trip for rescheduled waypoints
+
+- [x] Update `src/usecase/exception.go` - ExceptionUsecase
+  - [x] BatchRescheduleWaypoints - Reschedule waypoints with shipment conversion
+  - [x] ReturnWaypoint - Mark waypoint as returned to origin
+
+- [x] Update `src/usecase/waypoint.go` - WaypointUsecase
+  - [x] FailTripWaypointWithShipments - Handle partial execution (pickup/delivery failure)
+  - [x] SyncShipmentStatusFromTripWaypoint - Sync shipment status from trip waypoint
+  - [x] Add ShipmentUsecase dependency
+
+- [x] Update `src/usecase/order.go` - OrderUsecase
+  - [x] Add ShipmentRepo dependency
+  - [x] CreateWithShipments - Create order with shipments (and OrderWaypoints for backward compatibility)
+
+- [x] Update `src/usecase/factory.go` - Register ShipmentUsecase
+
+### 14.4 Handler & API
+**Order Handlers:**
+- [x] Update `src/handler/rest/order/request_create.go`
+  - [x] Add toShipmentEntities() - Convert waypoints to shipments
+  - [x] FTL: Create shipments from pickup+delivery pairs
+  - [x] LTL: Group shipments by common origins/destinations
+  - [x] Call CreateWithShipments instead of CreateWithWaypoints
+
+**Trip Handlers:**
+- [x] Update `src/handler/rest/trip/request_create.go`
+  - [x] Validate shipments exist for order
+  - [x] Call CreateWithShipments with orderID and orderType
+  - [x] Remove unused imports (fmt, uuid)
+
+- [x] Update `src/handler/rest/trip/request_update.go`
+  - [x] Update to use ConvertShipmentsToTripWaypoints
+  - [x] Remove unused imports and variables
+
+**Exception Handlers:**
+- [x] Update `src/handler/rest/exception/request_batch_reschedule.go`
+  - [x] Use ExceptionUsecase.BatchRescheduleWaypoints
+  - [x] Remove manual TripWaypoint creation
+
+**Driver Web Handlers:**
+- [x] Update `src/handler/rest/driver_web/request_waypoint_failed.go`
+  - [x] Add FailedShipmentIDs parameter for partial delivery failures
+  - [x] Implement partial execution logic:
+    - Pickup fails → ALL shipments in waypoint are cancelled
+    - Delivery fails → Can specify which shipments failed (partial) or all
+  - [x] Call FailTripWaypointWithShipments with proper shipment IDs
+
+### 14.5 Implementation Summary
+**Files Created:**
+- `entity/shipment.go` (130 lines)
+- `src/repository/shipment.go` (210 lines)
+- `src/usecase/shipment.go` (350+ lines)
+- `migrations/20250113100006_shipments.up.sql` & `.down.sql`
+
+**Files Modified:**
+- `entity/trip_waypoint.go` - ShipmentIDs array, location snapshot fields
+- `entity/waypoint_log.go` - ShipmentIDs array, OrderID NOT NULL
+- `entity/waypoint_image.go` - OrderID, ShipmentIDs array
+- `entity/order.go` - Shipments relation
+- `src/repository/trip_waypoint.go` - Handle ShipmentIDs operations
+- `src/usecase/trip.go` - Preview and shipment conversion methods
+- `src/usecase/exception.go` - Shipment-based reschedule
+- `src/usecase/waypoint.go` - Shipment status sync, partial execution
+- `src/usecase/order.go` - CreateWithShipments method
+- `src/usecase/factory.go` - Register ShipmentUsecase
+- `src/handler/rest/order/request_create.go` - Shipment creation
+- `src/handler/rest/trip/request_create.go` - Shipment-based trip creation
+- `src/handler/rest/trip/request_update.go` - Shipment-based sequence update
+- `src/handler/rest/exception/request_batch_reschedule.go` - Shipment-based reschedule
+- `src/handler/rest/driver_web/request_waypoint_failed.go` - Partial execution
+
+**Build Status:** ✅ Entire backend compiles successfully
+
+### 14.6 Frontend Implementation (PENDING)
+Frontend implementation masih pending - lihat `docs/feedbackV1/07_implementation_checklist.md`
+
+Phase 6-15 (Frontend):
+- Phase 6: API Service & Hooks
+- Phase 7: Components (Admin/Dispatcher) - Order forms & timelines
+- Phase 8: Components (Create Trip) - Preview & sequence
+- Phase 9: Components (Exception) - Reschedule modal
+- Phase 10: Components (Driver App) - Partial execution UI
+- Phase 11: Components (Tracking Page) - Shipment tracking
+- Phase 12: Components (Admin Dashboard) - Shipment maps
+- Phase 13: Components (Admin Reports) - Shipment metrics
+- Phase 14: Types & Helpers - Status options, badges
+- Phase 15: Testing - Unit & integration tests
+
+---
+
+**Last Updated:** 2026-03-02
+**Version:** 3.1 (Shipment Concept Backend Complete)
 

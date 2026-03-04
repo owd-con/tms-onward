@@ -165,9 +165,6 @@ const AddressFormModal = forwardRef<AddressFormModalRef, AddressFormModalProps>(
       setSelectedRegion(region);
     };
 
-    // Validation
-    const isFormValid =
-      name.trim() !== "" && address.trim() !== "" && regionId !== "";
     const isLoading = createResult?.isLoading || updateResult?.isLoading;
 
     return (
@@ -265,7 +262,6 @@ const AddressFormModal = forwardRef<AddressFormModalRef, AddressFormModalProps>(
                 type='submit'
                 variant='primary'
                 isLoading={isLoading}
-                disabled={!isFormValid}
               >
                 {mode === "create" ? "Create Address" : "Update Address"}
               </Button>

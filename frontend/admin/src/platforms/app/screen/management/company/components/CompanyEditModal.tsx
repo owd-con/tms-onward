@@ -1,15 +1,10 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 
-import { Button, Input, Modal, Select } from "@/components";
+import { Button, Input, Modal, RemoteSelect } from "@/components";
 import { useCompany } from "@/services/company/hooks";
 import type { Company } from "@/services/types";
-
-// Company type options
-const COMPANY_TYPE_OPTIONS = [
-  { value: "3PL", label: "3PL - Third Party Logistics" },
-  { value: "Carrier", label: "Carrier - Transportation Company" },
-];
+import { companyTypeOptions } from "@/shared/options";
 
 const CompanyEditModal = ({
   data,
@@ -24,50 +19,26 @@ const CompanyEditModal = ({
 
   // Form state
   const [name, setName] = useState(data?.name || "");
-  const [type, setType] = useState<"3PL" | "Carrier">(data?.type || "3PL");
+  const [type, setType] = useState<{ label: string; value: "3PL" | "Carrier" }>(
+    companyTypeOptions.find(opt => opt.value === (data?.type || "3PL")) || companyTypeOptions[0]
+  );
   const [timezone, setTimezone] = useState(data?.timezone || "Asia/Jakarta");
   const [currency, setCurrency] = useState(data?.currency || "IDR");
   const [language, setLanguage] = useState(data?.language || "id");
   const [logoUrl, setLogoUrl] = useState(data?.logo_url || "");
 
-  // Validation errors
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (name.trim()) {
-      newErrors.name = "Company name is required";
-    }
-
-    if (type) {
-      newErrors.type = "Company type is required";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async () => {
-    if (validateForm()) {
-      return;
-    }
-
-    try {
-      await updateCompany({
-        id: data?.id || "",
-        payload: {
-          name: name.trim(),
-          type,
-          timezone,
-          currency,
-          language,
-          logo_url: logoUrl.trim() || undefined,
-        },
-      });
-    } catch (error) {
-      console.error("Failed to update company:", error);
-    }
+    await updateCompany({
+      id: data?.id || "",
+      payload: {
+        name: name.trim(),
+        type: type.value,
+        timezone,
+        currency,
+        language,
+        logo_url: logoUrl.trim() || undefined,
+      },
+    });
   };
 
   // Close modal and reload on successful update
@@ -82,7 +53,7 @@ const CompanyEditModal = ({
   useEffect(() => {
     if (data) {
       setName(data.name || "");
-      setType(data.type || "3PL");
+      setType(companyTypeOptions.find(opt => opt.value === data.type) || companyTypeOptions[0]);
       setTimezone(data.timezone || "Asia/Jakarta");
       setCurrency(data.currency || "IDR");
       setLanguage(data.language || "id");
@@ -112,29 +83,19 @@ const CompanyEditModal = ({
           label='Company Name'
           required
           value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-            if (errors.name) {
-              setErrors({ ...errors, name: "" });
-            }
-          }}
-          error={errors.name}
+          onChange={(e) => setName(e.target.value)}
           placeholder='Enter your company name'
         />
 
         {/* Company Type */}
-        <Select
+        <RemoteSelect
           label='Company Type'
           required
-          options={COMPANY_TYPE_OPTIONS}
           value={type}
-          onChange={(e) => {
-            setType(e.target.value as "3PL" | "Carrier");
-            if (errors.type) {
-              setErrors({ ...errors, type: "" });
-            }
-          }}
-          error={errors.type}
+          onChange={(value) => setType(value)}
+          data={companyTypeOptions}
+          getLabel={(item) => item.label}
+          getValue={(item) => item.value}
         />
 
         {/* Logo URL */}

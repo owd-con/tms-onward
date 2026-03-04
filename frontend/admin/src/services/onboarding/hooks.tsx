@@ -38,7 +38,7 @@ export const useOnboarding = createCrudHook({
     },
     onboardingStep5: {
       hook: useOnboardingStep5Mutation,
-      errorMessage: "Failed to update pricing",
+      errorMessage: "Failed to update customers",
       requiresId: false,
     },
   },

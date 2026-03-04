@@ -10,24 +10,36 @@ export const exceptionApi = createApi({
   baseQuery,
   endpoints: (builder) => ({
     /**
-     * POST /exceptions/waypoints/batch-reschedule
-     * Batch reschedule failed waypoints with new driver & vehicle
+     * GET /exceptions/orders
+     * Get orders with failed shipments
      */
-    batchRescheduleWaypoints: builder.mutation({
+    getExceptionOrders: builder.query({
+      query: (params) => ({
+        url: "/exceptions/orders",
+        method: "GET",
+        params,
+      }),
+    }),
+
+    /**
+     * POST /exceptions/shipments/batch-reschedule
+     * Batch reschedule failed shipments with new driver & vehicle (delivery only)
+     */
+    batchRescheduleShipments: builder.mutation({
       query: (payload) => ({
-        url: "/exceptions/waypoints/batch-reschedule",
+        url: "/exceptions/shipments/batch-reschedule",
         method: "POST",
         body: payload,
       }),
     }),
 
     /**
-     * PUT /exceptions/waypoints/:id/return
-     * Return a failed waypoint to origin
+     * PUT /exceptions/shipments/:id/return
+     * Return a failed shipment to origin
      */
-    returnWaypoint: builder.mutation({
+    returnShipment: builder.mutation({
       query: ({ id, ...payload }) => ({
-        url: `/exceptions/waypoints/${id}/return`,
+        url: `/exceptions/shipments/${id}/return`,
         method: "PUT",
         body: payload,
       }),
@@ -37,6 +49,7 @@ export const exceptionApi = createApi({
 
 // Export RTK Query hooks
 export const {
-  useBatchRescheduleWaypointsMutation,
-  useReturnWaypointMutation,
+  useLazyGetExceptionOrdersQuery,
+  useBatchRescheduleShipmentsMutation,
+  useReturnShipmentMutation,
 } = exceptionApi;

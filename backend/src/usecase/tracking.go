@@ -32,26 +32,26 @@ type TrackingResponse struct {
 
 // ShipmentInfo represents shipment information for tracking
 type ShipmentInfo struct {
-	ShipmentNumber      string    `json:"shipment_number"`
-	Status              string    `json:"status"`
-	OriginLocationName  string    `json:"origin_location_name"`
-	OriginAddress       string    `json:"origin_address"`
-	DestLocationName    string    `json:"dest_location_name"`
-	DestAddress         string    `json:"dest_address"`
-	ScheduledPickupDate string    `json:"scheduled_pickup_date"`
-	ScheduledPickupTime string    `json:"scheduled_pickup_time"`
-	ActualPickupTime    *string   `json:"actual_pickup_time,omitempty"`
-	ActualDeliveryTime  *string   `json:"actual_delivery_time,omitempty"`
-	ReceivedBy          *string   `json:"received_by,omitempty"`
-	FailedReason        *string   `json:"failed_reason,omitempty"`
-	FailedAt            *string   `json:"failed_at,omitempty"`
+	ShipmentNumber      string  `json:"shipment_number"`
+	Status              string  `json:"status"`
+	OriginLocationName  string  `json:"origin_location_name"`
+	OriginAddress       string  `json:"origin_address"`
+	DestLocationName    string  `json:"dest_location_name"`
+	DestAddress         string  `json:"dest_address"`
+	ScheduledPickupDate string  `json:"scheduled_pickup_date"`
+	ScheduledPickupTime string  `json:"scheduled_pickup_time"`
+	ActualPickupTime    *string `json:"actual_pickup_time,omitempty"`
+	ActualDeliveryTime  *string `json:"actual_delivery_time,omitempty"`
+	ReceivedBy          *string `json:"received_by,omitempty"`
+	FailedReason        *string `json:"failed_reason,omitempty"`
+	FailedAt            *string `json:"failed_at,omitempty"`
 }
 
 // ShipmentHistory represents a single event in shipment timeline
 type ShipmentHistory struct {
 	ShipmentNumber string `json:"shipment_number"`
-	EventType      string `json:"event_type"`    // e.g., "status_change", "picked_up", "delivered", "failed"
-	Message        string `json:"message"`       // Human-readable message
+	EventType      string `json:"event_type"` // e.g., "status_change", "picked_up", "delivered", "failed"
+	Message        string `json:"message"`    // Human-readable message
 	OldStatus      string `json:"old_status,omitempty"`
 	NewStatus      string `json:"new_status"`
 	Notes          string `json:"notes,omitempty"`
@@ -243,7 +243,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 	// Get waypoint images (POD/failed) for this order
 	// Get trip_waypoints for this order
 	var tripWaypoints []*entity.TripWaypoint
-	if trip.ID != (uuid.UUID{}) {
+	if trip.ID != uuid.Nil {
 		// Trip exists, use its waypoints
 		tripWaypoints = trip.TripWaypoints
 	} else {
