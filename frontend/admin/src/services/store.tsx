@@ -1,4 +1,4 @@
-import { dashboardApi } from './dashboard/api';
+import { dashboardApi } from "./dashboard/api";
 import { userApi } from "./user/api";
 import { authApi } from "./auth/api";
 import { tableApi } from "./table/api";
@@ -27,6 +27,7 @@ import { onboardingApi } from "./onboarding/api";
 
 // TMS Onward - Report APIs
 import { reportApi } from "./report/api";
+import { uploadApi } from "./upload/api";
 
 import { configureStore, type Middleware } from "@reduxjs/toolkit";
 import { persistReducer, persistStore } from "redux-persist";
@@ -72,6 +73,7 @@ const apiMiddleware: Middleware[] = [
   onboardingApi.middleware,
   // TMS Onward - Report APIs
   reportApi.middleware,
+  uploadApi.middleware,
 ];
 
 const store = configureStore({

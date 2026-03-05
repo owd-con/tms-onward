@@ -1,5 +1,5 @@
 import { useEnigmaUI } from "@/components";
-import type { Shipment, ShipmentStatus } from "@/services/types";
+import type { Shipment } from "@/services/types";
 import { dateFormat, statusBadge, statusColors, statusIcon } from "@/shared/helper";
 import { formatCurrency } from "@/shared/utils/formatter";
 import { Button } from "@/components";

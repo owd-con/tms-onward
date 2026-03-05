@@ -36,7 +36,7 @@ const CompanyDetailPage = () => {
   }, []);
 
   const handleEditModal = () => {
-    if (company) return;
+    if (!company) return;
 
     openModal({
       id: "edit-company",
@@ -75,29 +75,6 @@ const CompanyDetailPage = () => {
         />
         <Page.Body className='flex-1 flex items-center justify-center'>
           <div className='loading loading-spinner loading-lg'></div>
-        </Page.Body>
-      </Page>
-    );
-  }
-
-  // Error state
-  if (getCompanyResult.isError) {
-    return (
-      <Page className='h-full flex flex-col min-h-0'>
-        <Page.Header
-          title='Company Management'
-          titleClassName='text-2xl'
-          subtitle='Manage your company information'
-        />
-        <Page.Body className='flex-1 flex items-center justify-center'>
-          <div className='text-center'>
-            <div className='text-error text-lg mb-2'>
-              Failed to load company information
-            </div>
-            <div className='text-base-content/60 text-sm'>
-              Please try again later
-            </div>
-          </div>
         </Page.Body>
       </Page>
     );
@@ -154,17 +131,6 @@ const CompanyDetailPage = () => {
                     </span>
                   </p>
                 </div>
-
-                {company?.logo_url && (
-                  <div>
-                    <div className='text-xs text-base-content/50 uppercase font-semibold tracking-wider mb-1'>
-                      Logo URL
-                    </div>
-                    <div className='text-sm text-base-content break-all'>
-                      {company.logo_url}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>

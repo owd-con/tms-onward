@@ -25,6 +25,8 @@ import { onboardingApi } from "./onboarding/api";
 // TMS Onward - Report APIs
 import { reportApi } from "./report/api";
 
+import { uploadApi } from "./upload/api";
+
 import { combineReducers } from "@reduxjs/toolkit";
 import type { Reducer, UnknownAction } from "redux";
 
@@ -69,6 +71,7 @@ const apiReducers = {
   [onboardingApi.reducerPath]: onboardingApi.reducer,
   // TMS Onward - Report APIs
   [reportApi.reducerPath]: reportApi.reducer,
+  [uploadApi.reducerPath]: uploadApi.reducer,
 };
 
 const sliceReducers = {
@@ -95,7 +98,7 @@ const rootReducer: Reducer<AppState, UnknownAction> = (state, action) => {
       "clear" in storage &&
       typeof (storage as unknown as Storage).clear === "function"
     ) {
-      ((storage as unknown) as Storage).clear();
+      (storage as unknown as Storage).clear();
     } else {
       storage.removeItem("persist:root");
     }

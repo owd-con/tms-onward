@@ -13,11 +13,10 @@ import { useLazyGetTripsQuery } from "@/services/trip/api";
 
 interface OrderTripListProps {
   orderId: string;
-  className?: string;
 }
 
 export const OrderTripList = memo<OrderTripListProps>(
-  ({ orderId, className }) => {
+  ({ orderId }) => {
     const navigate = useNavigate();
     const [getTrips, { data: tripsData, isLoading }] = useLazyGetTripsQuery();
     const [trips, setTrips] = useState<Trip[]>([]);
@@ -64,7 +63,7 @@ export const OrderTripList = memo<OrderTripListProps>(
     return (
       // <div className='p-4 lg:p-6 shadow-sm'>
       <div className='space-y-2'>
-        {sortedTrips.map((trip, index) => (
+        {sortedTrips.map((trip) => (
           <div
             key={trip.id}
             onClick={() => handleTripClick(trip.id)}

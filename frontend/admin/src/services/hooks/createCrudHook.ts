@@ -141,7 +141,7 @@ export interface CrudHookReturn<TEntity> {
   [key: string]: any;
 }
 
-const useNoopLazyQuery = () =>
+export const useNoopLazyQuery = () =>
   [
     async () => {
       return undefined;

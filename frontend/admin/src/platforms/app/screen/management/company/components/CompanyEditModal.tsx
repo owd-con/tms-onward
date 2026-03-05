@@ -5,6 +5,7 @@ import { Button, Input, Modal, RemoteSelect } from "@/components";
 import { useCompany } from "@/services/company/hooks";
 import type { Company } from "@/services/types";
 import { companyTypeOptions } from "@/shared/options";
+import { PhotoUpload } from "@/platforms/app/components/photo-upload/photo-upload";
 
 const CompanyEditModal = ({
   data,
@@ -25,7 +26,9 @@ const CompanyEditModal = ({
   const [timezone, setTimezone] = useState(data?.timezone || "Asia/Jakarta");
   const [currency, setCurrency] = useState(data?.currency || "IDR");
   const [language, setLanguage] = useState(data?.language || "id");
-  const [logoUrl, setLogoUrl] = useState(data?.logo_url || "");
+  const [logoPhotos, setLogoPhotos] = useState<string[]>(
+    data?.logo_url ? [data.logo_url] : []
+  );
 
   const handleSubmit = async () => {
     await updateCompany({
@@ -36,7 +39,7 @@ const CompanyEditModal = ({
         timezone,
         currency,
         language,
-        logo_url: logoUrl.trim() || undefined,
+        logo_url: logoPhotos[0] || undefined,
       },
     });
   };
@@ -57,7 +60,7 @@ const CompanyEditModal = ({
       setTimezone(data.timezone || "Asia/Jakarta");
       setCurrency(data.currency || "IDR");
       setLanguage(data.language || "id");
-      setLogoUrl(data.logo_url || "");
+      setLogoPhotos(data.logo_url ? [data.logo_url] : []);
     }
   }, [data]);
 
@@ -98,35 +101,14 @@ const CompanyEditModal = ({
           getValue={(item) => item.value}
         />
 
-        {/* Logo URL */}
-        <Input
-          label='Logo URL'
-          value={logoUrl}
-          onChange={(e) => setLogoUrl(e.target.value)}
-          placeholder='https://example.com/logo.png'
-          hint='Optional: Enter a URL for your company logo'
+        {/* Logo Upload */}
+        <PhotoUpload
+          photos={logoPhotos}
+          onPhotosChange={setLogoPhotos}
+          maxPhotos={1}
+          label='Company Logo'
+          optionalLabel='(Optional)'
         />
-
-        {/* Logo Preview */}
-        {logoUrl && (
-          <div className='flex items-center gap-4 p-3 bg-base-200 rounded-lg'>
-            <img
-              src={logoUrl}
-              alt='Logo Preview'
-              className='w-12 h-12 rounded object-cover border border-base-300'
-              onError={(e) => {
-                e.currentTarget.src = "";
-                e.currentTarget.style.display = "none";
-              }}
-            />
-            <div className='flex-1'>
-              <div className='text-xs text-base-content/60'>Logo Preview</div>
-              <div className='text-sm text-base-content break-all'>
-                {logoUrl}
-              </div>
-            </div>
-          </div>
-        )}
       </Modal.Body>
 
       <Modal.Footer>

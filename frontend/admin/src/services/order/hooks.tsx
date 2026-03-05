@@ -20,10 +20,9 @@ export const useOrder = createCrudHook({
       hook: useCancelOrderMutation,
       errorMessage: "Failed to cancel order",
     },
-    getWaypointPreview: {
-      hook: useLazyGetWaypointPreviewQuery,
-      errorMessage: "Failed to fetch waypoint preview",
-    },
+  },
+  additionalQueries: {
+    getWaypointPreview: useLazyGetWaypointPreviewQuery,
   },
   entityName: "order",
 });
