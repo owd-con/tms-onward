@@ -17,7 +17,7 @@ type DriverRepository struct {
 func NewDriverRepository() *DriverRepository {
 	base := postgres.NewBaseRepository[entity.Driver](postgres.GetDB(),
 		"drivers",
-		[]string{"license_number"},
+		[]string{"drivers.name", "license_number"},
 		[]string{"Company", "User"},
 		true,
 	)

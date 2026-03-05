@@ -84,14 +84,6 @@ type DriverPerformanceReport struct {
 	OnTimeRate     float64 `json:"on_time_rate"`
 }
 
-// DriverPerformanceReportWrapper wraps driver performance report with pagination
-type DriverPerformanceReportWrapper struct {
-	Data  []*DriverPerformanceReport `json:"data"`
-	Total int64                      `json:"total"`
-	Page  int64                      `json:"page"`
-	Limit int64                      `json:"limit"`
-}
-
 // OrderTripWaypointReportItem represents a single trip waypoint record (per shipment)
 type OrderTripWaypointReportItem struct {
 	OrderNumber  string `json:"order_number"`
@@ -110,14 +102,6 @@ type OrderTripWaypointReportItem struct {
 	ReceivedBy       *string `json:"received_by"`
 	FailedReason     *string `json:"failed_reason"`
 	CompletedAt      *string `json:"completed_at"`
-}
-
-// OrderTripWaypointReport represents comprehensive report response
-type OrderTripWaypointReport struct {
-	Data  []*OrderTripWaypointReportItem `json:"data"`
-	Total int64                          `json:"total"`
-	Page  int                            `json:"page"`
-	Limit int                            `json:"limit"`
 }
 
 // CustomerReportItem represents a single customer statistics record
@@ -160,7 +144,6 @@ type ReportQueryOptions struct {
 	// NEW: Phase 8 report fields
 	CustomerID string `query:"customer_id"`
 	DriverID   string `query:"driver_id"`
-	SortBy     string `query:"sort_by"` // Sort field (revenue|order_count|trip_count|success_rate)
 
 	Session *entity.TMSSessionClaims
 }
@@ -214,6 +197,11 @@ func (u *ReportUsecase) GetCustomerReport(opts *ReportQueryOptions) ([]*Customer
 		query = query.Where("c.id = ?", opts.CustomerID)
 	}
 
+	// Search by customer name
+	if opts.Search != "" {
+		query = query.Where("c.name ILIKE ?", "%"+opts.Search+"%")
+	}
+
 	// Group by customer
 	query = query.GroupExpr("c.id, c.name")
 
@@ -237,6 +225,9 @@ func (u *ReportUsecase) GetCustomerReport(opts *ReportQueryOptions) ([]*Customer
 	if opts.CustomerID != "" {
 		countQuery = countQuery.Where("c.id = ?", opts.CustomerID)
 	}
+	if opts.Search != "" {
+		countQuery = countQuery.Where("c.name ILIKE ?", "%"+opts.Search+"%")
+	}
 
 	if err := countQuery.Scan(u.ctx, &totalCount); err != nil {
 		return nil, 0, err
@@ -244,8 +235,8 @@ func (u *ReportUsecase) GetCustomerReport(opts *ReportQueryOptions) ([]*Customer
 
 	// Apply sorting
 	sortBy := "total_revenue"
-	if opts.SortBy != "" {
-		sortBy = opts.SortBy
+	if opts.OrderBy != "" {
+		sortBy = opts.OrderBy
 	}
 	query = query.OrderExpr(sortBy + " DESC")
 
@@ -301,6 +292,11 @@ func (u *ReportUsecase) GetDriverPerformance(opts *ReportQueryOptions) ([]*Drive
 		query = query.Where("d.id = ?", opts.DriverID)
 	}
 
+	// Search by driver name
+	if opts.Search != "" {
+		query = query.Where("d.name ILIKE ?", "%"+opts.Search+"%")
+	}
+
 	// Group by driver
 	query = query.GroupExpr("d.id, d.name")
 
@@ -323,6 +319,9 @@ func (u *ReportUsecase) GetDriverPerformance(opts *ReportQueryOptions) ([]*Drive
 	if opts.DriverID != "" {
 		countQuery = countQuery.Where("d.id = ?", opts.DriverID)
 	}
+	if opts.Search != "" {
+		countQuery = countQuery.Where("d.name ILIKE ?", "%"+opts.Search+"%")
+	}
 
 	if err := countQuery.Scan(u.ctx, &totalCount); err != nil {
 		return nil, 0, err
@@ -330,8 +329,8 @@ func (u *ReportUsecase) GetDriverPerformance(opts *ReportQueryOptions) ([]*Drive
 
 	// Apply sorting
 	sortBy := "total_trips"
-	if opts.SortBy != "" {
-		sortBy = opts.SortBy
+	if opts.OrderBy != "" {
+		sortBy = opts.OrderBy
 	}
 	query = query.OrderExpr(sortBy + " DESC")
 
@@ -401,6 +400,11 @@ func (u *ReportUsecase) GetOrderTripWaypointReport(opts *ReportQueryOptions) ([]
 		// Status filter
 		if opts.Status != "" {
 			f["waypoint_status"] = opts.Status
+		}
+
+		// Search filter by order_number (code)
+		if opts.Search != "" {
+			f["order_number"] = bson.M{"$regex": opts.Search, "$options": "i"}
 		}
 
 		return f

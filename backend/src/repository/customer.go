@@ -15,7 +15,7 @@ type CustomerRepository struct {
 func NewCustomerRepository() *CustomerRepository {
 	base := postgres.NewBaseRepository[entity.Customer](postgres.GetDB(),
 		"customers",
-		[]string{"name", "email", "phone"},
+		[]string{"customers.name", "customers.email", "customers.phone"},
 		[]string{"Company"},
 		true,
 	)

@@ -18,16 +18,16 @@ const CustomerReportTableFilter = ({ table }: ReportTableFilterProps) => {
   const current = table.State?.filter ?? {};
 
   // Store dates as Dayjs objects in local state
-  const [dateRange, setDateRange] = useState<
-    [Dayjs | null, Dayjs | null]
-  >(() => {
-    const start = current.start_date as string | undefined;
-    const end = current.end_date as string | undefined;
-    if (start && end) {
-      return [dayjs(start), dayjs(end)];
-    }
-    return [null, null];
-  });
+  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>(
+    () => {
+      const start = current.start_date as string | undefined;
+      const end = current.end_date as string | undefined;
+      if (start && end) {
+        return [dayjs(start), dayjs(end)];
+      }
+      return [null, null];
+    },
+  );
 
   const handleDateChange = (
     date: Dayjs | [Dayjs | null, Dayjs | null] | null,
@@ -64,16 +64,14 @@ const CustomerReportTableFilter = ({ table }: ReportTableFilterProps) => {
       handleClear={handleClear}
       handleFilter={handleFilter}
     >
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
-        <div className='flex-1'>
-          <DatePicker
-            mode='range'
-            value={dateRange}
-            onChange={handleDateChange}
-            placeholder='Select date range'
-            label='Date Range'
-          />
-        </div>
+      <div>
+        <DatePicker
+          mode='range'
+          value={dateRange}
+          onChange={handleDateChange}
+          placeholder='Select date range'
+          label='Date Range'
+        />
       </div>
     </TableFilters>
   );

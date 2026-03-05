@@ -1,6 +1,6 @@
 export const statusOptions = [
   { label: "Active", value: "active" },
-  { label: "Non Aktif", value: "non_active" },
+  { label: "Non Aktif", value: "inactive" },
 ];
 
 export const entitiesOptions = [
@@ -42,11 +42,10 @@ export const vehicleTypeOptions = [
 export const orderStatusOptions = [
   { label: "All Status", value: "" },
   { label: "Pending", value: "pending" },
-  { label: "Confirmed", value: "confirmed" },
+  { label: "Planned", value: "planned" },
   { label: "Dispatched", value: "dispatched" },
   { label: "In Transit", value: "in_transit" },
-  { label: "Delivered", value: "delivered" },
-  { label: "Failed", value: "failed" },
+  { label: "Completed", value: "completed" },
   { label: "Cancelled", value: "cancelled" },
 ];
 
@@ -57,6 +56,18 @@ export const orderTypeOptions = [
   { label: "All Types", value: "" },
   { label: "FTL", value: "FTL" },
   { label: "LTL", value: "LTL" },
+];
+
+/**
+ * Trip Status Options
+ */
+export const tripStatusOptions = [
+  { label: "All Status", value: "" },
+  { label: "Planned", value: "planned" },
+  { label: "Dispatched", value: "dispatched" },
+  { label: "In Transit", value: "in_transit" },
+  { label: "Completed", value: "completed" },
+  { label: "Cancelled", value: "cancelled" },
 ];
 
 /**
