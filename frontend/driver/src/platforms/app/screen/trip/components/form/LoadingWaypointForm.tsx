@@ -8,7 +8,7 @@ import { SignaturePad } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTrip } from "@/services/driver/hooks";
-import type { Shipment } from "@/services/types";
+import type { DriverShipment } from "@/services/types";
 
 /**
  * Ref type for LoadingWaypointForm
@@ -29,7 +29,7 @@ export interface LoadingWaypointFormProps {
   /** Trip waypoint ID */
   waypointId: string;
   /** Available shipments at this waypoint */
-  shipments?: Shipment[];
+  shipments?: DriverShipment[];
   /** Callback when form is cancelled */
   onCancel: () => void;
   /** Callback when loading is successfully completed */
@@ -161,8 +161,6 @@ const LoadingWaypointForm = forwardRef<
     signatureUrl !== "";
   const isLoading = loadingWaypointResult?.isLoading;
 
-  const allSelected = shipments.length > 0 && selectedShipmentIds.length === shipments.length;
-
   return (
     <Modal.Wrapper
       open={open}
@@ -239,7 +237,7 @@ const LoadingWaypointForm = forwardRef<
                         {shipment.shipment_number}
                       </p>
                       <p className='text-xs text-base-content/60 truncate'>
-                        {shipment.items?.map((item: any) => item.name).join(', ') || shipment.order?.reference_code}
+                        {shipment.items?.map((item: any) => item.name).join(', ') || shipment.shipment_number}
                       </p>
                     </div>
                   </label>
