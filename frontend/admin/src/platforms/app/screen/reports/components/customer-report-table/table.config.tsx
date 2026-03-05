@@ -51,25 +51,25 @@ const createTableConfig = () => ({
         </div>
       ),
     },
-    completed_waypoints: {
+    completed_shipments: {
       title: "Completed Waypoints",
       sortable: true,
       headerClass: "text-xs capitalize",
       class: "p-4",
       component: (row: any) => (
         <div className="text-xs font-normal tracking-wide text-center text-success">
-          <span className="font-semibold">{row?.completed_waypoints ?? 0}</span>
+          <span className="font-semibold">{row?.completed_shipments ?? 0}</span>
         </div>
       ),
     },
-    failed_waypoints: {
+    failed_shipments: {
       title: "Failed Waypoints",
       sortable: true,
       headerClass: "text-xs capitalize",
       class: "p-4",
       component: (row: any) => (
         <div className="text-xs font-normal tracking-wide text-center text-error">
-          <span className="font-semibold">{row?.failed_waypoints ?? 0}</span>
+          <span className="font-semibold">{row?.failed_shipments ?? 0}</span>
         </div>
       ),
     },

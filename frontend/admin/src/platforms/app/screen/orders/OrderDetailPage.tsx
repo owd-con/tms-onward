@@ -252,14 +252,14 @@ const OrderDetailPage = () => {
 
           {/* Order Tracking History */}
           {orderId && (
-            <OrderLogsTimeline
-              orderId={orderId}
-              className='lg:col-span-1'
-            />
+            <OrderLogsTimeline orderId={orderId} className='lg:col-span-1' />
           )}
+        </div>
 
-          {/* Shipment Timeline */}
-          <div className='lg:col-span-3'>
+        {/* Shipments & Trips - 3 Columns Grid (Shipments: 2, Trips: 1) */}
+        <div className='grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6'>
+          {/* Shipment Timeline - 2 Columns */}
+          <div className='lg:col-span-2'>
             <div className='mb-4'>
               <h3 className='text-base lg:text-lg font-semibold'>
                 Shipments ({order.shipments?.length || 0})
@@ -272,9 +272,14 @@ const OrderDetailPage = () => {
             />
           </div>
 
-          {/* Trip History (v2.10) */}
+          {/* Trip History (v2.10) - 1 Column */}
           {order?.status !== "pending" && orderId && (
-            <OrderTripList orderId={orderId} className='lg:col-span-3' />
+            <div className='lg:col-span-1'>
+              <div className='mb-4'>
+                <h3 className='text-base lg:text-lg font-semibold'>Trips</h3>
+              </div>
+              <OrderTripList orderId={orderId} />
+            </div>
           )}
         </div>
       </Page.Body>

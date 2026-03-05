@@ -1,14 +1,13 @@
 /**
  * TMS Onward - Order Trip List Component
  *
- * Displays list of trips for an order (including historical trips for rescheduled orders)
- * Shows trip progression: Trip 1, Trip 2, etc.
+ * Simple list of trips for an order.
+ * Compact design for side panel display.
  */
 
 import { memo, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import clsx from "clsx";
-import { dateFormat, statusBadge } from "@/shared/helper";
+import { dateFormat, statusIcon } from "@/shared/helper";
 import type { Trip } from "@/services/types";
 import { useLazyGetTripsQuery } from "@/services/trip/api";
 
@@ -44,17 +43,9 @@ export const OrderTripList = memo<OrderTripListProps>(
 
     if (isLoading) {
       return (
-        <div
-          className={clsx(
-            "bg-white rounded-xl p-4 lg:p-6 shadow-sm",
-            className,
-          )}
-        >
-          <h3 className='text-base lg:text-lg font-semibold mb-4'>
-            Trip History
-          </h3>
-          <div className='flex justify-center items-center h-32'>
-            <div className='loading loading-spinner loading-lg'></div>
+        <div className='bg-white rounded-xl p-4 lg:p-6 shadow-sm'>
+          <div className='flex justify-center items-center h-24'>
+            <div className='loading loading-spinner'></div>
           </div>
         </div>
       );
@@ -64,91 +55,59 @@ export const OrderTripList = memo<OrderTripListProps>(
       return null;
     }
 
-    // Sort by created_at to show chronological order
+    // Sort by created_at to show chronological order (newest first)
     const sortedTrips = [...trips].sort(
       (a, b) =>
-        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
 
     return (
-      <div
-        className={clsx("bg-white rounded-xl p-4 lg:p-6 shadow-sm", className)}
-      >
-        <h3 className='text-base lg:text-lg font-semibold mb-4'>
-          Trip History
-        </h3>
-        <div className='space-y-3'>
-          {sortedTrips.map((trip, index) => (
-            <div
-              key={trip.id}
-              onClick={() => handleTripClick(trip.id)}
-              className='border border-base-200 rounded-lg p-4 hover:bg-base-50 hover:shadow-sm transition-all cursor-pointer'
-            >
-              {/* Header */}
-              <div className='flex items-start justify-between mb-3'>
-                <div className='flex items-center gap-3'>
-                  <div className='w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center'>
-                    <span className='text-sm font-bold text-primary'>
-                      {index + 1}
-                    </span>
-                  </div>
-                  <div>
-                    <h4 className='font-semibold text-base-content'>
-                      {trip.trip_number}
-                    </h4>
-                    <p className='text-xs text-base-content/60'>
-                      {dateFormat(trip.created_at, "DD/MM/YYYY HH:mm")}
-                    </p>
-                  </div>
-                </div>
-                {statusBadge(trip.status)}
-              </div>
+      // <div className='p-4 lg:p-6 shadow-sm'>
+      <div className='space-y-2'>
+        {sortedTrips.map((trip, index) => (
+          <div
+            key={trip.id}
+            onClick={() => handleTripClick(trip.id)}
+            className='p-3 bg-white rounded-lg border border-base-200 hover:border-primary cursor-pointer transition-colors'
+          >
+            {/* Trip Number & Status */}
+            <div className='flex items-center justify-between mb-2'>
+              <span className='text-sm font-semibold text-base-content'>
+                {trip.trip_number}
+              </span>
+              {statusIcon(trip.status)}
+            </div>
 
-              {/* Details */}
-              <div className='grid grid-cols-2 gap-3 text-sm'>
-                {trip.driver?.name && (
-                  <div>
-                    <span className='text-xs text-base-content/60 block'>
-                      Driver
-                    </span>
-                    <span className='font-medium'>{trip.driver.name}</span>
-                  </div>
-                )}
-                {trip.vehicle?.plate_number && (
-                  <div>
-                    <span className='text-xs text-base-content/60 block'>
-                      Vehicle
-                    </span>
-                    <span className='font-medium'>
-                      {trip.vehicle.plate_number}
-                    </span>
-                  </div>
-                )}
+            {/* Driver & Vehicle */}
+            <div className='flex items-center gap-3 text-xs text-base-content/70'>
+              {trip.driver?.name && <span>👤 {trip.driver.name}</span>}
+              {trip.vehicle?.plate_number && (
+                <span>🚗 {trip.vehicle.plate_number}</span>
+              )}
+            </div>
+
+            {/* Dates */}
+            {(trip.started_at || trip.completed_at) && (
+              <div className='mt-2 pt-2 border-t border-base-200 text-xs text-base-content/60'>
                 {trip.started_at && (
-                  <div>
-                    <span className='text-xs text-base-content/60 block'>
-                      Started
-                    </span>
-                    <span className='text-sm'>
-                      {dateFormat(trip.started_at, "DD/MM/YYYY HH:mm")}
-                    </span>
-                  </div>
+                  <span>
+                    Started: {dateFormat(trip.started_at, "DD/MM/YYYY")}
+                  </span>
+                )}
+                {trip.started_at && trip.completed_at && (
+                  <span className='mx-1'>•</span>
                 )}
                 {trip.completed_at && (
-                  <div>
-                    <span className='text-xs text-base-content/60 block'>
-                      Completed
-                    </span>
-                    <span className='text-sm'>
-                      {dateFormat(trip.completed_at, "DD/MM/YYYY HH:mm")}
-                    </span>
-                  </div>
+                  <span>
+                    Completed: {dateFormat(trip.completed_at, "DD/MM/YYYY")}
+                  </span>
                 )}
               </div>
-            </div>
-          ))}
-        </div>
+            )}
+          </div>
+        ))}
       </div>
+      // </div>
     );
   },
 );

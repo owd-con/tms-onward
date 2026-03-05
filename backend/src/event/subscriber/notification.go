@@ -49,7 +49,8 @@ func SubscribeDeliveryFailed(event interface{}, msg amqp.Delivery) error {
 	}
 
 	if req.UserID != "" {
-		notification.UserID = uuid.MustParse(req.UserID)
+		parsedID := uuid.MustParse(req.UserID)
+		notification.UserID = &parsedID
 	}
 
 	// Save using notification usecase
@@ -103,7 +104,8 @@ func SubscribeDeliveryCompleted(event interface{}, msg amqp.Delivery) error {
 	}
 
 	if req.UserID != "" {
-		notification.UserID = uuid.MustParse(req.UserID)
+		parsedID := uuid.MustParse(req.UserID)
+		notification.UserID = &parsedID
 	}
 
 	// Save using notification usecase

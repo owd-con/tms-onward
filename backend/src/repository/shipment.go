@@ -6,6 +6,7 @@ import (
 	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/engine/ds/postgres"
 	"github.com/logistics-id/onward-tms/entity"
+	"github.com/uptrace/bun"
 )
 
 type ShipmentRepository struct {
@@ -84,4 +85,20 @@ func (r *ShipmentRepository) UpdateOrderStatusBasedOnShipments(orderID string) e
 
 	_, err := r.DB.ExecContext(r.Context, query, orderID)
 	return err
+}
+
+// FindByIDs retrieves multiple shipments by their IDs with Order.Customer relations
+func (r *ShipmentRepository) FindByIDs(ids []string) ([]*entity.Shipment, error) {
+	if len(ids) == 0 {
+		return []*entity.Shipment{}, nil
+	}
+
+	var shipments []*entity.Shipment
+	err := r.DB.NewSelect().
+		Model(&shipments).
+		Where("shipments.id IN (?)", bun.In(ids)).
+		Relation("Order.Customer").
+		Scan(r.Context)
+
+	return shipments, err
 }

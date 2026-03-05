@@ -1,6 +1,7 @@
 import type { TripWaypoint, WaypointStatus } from "@/services/types";
 import { dateFormat, statusBadge, shipmentStatusBadge } from "@/shared/helper";
 import { Link } from "react-router-dom";
+import { WaypointEvidence } from "./WaypointEvidence";
 
 interface WaypointTimelineProps {
   waypoints: TripWaypoint[];
@@ -89,94 +90,101 @@ const WaypointTimeline = ({ waypoints }: WaypointTimelineProps) => {
                     : "border-info/30 bg-info/5"
                 }`}
               >
-                {/* Header */}
-                <div className='flex items-start justify-between mb-2'>
-                  <div className='flex items-center gap-2'>
-                    <h4 className='font-semibold text-base-content capitalize'>
-                      {waypoint.type} Waypoint
-                      {waypoint.sequence_number !== 0 &&
-                        ` #${waypoint.sequence_number}`}
-                    </h4>
-                    {statusBadge(waypoint.status)}
-                  </div>
-                </div>
-
-                {/* Location */}
-                <div className='space-y-1 text-sm'>
-                  {waypoint.location_name && (
-                    <div className='font-medium text-base-content'>
-                      {waypoint.location_name}
+                {/* Top Section: Info (Left) + Photos (Right) */}
+                <div className='grid grid-cols-1 lg:grid-cols-2 gap-3'>
+                  {/* Left: Waypoint Info */}
+                  <div>
+                    {/* Header */}
+                    <div className='flex items-center gap-2 mb-2'>
+                      <h4 className='font-semibold text-base-content capitalize'>
+                        {waypoint.type} Waypoint
+                        {waypoint.sequence_number !== 0 &&
+                          ` #${waypoint.sequence_number}`}
+                      </h4>
+                      {statusBadge(waypoint.status)}
                     </div>
-                  )}
-                  {waypoint.address && (
-                    <div className='text-base-content/70'>
-                      {waypoint.address}
-                    </div>
-                  )}
-                </div>
 
-                {/* Contact Info */}
-                {(waypoint.contact_name || waypoint.contact_phone) && (
-                  <div className='mt-2 text-sm text-base-content/70'>
-                    {waypoint.contact_name && (
-                      <div>Contact: {waypoint.contact_name}</div>
-                    )}
-                    {waypoint.contact_phone && (
-                      <div>Phone: {waypoint.contact_phone}</div>
-                    )}
-                  </div>
-                )}
-
-                {/* Execution timestamps */}
-                {(waypoint.actual_arrival_time ||
-                  waypoint.actual_completion_time) && (
-                  <div className='mt-2 pt-2 border-t border-base-300/50'>
-                    <div className='text-xs text-base-content/60 space-y-1'>
-                      {waypoint.actual_arrival_time && (
-                        <div>
-                          <span className='font-medium'>Arrived:</span>{" "}
-                          {dateFormat(
-                            waypoint.actual_arrival_time,
-                            "DD/MM/YYYY, HH:mm",
-                          )}
+                    {/* Location */}
+                    <div className='space-y-1 text-sm'>
+                      {waypoint.location_name && (
+                        <div className='font-medium text-base-content'>
+                          {waypoint.location_name}
                         </div>
                       )}
-                      {waypoint.actual_completion_time && (
-                        <div>
-                          <span className='font-medium'>Completed:</span>{" "}
-                          {dateFormat(
-                            waypoint.actual_completion_time,
-                            "DD/MM/YYYY, HH:mm",
-                          )}
+                      {waypoint.address && (
+                        <div className='text-base-content/70'>
+                          {waypoint.address}
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
 
-                {/* Received by - for completed delivery waypoints */}
-                {waypoint.received_by && (
-                  <div className='mt-2 text-sm'>
-                    <span className='font-medium text-success'>
-                      Received by:{" "}
-                    </span>
-                    <span className='text-base-content'>
-                      {waypoint.received_by}
-                    </span>
-                  </div>
-                )}
+                    {/* Contact Info */}
+                    {(waypoint.contact_name || waypoint.contact_phone) && (
+                      <div className='mt-2 text-sm text-base-content/70'>
+                        {waypoint.contact_name && (
+                          <div>Contact: {waypoint.contact_name}</div>
+                        )}
+                        {waypoint.contact_phone && (
+                          <div>Phone: {waypoint.contact_phone}</div>
+                        )}
+                      </div>
+                    )}
 
-                {/* Failed reason - for failed waypoints */}
-                {waypoint.failed_reason && (
-                  <div className='mt-2 text-sm'>
-                    <span className='font-medium text-error'>
-                      Failed reason:{" "}
-                    </span>
-                    <span className='text-base-content'>
-                      {waypoint.failed_reason}
-                    </span>
+                    {/* Execution timestamps */}
+                    {(waypoint.actual_arrival_time ||
+                      waypoint.actual_completion_time) && (
+                      <div className='mt-2 pt-2 border-t border-base-300/50'>
+                        <div className='text-xs text-base-content/60 space-y-1'>
+                          {waypoint.actual_arrival_time && (
+                            <div>
+                              <span className='font-medium'>Arrived:</span>{" "}
+                              {dateFormat(
+                                waypoint.actual_arrival_time,
+                                "DD/MM/YYYY, HH:mm",
+                              )}
+                            </div>
+                          )}
+                          {waypoint.actual_completion_time && (
+                            <div>
+                              <span className='font-medium'>Completed:</span>{" "}
+                              {dateFormat(
+                                waypoint.actual_completion_time,
+                                "DD/MM/YYYY, HH:mm",
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Received by - for completed delivery waypoints */}
+                    {waypoint.received_by && (
+                      <div className='mt-2 text-sm'>
+                        <span className='font-medium text-success'>
+                          Received by:{" "}
+                        </span>
+                        <span className='text-base-content'>
+                          {waypoint.received_by}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Failed reason - for failed waypoints */}
+                    {waypoint.failed_reason && (
+                      <div className='mt-2 text-sm'>
+                        <span className='font-medium text-error'>
+                          Failed reason:{" "}
+                        </span>
+                        <span className='text-base-content'>
+                          {waypoint.failed_reason}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
+
+                  {/* Right: Photos & Evidence */}
+                  <WaypointEvidence waypointId={waypoint.id} />
+                </div>
 
                 {/* Shipments */}
                 {waypoint.shipments && waypoint.shipments.length > 0 && (

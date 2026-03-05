@@ -10,17 +10,20 @@ const FailedWaypointsCell = ({ failedWaypoints }: { failedWaypoints?: any[] }) =
   const [expanded, setExpanded] = useState(false);
 
   if (!failedWaypoints || failedWaypoints.length === 0) {
-    return <span className="text-base-content/60">-</span>;
+    return <span className="text-base-content/60 text-[10px]">-</span>;
   }
 
   return (
-    <div className="text-xs">
+    <div className="text-[10px]">
       {failedWaypoints.length === 1 ? (
         // Single waypoint - show directly without expand
         <div>
-          <span className="font-medium">{failedWaypoints[0]?.type}</span>
-          <div className="text-base-content/70 mt-1">
-            {failedWaypoints[0]?.location_name || failedWaypoints[0]?.location_address || "-"}
+          <span className="font-medium">{failedWaypoints[0]?.shipment_number || "-"}</span>
+          <div className="text-base-content/70 mt-0.5">
+            {failedWaypoints[0]?.dest_location || "-"}
+            {failedWaypoints[0]?.failed_reason && (
+              <span className="text-error"> ({failedWaypoints[0]?.failed_reason})</span>
+            )}
           </div>
         </div>
       ) : (
@@ -31,20 +34,23 @@ const FailedWaypointsCell = ({ failedWaypoints }: { failedWaypoints?: any[] }) =
             className="flex items-center gap-1 text-base-content hover:text-base-content/80 transition-colors"
           >
             <span className="font-medium">
-              {failedWaypoints.length} waypoint{failedWaypoints.length > 1 ? "s" : ""}
+              {failedWaypoints.length} shipment{failedWaypoints.length > 1 ? "s" : ""}
             </span>
-            <span className="text-xs text-base-content/60">
+            <span className="text-[10px] text-base-content/60">
               {expanded ? "▼" : "▶"}
             </span>
           </button>
 
           {expanded && (
-            <div className="mt-2 space-y-2 pl-2 border-l-2 border-error">
+            <div className="mt-1.5 space-y-1 pl-2 border-l-2 border-error">
               {failedWaypoints.map((wp: any, idx: number) => (
-                <div key={idx} className="space-y-1">
-                  <span className="font-medium">{wp?.type}</span>
+                <div key={idx} className="space-y-0.5">
+                  <span className="font-medium">{wp?.shipment_number || "-"}</span>
                   <div className="text-base-content/70">
-                    {wp?.location_name || wp?.location_address || "-"}
+                    {wp?.dest_location || "-"}
+                    {wp?.failed_reason && (
+                      <span className="text-error"> ({wp?.failed_reason})</span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -77,26 +83,26 @@ const createTableConfig = ({
         </div>
       ),
     },
-    customer: {
+    customer_name: {
       title: "Customer",
       sortable: true,
       headerClass: "text-xs capitalize",
       class: "p-4",
-      component: (row: { customer: any }) => (
+      component: (row: { customer_name: string }) => (
         <div className="text-xs font-normal tracking-wide">
           <span className="font-semibold">
-            {row?.customer?.name || "-"}
+            {row?.customer_name || "-"}
           </span>
         </div>
       ),
     },
-    failed_waypoints: {
+    failed_shipments: {
       title: "Failed Waypoints",
       sortable: false,
       headerClass: "text-xs capitalize",
       class: "p-4",
-      component: (row: { failed_waypoints: any[] }) => (
-        <FailedWaypointsCell failedWaypoints={row?.failed_waypoints} />
+      component: (row: { failed_shipments: any[] }) => (
+        <FailedWaypointsCell failedWaypoints={row?.failed_shipments} />
       ),
     },
     failure_count: {

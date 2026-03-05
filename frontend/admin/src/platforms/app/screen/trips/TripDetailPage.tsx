@@ -9,7 +9,6 @@ import { useTrip } from "@/services/trip/hooks";
 import type { Trip } from "@/services/types";
 import { Page } from "../../components/layout";
 import WaypointTimeline from "./components/detail/WaypointTimeline";
-import { WaypointEvidence } from "@/platforms/app/components/waypoint/WaypointEvidence";
 import { TripInformation } from "./components/detail/TripInformation";
 import { TripOrderCard } from "./components/detail/TripOrderCard";
 
@@ -266,9 +265,6 @@ const TripDetailPage = () => {
             <div className='lg:col-span-4 space-y-4 lg:space-y-6'>
               {/* Order Information */}
               {trip.order && <TripOrderCard trip={trip} />}
-
-              {/* Waypoint Evidence */}
-              {tripId && <WaypointEvidence tripId={tripId} />}
             </div>
           </div>
 

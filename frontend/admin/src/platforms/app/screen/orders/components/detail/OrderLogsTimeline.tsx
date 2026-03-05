@@ -55,7 +55,10 @@ export const OrderLogsTimeline = memo<OrderLogsTimelineProps>(({
             className="flex gap-3 pb-3 border-b border-base-200 last:border-0 last:pb-0"
           >
             <div className="flex flex-col items-center">
-              <div className="w-2 h-2 rounded-full bg-primary"></div>
+              <div className={clsx(
+                "w-2 h-2 rounded-full",
+                index === 0 ? "bg-primary" : "bg-base-300"
+              )}></div>
               {index < logs.length - 1 && (
                 <div className="w-0.5 flex-1 bg-base-200 min-h-[2rem]"></div>
               )}

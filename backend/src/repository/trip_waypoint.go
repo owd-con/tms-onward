@@ -16,7 +16,7 @@ func NewTripWaypointRepository() *TripWaypointRepository {
 	base := postgres.NewBaseRepository[entity.TripWaypoint](postgres.GetDB(),
 		"trip_waypoints",
 		[]string{},
-		[]string{"Trip.Driver", "AddressRel"},
+		[]string{"Trip.Driver", "Trip.Vehicle", "AddressRel"},
 		true,
 	)
 

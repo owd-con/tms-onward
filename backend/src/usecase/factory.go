@@ -84,7 +84,7 @@ func (f *Factory) WithContext(ctx context.Context) *Factory {
 		Exception:     f.Exception.WithContext(ctx),
 		Notification:  f.Notification.WithContext(ctx),
 		Dashboard:     f.Dashboard,
-		Report:        f.Report,
+		Report:        f.Report.WithContext(ctx),
 		Tracking:      f.Tracking,
 		Onboarding:    f.Onboarding.WithContext(ctx),
 		Upload:        f.Upload.WithContext(ctx),

@@ -13,10 +13,10 @@ interface WaypointCardProps {
 }
 
 /**
- * Get waypoint type from order_waypoint
+ * Get waypoint type from trip_waypoint
  */
 const getWaypointType = (waypoint: any) => {
-  return waypoint.order_waypoint?.type || "pickup";
+  return waypoint.type || "pickup";
 };
 
 /**
@@ -128,15 +128,27 @@ export const WaypointCard = ({
         )}
 
         {/* Show received_by for completed delivery */}
-        {waypoint.status === "completed" &&
-          !isPickup &&
-          waypoint.received_by && (
-            <div className='p-3 bg-green-50 border border-green-200 rounded-lg'>
-              <p className='typo-tiny text-green-800'>
-                <strong>Received by:</strong> {waypoint.received_by}
-              </p>
-            </div>
-          )}
+        {waypoint.status === "completed" && !isPickup && (
+          <>
+            {/* Customer refused case */}
+            {waypoint.failed_reason && (
+              <div className='p-3 bg-orange-50 border border-orange-200 rounded-lg'>
+                <p className='typo-tiny text-orange-800'>
+                  <strong>Customer refused:</strong> {waypoint.failed_reason}
+                </p>
+              </div>
+            )}
+
+            {/* Normal completed case */}
+            {!waypoint.failed_reason && waypoint.received_by && (
+              <div className='p-3 bg-green-50 border border-green-200 rounded-lg'>
+                <p className='typo-tiny text-green-800'>
+                  <strong>Received by:</strong> {waypoint.received_by}
+                </p>
+              </div>
+            )}
+          </>
+        )}
 
         {/* Show failed_reason for failed waypoints */}
         {waypoint.status === "failed" && waypoint.failed_reason && (

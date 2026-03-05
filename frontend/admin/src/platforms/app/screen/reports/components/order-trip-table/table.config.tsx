@@ -13,8 +13,7 @@ const createTableConfig = () => ({
       class: "p-4",
       component: (row: any) => (
         <div className="text-xs font-normal tracking-wide">
-          <div className="font-medium">{row?.order_number || "-"}</div>
-          <div className="text-xs text-base-content/60">{row?.order_type || "-"}</div>
+          <span className="font-medium">{row?.order_number || "-"}</span>
         </div>
       ),
     },
@@ -29,21 +28,14 @@ const createTableConfig = () => ({
         </div>
       ),
     },
-    trip_info: {
-      title: "Trip",
-      sortable: false,
+    trip_code: {
+      title: "Trip Code",
+      sortable: true,
       headerClass: "text-xs capitalize",
       class: "p-4",
       component: (row: any) => (
         <div className="text-xs font-normal tracking-wide">
-          {row?.trip_id ? (
-            <div>
-              <div className="text-xs font-mono">{row.trip_id.slice(0, 8)}...</div>
-              {statusBadge(row.trip_status)}
-            </div>
-          ) : (
-            <span className="text-base-content/40">-</span>
-          )}
+          <span className="font-mono font-medium">{row?.trip_code || "-"}</span>
         </div>
       ),
     },
@@ -69,39 +61,84 @@ const createTableConfig = () => ({
         </div>
       ),
     },
-    waypoint_info: {
-      title: "Waypoint",
-      sortable: false,
-      headerClass: "text-xs capitalize",
-      class: "p-4",
-      component: (row: any) => (
-        <div className="text-xs font-normal tracking-wide">
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-xs text-base-content/60">#{row?.waypoint_sequence || 0}</span>
-            <span className="badge badge-ghost badge-xs">{row?.waypoint_type || "-"}</span>
-          </div>
-        </div>
-      ),
-    },
-    address: {
-      title: "Address",
-      sortable: false,
-      headerClass: "text-xs capitalize",
-      class: "p-4",
-      component: (row: any) => (
-        <div className="text-xs font-normal tracking-wide max-w-[200px] truncate" title={row?.address}>
-          <span className="font-semibold">{row?.address || "-"}</span>
-        </div>
-      ),
-    },
-    waypoint_status: {
-      title: "Status",
+    shipment_number: {
+      title: "Shipment Code",
       sortable: true,
       headerClass: "text-xs capitalize",
       class: "p-4",
       component: (row: any) => (
         <div className="text-xs font-normal tracking-wide">
-          {statusBadge(row?.waypoint_status)}
+          <span className="font-mono font-medium">{row?.shipment_number || "-"}</span>
+        </div>
+      ),
+    },
+    waypoint_location: {
+      title: "Location",
+      sortable: false,
+      headerClass: "text-xs capitalize",
+      class: "p-4",
+      component: (row: any) => (
+        <div className="text-xs font-normal tracking-wide">
+          <div className="font-medium">{row?.location_name || "-"}</div>
+          <div className="text-gray-500">{row?.address || "-"}</div>
+        </div>
+      ),
+    },
+    waypoint_type: {
+      title: "Type",
+      sortable: true,
+      headerClass: "text-xs capitalize",
+      class: "p-4",
+      component: (row: any) => (
+        <div className="text-xs font-normal tracking-wide">
+          <span
+            className={`badge badge-sm ${
+              row?.waypoint_type === "pickup"
+                ? "badge-info"
+                : row?.waypoint_type === "delivery"
+                ? "badge-success"
+                : "badge-ghost"
+            }`}
+          >
+            {row?.waypoint_type || "-"}
+          </span>
+        </div>
+      ),
+    },
+    shipment_status: {
+      title: "Shipment Status",
+      sortable: true,
+      headerClass: "text-xs capitalize",
+      class: "p-4",
+      component: (row: any) => (
+        <div className="text-xs font-normal tracking-wide">
+          {statusBadge(row?.shipment_status)}
+        </div>
+      ),
+    },
+    received_by: {
+      title: "Received By",
+      sortable: false,
+      headerClass: "text-xs capitalize",
+      class: "p-4",
+      component: (row: any) => (
+        <div className="text-xs font-normal tracking-wide">
+          <span className="font-semibold">{row?.received_by || "-"}</span>
+        </div>
+      ),
+    },
+    failed_reason: {
+      title: "Failed Reason",
+      sortable: false,
+      headerClass: "text-xs capitalize",
+      class: "p-4 max-w-xs",
+      component: (row: any) => (
+        <div className="text-xs font-normal tracking-wide">
+          {row?.failed_reason ? (
+            <span className="text-error">{row.failed_reason}</span>
+          ) : (
+            "-"
+          )}
         </div>
       ),
     },

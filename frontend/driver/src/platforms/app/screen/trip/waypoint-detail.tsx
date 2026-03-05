@@ -3,7 +3,11 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { HiCheck, HiExclamationTriangle, HiMapPin } from "react-icons/hi2";
 import { Button, useEnigmaUI } from "@/components";
 import { ErrorState } from "@/platforms/app/components";
-import { LoadingWaypointForm, CompleteWaypointForm, FailWaypointForm } from "./components/form";
+import {
+  LoadingWaypointForm,
+  CompleteWaypointForm,
+  FailWaypointForm,
+} from "./components/form";
 import { LocationInfo, OrderInfo, WaypointItems } from "./components/detail";
 import { useTrip } from "@/services/driver/hooks";
 import { statusBadge } from "@/shared/helper";
@@ -47,9 +51,7 @@ export const WaypointDetail = () => {
 
   // Extract waypoint from trip data
   const waypoint = trip?.trip_waypoints?.find((wp) => wp.id === waypointId);
-  const waypointType = (waypoint?.type || "pickup") as
-    | "pickup"
-    | "delivery";
+  const waypointType = (waypoint?.type || "pickup") as "pickup" | "delivery";
   const isPickup = waypointType === "pickup";
   const shipments = waypoint?.shipments || [];
 
@@ -139,7 +141,6 @@ export const WaypointDetail = () => {
         <FailWaypointForm
           waypointId={waypointId}
           waypointType={waypointType}
-          shipments={shipments}
           open={true}
           onSuccess={() => {
             closeModal("fail-waypoint");
@@ -217,33 +218,62 @@ export const WaypointDetail = () => {
         <Page.Body className='px-4 py-4 max-w-screen-md flex flex-col'>
           {/* v2.10: Completed banner with received_by for delivery */}
           {waypoint.status === "completed" && (
-            <div className='bg-green-50 border border-green-200 rounded-lg p-3 mb-4'>
-              <div className='flex items-center gap-2'>
-                <div className='w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0'>
-                  <HiCheck size={16} className='text-white' />
+            <>
+              {/* Customer refused case */}
+              {waypoint.failed_reason && !isPickup && (
+                <div className='bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4'>
+                  <div className='flex items-center gap-2'>
+                    <div className='w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center flex-shrink-0'>
+                      <HiExclamationTriangle size={16} className='text-white' />
+                    </div>
+                    <div className='flex-1 min-w-0'>
+                      <h3 className='font-semibold text-orange-900 text-sm'>
+                        Delivery Refused
+                      </h3>
+                      <p className='text-xs text-orange-700'>
+                        {waypoint.failed_reason}
+                      </p>
+                      {waypoint.actual_completion_time && (
+                        <p className='text-xs text-orange-700'>
+                          Refused at {formatDateTime(waypoint.actual_completion_time)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className='flex-1 min-w-0'>
-                  <h3 className='font-semibold text-green-900 text-sm'>
-                    Waypoint Completed
-                  </h3>
-                  {isPickup && waypoint.loaded_by && (
-                    <p className='text-xs text-green-700 truncate'>
-                      Loaded by: {waypoint.loaded_by}
-                    </p>
-                  )}
-                  {!isPickup && waypoint.received_by && (
-                    <p className='text-xs text-green-700 truncate'>
-                      Received by: {waypoint.received_by}
-                    </p>
-                  )}
-                  <p className='text-xs text-green-700'>
-                    {waypoint.actual_completion_time
-                      ? `Completed at ${formatDateTime(waypoint.actual_completion_time)}`
-                      : "Successfully completed"}
-                  </p>
+              )}
+
+              {/* Normal completed case */}
+              {(!waypoint.failed_reason || isPickup) && (
+                <div className='bg-green-50 border border-green-200 rounded-lg p-3 mb-4'>
+                  <div className='flex items-center gap-2'>
+                    <div className='w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0'>
+                      <HiCheck size={16} className='text-white' />
+                    </div>
+                    <div className='flex-1 min-w-0'>
+                      <h3 className='font-semibold text-green-900 text-sm'>
+                        Waypoint Completed
+                      </h3>
+                      {isPickup && waypoint.loaded_by && (
+                        <p className='text-xs text-green-700 truncate'>
+                          Loaded by: {waypoint.loaded_by}
+                        </p>
+                      )}
+                      {!isPickup && waypoint.received_by && (
+                        <p className='text-xs text-green-700 truncate'>
+                          Received by: {waypoint.received_by}
+                        </p>
+                      )}
+                      <p className='text-xs text-green-700'>
+                        {waypoint.actual_completion_time
+                          ? `Completed at ${formatDateTime(waypoint.actual_completion_time)}`
+                          : "Successfully completed"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              )}
+            </>
           )}
 
           {/* v2.10: Failed banner with failed_reason */}
@@ -263,6 +293,33 @@ export const WaypointDetail = () => {
                   {waypoint.actual_completion_time && (
                     <p className='text-xs text-red-700'>
                       Failed at{" "}
+                      {formatDateTime(waypoint.actual_completion_time)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* v2.10: Cancelled banner - pickup failed, delivery skipped */}
+          {waypoint.status === "cancelled" && (
+            <div className='bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4'>
+              <div className='flex items-center gap-2'>
+                <div className='w-8 h-8 rounded-full bg-gray-500 flex items-center justify-center flex-shrink-0'>
+                  <HiExclamationTriangle size={16} className='text-white' />
+                </div>
+                <div className='flex-1 min-w-0'>
+                  <h3 className='font-semibold text-gray-900 text-sm'>
+                    Waypoint Cancelled
+                  </h3>
+                  <p className='text-xs text-gray-700'>
+                    {isPickup
+                      ? "Pickup failed. This waypoint has been cancelled."
+                      : "Delivery skipped due to pickup failure."}
+                  </p>
+                  {waypoint.actual_completion_time && (
+                    <p className='text-xs text-gray-700'>
+                      Cancelled at{" "}
                       {formatDateTime(waypoint.actual_completion_time)}
                     </p>
                   )}
@@ -348,6 +405,15 @@ export const WaypointDetail = () => {
                     <span>Report Failed</span>
                   </div>
                 </Button>
+              </div>
+            )}
+
+            {/* Cancelled status: No action buttons */}
+            {waypoint.status === "cancelled" && (
+              <div className='text-center py-2'>
+                <p className='text-xs text-content-tertiary'>
+                  This waypoint has been cancelled. No actions available.
+                </p>
               </div>
             )}
           </div>

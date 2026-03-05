@@ -51,7 +51,7 @@ func (r *getOrderTripWaypointRequest) with(ctx context.Context, uc *usecase.Repo
 }
 
 func (r *getOrderTripWaypointRequest) getDownload(data any, c *rest.Context) error {
-	items, ok := data.([]*entity.TripWaypointReport)
+	items, ok := data.([]*usecase.OrderTripWaypointReportItem)
 	if !ok {
 		return fmt.Errorf("invalid data type")
 	}
@@ -95,14 +95,9 @@ func (r *getOrderTripWaypointRequest) getDownload(data any, c *rest.Context) err
 		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), item.DriverName)
 		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), item.VehiclePlateNumber)
 		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), item.ShipmentNumber)
-		
-		// Combine location_name and address for waypoint location
-		waypointLocation := fmt.Sprintf("%s, %s", item.LocationName, item.Address)
-		f.SetCellValue(sheet, fmt.Sprintf("G%d", row), waypointLocation)
-		
+		f.SetCellValue(sheet, fmt.Sprintf("G%d", row), item.WaypointLocation)
 		f.SetCellValue(sheet, fmt.Sprintf("H%d", row), item.WaypointType)
-		f.SetCellValue(sheet, fmt.Sprintf("I%d", row), item.ShipmentStatus)
-		
+		f.SetCellValue(sheet, fmt.Sprintf("I%d", row), item.WaypointStatus)
 		if item.ReceivedBy != nil {
 			f.SetCellValue(sheet, fmt.Sprintf("J%d", row), *item.ReceivedBy)
 		} else {
@@ -114,7 +109,7 @@ func (r *getOrderTripWaypointRequest) getDownload(data any, c *rest.Context) err
 			f.SetCellValue(sheet, fmt.Sprintf("K%d", row), "")
 		}
 		if item.CompletedAt != nil {
-			f.SetCellValue(sheet, fmt.Sprintf("L%d", row), item.CompletedAt.Format("2006-01-02 15:04:05"))
+			f.SetCellValue(sheet, fmt.Sprintf("L%d", row), *item.CompletedAt)
 		} else {
 			f.SetCellValue(sheet, fmt.Sprintf("L%d", row), "")
 		}

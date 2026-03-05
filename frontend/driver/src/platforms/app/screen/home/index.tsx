@@ -27,26 +27,37 @@ const calculateProgress = (trip: Trip) => {
 
 /**
  * Get current waypoint (first non-completed waypoint or last completed)
+ * Only shows waypoint status when trip is in_transit
  */
 const getCurrentWaypoint = (trip: Trip): string | null => {
   if (!trip.trip_waypoints || trip.trip_waypoints.length === 0) {
     return null;
   }
 
-  // Find first non-completed waypoint
-  const nextWaypoint = trip.trip_waypoints.find(
+  // For planned/dispatched trips, don't show waypoint progress yet
+  if (trip.status === "planned" || trip.status === "dispatched") {
+    return null;
+  }
+
+  // Sort by sequence_number first
+  const sortedWaypoints = [...trip.trip_waypoints].sort(
+    (a, b) => (a.sequence_number || 0) - (b.sequence_number || 0),
+  );
+
+  // Find first non-completed waypoint (now in correct order)
+  const nextWaypoint = sortedWaypoints.find(
     (wp) => wp.status !== "completed",
   );
 
-  if (nextWaypoint?.order_waypoint) {
-    const type = nextWaypoint.order_waypoint.type || "Waypoint";
+  if (nextWaypoint) {
+    const type = nextWaypoint.type || "Waypoint";
     return `${type} in progress`;
   }
 
   // If all completed, show last waypoint
-  const lastWaypoint = trip.trip_waypoints[trip.trip_waypoints.length - 1];
-  if (lastWaypoint?.order_waypoint) {
-    const type = lastWaypoint.order_waypoint.type || "Waypoint";
+  const lastWaypoint = sortedWaypoints[sortedWaypoints.length - 1];
+  if (lastWaypoint) {
+    const type = lastWaypoint.type || "Waypoint";
     return `${type} completed`;
   }
 
@@ -203,7 +214,7 @@ export const ActiveTrips = () => {
                           <p className='typo-tiny text-content-secondary mb-0.5'>
                             Current Status
                           </p>
-                          <p className='typo-small font-medium text-content-primary truncate'>
+                          <p className='typo-small font-medium text-content-primary truncate capitalize'>
                             {currentWaypoint}
                           </p>
                         </div>

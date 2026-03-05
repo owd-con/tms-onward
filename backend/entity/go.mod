@@ -7,6 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/logistics-id/engine/common v0.0.19-dev
 	github.com/uptrace/bun v1.2.16
+	go.mongodb.org/mongo-driver v1.17.9
 )
 
 require (

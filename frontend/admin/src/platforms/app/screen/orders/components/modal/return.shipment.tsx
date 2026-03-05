@@ -97,17 +97,13 @@ const ReturnShipmentModal = forwardRef<
     const payload = buildPayload();
     await returnShipment({
       id: shipment.id,
-      ...payload,
+      payload,
     });
   };
 
   // Close modal on success
   useEffect(() => {
-    if (
-      returnShipmentResult?.isSuccess &&
-      !successHandledRef.current &&
-      open
-    ) {
+    if (returnShipmentResult?.isSuccess && !successHandledRef.current && open) {
       successHandledRef.current = true;
 
       showToast({
@@ -135,51 +131,52 @@ const ReturnShipmentModal = forwardRef<
       open={open}
       onClose={handleClose}
       closeOnOutsideClick={false}
-      className="max-w-2xl w-full mx-4"
+      className='max-w-2xl w-full mx-4'
     >
-      <Modal.Header className="mb-4">
-        <div className="text-xl font-bold">Mark Shipment as Returned</div>
-        <div className="text-sm text-base-content/60">
+      <Modal.Header className='mb-4'>
+        <div className='text-xl font-bold'>Mark Shipment as Returned</div>
+        <div className='text-sm text-base-content/60'>
           Mark this failed shipment as returned to origin
         </div>
       </Modal.Header>
 
       <form onSubmit={handleSubmit}>
-        <Modal.Body className="min-h-[300px]">
-          <div className="space-y-4">
+        <Modal.Body className='min-h-[300px]'>
+          <div className='space-y-4'>
             {/* Shipment Info */}
             {shipment && (
-              <div className="p-4 bg-base-200 rounded-lg space-y-2">
-                <div className="text-sm">
-                  <span className="font-semibold text-base-content/70">
+              <div className='p-4 bg-base-200 rounded-lg space-y-2'>
+                <div className='text-sm'>
+                  <span className='font-semibold text-base-content/70'>
                     Shipment Number:
                   </span>{" "}
-                  <span className="font-medium text-primary">
+                  <span className='font-medium text-primary'>
                     {shipment.shipment_number}
                   </span>
                 </div>
-                <div className="text-sm">
-                  <span className="font-semibold text-base-content/70">
+                <div className='text-sm'>
+                  <span className='font-semibold text-base-content/70'>
                     Route:
                   </span>{" "}
-                  <span className="font-medium">
-                    ▲ {shipment.origin_location_name || shipment.origin_address} → ▼ {shipment.dest_location_name || shipment.dest_address}
+                  <span className='font-medium'>
+                    ▲ {shipment.origin_location_name || shipment.origin_address}{" "}
+                    → ▼ {shipment.dest_location_name || shipment.dest_address}
                   </span>
                 </div>
-                <div className="text-sm">
-                  <span className="font-semibold text-base-content/70">
+                <div className='text-sm'>
+                  <span className='font-semibold text-base-content/70'>
                     Current Status:
                   </span>{" "}
-                  <span className="font-medium capitalize">
+                  <span className='font-medium capitalize'>
                     {shipment.status}
                   </span>
                 </div>
                 {shipment.failed_reason && (
-                  <div className="text-sm">
-                    <span className="font-semibold text-base-content/70">
+                  <div className='text-sm'>
+                    <span className='font-semibold text-base-content/70'>
                       Failed Reason:
                     </span>{" "}
-                    <span className="font-medium text-error">
+                    <span className='font-medium text-error'>
                       {shipment.failed_reason}
                     </span>
                   </div>
@@ -190,9 +187,9 @@ const ReturnShipmentModal = forwardRef<
             {/* Return Note */}
             <div>
               <Input
-                label="Return Reason"
-                placeholder="Explain why this shipment is being returned to origin"
-                type="textarea"
+                label='Return Reason'
+                placeholder='Explain why this shipment is being returned to origin'
+                type='textarea'
                 value={returnedNote}
                 onChange={(e) => setReturnedNote(e.target.value)}
                 error={FormState?.errors?.returned_note as string}
@@ -202,7 +199,7 @@ const ReturnShipmentModal = forwardRef<
 
             {/* Error Alert */}
             {returnShipmentResult?.isError && (
-              <div className="text-sm text-error">
+              <div className='text-sm text-error'>
                 Failed to mark shipment as returned. Please try again.
               </div>
             )}
@@ -210,22 +207,22 @@ const ReturnShipmentModal = forwardRef<
         </Modal.Body>
 
         <Modal.Footer>
-          <div className="flex flex-col sm:flex-row justify-end gap-3">
+          <div className='flex flex-col sm:flex-row justify-end gap-3'>
             <Button
-              type="button"
-              variant="secondary"
+              type='button'
+              variant='secondary'
               onClick={handleClose}
               disabled={isLoading}
-              className="w-full sm:w-auto"
+              className='w-full sm:w-auto'
             >
               Cancel
             </Button>
             <Button
-              type="submit"
-              variant="primary"
+              type='submit'
+              variant='primary'
               isLoading={isLoading}
               disabled={!isFormValid}
-              className="w-full sm:w-auto"
+              className='w-full sm:w-auto'
             >
               Return to Origin
             </Button>

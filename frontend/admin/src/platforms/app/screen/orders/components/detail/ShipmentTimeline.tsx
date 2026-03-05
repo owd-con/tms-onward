@@ -1,16 +1,12 @@
 import { useEnigmaUI } from "@/components";
 import type { Shipment, ShipmentStatus } from "@/services/types";
-import { dateFormat, statusBadge } from "@/shared/helper";
+import { dateFormat, statusBadge, statusColors, statusIcon } from "@/shared/helper";
 import { formatCurrency } from "@/shared/utils/formatter";
 import { Button } from "@/components";
 import {
   HiArrowUturnLeft,
   HiOutlineCube,
-  HiOutlineClock,
   HiMapPin,
-  HiCheckCircle,
-  HiXCircle,
-  HiArrowPath,
 } from "react-icons/hi2";
 import ReturnShipmentModal from "../modal/return.shipment";
 
@@ -22,57 +18,6 @@ interface ShipmentTimelineProps {
    */
   onReturnSuccess?: () => void;
 }
-
-const statusConfig: Record<
-  string,
-  { color: string; bgColor: string; icon: React.ReactNode }
-> = {
-  pending: {
-    color: "text-neutral-content",
-    bgColor: "bg-neutral",
-    icon: <HiOutlineClock className='w-4 h-4' />,
-  },
-  dispatched: {
-    color: "text-primary-content",
-    bgColor: "bg-primary",
-    icon: <HiArrowPath className='w-4 h-4' />,
-  },
-  on_pickup: {
-    color: "text-info-content",
-    bgColor: "bg-info",
-    icon: <HiMapPin className='w-4 h-4' />,
-  },
-  picked_up: {
-    color: "text-primary-content",
-    bgColor: "bg-primary",
-    icon: <HiCheckCircle className='w-4 h-4' />,
-  },
-  on_delivery: {
-    color: "text-info-content",
-    bgColor: "bg-info",
-    icon: <HiMapPin className='w-4 h-4' />,
-  },
-  delivered: {
-    color: "text-success-content",
-    bgColor: "bg-success",
-    icon: <HiCheckCircle className='w-4 h-4' />,
-  },
-  failed: {
-    color: "text-error-content",
-    bgColor: "bg-error",
-    icon: <HiXCircle className='w-4 h-4' />,
-  },
-  cancelled: {
-    color: "text-error-content",
-    bgColor: "bg-error",
-    icon: <HiXCircle className='w-4 h-4' />,
-  },
-  returned: {
-    color: "text-warning-content",
-    bgColor: "bg-warning",
-    icon: <HiArrowUturnLeft className='w-4 h-4' />,
-  },
-};
 
 /**
  * TMS Onward - Shipment Timeline Component
@@ -120,7 +65,7 @@ const ShipmentTimeline = ({
   return (
     <div className='space-y-4'>
       {sortedShipments.map((shipment, index) => {
-        const config = statusConfig[shipment.status as ShipmentStatus];
+        const { bgColor, color } = statusColors(shipment.status);
 
         return (
           <div
@@ -129,10 +74,10 @@ const ShipmentTimeline = ({
           >
             {/* Status Header */}
             <div
-              className={`${config.bgColor} ${config.color} px-4 py-3 flex items-center justify-between`}
+              className={`${bgColor} ${color} px-4 py-3 flex items-center justify-between`}
             >
               <div className='flex items-center gap-2'>
-                {config.icon}
+                {statusIcon(shipment.status)}
                 <span className='font-semibold text-sm'>
                   Shipment #{index + 1}
                 </span>

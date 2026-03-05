@@ -1,0 +1,62 @@
+package repository
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/logistics-id/onward-tms/entity"
+	"github.com/logistics-id/engine/common"
+	"github.com/logistics-id/engine/ds/mongo"
+)
+
+type TripWaypointReportRepository struct {
+	*mongo.BaseRepository[entity.TripWaypointReport]
+}
+
+// NewTripWaypointReportRepository creates a new repository instance
+func NewTripWaypointReportRepository() *TripWaypointReportRepository {
+	// Create collection wrapper
+	col := mongo.NewCollection("trip_waypoint_reports")
+
+	// Create base repository (NO soft delete for reports)
+	base := mongo.NewBaseRepository[entity.TripWaypointReport](
+		col,
+		[]string{"order_number", "customer_name", "trip_code", "driver_name", "vehicle_plate_number", "shipment_number"},
+		false, // No soft delete
+	)
+
+	return &TripWaypointReportRepository{BaseRepository: base}
+}
+
+// WithContext propagates context to repository
+func (r *TripWaypointReportRepository) WithContext(ctx context.Context) common.BaseRepositoryInterface[entity.TripWaypointReport] {
+	return &TripWaypointReportRepository{
+		BaseRepository: r.BaseRepository.WithContext(ctx).(*mongo.BaseRepository[entity.TripWaypointReport]),
+	}
+}
+
+// BulkInsert inserts multiple documents in one operation using insertMany
+func (r *TripWaypointReportRepository) BulkInsert(docs []*entity.TripWaypointReport) error {
+	if len(docs) == 0 {
+		return nil
+	}
+// BulkInsert inserts multiple documents in one operation using insertMany
+func (r *TripWaypointReportRepository) BulkInsert(docs []*entity.TripWaypointReport) error {
+	if len(docs) == 0 {
+		return nil
+	}
+
+	// Convert to []interface{} for InsertMany
+	interfaceDocs := make([]interface{}, len(docs))
+	for i, doc := range docs {
+		interfaceDocs[i] = doc
+	}
+
+	// Use insertMany for bulk insert (faster than individual inserts)
+	_, err := r.Collection.InsertMany(r.Ctx, interfaceDocs)
+	if err != nil {
+		return fmt.Errorf("bulk insert: %w", err)
+	}
+
+	return nil
+}

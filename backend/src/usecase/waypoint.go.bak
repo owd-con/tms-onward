@@ -18,7 +18,6 @@ type WaypointUsecase struct {
 	TripWaypointRepo  *repository.TripWaypointRepository
 	WaypointImageRepo *repository.WaypointImageRepository
 	LogRepo           *repository.WaypointLogRepository
-	ReportRepo        *repository.TripWaypointReportRepository
 	TripUsecase       *TripUsecase
 	OrderUsecase      *OrderUsecase
 	ShipmentUsecase   *ShipmentUsecase
@@ -30,7 +29,6 @@ func (u *WaypointUsecase) WithContext(ctx context.Context) *WaypointUsecase {
 		TripWaypointRepo:  u.TripWaypointRepo.WithContext(ctx).(*repository.TripWaypointRepository),
 		WaypointImageRepo: u.WaypointImageRepo.WithContext(ctx).(*repository.WaypointImageRepository),
 		LogRepo:           u.LogRepo.WithContext(ctx).(*repository.WaypointLogRepository),
-		ReportRepo:        u.ReportRepo.WithContext(ctx).(*repository.TripWaypointReportRepository),
 		TripUsecase:       u.TripUsecase.WithContext(ctx),
 		OrderUsecase:      u.OrderUsecase.WithContext(ctx),
 		ShipmentUsecase:   u.ShipmentUsecase.WithContext(ctx),
@@ -231,86 +229,7 @@ func (u *WaypointUsecase) CompleteWaypoint(
 		}
 	}
 
-	// Sync to MongoDB (async with goroutine)
-	go u.saveTripWaypointReport(tripWaypoint, tripWaypoint.ShipmentIDs)
-
 	return nil
-}
-
-// saveTripWaypointReport saves report data to MongoDB (one-time insert on waypoint complete)
-// shipmentIDs: filter which shipments to save (if empty, skip)
-func (u *WaypointUsecase) saveTripWaypointReport(waypoint *entity.TripWaypoint, shipmentIds []string) {
-	// Skip if no shipment IDs provided
-	if len(shipmentIds) == 0 {
-		return
-	}
-
-	// Create context with timeout for async operation (avoid context canceled error)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// Create repositories with new context
-	tripWaypointRepo := u.TripWaypointRepo.WithContext(ctx).(*repository.TripWaypointRepository)
-	shipmentRepo := u.ShipmentUsecase.Repo.WithContext(ctx).(*repository.ShipmentRepository)
-	reportRepo := u.ReportRepo.WithContext(ctx).(*repository.TripWaypointReportRepository)
-
-	// Refetch waypoint with all relations (Trip.Driver, Trip.Vehicle)
-	fetchedWaypoint, err := tripWaypointRepo.FindByID(waypoint.ID)
-	if err != nil {
-		return
-	}
-	if fetchedWaypoint.Trip == nil {
-		return
-	}
-	trip := fetchedWaypoint.Trip
-
-	// Fetch shipments by provided IDs (Order.Customer relations auto-loaded via FindByIDs)
-	shipments, err := shipmentRepo.FindByIDs(shipmentIds)
-	if err != nil {
-		return
-	}
-
-	// Build report docs for each shipment
-	docs := make([]*entity.TripWaypointReport, 0, len(shipments))
-	for _, shipment := range shipments {
-		if shipment.Order == nil || shipment.Order.Customer == nil {
-			continue
-		}
-
-		if shipment.Status == "cancelled" && waypoint.FailedReason == nil {
-			fr := "Pickup gagal"
-			waypoint.FailedReason = &fr
-		}
-
-		doc := &entity.TripWaypointReport{
-			OrderNumber:        shipment.Order.OrderNumber,
-			CustomerName:       shipment.Order.Customer.Name,
-			TripCode:           trip.TripNumber,
-			TripID:             trip.ID.String(),
-			DriverName:         trip.Driver.Name,
-			DriverID:           trip.Driver.ID.String(),
-			VehiclePlateNumber: trip.Vehicle.PlateNumber,
-			VehicleID:          trip.Vehicle.ID.String(),
-			ShipmentNumber:     shipment.ShipmentNumber,
-			ShipmentID:         shipment.ID.String(),
-			WaypointType:       fetchedWaypoint.Type,
-			ShipmentStatus:     shipment.Status,
-			LocationName:       fetchedWaypoint.LocationName,
-			Address:            fetchedWaypoint.Address,
-			ReceivedBy:         fetchedWaypoint.ReceivedBy,
-			FailedReason:       fetchedWaypoint.FailedReason,
-			CompletedAt:        fetchedWaypoint.ActualCompletionTime,
-			CompanyID:          trip.CompanyID.String(),
-			UpdatedAt:          time.Now(),
-		}
-
-		docs = append(docs, doc)
-	}
-
-	// Bulk insert to MongoDB
-	if len(docs) > 0 {
-		reportRepo.BulkInsert(docs)
-	}
 }
 
 // CompleteLoading completes a pickup waypoint with partial execution support
@@ -506,9 +425,6 @@ func (u *WaypointUsecase) CompleteLoading(
 		return fmt.Errorf("failed to check and update trip status: %w", err)
 	}
 
-	// Save to MongoDB for report (async with goroutine) - only failed shipments
-	go u.saveTripWaypointReport(tripWaypoint, failedShipmentIDs)
-
 	return nil
 }
 
@@ -656,9 +572,6 @@ func (u *WaypointUsecase) FailPickup(
 		return fmt.Errorf("failed to check and update trip status: %w", err)
 	}
 
-	// Save to MongoDB for report (async with goroutine)
-	go u.saveTripWaypointReport(tripWaypoint, tripWaypoint.ShipmentIDs)
-
 	return nil
 }
 
@@ -768,9 +681,6 @@ func (u *WaypointUsecase) FailDelivery(
 		}
 	}
 
-	// Sync to MongoDB (async with goroutine)
-	go u.saveTripWaypointReport(tripWaypoint, tripWaypoint.ShipmentIDs)
-
 	return nil
 }
 
@@ -803,7 +713,6 @@ func NewWaypointUsecase() *WaypointUsecase {
 		TripWaypointRepo:  repository.NewTripWaypointRepository(),
 		WaypointImageRepo: repository.NewWaypointImageRepository(),
 		LogRepo:           repository.NewWaypointLogRepository(),
-		ReportRepo:        repository.NewTripWaypointReportRepository(),
 		TripUsecase:       NewTripUsecase(),
 		OrderUsecase:      NewOrderUsecase(),
 		ShipmentUsecase:   NewShipmentUsecase(),
