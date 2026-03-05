@@ -127,7 +127,8 @@ func (u *ExceptionUsecase) GetFailedOrders(req *ExceptionQueryOptions) ([]*Excep
 					'retry_count', x.retry_count
 				)
 			) FILTER (WHERE x.id IS NOT NULL), '[]'::jsonb) as failed_shipments,
-			COUNT(x.id) FILTER (WHERE x.id IS NOT NULL) as failure_count
+			COUNT(x.id) FILTER (WHERE x.id IS NOT NULL) as failure_count,
+			MAX(x.failed_at) as last_failed_at
 		FROM orders o
 		INNER JOIN customers c ON c.id = o.customer_id
 		INNER JOIN (
