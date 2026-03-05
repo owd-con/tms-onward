@@ -69,14 +69,42 @@ func (r *startWaypointRequest) Validate() *validate.Response {
 			}
 
 			// Validate no other waypoint in same trip is in_transit
+			// For delivery waypoints, validate all shipments in this delivery are picked_up
 			tripWaypoints, err := r.uc.Trip.GetTripWaypointsByTripID(tripWaypoint.TripID.String())
 			if err != nil {
 				v.SetError("trip.invalid", "Failed to validate trip waypoints.")
 			} else {
 				for _, tw := range tripWaypoints {
+					// Check if another waypoint is already in progress
 					if tw.Status == "in_transit" && tw.ID.String() != tripWaypoint.ID.String() {
 						v.SetError("id.invalid", "Another waypoint is already in progress. Please complete it first.")
 						break
+					}
+				}
+
+				// For delivery waypoint: check if all shipments in this delivery are picked_up
+				if tripWaypoint.Type == "delivery" && len(tripWaypoint.ShipmentIDs) > 0 {
+					// Get all shipments from completed pickup waypoints
+					completedPickupShipmentIDs := []string{}
+					for _, tw := range tripWaypoints {
+						if tw.Type == "pickup" && tw.Status == "completed" {
+							completedPickupShipmentIDs = append(completedPickupShipmentIDs, tw.ShipmentIDs...)
+						}
+					}
+
+					// Check if all shipments in this delivery are picked_up
+					for _, shipmentID := range tripWaypoint.ShipmentIDs {
+						isPickedUp := false
+						for _, pickedUpID := range completedPickupShipmentIDs {
+							if shipmentID == pickedUpID {
+								isPickedUp = true
+								break
+							}
+						}
+						if !isPickedUp {
+							v.SetError("id.invalid", "Some shipments in this delivery are not picked up yet. Please complete the pickups first.")
+							break
+						}
 					}
 				}
 			}

@@ -72,7 +72,7 @@ type WaypointHistory struct {
 type WaypointImageInfo struct {
 	WaypointImageID string   `json:"waypoint_image_id"`
 	Type            string   `json:"type"`           // "pod" | "failed"
-	Note            string   `json:"note,omitempty"` // ini kalo ga received_by atau failed reason
+	Note            string   `json:"note,omitempty"` // Note for this waypoint image (used when there's no received_by or failed_reason)
 	Photos          []string `json:"photos,omitempty"`
 	SignatureURL    string   `json:"signature_url,omitempty"`
 	SubmittedAt     string   `json:"submitted_at"`
@@ -304,7 +304,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 
 	// Get trip info for driver and vehicle (only if dispatched/in_transit/completed)
 	if order.Status == "dispatched" || order.Status == "in_transit" || order.Status == "completed" {
-		// Get trip directly (1 order = 1 trip after dispatch removal)
+		// Get trip directly (fetches latest trip for this order)
 		trip = &entity.Trip{}
 		err = u.db.NewSelect().
 			Model(trip).

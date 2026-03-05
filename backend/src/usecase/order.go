@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/logistics-id/onward-tms/entity"
@@ -205,7 +204,7 @@ func (u *OrderUsecase) UpdateStatus(orderID, status string) error {
 		"pending":    {"planned", "cancelled"},
 		"planned":    {"dispatched", "pending", "cancelled", "in_transit"},
 		"dispatched": {"in_transit", "pending", "cancelled"},
-		"in_transit": {"completed", "cancelled", "planned"},
+		"in_transit": {"completed", "cancelled", "planned", "dispatched"},
 	}
 
 	allowedStatuses, ok := validTransitions[order.Status]
@@ -247,14 +246,6 @@ func (u *OrderUsecase) GetByID(id string) (*entity.Order, error) {
 // Cancel cancels an order
 func (u *OrderUsecase) Cancel(order *entity.Order) error {
 	return u.UpdateStatus(order.ID.String(), "cancelled")
-}
-
-// GenerateOrderNumber - Generate order number with format ORD-YYYYMMDD-RandomNumber
-func (u *OrderUsecase) GenerateOrderNumber() string {
-	now := time.Now()
-	dateStr := now.Format("20060102")
-	randomNum := fmt.Sprintf("%04d", now.Nanosecond()%10000)
-	return fmt.Sprintf("ORD-%s-%s", dateStr, randomNum)
 }
 
 func NewOrderUsecase() *OrderUsecase {

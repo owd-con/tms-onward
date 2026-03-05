@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/repository"
+	"github.com/logistics-id/onward-tms/utility"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -51,7 +52,8 @@ func createTestOrder(t *testing.T, ctx context.Context, companyID, customerID uu
 // TestTripUsecase_Create_Success tests creating a new trip successfully
 func TestTripUsecase_Create_Success(t *testing.T) {
 	ctx := context.Background()
-	uc := NewTripUsecase().WithContext(ctx)
+	factory := NewFactory()
+	uc := factory.WithContext(ctx).Trip
 
 	// Create a company first
 	company := &entity.Company{
@@ -97,7 +99,7 @@ func TestTripUsecase_Create_Success(t *testing.T) {
 	trip := &entity.Trip{
 		CompanyID:  company.ID,
 		OrderID:    order.ID,
-		TripNumber: uc.GenerateTripNumber(),
+		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
 		VehicleID:  vehicle.ID,
 		Status:     "planned",
@@ -111,7 +113,8 @@ func TestTripUsecase_Create_Success(t *testing.T) {
 // TestTripUsecase_Update_Success tests updating a trip
 func TestTripUsecase_Update_Success(t *testing.T) {
 	ctx := context.Background()
-	uc := NewTripUsecase().WithContext(ctx)
+	factory := NewFactory()
+	uc := factory.WithContext(ctx).Trip
 
 	// Create a company first
 	company := &entity.Company{
@@ -157,7 +160,7 @@ func TestTripUsecase_Update_Success(t *testing.T) {
 	trip := &entity.Trip{
 		CompanyID:  company.ID,
 		OrderID:    order.ID,
-		TripNumber: uc.GenerateTripNumber(),
+		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
 		VehicleID:  vehicle.ID,
 		Status:     "planned",
@@ -180,7 +183,8 @@ func TestTripUsecase_Update_Success(t *testing.T) {
 // TestTripUsecase_UpdateStatus_ValidTransitions tests valid status transitions
 func TestTripUsecase_UpdateStatus_ValidTransitions(t *testing.T) {
 	ctx := context.Background()
-	uc := NewTripUsecase().WithContext(ctx)
+	factory := NewFactory()
+	uc := factory.WithContext(ctx).Trip
 
 	// Create a company first
 	company := &entity.Company{
@@ -226,7 +230,7 @@ func TestTripUsecase_UpdateStatus_ValidTransitions(t *testing.T) {
 	trip := &entity.Trip{
 		CompanyID:  company.ID,
 		OrderID:    order.ID,
-		TripNumber: uc.GenerateTripNumber(),
+		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
 		VehicleID:  vehicle.ID,
 		Status:     "planned",
@@ -253,7 +257,8 @@ func TestTripUsecase_UpdateStatus_ValidTransitions(t *testing.T) {
 // TestTripUsecase_UpdateStatus_InvalidTransition tests invalid status transitions
 func TestTripUsecase_UpdateStatus_InvalidTransition(t *testing.T) {
 	ctx := context.Background()
-	uc := NewTripUsecase().WithContext(ctx)
+	factory := NewFactory()
+	uc := factory.WithContext(ctx).Trip
 
 	// Create a company first
 	company := &entity.Company{
@@ -299,7 +304,7 @@ func TestTripUsecase_UpdateStatus_InvalidTransition(t *testing.T) {
 	trip := &entity.Trip{
 		CompanyID:  company.ID,
 		OrderID:    order.ID,
-		TripNumber: uc.GenerateTripNumber(),
+		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
 		VehicleID:  vehicle.ID,
 		Status:     "planned",
@@ -316,7 +321,8 @@ func TestTripUsecase_UpdateStatus_InvalidTransition(t *testing.T) {
 // TestTripUsecase_UpdateStatus_FromCompleted tests that completed trip cannot change status
 func TestTripUsecase_UpdateStatus_FromCompleted(t *testing.T) {
 	ctx := context.Background()
-	uc := NewTripUsecase().WithContext(ctx)
+	factory := NewFactory()
+	uc := factory.WithContext(ctx).Trip
 
 	// Create a company first
 	company := &entity.Company{
@@ -362,7 +368,7 @@ func TestTripUsecase_UpdateStatus_FromCompleted(t *testing.T) {
 	trip := &entity.Trip{
 		CompanyID:  company.ID,
 		OrderID:    order.ID,
-		TripNumber: uc.GenerateTripNumber(),
+		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
 		VehicleID:  vehicle.ID,
 		Status:     "completed",
@@ -378,7 +384,8 @@ func TestTripUsecase_UpdateStatus_FromCompleted(t *testing.T) {
 // TestTripUsecase_Start_Success tests starting a trip successfully
 func TestTripUsecase_Start_Success(t *testing.T) {
 	ctx := context.Background()
-	uc := NewTripUsecase().WithContext(ctx)
+	factory := NewFactory()
+	uc := factory.WithContext(ctx).Trip
 
 	// Create a company first
 	company := &entity.Company{
@@ -424,7 +431,7 @@ func TestTripUsecase_Start_Success(t *testing.T) {
 	trip := &entity.Trip{
 		CompanyID:  company.ID,
 		OrderID:    order.ID,
-		TripNumber: uc.GenerateTripNumber(),
+		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
 		VehicleID:  vehicle.ID,
 		Status:     "dispatched",
@@ -442,7 +449,8 @@ func TestTripUsecase_Start_Success(t *testing.T) {
 // TestTripUsecase_Start_InvalidStatus tests starting a trip from invalid status
 func TestTripUsecase_Start_InvalidStatus(t *testing.T) {
 	ctx := context.Background()
-	uc := NewTripUsecase().WithContext(ctx)
+	factory := NewFactory()
+	uc := factory.WithContext(ctx).Trip
 
 	// Create a company first
 	company := &entity.Company{
@@ -488,7 +496,7 @@ func TestTripUsecase_Start_InvalidStatus(t *testing.T) {
 	trip := &entity.Trip{
 		CompanyID:  company.ID,
 		OrderID:    order.ID,
-		TripNumber: uc.GenerateTripNumber(),
+		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
 		VehicleID:  vehicle.ID,
 		Status:     "planned",
@@ -505,7 +513,8 @@ func TestTripUsecase_Start_InvalidStatus(t *testing.T) {
 // TestTripUsecase_Complete_Success tests completing a trip successfully
 func TestTripUsecase_Complete_Success(t *testing.T) {
 	ctx := context.Background()
-	uc := NewTripUsecase().WithContext(ctx)
+	factory := NewFactory()
+	uc := factory.WithContext(ctx).Trip
 
 	// Create a company first
 	company := &entity.Company{
@@ -551,7 +560,7 @@ func TestTripUsecase_Complete_Success(t *testing.T) {
 	trip := &entity.Trip{
 		CompanyID:  company.ID,
 		OrderID:    order.ID,
-		TripNumber: uc.GenerateTripNumber(),
+		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
 		VehicleID:  vehicle.ID,
 		Status:     "in_transit",
@@ -568,7 +577,8 @@ func TestTripUsecase_Complete_Success(t *testing.T) {
 // TestTripUsecase_Delete_Success tests soft deleting a trip
 func TestTripUsecase_Delete_Success(t *testing.T) {
 	ctx := context.Background()
-	uc := NewTripUsecase().WithContext(ctx)
+	factory := NewFactory()
+	uc := factory.WithContext(ctx).Trip
 
 	// Create a company first
 	company := &entity.Company{
@@ -614,7 +624,7 @@ func TestTripUsecase_Delete_Success(t *testing.T) {
 	trip := &entity.Trip{
 		CompanyID:  company.ID,
 		OrderID:    order.ID,
-		TripNumber: uc.GenerateTripNumber(),
+		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
 		VehicleID:  vehicle.ID,
 		Status:     "planned",
@@ -635,10 +645,8 @@ func TestTripUsecase_Delete_Success(t *testing.T) {
 
 // TestTripUsecase_GenerateTripNumber tests trip number generation
 func TestTripUsecase_GenerateTripNumber(t *testing.T) {
-	uc := NewTripUsecase()
-
-	tripNumber1 := uc.GenerateTripNumber()
-	tripNumber2 := uc.GenerateTripNumber()
+	tripNumber1 := utility.GenerateNumberWithRandom(utility.NumberTypeTrip)
+	tripNumber2 := utility.GenerateNumberWithRandom(utility.NumberTypeTrip)
 
 	assert.NotEmpty(t, tripNumber1)
 	assert.NotEmpty(t, tripNumber2)
@@ -725,13 +733,14 @@ func TestTripUsecase_Get_WithTenantIsolation(t *testing.T) {
 	customer2 := createTestCustomer(t, ctx, company2.ID)
 	order2 := createTestOrder(t, ctx, company2.ID, customer2.ID)
 
-	uc := NewTripUsecase().WithContext(ctx)
+	factory := NewFactory()
+	uc := factory.WithContext(ctx).Trip
 
 	// Create trip for company1
 	trip1 := &entity.Trip{
 		CompanyID:  company1.ID,
 		OrderID:    order1.ID,
-		TripNumber: uc.GenerateTripNumber(),
+		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver1.ID,
 		VehicleID:  vehicle1.ID,
 		Status:     "planned",
@@ -743,7 +752,7 @@ func TestTripUsecase_Get_WithTenantIsolation(t *testing.T) {
 	trip2 := &entity.Trip{
 		CompanyID:  company2.ID,
 		OrderID:    order2.ID,
-		TripNumber: uc.GenerateTripNumber(),
+		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver2.ID,
 		VehicleID:  vehicle2.ID,
 		Status:     "planned",

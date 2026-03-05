@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/repository"
+	"github.com/logistics-id/onward-tms/utility"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -56,12 +57,11 @@ func TestOrderUsecase_ValidateUnique_NotUnique(t *testing.T) {
 		t.Skip("Cannot create test customer")
 	}
 
-	companyID := company.ID
 	orderNumber := fmt.Sprintf("ORD-%d", uuid.New().ID())
 
 	// Create existing order
 	existingOrder := &entity.Order{
-		CompanyID:     companyID,
+		CompanyID:     company.ID,
 		CustomerID:    customer.ID,
 		OrderNumber:   orderNumber,
 		OrderType:     "FTL",
@@ -76,7 +76,7 @@ func TestOrderUsecase_ValidateUnique_NotUnique(t *testing.T) {
 	}
 
 	// Test with existing order should return false
-	result := uc.ValidateUnique(orderNumber, companyID.String(), "")
+	result := uc.ValidateUnique(orderNumber, company.ID.String(), "")
 	assert.False(t, result)
 }
 
@@ -111,12 +111,11 @@ func TestOrderUsecase_ValidateUnique_ExcludeID(t *testing.T) {
 		t.Skip("Cannot create test customer")
 	}
 
-	companyID := company.ID
 	orderNumber := fmt.Sprintf("ORD-%d", uuid.New().ID())
 
 	// Create existing order
 	existingOrder := &entity.Order{
-		CompanyID:     companyID,
+		CompanyID:     company.ID,
 		CustomerID:    customer.ID,
 		OrderNumber:   orderNumber,
 		OrderType:     "FTL",
@@ -131,32 +130,13 @@ func TestOrderUsecase_ValidateUnique_ExcludeID(t *testing.T) {
 	}
 
 	// Test with existing order should return true (excluding current ID)
-	result := uc.ValidateUnique(orderNumber, companyID.String(), existingOrder.ID.String())
+	result := uc.ValidateUnique(orderNumber, company.ID.String(), existingOrder.ID.String())
 	assert.True(t, result)
 }
 
 func TestOrderUsecase_GenerateOrderNumber(t *testing.T) {
-	ctx := context.Background()
-	factory := NewFactory()
-	uc := factory.WithContext(ctx).Order
-
-	// Create a company first
-	company := &entity.Company{
-		Name:                "Test Company",
-		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
-		IsActive:            true,
-		OnboardingCompleted: true,
-	}
-	err := repository.NewCompanyRepository().WithContext(ctx).Insert(company)
-	if err != nil {
-		t.Skip("Cannot create test company")
-	}
-
-	// Test generating order number
-	orderNumber := uc.GenerateOrderNumber()
+	// Test generating order number using utility
+	orderNumber := utility.GenerateNumberWithRandom(utility.NumberTypeOrder)
 	assert.NotEmpty(t, orderNumber)
 	assert.Contains(t, orderNumber, "ORD-")
 }
@@ -192,11 +172,9 @@ func TestOrderUsecase_UpdateStatus_Success(t *testing.T) {
 		t.Skip("Cannot create test customer")
 	}
 
-	companyID := company.ID
-
 	// Create existing order
 	existingOrder := &entity.Order{
-		CompanyID:     companyID,
+		CompanyID:     company.ID,
 		CustomerID:    customer.ID,
 		OrderNumber:   fmt.Sprintf("ORD-%d", uuid.New().ID()),
 		OrderType:     "FTL",
@@ -261,11 +239,9 @@ func TestOrderUsecase_UpdateStatus_InvalidTransition(t *testing.T) {
 		t.Skip("Cannot create test customer")
 	}
 
-	companyID := company.ID
-
 	// Create existing order
 	existingOrder := &entity.Order{
-		CompanyID:     companyID,
+		CompanyID:     company.ID,
 		CustomerID:    customer.ID,
 		OrderNumber:   fmt.Sprintf("ORD-%d", uuid.New().ID()),
 		OrderType:     "FTL",

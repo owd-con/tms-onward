@@ -6,11 +6,15 @@ import (
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/usecase"
 
+	utility "github.com/logistics-id/onward-tms/utility"
+
 	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/engine/transport/rest"
 	"github.com/logistics-id/engine/validate"
 )
 
+// createRequest handles POST /trips
+// Creates a new trip with explicit waypoints (instead of deriving from shipments)
 type createRequest struct {
 	OrderID   string            `json:"order_id" valid:"required|uuid"`
 	DriverID  string            `json:"driver_id" valid:"required|uuid"`
@@ -95,7 +99,7 @@ func (r *createRequest) toEntity() *entity.Trip {
 	return &entity.Trip{
 		CompanyID:  r.driver.CompanyID,
 		OrderID:    r.order.ID,
-		TripNumber: r.uc.Trip.GenerateTripNumber(),
+		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   r.driver.ID,
 		VehicleID:  r.vehicle.ID,
 		Status:     "planned",

@@ -159,20 +159,6 @@ func (u *AddressUsecase) Create(address *entity.Address) error {
 	return u.Repo.Insert(address)
 }
 
-// CreateForCustomer creates a new address for a specific customer
-func (u *AddressUsecase) CreateForCustomer(ctx context.Context, address *entity.Address, customerID string) error {
-	// Validate customer exists
-	customer, err := u.repoCustomer.FindByID(customerID)
-	if err != nil {
-		return err
-	}
-
-	// Set customer_id
-	address.CustomerID = customer.ID
-
-	return u.Repo.Insert(address)
-}
-
 // Update updates an address
 func (u *AddressUsecase) Update(address *entity.Address, fields ...string) error {
 	return u.Repo.Update(address, fields...)

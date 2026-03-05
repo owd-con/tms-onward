@@ -12,8 +12,9 @@ import (
 )
 
 // failWaypointRequest handles PUT /driver/trips/waypoint/{id}/failed
-// Mark delivery waypoint as failed (all-or-nothing)
-// ALL shipments in this waypoint → "failed"
+// Mark waypoint as failed (total failure - all shipments failed)
+// Pickup: shipments → "cancelled" (cannot retry)
+// Delivery: shipments → "failed" (can retry)
 type failWaypointRequest struct {
 	TripWaypointID string   `param:"id" valid:"required"`
 	FailedReason   string   `json:"failed_reason" valid:"required"`
@@ -62,11 +63,6 @@ func (r *failWaypointRequest) Validate() *validate.Response {
 				}
 			}
 
-			// Validate type is delivery
-			if tripWaypoint.Type != "delivery" {
-				v.SetError("id.invalid", "Failed action is only for delivery waypoints. Use /loading for pickup.")
-			}
-
 			// Validate shipments exist in waypoint
 			if len(tripWaypoint.ShipmentIDs) == 0 {
 				v.SetError("id.invalid", "No shipments found in this waypoint.")
@@ -87,7 +83,7 @@ func (r *failWaypointRequest) Messages() map[string]string {
 }
 
 func (r *failWaypointRequest) execute() (*rest.ResponseBody, error) {
-	if err := r.uc.Waypoint.FailTrip(
+	if err := r.uc.Waypoint.FailWaypoint(
 		r.tripWaypoint,
 		r.FailedReason,
 		r.Images,

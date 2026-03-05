@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/repository"
+	"github.com/logistics-id/onward-tms/utility"
 	"github.com/uptrace/bun"
 
 	"github.com/logistics-id/engine/common"
@@ -28,25 +29,25 @@ type ExceptionUsecase struct {
 
 // FailedShipmentData - Failed shipment data from SQL result
 type FailedShipmentData struct {
-	ID              string `json:"id"`
-	ShipmentNumber  string `json:"shipment_number"`
-	OriginLocation  string `json:"origin_location"`
-	DestLocation    string `json:"dest_location"`
-	FailedAt        string `json:"failed_at"`
-	FailureReason   string `json:"failure_reason"`
-	RetryCount      int    `json:"retry_count"`
+	ID             string `json:"id"`
+	ShipmentNumber string `json:"shipment_number"`
+	OriginLocation string `json:"origin_location"`
+	DestLocation   string `json:"dest_location"`
+	FailedAt       string `json:"failed_at"`
+	FailedReason   string `json:"failed_reason"`
+	RetryCount     int    `json:"retry_count"`
 }
 
 // ExceptionOrderResult - Result from GetFailedOrders raw SQL query
 type ExceptionOrderResult struct {
-	ID              uuid.UUID              `json:"id"`
-	OrderNumber     string                 `json:"order_number"`
-	ReferenceCode   string                 `json:"reference_code"`
-	CustomerID      uuid.UUID              `json:"customer_id"`
-	CustomerName    string                 `json:"customer_name"`
-	FailedShipments []*FailedShipmentData  `json:"failed_shipments"`
-	FailureCount    int                    `json:"failure_count"`
-	LastFailedAt    time.Time              `json:"last_failed_at"`
+	ID              uuid.UUID             `json:"id"`
+	OrderNumber     string                `json:"order_number"`
+	ReferenceCode   string                `json:"reference_code"`
+	CustomerID      uuid.UUID             `json:"customer_id"`
+	CustomerName    string                `json:"customer_name"`
+	FailedShipments []*FailedShipmentData `json:"failed_shipments"`
+	FailureCount    int                   `json:"failure_count"`
+	LastFailedAt    time.Time             `json:"last_failed_at"`
 }
 
 type ExceptionQueryOptions struct {
@@ -122,7 +123,7 @@ func (u *ExceptionUsecase) GetFailedOrders(req *ExceptionQueryOptions) ([]*Excep
 					'origin_location', x.origin_location_name,
 					'dest_location', x.dest_location_name,
 					'failed_at', x.failed_at,
-					'failure_reason', x.failure_reason,
+					'failed_reason', x.failed_reason,
 					'retry_count', x.retry_count
 				)
 			) FILTER (WHERE x.id IS NOT NULL), '[]'::jsonb) as failed_shipments,
@@ -137,7 +138,7 @@ func (u *ExceptionUsecase) GetFailedOrders(req *ExceptionQueryOptions) ([]*Excep
 				s.origin_location_name,
 				s.dest_location_name,
 				s.failed_at,
-				s.failure_reason,
+				s.failed_reason,
 				s.retry_count
 			FROM shipments s
 			WHERE s.status = 'failed'
@@ -164,43 +165,66 @@ func (u *ExceptionUsecase) GetFailedOrders(req *ExceptionQueryOptions) ([]*Excep
 // 3. Create new trip with failed shipments
 // 4. Return new trip info
 //
-// Note: Validation of old trip status is done at request level (Validate method)
-func (u *ExceptionUsecase) BatchRescheduleShipments(shipments []*entity.Shipment, driver *entity.Driver, vehicle *entity.Vehicle) (*entity.Trip, error) {
-	// Use first shipment to get order info (all shipments validated to belong to same order)
-	firstShipment := shipments[0]
-
-	// Get old trip for notes and audit log (validation already done at request level)
-	oldTrip, err := u.TripRepo.FindByOrderID(firstShipment.OrderID.String())
+// Note: Validation and notes generation done at request level
+func (u *ExceptionUsecase) BatchRescheduleShipments(newTrip *entity.Trip, shipments []*entity.Shipment) (*entity.Trip, error) {
+	// Generate trip number
+	tripNumber, err := utility.GenerateNumberWithSequence(u.ctx, u.TripRepo.DB, utility.NumberTypeTrip, "trips")
 	if err != nil {
-		return nil, fmt.Errorf("failed to find old trip for order: %w", err)
+		return nil, fmt.Errorf("failed to generate trip number: %w", err)
 	}
+	newTrip.TripNumber = tripNumber
 
-	// Generate notes for the new trip with reference to old trip
-	shipmentInfos := make([]string, len(shipments))
-	for i, s := range shipments {
-		shipmentInfos[i] = fmt.Sprintf("%s (%s → %s)", s.ShipmentNumber, s.OriginLocationName, s.DestLocationName)
-	}
-	notes := fmt.Sprintf("Rescheduled trip for shipments %v (previous trip: %s)", shipmentInfos, oldTrip.TripNumber)
+	// All operations in ONE transaction for atomicity
+	err = u.TripRepo.RunInTx(u.ctx, func(ctx context.Context, tx bun.Tx) error {
+		// 1. Insert trip
+		tripRepoWithTx := &repository.TripRepository{
+			BaseRepository: u.TripRepo.BaseRepository.WithTx(ctx, tx),
+		}
+		if err := tripRepoWithTx.Insert(newTrip); err != nil {
+			return fmt.Errorf("failed to create trip: %w", err)
+		}
 
-	// Create TripUsecase to handle new trip creation with shipments
-	tripRepo := u.TripRepo.WithContext(u.ctx).(*repository.TripRepository)
-	tripUsecase := (&TripUsecase{
-		BaseUsecase:      common.NewBaseUsecase(tripRepo),
-		Repo:             tripRepo,
-		DriverRepo:       repository.NewDriverRepository().WithContext(u.ctx).(*repository.DriverRepository),
-		VehicleRepo:      repository.NewVehicleRepository().WithContext(u.ctx).(*repository.VehicleRepository),
-		TripWaypointRepo: u.TripWaypointRepo.WithContext(u.ctx).(*repository.TripWaypointRepository),
-		OrderRepo:        repository.NewOrderRepository().WithContext(u.ctx).(*repository.OrderRepository),
-		ShipmentUsecase:  u.ShipmentUsecase.WithContext(u.ctx),
-	}).WithContext(u.ctx)
+		// 2. Create delivery waypoints for these shipments
+		// Note: For rescheduled shipments (failed delivery), we only create delivery waypoints
+		// because shipments were already picked up in the previous trip
+		waypoints := make([]*entity.TripWaypoint, 0)
 
-	newTrip, err := tripUsecase.CreateForReschedule(driver, vehicle, shipments, notes)
-	if err != nil {
-		return nil, err
-	}
+		// Group shipments by destination
+		destMap := make(map[uuid.UUID][]string)
+		for _, shipment := range shipments {
+			destMap[shipment.DestinationAddressID] = append(destMap[shipment.DestinationAddressID], shipment.ID.String())
+		}
 
-	// Update all shipment statuses to dispatched and create logs (transactional)
-	if err := u.ShipmentRepo.RunInTx(u.ctx, func(ctx context.Context, tx bun.Tx) error {
+		seq := 1
+		// Create delivery waypoints
+		for destAddrID, ids := range destMap {
+			firstShipment := getShipmentByID(shipments, ids[0])
+			if firstShipment != nil {
+				waypoints = append(waypoints, &entity.TripWaypoint{
+					TripID:         newTrip.ID,
+					ShipmentIDs:    ids,
+					Type:           "delivery",
+					AddressID:      destAddrID,
+					LocationName:   firstShipment.DestLocationName,
+					Address:        firstShipment.DestAddress,
+					ContactName:    firstShipment.DestContactName,
+					ContactPhone:   firstShipment.DestContactPhone,
+					SequenceNumber: seq,
+					Status:         "pending",
+				})
+				seq++
+			}
+		}
+
+		// 3. Insert trip_waypoints
+		tripWaypointRepo := &repository.TripWaypointRepository{
+			BaseRepository: u.TripWaypointRepo.BaseRepository.WithTx(ctx, tx),
+		}
+		if err := tripWaypointRepo.CreateBatch(waypoints); err != nil {
+			return fmt.Errorf("failed to create trip waypoints: %w", err)
+		}
+
+		// 4. Update all shipment statuses to dispatched and create logs
 		shipmentRepoWithTx := &repository.ShipmentRepository{
 			BaseRepository: u.ShipmentRepo.BaseRepository.WithTx(ctx, tx),
 		}
@@ -224,10 +248,10 @@ func (u *ExceptionUsecase) BatchRescheduleShipments(shipments []*entity.Shipment
 				OrderID:     shipment.OrderID,
 				ShipmentIDs: []string{shipment.ID.String()},
 				EventType:   "shipment_retry",
-				Message:     fmt.Sprintf("Shipment %s rescheduled from old trip %s to new trip %s (retry #%d)", shipment.ShipmentNumber, oldTrip.TripNumber, newTrip.TripNumber, shipment.RetryCount),
+				Message:     fmt.Sprintf("Shipment %s rescheduled to new trip %s (retry #%d)", shipment.ShipmentNumber, newTrip.TripNumber, shipment.RetryCount),
 				OldStatus:   oldStatus,
 				NewStatus:   "dispatched",
-				Notes:       fmt.Sprintf("Shipment rescheduled for retry"),
+				Notes:       "Shipment rescheduled for retry",
 				CreatedBy:   "System",
 			}
 			if err := logRepoWithTx.Insert(log); err != nil {
@@ -236,7 +260,8 @@ func (u *ExceptionUsecase) BatchRescheduleShipments(shipments []*entity.Shipment
 		}
 
 		return nil
-	}); err != nil {
+	})
+	if err != nil {
 		return nil, err
 	}
 
@@ -277,7 +302,7 @@ func (u *ExceptionUsecase) ReturnShipment(ctx context.Context, shipment *entity.
 			OrderID:     shipment.OrderID,
 			ShipmentIDs: []string{shipment.ID.String()},
 			EventType:   "shipment_returned",
-			Message:     fmt.Sprintf("Shipment %s returned to origin", shipment.ShipmentNumber),
+			Message:     fmt.Sprintf("Barang dikembalikan ke %s", shipment.OriginLocationName),
 			OldStatus:   oldStatus,
 			NewStatus:   "returned",
 			Notes:       returnedNote,
@@ -297,6 +322,16 @@ func (u *ExceptionUsecase) ReturnShipment(ctx context.Context, shipment *entity.
 		return fmt.Errorf("failed to check and update order status: %w", err)
 	}
 
+	return nil
+}
+
+// getShipmentByID is a helper function to get shipment by ID from slice
+func getShipmentByID(shipments []*entity.Shipment, id string) *entity.Shipment {
+	for _, s := range shipments {
+		if s.ID.String() == id {
+			return s
+		}
+	}
 	return nil
 }
 

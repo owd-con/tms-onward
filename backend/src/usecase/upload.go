@@ -64,28 +64,6 @@ func (u *UploadUsecase) GeneratePresignedPutURL(filename, contentType string) (*
 	}, nil
 }
 
-// GeneratePresignedGetURL generates a presigned URL for GET request (download/view)
-func (u *UploadUsecase) GeneratePresignedGetURL(filePath string) (*PresignedURLResponse, error) {
-	ctx := context.Background()
-
-	// Create presign client
-	presignClient := s3.NewPresignClient(u.s3Client)
-
-	// Create presigned URL for GET object
-	presignedResult, err := presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
-		Bucket: aws.String(u.bucket),
-		Key:    aws.String(filePath),
-	}, s3.WithPresignExpires(10*time.Minute)) // 10 minutes expiration
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate presigned URL: %w", err)
-	}
-
-	return &PresignedURLResponse{
-		UploadURL: presignedResult.URL,
-		FileURL:   presignedResult.URL,
-	}, nil
-}
-
 // NewUploadUsecase creates a new UploadUsecase with S3 client
 func NewUploadUsecase() (*UploadUsecase, error) {
 	// Load AWS configuration from environment

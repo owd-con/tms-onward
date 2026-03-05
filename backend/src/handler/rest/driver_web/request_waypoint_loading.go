@@ -73,6 +73,11 @@ func (r *loadingWaypointRequest) Validate() *validate.Response {
 				v.SetError("id.invalid", "No shipments found in this waypoint.")
 			}
 
+			// Validate loaded_shipment_ids has at least 1 item
+			if len(r.LoadedShipmentIDs) == 0 {
+				v.SetError("loaded_shipment_ids.required", "At least 1 shipment must be successfully picked up. Use /failed if all failed.")
+			}
+
 			// Validate current status
 			if tripWaypoint.Status != "in_transit" {
 				v.SetError("id.invalid", "Can only load a waypoint that is in transit.")

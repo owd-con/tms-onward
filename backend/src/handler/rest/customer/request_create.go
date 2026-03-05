@@ -47,7 +47,7 @@ func (r *createRequest) Validate() *validate.Response {
 	var err error
 	if r.Phone != "" {
 		if r.Phone, err = validate.ValidPhone(r.Phone); err != nil {
-			v.SetError("phone.invalid", "format no. handphone tidak valid.")
+			v.SetError("phone.invalid", "phone number format is invalid.")
 		}
 	}
 

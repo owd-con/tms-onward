@@ -2,6 +2,7 @@ package exception
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/logistics-id/onward-tms/entity"
@@ -12,6 +13,8 @@ import (
 	"github.com/logistics-id/engine/validate"
 )
 
+// batchRescheduleShipmentsRequest handles POST /exceptions/shipments/reschedule
+// Reschedules multiple failed shipments in a single new trip
 type batchRescheduleShipmentsRequest struct {
 	ShipmentIDs []string `json:"shipment_ids" valid:"required"` // Array of failed shipment IDs
 	DriverID    string   `json:"driver_id" valid:"required|uuid"`
@@ -90,11 +93,11 @@ func (r *batchRescheduleShipmentsRequest) Validate() *validate.Response {
 		}
 	}
 
-	// Validate old trip is "completed" before allowing reschedule
-	// For shipments, we check if the order's last trip is completed
+	// Validate latest trip is "completed" before allowing reschedule
+	// We check if the order's latest trip is completed
 	if r.orderID != uuid.Nil && len(r.shipments) > 0 {
-		// Check if there's a completed trip for this order
-		trip, err := r.uc.Trip.GetByOrderID(r.orderID.String())
+		// Get the latest trip for this order
+		trip, err := r.uc.Trip.GetLatestByOrderID(r.orderID.String())
 		if err != nil {
 			// No trip found, this is OK (first reschedule)
 		} else if trip.Status != "completed" && trip.Status != "cancelled" {
@@ -109,8 +112,30 @@ func (r *batchRescheduleShipmentsRequest) Messages() map[string]string {
 	return map[string]string{}
 }
 
+// toEntity creates a new Trip entity for rescheduling
+func (r *batchRescheduleShipmentsRequest) toEntity() *entity.Trip {
+	// Generate shipment info for notes (only destination for rescheduled shipments)
+	shipmentInfos := make([]string, len(r.shipments))
+	for i, s := range r.shipments {
+		shipmentInfos[i] = fmt.Sprintf("%s (%s)", s.ShipmentNumber, s.DestLocationName)
+	}
+
+	// Generate notes
+	notes := fmt.Sprintf("Rescheduled trip for shipments %v", shipmentInfos)
+
+	return &entity.Trip{
+		CompanyID:  r.driver.CompanyID,
+		OrderID:    r.orderID,
+		DriverID:   r.driver.ID,
+		VehicleID:  r.vehicle.ID,
+		Status:     "planned",
+		Notes:      notes,
+	}
+}
+
 func (r *batchRescheduleShipmentsRequest) execute() (*rest.ResponseBody, error) {
-	trip, err := r.uc.Exception.BatchRescheduleShipments(r.shipments, r.driver, r.vehicle)
+	newTrip := r.toEntity()
+	trip, err := r.uc.Exception.BatchRescheduleShipments(newTrip, r.shipments)
 	if err != nil {
 		return nil, err
 	}

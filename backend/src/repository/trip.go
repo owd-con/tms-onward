@@ -6,7 +6,6 @@ import (
 	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/engine/ds/postgres"
 	"github.com/logistics-id/onward-tms/entity"
-	"github.com/uptrace/bun"
 )
 
 type TripRepository struct {
@@ -31,13 +30,14 @@ func (r *TripRepository) WithContext(ctx context.Context) common.BaseRepositoryI
 	}
 }
 
-// FindByOrderID retrieves a trip by order ID (1 order = 1 trip)
-func (r *TripRepository) FindByOrderID(orderID string) (*entity.Trip, error) {
+// FindLatestByOrderID retrieves the latest trip by order ID (ordered by created_at DESC)
+func (r *TripRepository) FindLatestByOrderID(orderID string) (*entity.Trip, error) {
 	var trip entity.Trip
 	err := r.DB.NewSelect().
 		Model(&trip).
 		Where("trips.order_id = ?", orderID).
 		Where("trips.is_deleted = false").
+		OrderExpr("trips.created_at DESC").
 		Scan(r.Context)
 	if err != nil {
 		return nil, err
@@ -62,28 +62,4 @@ func (r *TripRepository) FindWithWaypoints(id string) (*entity.Trip, error) {
 		return nil, err
 	}
 	return &trip, nil
-}
-
-// HasCompletedWaypoints checks if any of the given trip waypoints are already completed
-// in the latest trip for the specified order. Returns true if trip is not completed
-// OR if any waypoints are already completed.
-func (r *TripRepository) HasCompletedWaypoints(orderID string, tripWaypointIDs []string) (bool, error) {
-	// Single query to check:
-	// 1. If the latest trip is NOT completed
-	// 2. OR if any of the waypoints are already completed
-	count, err := r.DB.NewSelect().
-		Model((*entity.TripWaypoint)(nil)).
-		Join("INNER JOIN trips ON trips.id = trip_waypoints.trip_id").
-		Where("trips.order_id = ?", orderID).
-		Where("trips.is_deleted = false").
-		Where("trip_waypoints.is_deleted = false").
-		Where("(trips.status != 'completed' OR trip_waypoints.status = 'completed')").
-		Where("trip_waypoints.id IN (?)", bun.In(tripWaypointIDs)).
-		Count(r.Context)
-
-	if err != nil {
-		return false, err
-	}
-
-	return count > 0, nil
 }

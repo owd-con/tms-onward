@@ -8,11 +8,15 @@ import (
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/usecase"
 
+	utility "github.com/logistics-id/onward-tms/utility"
+
 	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/engine/transport/rest"
 	"github.com/logistics-id/engine/validate"
 )
 
+// updateRequest handles PUT /orders/{id}
+// Updates an existing order and its shipments
 type updateRequest struct {
 	ID                  string             `json:"id" param:"id"`
 	CustomerID          string             `json:"customer_id" valid:"required|uuid"`
@@ -181,7 +185,7 @@ func (r *updateRequest) toShipmentEntities() ([]*entity.Shipment, error) {
 
 	for _, sp := range r.Shipments {
 		// Generate shipment number
-		shipmentNumber := r.uc.Shipment.GenerateShipmentNumber()
+		shipmentNumber := utility.GenerateNumberWithRandom(utility.NumberTypeShipment)
 
 		// Convert ShipmentRequest to Shipment entity
 		shipment := r.toShipmentEntity(sp, r.order.ID, shipmentNumber, companyID)

@@ -11,6 +11,7 @@ import (
 	"github.com/logistics-id/onward-tms/src/repository"
 
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
 )
 
 type WaypointUsecase struct {
@@ -45,29 +46,8 @@ func (u *WaypointUsecase) GetLogsByOrderID(orderID string) ([]*entity.WaypointLo
 	return u.LogRepo.GetByOrderID(orderID)
 }
 
-// SyncShipmentStatusFromTripWaypoint syncs shipment status when TripWaypoint status changes
-func (u *WaypointUsecase) SyncShipmentStatusFromTripWaypoint(tripWaypoint *entity.TripWaypoint) error {
-	// Sync all shipments in this TripWaypoint
-	if err := u.ShipmentUsecase.UpdateStatusFromTripWaypoint(tripWaypoint); err != nil {
-		return fmt.Errorf("failed to sync shipment status: %w", err)
-	}
-
-	// Update order status based on all shipments
-	if err := u.ShipmentUsecase.UpdateOrderStatusBasedOnShipments(tripWaypoint.Trip.OrderID.String()); err != nil {
-		return fmt.Errorf("failed to update order status: %w", err)
-	}
-
-	return nil
-}
-
-// StartWaypoint - Start a waypoint (Pending -> In Transit)
-// Wrapper for StartTrip for backward compatibility
+// StartWaypoint starts a TripWaypoint (Pending -> In Transit) and syncs to shipments
 func (u *WaypointUsecase) StartWaypoint(tripWaypoint *entity.TripWaypoint) error {
-	return u.StartTrip(tripWaypoint)
-}
-
-// StartTrip starts a TripWaypoint and syncs to shipments
-func (u *WaypointUsecase) StartTrip(tripWaypoint *entity.TripWaypoint) error {
 	// Determine new shipment status based on TripWaypoint type
 	var newShipmentStatus string
 	if tripWaypoint.Type == "pickup" {
@@ -139,8 +119,7 @@ func (u *WaypointUsecase) StartTrip(tripWaypoint *entity.TripWaypoint) error {
 	return nil
 }
 
-// CompleteWaypoint - Complete delivery waypoint with POD (In Transit -> Completed)
-// Wrapper for CompleteTrip
+// CompleteWaypoint completes a delivery waypoint with POD (In Transit -> Completed) and syncs to shipments
 func (u *WaypointUsecase) CompleteWaypoint(
 	tripWaypoint *entity.TripWaypoint,
 	receivedBy string,
@@ -149,27 +128,6 @@ func (u *WaypointUsecase) CompleteWaypoint(
 	note string,
 	createdBy string,
 ) error {
-	return u.CompleteTrip(tripWaypoint, &receivedBy, &signatureURL, images, note, createdBy)
-}
-
-// CompleteTrip completes a TripWaypoint and syncs to shipments
-func (u *WaypointUsecase) CompleteTrip(
-	tripWaypoint *entity.TripWaypoint,
-	receivedBy *string,
-	signatureURL *string,
-	images []string,
-	note string,
-	createdBy string,
-) error {
-	// Determine new shipment status based on TripWaypoint type
-	var newShipmentStatus string
-	// For "completed" status, determine corresponding shipment status
-	if tripWaypoint.Type == "pickup" {
-		newShipmentStatus = "picked_up"
-	} else { // delivery
-		newShipmentStatus = "delivered"
-	}
-
 	// Run all operations in a single transaction for data consistency
 	err := u.TripWaypointRepo.RunInTx(u.ctx, func(ctx context.Context, tx bun.Tx) error {
 		// Create transaction-aware repositories
@@ -187,13 +145,13 @@ func (u *WaypointUsecase) CompleteTrip(
 		}
 
 		// 1. Create waypoint_image (POD)
-		if len(images) > 0 || signatureURL != nil {
+		if len(images) > 0 || signatureURL != "" {
 			waypointImage := &entity.WaypointImage{
 				OrderID:        tripWaypoint.Trip.OrderID,
 				ShipmentIDs:    tripWaypoint.ShipmentIDs,
 				TripWaypointID: tripWaypoint.ID,
 				Type:           tripWaypoint.Type,
-				SignatureURL:   signatureURL,
+				SignatureURL:   &signatureURL,
 				Images:         images,
 				CreatedBy:      createdBy,
 			}
@@ -203,29 +161,19 @@ func (u *WaypointUsecase) CompleteTrip(
 		}
 
 		// 2. Update trip_waypoint status and set received_by
-		if err := tripWaypointRepo.UpdateStatus(tripWaypoint.ID.String(), "completed", receivedBy, nil); err != nil {
+		if err := tripWaypointRepo.UpdateStatus(tripWaypoint.ID.String(), "completed", &receivedBy, nil); err != nil {
 			return fmt.Errorf("failed to update trip_waypoint status: %w", err)
-		}
-
-		if err := tripWaypointRepo.UpdateCompletedAt(tripWaypoint.ID.String()); err != nil {
-			return fmt.Errorf("failed to update trip_waypoint completion time: %w", err)
 		}
 
 		// 3. Sync shipment status (inline for transaction support)
 		now := time.Now()
 		if len(tripWaypoint.ShipmentIDs) > 0 {
-			updateQuery := shipmentRepo.DB.NewUpdate().
+			_, err := shipmentRepo.DB.NewUpdate().
 				Model(&entity.Shipment{}).
-				Set("status = ?", newShipmentStatus).
-				Set("updated_at = ?", now)
-
-			if newShipmentStatus == "picked_up" {
-				updateQuery.Set("actual_pickup_time = ?", now)
-			} else if newShipmentStatus == "delivered" {
-				updateQuery.Set("actual_delivery_time = ?", now)
-			}
-
-			_, err := updateQuery.
+				Set("status = ?", "delivered").
+				Set("actual_delivery_time = ?", now).
+				Set("received_by = ?", receivedBy).
+				Set("updated_at = ?", now).
 				Where("id IN (?)", bun.In(tripWaypoint.ShipmentIDs)).
 				Where("is_deleted = false").
 				Exec(ctx)
@@ -240,7 +188,7 @@ func (u *WaypointUsecase) CompleteTrip(
 			ShipmentIDs:    tripWaypoint.ShipmentIDs,
 			TripWaypointID: &tripWaypoint.ID,
 			EventType:      "waypoint_completed",
-			Message:        fmt.Sprintf("Waypoint %s selesai", tripWaypoint.Type),
+			Message:        fmt.Sprintf("Pengiriman telah sampai ditujuan, diterima oleh (%s)", receivedBy),
 			OldStatus:      "in_transit",
 			NewStatus:      "completed",
 			Notes:          note,
@@ -275,12 +223,8 @@ func (u *WaypointUsecase) CompleteTrip(
 			// Fetch order to get order number
 			order, err := u.OrderUsecase.GetByID(trip.OrderID.String())
 			if err == nil && order != nil {
-				recipient := ""
-				if receivedBy != nil {
-					recipient = *receivedBy
-				}
 				// Publish notification asynchronously (don't fail on error)
-				publisher.DeliveryCompleted(u.ctx, tripWaypoint, order, trip, recipient)
+				go publisher.DeliveryCompleted(u.ctx, tripWaypoint, order, trip, receivedBy)
 			}
 		}
 	}
@@ -363,21 +307,15 @@ func (u *WaypointUsecase) CompleteLoading(
 		}
 
 		// 4. Update trip_waypoint status to completed with loaded_by
-		if err := tripWaypointRepo.UpdateStatus(tripWaypoint.ID.String(), "completed", nil, nil); err != nil {
-			return fmt.Errorf("failed to update trip_waypoint status: %w", err)
-		}
-
-		// Set loaded_by for pickup waypoint
 		if _, err := tripWaypointRepo.DB.NewUpdate().
 			Model(&entity.TripWaypoint{}).
+			Set("status = ?", "completed").
 			Set("loaded_by = ?", loadedBy).
+			Set("actual_completion_time = current_timestamp").
 			Where("id = ?", tripWaypoint.ID.String()).
+			Where("is_deleted = false").
 			Exec(ctx); err != nil {
-			return fmt.Errorf("failed to update loaded_by: %w", err)
-		}
-
-		if err := tripWaypointRepo.UpdateCompletedAt(tripWaypoint.ID.String()); err != nil {
-			return fmt.Errorf("failed to update trip_waypoint completion time: %w", err)
+			return fmt.Errorf("failed to update trip_waypoint status: %w", err)
 		}
 
 		// 5. Create waypoint log for loaded shipments
@@ -387,7 +325,7 @@ func (u *WaypointUsecase) CompleteLoading(
 				ShipmentIDs:    loadedShipmentIDs,
 				TripWaypointID: &tripWaypoint.ID,
 				EventType:      "waypoint_completed",
-				Message:        "Pickup selesai",
+				Message:        fmt.Sprintf("Pickup selesai di (%s) oleh (%s)", tripWaypoint.LocationName, loadedBy),
 				OldStatus:      "in_transit",
 				NewStatus:      "picked_up",
 				Notes:          loadedBy,
@@ -404,7 +342,7 @@ func (u *WaypointUsecase) CompleteLoading(
 				ShipmentIDs:    failedShipmentIDs,
 				TripWaypointID: &tripWaypoint.ID,
 				EventType:      "waypoint_cancelled",
-				Message:        fmt.Sprintf("Pickup gagal untuk %d shipment", len(failedShipmentIDs)),
+				Message:        fmt.Sprintf("Pickup sebagian gagal di (%s)", tripWaypoint.LocationName),
 				OldStatus:      "on_pickup",
 				NewStatus:      "cancelled",
 				Notes:          loadedBy,
@@ -415,6 +353,7 @@ func (u *WaypointUsecase) CompleteLoading(
 		}
 
 		// 7. Remove cancelled shipments from delivery waypoints
+		// If all shipments in a delivery waypoint are cancelled, cancel the waypoint
 		if len(failedShipmentIDs) > 0 {
 			// Get all trip waypoints for this trip
 			allWaypoints, err := tripWaypointRepo.GetByTripID(tripWaypoint.TripID.String())
@@ -442,12 +381,26 @@ func (u *WaypointUsecase) CompleteLoading(
 					}
 
 					if removed {
-						if _, err := shipmentRepo.DB.NewUpdate().
-							Model(&entity.TripWaypoint{}).
-							Set("shipment_ids = ?", newShipmentIDs).
-							Where("id = ?", tw.ID.String()).
-							Exec(ctx); err != nil {
-							return fmt.Errorf("failed to update delivery waypoint: %w", err)
+						// If all shipments cancelled, cancel the waypoint
+						if len(newShipmentIDs) == 0 {
+							if _, err := shipmentRepo.DB.NewUpdate().
+								Model(&entity.TripWaypoint{}).
+								Set("status = ?", "cancelled").
+								Set("updated_at = ?", now).
+								Where("id = ?", tw.ID.String()).
+								Exec(ctx); err != nil {
+								return fmt.Errorf("failed to cancel delivery waypoint: %w", err)
+							}
+						} else {
+							// Some shipments still valid, remove failed ones
+							if _, err := shipmentRepo.DB.NewUpdate().
+								Model(&entity.TripWaypoint{}).
+								Set("shipment_ids = ?", pgdialect.Array(newShipmentIDs)).
+								Set("updated_at = ?", now).
+								Where("id = ?", tw.ID.String()).
+								Exec(ctx); err != nil {
+								return fmt.Errorf("failed to update delivery waypoint: %w", err)
+							}
 						}
 					}
 				}
@@ -476,18 +429,23 @@ func (u *WaypointUsecase) CompleteLoading(
 }
 
 // FailWaypoint - Mark waypoint as failed (In Transit -> Failed)
+// Routes to FailPickup or FailDelivery based on waypoint type
 func (u *WaypointUsecase) FailWaypoint(
 	tripWaypoint *entity.TripWaypoint,
 	failedReason string,
 	images []string,
 	createdBy string,
 ) error {
-	return u.FailTrip(tripWaypoint, failedReason, images, createdBy)
+	if tripWaypoint.Type == "pickup" {
+		return u.FailPickup(tripWaypoint, failedReason, images, createdBy)
+	}
+	return u.FailDelivery(tripWaypoint, failedReason, images, createdBy)
 }
 
-// FailTrip marks a TripWaypoint as failed and syncs to shipments
-// All shipments in the waypoint will be marked as failed
-func (u *WaypointUsecase) FailTrip(
+// FailPickup marks a pickup waypoint as failed (total failure)
+// All shipments → "cancelled" (cannot retry)
+// Related delivery waypoints → "cancelled" (driver doesn't go there)
+func (u *WaypointUsecase) FailPickup(
 	tripWaypoint *entity.TripWaypoint,
 	failedReason string,
 	images []string,
@@ -526,7 +484,139 @@ func (u *WaypointUsecase) FailTrip(
 			}
 		}
 
-		// 2. Update failed shipments status
+		// 2. Update shipments to cancelled
+		now := time.Now()
+		if len(failedShipmentIDs) > 0 {
+			_, err := shipmentRepo.DB.NewUpdate().
+				Model(&entity.Shipment{}).
+				Set("status = ?", "cancelled").
+				Set("updated_at = ?", now).
+				Set("failed_reason = ?", failedReason).
+				Set("failed_at = ?", now).
+				Where("id IN (?)", bun.In(failedShipmentIDs)).
+				Where("is_deleted = false").
+				Exec(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to update shipment status: %w", err)
+			}
+		}
+
+		// 3. Update trip_waypoint status to completed
+		if err := tripWaypointRepo.UpdateStatus(tripWaypoint.ID.String(), "completed", nil, &failedReason); err != nil {
+			return fmt.Errorf("failed to update trip_waypoint status: %w", err)
+		}
+
+		// 4. Create waypoint log
+		log := &entity.WaypointLog{
+			OrderID:        tripWaypoint.Trip.OrderID,
+			ShipmentIDs:    failedShipmentIDs,
+			TripWaypointID: &tripWaypoint.ID,
+			EventType:      "waypoint_cancelled",
+			Message:        fmt.Sprintf("Pickup gagal untuk (%s), dikarenakan (%s)", tripWaypoint.LocationName, failedReason),
+			OldStatus:      "in_transit",
+			NewStatus:      "cancelled",
+			Notes:          fmt.Sprintf("Alasan gagal: %s", failedReason),
+		}
+		if err := logRepo.Insert(log); err != nil {
+			return fmt.Errorf("failed to create waypoint log: %w", err)
+		}
+
+		// 5. Mark related delivery waypoints as cancelled
+		if len(failedShipmentIDs) > 0 {
+			allWaypoints, err := tripWaypointRepo.GetByTripID(tripWaypoint.TripID.String())
+			if err != nil {
+				return fmt.Errorf("failed to get trip waypoints: %w", err)
+			}
+
+			for _, tw := range allWaypoints {
+				if tw.Type == "delivery" && len(tw.ShipmentIDs) > 0 {
+					// Check if delivery waypoint contains cancelled shipments
+					hasCancelledShipments := false
+					for _, sid := range tw.ShipmentIDs {
+						for _, failedID := range failedShipmentIDs {
+							if sid == failedID {
+								hasCancelledShipments = true
+								break
+							}
+						}
+						if hasCancelledShipments {
+							break
+						}
+					}
+
+					// Mark delivery waypoint as cancelled if it has cancelled shipments
+					if hasCancelledShipments {
+						if err := tripWaypointRepo.UpdateStatus(tw.ID.String(), "cancelled", nil, nil); err != nil {
+							return fmt.Errorf("failed to cancel delivery waypoint: %w", err)
+						}
+					}
+				}
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	tripWaypoint.Status = "completed"
+
+	// Update order status based on all shipments
+	if err := u.ShipmentUsecase.UpdateOrderStatusBasedOnShipments(tripWaypoint.Trip.OrderID.String()); err != nil {
+		return fmt.Errorf("failed to update order status: %w", err)
+	}
+
+	// Check and update trip status
+	if err := u.CheckAndUpdateTripStatus(tripWaypoint.TripID); err != nil {
+		return fmt.Errorf("failed to check and update trip status: %w", err)
+	}
+
+	return nil
+}
+
+// FailDelivery marks a delivery waypoint as failed (total failure)
+// All shipments → "failed" (can retry)
+func (u *WaypointUsecase) FailDelivery(
+	tripWaypoint *entity.TripWaypoint,
+	failedReason string,
+	images []string,
+	createdBy string,
+) error {
+	failedShipmentIDs := tripWaypoint.ShipmentIDs
+
+	// Run all operations in a single transaction for data consistency
+	err := u.TripWaypointRepo.RunInTx(u.ctx, func(ctx context.Context, tx bun.Tx) error {
+		// Create transaction-aware repositories
+		waypointImageRepo := &repository.WaypointImageRepository{
+			BaseRepository: u.WaypointImageRepo.BaseRepository.WithTx(ctx, tx),
+		}
+		tripWaypointRepo := &repository.TripWaypointRepository{
+			BaseRepository: u.TripWaypointRepo.BaseRepository.WithTx(ctx, tx),
+		}
+		shipmentRepo := &repository.ShipmentRepository{
+			BaseRepository: u.ShipmentUsecase.Repo.BaseRepository.WithTx(ctx, tx),
+		}
+		logRepo := &repository.WaypointLogRepository{
+			BaseRepository: u.LogRepo.BaseRepository.WithTx(ctx, tx),
+		}
+
+		// 1. Create waypoint_image (failed)
+		if len(images) > 0 {
+			waypointImage := &entity.WaypointImage{
+				OrderID:        tripWaypoint.Trip.OrderID,
+				ShipmentIDs:    failedShipmentIDs,
+				TripWaypointID: tripWaypoint.ID,
+				Type:           "failed",
+				Images:         images,
+				CreatedBy:      createdBy,
+			}
+			if err := waypointImageRepo.Insert(waypointImage); err != nil {
+				return fmt.Errorf("failed to create waypoint_image: %w", err)
+			}
+		}
+
+		// 2. Update shipments to failed
 		now := time.Now()
 		if len(failedShipmentIDs) > 0 {
 			_, err := shipmentRepo.DB.NewUpdate().
@@ -543,13 +633,9 @@ func (u *WaypointUsecase) FailTrip(
 			}
 		}
 
-		// 3. Update trip_waypoint status to failed
-		if err := tripWaypointRepo.UpdateStatus(tripWaypoint.ID.String(), "failed", nil, &failedReason); err != nil {
+		// 3. Update trip_waypoint status to completed
+		if err := tripWaypointRepo.UpdateStatus(tripWaypoint.ID.String(), "completed", nil, &failedReason); err != nil {
 			return fmt.Errorf("failed to update trip_waypoint status: %w", err)
-		}
-
-		if err := tripWaypointRepo.UpdateCompletedAt(tripWaypoint.ID.String()); err != nil {
-			return fmt.Errorf("failed to update trip_waypoint completion time: %w", err)
 		}
 
 		// 4. Create waypoint log
@@ -558,10 +644,10 @@ func (u *WaypointUsecase) FailTrip(
 			ShipmentIDs:    failedShipmentIDs,
 			TripWaypointID: &tripWaypoint.ID,
 			EventType:      "waypoint_failed",
-			Message:        fmt.Sprintf("Pengiriman gagal untuk %d shipment, dikarenakan (%s)", len(failedShipmentIDs), failedReason),
+			Message:        fmt.Sprintf("Pengiriman gagal dikarenakan (%s)", failedReason),
 			OldStatus:      "in_transit",
 			NewStatus:      "failed",
-			Notes:          fmt.Sprintf("Alasan gagal: (%s)", failedReason),
+			Notes:          fmt.Sprintf("Alasan gagal: %s", failedReason),
 		}
 		if err := logRepo.Insert(log); err != nil {
 			return fmt.Errorf("failed to create waypoint log: %w", err)
@@ -573,29 +659,25 @@ func (u *WaypointUsecase) FailTrip(
 		return err
 	}
 
-	tripWaypoint.Status = "failed"
+	tripWaypoint.Status = "completed"
 
-	// Update order status based on all shipments (outside transaction, uses its own transaction)
+	// Update order status based on all shipments
 	if err := u.ShipmentUsecase.UpdateOrderStatusBasedOnShipments(tripWaypoint.Trip.OrderID.String()); err != nil {
 		return fmt.Errorf("failed to update order status: %w", err)
 	}
 
-	// Check and update trip status if all waypoints completed/failed
+	// Check and update trip status
 	if err := u.CheckAndUpdateTripStatus(tripWaypoint.TripID); err != nil {
 		return fmt.Errorf("failed to check and update trip status: %w", err)
 	}
 
 	// Publish notification for failed delivery
-	if tripWaypoint.Type == "delivery" {
-		// Fetch trip to get trip number
-		trip, err := u.TripUsecase.GetByID(tripWaypoint.TripID.String())
-		if err == nil && trip != nil {
-			// Fetch order to get order number
-			order, err := u.OrderUsecase.GetByID(trip.OrderID.String())
-			if err == nil && order != nil {
-				// Publish notification asynchronously (don't fail on error)
-				publisher.DeliveryFailed(u.ctx, tripWaypoint, order, trip, failedReason)
-			}
+	trip, err := u.TripUsecase.GetByID(tripWaypoint.TripID.String())
+	if err == nil && trip != nil {
+		order, err := u.OrderUsecase.GetByID(trip.OrderID.String())
+		if err == nil && order != nil {
+			// Publish notification asynchronously (don't fail on error)
+			go publisher.DeliveryFailed(u.ctx, tripWaypoint, order, trip, failedReason)
 		}
 	}
 
@@ -611,7 +693,7 @@ func (u *WaypointUsecase) CheckAndUpdateTripStatus(tripID uuid.UUID) error {
 
 	allFinished := true
 	for _, tw := range tripWaypoints {
-		if tw.Status != "completed" && tw.Status != "failed" && tw.Status != "returned" {
+		if tw.Status != "completed" && tw.Status != "cancelled" {
 			allFinished = false
 			break
 		}

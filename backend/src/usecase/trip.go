@@ -7,7 +7,6 @@ import (
 	"sort"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/repository"
 
@@ -104,7 +103,7 @@ func (u *TripUsecase) Get(req *TripQueryOptions) ([]*entity.Trip, int64, error) 
 			q.Where("trips.company_id = ?", req.Session.CompanyID)
 		}
 
-		// ini untuk load frontend progresbar
+		// Load TripWaypoints relation for active trips to display progress in frontend
 		if req.Status == "active" {
 			q.Relation("TripWaypoints")
 		}
@@ -118,25 +117,39 @@ func (u *TripUsecase) GetByID(id string) (*entity.Trip, error) {
 	return u.Repo.FindByID(id)
 }
 
-// GetByOrderID retrieves a trip by order ID (1 order = 1 trip)
-func (u *TripUsecase) GetByOrderID(orderID string) (*entity.Trip, error) {
-	return u.Repo.FindByOrderID(orderID)
+// GetLatestByOrderID retrieves the latest trip by order ID
+func (u *TripUsecase) GetLatestByOrderID(orderID string) (*entity.Trip, error) {
+	return u.Repo.FindLatestByOrderID(orderID)
 }
 
 // Delete soft deletes a trip
 func (u *TripUsecase) Delete(trip *entity.Trip) error {
-	// Update order status based on its waypoints dispatch status
-	// Uses raw SQL UPDATE with INNER JOIN for efficiency
-	if err := u.OrderRepo.UpdateStatusBasedOnWaypoints(trip.OrderID.String()); err != nil {
-		return fmt.Errorf("failed to update order status: %w", err)
-	}
+	return u.Repo.RunInTx(u.Context, func(ctx context.Context, tx bun.Tx) error {
+		// 1. Update order status based on its waypoints dispatch status
+		// Uses raw SQL UPDATE with INNER JOIN for efficiency
+		orderRepo := &repository.OrderRepository{
+			BaseRepository: u.OrderRepo.BaseRepository.WithTx(ctx, tx),
+		}
+		if err := orderRepo.UpdateStatusBasedOnWaypoints(trip.OrderID.String()); err != nil {
+			return fmt.Errorf("failed to update order status: %w", err)
+		}
 
-	// Soft delete all trip waypoints
-	if err := u.TripWaypointRepo.SoftDeleteByTripID(trip.ID.String()); err != nil {
-		return fmt.Errorf("failed to delete trip waypoints: %w", err)
-	}
+		// 2. Soft delete all trip waypoints
+		tripWaypointRepo := &repository.TripWaypointRepository{
+			BaseRepository: u.TripWaypointRepo.BaseRepository.WithTx(ctx, tx),
+		}
+		if err := tripWaypointRepo.SoftDeleteByTripID(trip.ID.String()); err != nil {
+			return fmt.Errorf("failed to delete trip waypoints: %w", err)
+		}
 
-	return u.Repo.SoftDelete(trip.ID)
+		// 3. Soft delete trip
+		tripRepo := u.Repo.WithTx(ctx, tx)
+		if err := tripRepo.SoftDelete(trip.ID); err != nil {
+			return fmt.Errorf("failed to delete trip: %w", err)
+		}
+
+		return nil
+	})
 }
 
 // UpdateStatus - Update trip status with validation
@@ -191,17 +204,31 @@ func (u *TripUsecase) Start(trip *entity.Trip) error {
 		trip.Status = "in_transit"
 		now := time.Now()
 		trip.StartedAt = &now
-		if err := u.Repo.Update(trip); err != nil {
+		tripRepo := u.Repo.WithTx(ctx, tx)
+		if err := tripRepo.Update(trip); err != nil {
 			return fmt.Errorf("failed to update trip status: %w", err)
 		}
 
-		// 2. Update order to "in_transit"
-		if err := u.OrderUsecase.UpdateStatus(trip.OrderID.String(), "in_transit"); err != nil {
+		// 2. Update order to "in_transit" - use transaction-aware repo
+		orderRepo := &repository.OrderRepository{
+			BaseRepository: u.OrderRepo.BaseRepository.WithTx(ctx, tx),
+		}
+		if _, err := orderRepo.DB.NewUpdate().
+			Model(&entity.Order{}).
+			Set("status = ?", "in_transit").
+			Where("id = ?", trip.OrderID).
+			Where("is_deleted = false").
+			Exec(ctx); err != nil {
 			return fmt.Errorf("failed to update order status: %w", err)
 		}
 
-		// 3. Update first waypoint (sequence=1) to "in_transit"
-		tripWaypoints, err := u.TripWaypointRepo.GetByTripID(trip.ID.String())
+		// 3. Create transaction-aware repositories
+		tripWaypointRepo := &repository.TripWaypointRepository{
+			BaseRepository: u.TripWaypointRepo.BaseRepository.WithTx(ctx, tx),
+		}
+
+		// 4. Update first waypoint (sequence=1) to "in_transit"
+		tripWaypoints, err := tripWaypointRepo.GetByTripID(trip.ID.String())
 		if err != nil {
 			return fmt.Errorf("failed to get trip waypoints: %w", err)
 		}
@@ -211,20 +238,26 @@ func (u *TripUsecase) Start(trip *entity.Trip) error {
 			if tw.SequenceNumber == 1 {
 				tripWaypoint = tw
 				// Update TripWaypoint status directly
-				if err := u.TripWaypointRepo.UpdateStatus(tw.ID.String(), "in_transit", nil, nil); err != nil {
+				if err := tripWaypointRepo.UpdateStatus(tw.ID.String(), "in_transit", nil, nil); err != nil {
 					return fmt.Errorf("failed to update first waypoint status: %w", err)
 				}
-				// Sync shipment status
-				waypointUsecase := NewWaypointUsecase().WithContext(ctx)
-				tw.Status = "in_transit" // Set status for sync
-				if err := waypointUsecase.SyncShipmentStatusFromTripWaypoint(tw); err != nil {
+				// Sync shipment status - use transaction-aware shipment repo
+				shipmentRepo := &repository.ShipmentRepository{
+					BaseRepository: u.ShipmentUsecase.Repo.BaseRepository.WithTx(ctx, tx),
+				}
+				if _, err := shipmentRepo.DB.NewUpdate().
+					Model(&entity.Shipment{}).
+					Set("status = ?", "in_transit").
+					Where("id IN (?)", bun.In(tw.ShipmentIDs)).
+					Where("is_deleted = false").
+					Exec(ctx); err != nil {
 					return fmt.Errorf("failed to sync shipment status: %w", err)
 				}
 				break
 			}
 		}
 
-		// 4. Create waypoint log
+		// 5. Create waypoint log
 		if tripWaypoint != nil {
 			waypointLogRepo := u.WaypointLogRepo.WithTx(ctx, tx)
 
@@ -260,8 +293,16 @@ func (u *TripUsecase) Dispatch(trip *entity.Trip) error {
 			return fmt.Errorf("failed to update trip status: %w", err)
 		}
 
-		// 2. Update order to "dispatched"
-		if err := u.OrderUsecase.UpdateStatus(trip.OrderID.String(), "dispatched"); err != nil {
+		// 2. Update order to "dispatched" - use transaction-aware repo
+		orderRepo := &repository.OrderRepository{
+			BaseRepository: u.OrderRepo.BaseRepository.WithTx(ctx, tx),
+		}
+		if _, err := orderRepo.DB.NewUpdate().
+			Model(&entity.Order{}).
+			Set("status = ?", "dispatched").
+			Where("id = ?", trip.OrderID).
+			Where("is_deleted = false").
+			Exec(ctx); err != nil {
 			return fmt.Errorf("failed to update order status: %w", err)
 		}
 
@@ -319,14 +360,6 @@ func (u *TripUsecase) UpdateStatusByID(tripID, status string) error {
 	return u.UpdateStatus(trip, status)
 }
 
-// GenerateTripNumber - Generate trip number with format TRP-YYYYMMDD-RandomNumber
-func (u *TripUsecase) GenerateTripNumber() string {
-	now := time.Now()
-	dateStr := now.Format("20060102")
-	randomNum := fmt.Sprintf("%04d", now.Nanosecond()%10000)
-	return fmt.Sprintf("TRP-%s-%s", dateStr, randomNum)
-}
-
 // GetWithWaypoints retrieves a trip with its waypoints
 func (u *TripUsecase) GetWithWaypoints(id string) (*entity.Trip, error) {
 	return u.Repo.FindWithWaypoints(id)
@@ -380,8 +413,16 @@ func (u *TripUsecase) CreateWithWaypoints(trip *entity.Trip, orderID string, way
 			}
 		}
 
-		// 5. Update order to "planned"
-		if err := u.OrderUsecase.UpdateStatus(orderID, "planned"); err != nil {
+		// 5. Update order to "planned" - use transaction-aware repo
+		orderRepo := &repository.OrderRepository{
+			BaseRepository: u.OrderRepo.BaseRepository.WithTx(ctx, tx),
+		}
+		if _, err := orderRepo.DB.NewUpdate().
+			Model(&entity.Order{}).
+			Set("status = ?", "planned").
+			Where("id = ?", orderID).
+			Where("is_deleted = false").
+			Exec(ctx); err != nil {
 			return fmt.Errorf("failed to update order status: %w", err)
 		}
 
@@ -544,116 +585,6 @@ func (u *TripUsecase) GenerateWaypointPreview(shipments []*entity.Shipment, orde
 	}
 
 	return preview, nil
-}
-
-// CreateForReschedule creates a new trip for rescheduled shipments
-// This replaces CreateForRescheduleWithWaypoints for shipment-based system
-func (u *TripUsecase) CreateForReschedule(driver *entity.Driver, vehicle *entity.Vehicle, shipments []*entity.Shipment, notes string) (*entity.Trip, error) {
-	var createdTrip *entity.Trip
-
-	// Get order ID from first shipment
-	orderID := shipments[0].OrderID
-
-	// Run in transaction
-	err := u.Repo.RunInTx(u.Context, func(ctx context.Context, tx bun.Tx) error {
-		// 1. Create trip
-		tripNumber := u.GenerateTripNumber()
-		trip := &entity.Trip{
-			CompanyID:  driver.CompanyID,
-			OrderID:    orderID,
-			TripNumber: tripNumber,
-			DriverID:   driver.ID,
-			VehicleID:  vehicle.ID,
-			Status:     "planned",
-			Notes:      notes,
-		}
-
-		tripRepoWithTx := &repository.TripRepository{
-			BaseRepository: u.Repo.BaseRepository.WithTx(ctx, tx),
-		}
-		if err := tripRepoWithTx.Insert(trip); err != nil {
-			return err
-		}
-		createdTrip = trip
-
-		// 3. Create trip_waypoints for these shipments
-		// Convert shipments to trip waypoints
-		// Note: For rescheduled shipments, we only create waypoints for the rescheduled shipments
-		// This is a simplified version - in production, you'd need more complex logic
-		waypoints := make([]*entity.TripWaypoint, 0)
-
-		// Group shipments by origin and destination
-		originMap := make(map[uuid.UUID][]string)
-		destMap := make(map[uuid.UUID][]string)
-
-		for _, shipment := range shipments {
-			originMap[shipment.OriginAddressID] = append(originMap[shipment.OriginAddressID], shipment.ID.String())
-			destMap[shipment.DestinationAddressID] = append(destMap[shipment.DestinationAddressID], shipment.ID.String())
-		}
-
-		seq := 1
-		// Create pickup waypoints
-		for originAddrID, ids := range originMap {
-			firstShipment := getShipmentByID(shipments, ids[0])
-			if firstShipment != nil {
-				waypoints = append(waypoints, &entity.TripWaypoint{
-					TripID:         trip.ID,
-					ShipmentIDs:    ids,
-					Type:           "pickup",
-					AddressID:      originAddrID,
-					LocationName:   firstShipment.OriginLocationName,
-					Address:        firstShipment.OriginAddress,
-					ContactName:    firstShipment.OriginContactName,
-					ContactPhone:   firstShipment.OriginContactPhone,
-					SequenceNumber: seq,
-					Status:         "pending",
-				})
-				seq++
-			}
-		}
-
-		// Create delivery waypoints
-		for destAddrID, ids := range destMap {
-			firstShipment := getShipmentByID(shipments, ids[0])
-			if firstShipment != nil {
-				waypoints = append(waypoints, &entity.TripWaypoint{
-					TripID:         trip.ID,
-					ShipmentIDs:    ids,
-					Type:           "delivery",
-					AddressID:      destAddrID,
-					LocationName:   firstShipment.DestLocationName,
-					Address:        firstShipment.DestAddress,
-					ContactName:    firstShipment.DestContactName,
-					ContactPhone:   firstShipment.DestContactPhone,
-					SequenceNumber: seq,
-					Status:         "pending",
-				})
-				seq++
-			}
-		}
-
-		// 4. Insert trip_waypoints
-		tripWaypointRepo := &repository.TripWaypointRepository{
-			BaseRepository: u.TripWaypointRepo.BaseRepository.WithTx(ctx, tx),
-		}
-		if err := tripWaypointRepo.CreateBatch(waypoints); err != nil {
-			return fmt.Errorf("failed to create trip waypoints: %w", err)
-		}
-
-		return nil
-	})
-
-	return createdTrip, err
-}
-
-// Helper function to get shipment by ID from slice
-func getShipmentByID(shipments []*entity.Shipment, id string) *entity.Shipment {
-	for _, s := range shipments {
-		if s.ID.String() == id {
-			return s
-		}
-	}
-	return nil
 }
 
 func NewTripUsecase() *TripUsecase {

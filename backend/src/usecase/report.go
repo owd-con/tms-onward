@@ -88,26 +88,24 @@ type DriverPerformanceReportWrapper struct {
 	Limit int64                      `json:"limit"`
 }
 
-// OrderTripWaypointReportItem represents a single order-trip-shipment record
+// OrderTripWaypointReportItem represents a single trip waypoint record (per shipment)
 type OrderTripWaypointReportItem struct {
 	OrderNumber  string `json:"order_number"`
-	OrderType    string `json:"order_type"`
-	OrderStatus  string `json:"order_status"`
 	CustomerName string `json:"customer_name"`
 
-	TripID             string `json:"trip_id"`
-	TripStatus         string `json:"trip_status"`
+	TripCode           string `json:"trip_code"`
 	DriverName         string `json:"driver_name"`
 	VehiclePlateNumber string `json:"vehicle_plate_number"`
 
-	ShipmentNumber      string `json:"shipment_number"`
-	ShipmentSequence    int    `json:"shipment_sequence"`  // sorting_id from shipments
-	Address             string `json:"address"`            // origin -> dest (for report display)
-	OriginAddress       string `json:"origin_address"`     // separate fields
-	DestAddress         string `json:"dest_address"`
-	RecipientName       string `json:"recipient_name"`  // for delivery
-	ShipmentStatus      string `json:"shipment_status"`
-	ActualDeliveryTime  *string `json:"actual_delivery_time"`
+	ShipmentNumber string `json:"shipment_number"`
+
+	// Waypoint info
+	WaypointLocation string `json:"waypoint_location"` // location_name + address
+	WaypointType     string `json:"waypoint_type"`     // pickup / delivery
+	WaypointStatus   string `json:"waypoint_status"`
+	ReceivedBy       *string `json:"received_by"`
+	FailedReason     *string `json:"failed_reason"`
+	CompletedAt      *string `json:"completed_at"`
 }
 
 // OrderTripWaypointReport represents comprehensive report response
@@ -356,42 +354,40 @@ func (u *ReportUsecase) GetDriverPerformance(opts *ReportQueryOptions) ([]*Drive
 	return items, totalCount, nil
 }
 
-// GetOrderTripWaypointReport retrieves comprehensive order-trip-shipment report
+// GetOrderTripWaypointReport retrieves trip waypoint report (1 row per shipment per waypoint)
 func (u *ReportUsecase) GetOrderTripWaypointReport(opts *ReportQueryOptions) ([]*OrderTripWaypointReportItem, int64, error) {
+	// Use trip_waypoints as base table, unnest shipment_ids to get 1 row per shipment
 	query := u.db.NewSelect().
-		TableExpr("shipments AS s").
+		TableExpr("trip_waypoints AS tw").
 		ColumnExpr("o.order_number").
-		ColumnExpr("o.order_type").
-		ColumnExpr("o.status AS order_status").
 		ColumnExpr("c.name AS customer_name").
-		ColumnExpr("t.id AS trip_id").
-		ColumnExpr("t.status AS trip_status").
+		ColumnExpr("t.trip_number AS trip_code").
 		ColumnExpr("d.name AS driver_name").
 		ColumnExpr("v.plate_number AS vehicle_plate_number").
 		ColumnExpr("s.shipment_number").
-		ColumnExpr("s.sorting_id AS shipment_sequence").
-		ColumnExpr("s.origin_address || ' -> ' || s.dest_address AS address").
-		ColumnExpr("s.origin_address").
-		ColumnExpr("s.dest_address").
-		ColumnExpr("s.dest_contact_name AS recipient_name").
-		ColumnExpr("s.status AS shipment_status").
-		ColumnExpr("TO_CHAR(s.actual_delivery_time, 'YYYY-MM-DD HH24:MI:SS') AS actual_delivery_time").
-		Join("LEFT JOIN orders AS o ON o.id = s.order_id AND o.is_deleted = false").
-		Join("LEFT JOIN customers AS c ON c.id = o.customer_id AND c.is_deleted = false").
-		Join("LEFT JOIN trip_waypoints AS tw ON s.id = ANY(tw.shipment_ids) AND tw.is_deleted = false").
+		ColumnExpr("tw.location_name || ', ' || tw.address AS waypoint_location").
+		ColumnExpr("tw.type AS waypoint_type").
+		ColumnExpr("tw.status AS waypoint_status").
+		ColumnExpr("tw.received_by").
+		ColumnExpr("tw.failed_reason").
+		ColumnExpr("TO_CHAR(tw.actual_completion_time, 'YYYY-MM-DD HH24:MI:SS') AS completed_at").
 		Join("LEFT JOIN trips AS t ON t.id = tw.trip_id AND t.is_deleted = false").
 		Join("LEFT JOIN drivers AS d ON d.id = t.driver_id AND d.is_deleted = false").
 		Join("LEFT JOIN vehicles AS v ON v.id = t.vehicle_id AND v.is_deleted = false").
-		Where("o.company_id = ?", opts.Session.CompanyID).
-		Where("s.is_deleted = false").
+		Join("LEFT JOIN LATERAL unnest(tw.shipment_ids) AS shipment_id ON TRUE").
+		Join("LEFT JOIN shipments AS s ON s.id::text = shipment_id AND s.is_deleted = false").
+		Join("LEFT JOIN orders AS o ON o.id = s.order_id AND o.is_deleted = false").
+		Join("LEFT JOIN customers AS c ON c.id = o.customer_id AND c.is_deleted = false").
+		Where("t.company_id = ?", opts.Session.CompanyID).
+		Where("tw.is_deleted = false").
 		Where("o.status != 'pending'")
 
-	// Filter by date range
+	// Filter by date range (filter by waypoint creation time)
 	if opts.StartDate != "" {
-		query = query.Where("s.created_at >= ?", opts.StartDate+" 00:00:00")
+		query = query.Where("tw.created_at >= ?", opts.StartDate+" 00:00:00")
 	}
 	if opts.EndDate != "" {
-		query = query.Where("s.created_at <= ?", opts.EndDate+" 23:59:59")
+		query = query.Where("tw.created_at <= ?", opts.EndDate+" 23:59:59")
 	}
 
 	// Filter by customer
@@ -404,29 +400,30 @@ func (u *ReportUsecase) GetOrderTripWaypointReport(opts *ReportQueryOptions) ([]
 		query = query.Where("t.driver_id = ?", opts.DriverID)
 	}
 
-	// Filter by status
+	// Filter by waypoint status
 	if opts.Status != "" {
-		query = query.Where("s.status = ?", opts.Status)
+		query = query.Where("tw.status = ?", opts.Status)
 	}
 
 	// Get total count
 	var totalCount int64
 	countQuery := u.db.NewSelect().
-		TableExpr("shipments AS s").
+		TableExpr("trip_waypoints AS tw").
 		ColumnExpr("COUNT(*)").
-		Join("LEFT JOIN orders AS o ON o.id = s.order_id AND o.is_deleted = false").
-		Join("LEFT JOIN trip_waypoints AS tw ON s.id = ANY(tw.shipment_ids) AND tw.is_deleted = false").
 		Join("LEFT JOIN trips AS t ON t.id = tw.trip_id AND t.is_deleted = false").
-		Where("o.company_id = ?", opts.Session.CompanyID).
-		Where("s.is_deleted = false").
+		Join("LEFT JOIN LATERAL unnest(tw.shipment_ids) AS shipment_id ON TRUE").
+		Join("LEFT JOIN shipments AS s ON s.id::text = shipment_id AND s.is_deleted = false").
+		Join("LEFT JOIN orders AS o ON o.id = s.order_id AND o.is_deleted = false").
+		Where("t.company_id = ?", opts.Session.CompanyID).
+		Where("tw.is_deleted = false").
 		Where("o.status != 'pending'")
 
 	// Apply same filters to count query
 	if opts.StartDate != "" {
-		countQuery = countQuery.Where("s.created_at >= ?", opts.StartDate+" 00:00:00")
+		countQuery = countQuery.Where("tw.created_at >= ?", opts.StartDate+" 00:00:00")
 	}
 	if opts.EndDate != "" {
-		countQuery = countQuery.Where("s.created_at <= ?", opts.EndDate+" 23:59:59")
+		countQuery = countQuery.Where("tw.created_at <= ?", opts.EndDate+" 23:59:59")
 	}
 	if opts.CustomerID != "" {
 		countQuery = countQuery.Where("o.customer_id = ?", opts.CustomerID)
@@ -435,15 +432,15 @@ func (u *ReportUsecase) GetOrderTripWaypointReport(opts *ReportQueryOptions) ([]
 		countQuery = countQuery.Where("t.driver_id = ?", opts.DriverID)
 	}
 	if opts.Status != "" {
-		countQuery = countQuery.Where("s.status = ?", opts.Status)
+		countQuery = countQuery.Where("tw.status = ?", opts.Status)
 	}
 
 	if err := countQuery.Scan(u.ctx, &totalCount); err != nil {
 		return nil, 0, err
 	}
 
-	// Apply sorting by shipment sequence and created_at
-	query = query.OrderExpr("s.sorting_id ASC").OrderExpr("s.created_at DESC")
+	// Apply sorting by trip created_at (newest first)
+	query = query.OrderExpr("t.created_at DESC")
 
 	// Apply pagination
 	if opts.Limit > 0 {
@@ -458,78 +455,6 @@ func (u *ReportUsecase) GetOrderTripWaypointReport(opts *ReportQueryOptions) ([]
 	var items []*OrderTripWaypointReportItem
 	if err := query.Scan(u.ctx, &items); err != nil {
 		return nil, 0, err
-	}
-
-	return items, totalCount, nil
-}
-
-// GetRevenueReport retrieves order revenue report
-func (u *ReportUsecase) GetRevenueReport(opts *ReportQueryOptions) ([]*RevenueReportItem, int64, error) {
-	query := u.db.NewSelect().
-		TableExpr("orders AS o").
-		ColumnExpr("o.order_number").
-		ColumnExpr("c.name AS customer_name").
-		ColumnExpr("o.order_type").
-		ColumnExpr("o.total_price").
-		ColumnExpr("o.status").
-		ColumnExpr("TO_CHAR(o.created_at, 'YYYY-MM-DD HH24:MI:SS') AS created_at").
-		Join("LEFT JOIN customers AS c ON c.id = o.customer_id AND c.is_deleted = false").
-		Where("o.company_id = ?", opts.Session.CompanyID).
-		Where("o.is_deleted = false")
-
-	// Filter by date range
-	if opts.StartDate != "" {
-		query = query.Where("o.created_at >= ?", opts.StartDate+" 00:00:00")
-	}
-	if opts.EndDate != "" {
-		query = query.Where("o.created_at <= ?", opts.EndDate+" 23:59:59")
-	}
-
-	// Filter by specific customer
-	if opts.CustomerID != "" {
-		query = query.Where("o.customer_id = ?", opts.CustomerID)
-	}
-
-	// Get total count
-	var totalCount int64
-	countQuery := u.db.NewSelect().
-		TableExpr("orders AS o").
-		ColumnExpr("COUNT(*)").
-		Join("LEFT JOIN customers AS c ON c.id = o.customer_id AND c.is_deleted = false").
-		Where("o.company_id = ?", opts.Session.CompanyID).
-		Where("o.is_deleted = false")
-
-	// Apply same filters to count query
-	if opts.StartDate != "" {
-		countQuery = countQuery.Where("o.created_at >= ?", opts.StartDate+" 00:00:00")
-	}
-	if opts.EndDate != "" {
-		countQuery = countQuery.Where("o.created_at <= ?", opts.EndDate+" 23:59:59")
-	}
-	if opts.CustomerID != "" {
-		countQuery = countQuery.Where("o.customer_id = ?", opts.CustomerID)
-	}
-
-	if err := countQuery.Scan(u.ctx, &totalCount); err != nil {
-		return nil, 0, err
-	}
-
-	// Apply sorting by created_at desc
-	query = query.OrderExpr("o.created_at DESC")
-
-	// Apply pagination
-	if opts.Limit > 0 {
-		query = query.Limit(int(opts.Limit))
-		if opts.Page > 0 {
-			offset := (opts.Page - 1) * opts.Limit
-			query = query.Offset(int(offset))
-		}
-	}
-
-	// Execute query
-	var items []*RevenueReportItem
-	if err := query.Scan(u.ctx, &items); err != nil {
-		return nil, totalCount, err
 	}
 
 	return items, totalCount, nil

@@ -7,11 +7,15 @@ import (
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/usecase"
 
+	utility "github.com/logistics-id/onward-tms/utility"
+
 	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/engine/transport/rest"
 	"github.com/logistics-id/engine/validate"
 )
 
+// createRequest handles POST /orders
+// Creates a new order with shipments (FTL or LTL)
 type createRequest struct {
 	CustomerID          string             `json:"customer_id" valid:"required|uuid"`
 	OrderType           string             `json:"order_type" valid:"required|in:FTL,LTL"`
@@ -162,7 +166,7 @@ func (r *createRequest) toShipmentEntities() ([]*entity.Shipment, error) {
 
 	for _, sp := range r.Shipments {
 		// Generate shipment number
-		shipmentNumber := r.uc.Shipment.GenerateShipmentNumber()
+		shipmentNumber := utility.GenerateNumberWithRandom(utility.NumberTypeShipment)
 
 		// Convert ShipmentRequest to Shipment entity
 		shipment := r.toShipmentEntity(sp, uuid.Nil, shipmentNumber, companyID)
@@ -175,7 +179,7 @@ func (r *createRequest) toShipmentEntities() ([]*entity.Shipment, error) {
 
 func (r *createRequest) execute() (*rest.ResponseBody, error) {
 	// Generate order number
-	orderNumber := r.uc.Order.GenerateOrderNumber()
+	orderNumber := utility.GenerateNumberWithRandom(utility.NumberTypeOrder)
 
 	// Create order entity
 	order := r.toEntity()

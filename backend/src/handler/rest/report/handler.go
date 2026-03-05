@@ -26,8 +26,8 @@ func RegisterHandler(s *rest.RestServer) {
 }
 
 // getOrderTripWaypointReport handles GET /reports/order-trip-waypoint
-// @Summary Get order-trip-waypoint report
-// @Description Generate comprehensive order, trip, and waypoint report
+// @Summary Get trip waypoint report
+// @Description Generate trip waypoint report with shipment details (1 row per shipment per waypoint)
 // @Tags report
 // @Accept json
 // @Produce json
@@ -35,7 +35,7 @@ func RegisterHandler(s *rest.RestServer) {
 // @Param end_date query string false "End date (YYYY-MM-DD)"
 // @Param customer_id query string false "Filter by customer ID"
 // @Param driver_id query string false "Filter by driver ID"
-// @Param status query string false "Filter by status"
+// @Param status query string false "Filter by waypoint status (pending/in_progress/completed)"
 // @Param downloadable query bool false "Download as Excel (default: false)"
 // @Param page query int false "Page number"
 // @Param limit query int false "Items per page"

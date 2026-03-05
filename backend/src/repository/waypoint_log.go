@@ -36,7 +36,7 @@ func (r *WaypointLogRepository) GetByTripWaypointID(tripWaypointID string) ([]*e
 	err := r.DB.NewSelect().
 		Model(&logs).
 		Where("trip_waypoint_id = ?", tripWaypointID).
-		Order("created_at ASC").
+		Order("created_at DESC").
 		Scan(r.Context)
 	return logs, err
 }
@@ -47,7 +47,7 @@ func (r *WaypointLogRepository) GetByOrderID(orderID string) ([]*entity.Waypoint
 	err := r.DB.NewSelect().
 		Model(&logs).
 		Where("order_id = ?", orderID).
-		Order("created_at ASC").
+		Order("created_at DESC").
 		Scan(r.Context)
 	return logs, err
 }

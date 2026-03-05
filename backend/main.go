@@ -23,7 +23,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -47,9 +46,6 @@ import (
 func init() {
 	godotenv.Load()
 	engine.Init("onward-tms", "1.0.0", true)
-
-	fmt.Println("====================", os.Getenv("REST_SERVER"))
-	fmt.Println("====================", os.Getenv("GRPC_SERVER"))
 
 	// Set custom claim factory for TMSSessionClaims
 	common.SetClaimFactory(func() jwt.Claims {
