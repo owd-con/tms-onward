@@ -168,16 +168,16 @@ func (u *ExceptionUsecase) GetFailedOrders(req *ExceptionQueryOptions) ([]*Excep
 //
 // Note: Validation and notes generation done at request level
 func (u *ExceptionUsecase) BatchRescheduleShipments(newTrip *entity.Trip, shipments []*entity.Shipment) (*entity.Trip, error) {
-	// Generate trip number
-	tripNumber, err := utility.GenerateNumberWithSequence(u.ctx, u.TripRepo.DB, utility.NumberTypeTrip, "trips")
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate trip number: %w", err)
-	}
-	newTrip.TripNumber = tripNumber
-
 	// All operations in ONE transaction for atomicity
-	err = u.TripRepo.RunInTx(u.ctx, func(ctx context.Context, tx bun.Tx) error {
-		// 1. Insert trip
+	err := u.TripRepo.RunInTx(u.ctx, func(ctx context.Context, tx bun.Tx) error {
+		// 1. Generate trip number WITHIN transaction to prevent race condition
+		tripNumber, err := utility.GenerateNumberWithSequence(ctx, tx, utility.NumberTypeTrip, "trips")
+		if err != nil {
+			return fmt.Errorf("failed to generate trip number: %w", err)
+		}
+		newTrip.TripNumber = tripNumber
+
+		// 2. Insert trip
 		tripRepoWithTx := &repository.TripRepository{
 			BaseRepository: u.TripRepo.BaseRepository.WithTx(ctx, tx),
 		}
