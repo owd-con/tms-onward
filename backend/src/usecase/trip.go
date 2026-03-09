@@ -125,8 +125,22 @@ func (u *TripUsecase) GetLatestByOrderID(orderID string) (*entity.Trip, error) {
 // Delete soft deletes a trip
 func (u *TripUsecase) Delete(trip *entity.Trip) error {
 	return u.Repo.RunInTx(u.Context, func(ctx context.Context, tx bun.Tx) error {
-		// 1. Update order status based on its waypoints dispatch status
-		// Uses raw SQL UPDATE with INNER JOIN for efficiency
+		// 1. Get all trip waypoints to collect shipment IDs
+		tripWaypointRepo := &repository.TripWaypointRepository{
+			BaseRepository: u.TripWaypointRepo.BaseRepository.WithTx(ctx, tx),
+		}
+		tripWaypoints, err := tripWaypointRepo.GetByTripID(trip.ID.String())
+		if err != nil {
+			return fmt.Errorf("failed to get trip waypoints: %w", err)
+		}
+
+		// Collect all shipment IDs from all trip waypoints
+		allShipmentIDs := make([]string, 0)
+		for _, tw := range tripWaypoints {
+			allShipmentIDs = append(allShipmentIDs, tw.ShipmentIDs...)
+		}
+
+		// 2. Update order status based on its waypoints dispatch status
 		orderRepo := &repository.OrderRepository{
 			BaseRepository: u.OrderRepo.BaseRepository.WithTx(ctx, tx),
 		}
@@ -134,15 +148,31 @@ func (u *TripUsecase) Delete(trip *entity.Trip) error {
 			return fmt.Errorf("failed to update order status: %w", err)
 		}
 
-		// 2. Soft delete all trip waypoints
-		tripWaypointRepo := &repository.TripWaypointRepository{
-			BaseRepository: u.TripWaypointRepo.BaseRepository.WithTx(ctx, tx),
-		}
+		// 3. Soft delete all trip waypoints
 		if err := tripWaypointRepo.SoftDeleteByTripID(trip.ID.String()); err != nil {
 			return fmt.Errorf("failed to delete trip waypoints: %w", err)
 		}
 
-		// 3. Soft delete trip
+		// 4. Update shipment status based on retry_count (single query with CASE WHEN)
+		// - retry_count > 0: from failed reschedule → back to "failed"
+		// - retry_count = 0: new shipment → back to "pending"
+		shipmentRepo := &repository.ShipmentRepository{
+			BaseRepository: u.ShipmentUsecase.Repo.BaseRepository.WithTx(ctx, tx),
+		}
+		if len(allShipmentIDs) > 0 {
+			_, err := shipmentRepo.DB.NewUpdate().
+				Model(&entity.Shipment{}).
+				Set("status = CASE WHEN retry_count > 0 THEN 'failed' ELSE 'pending' END").
+				Set("updated_at = ?", time.Now()).
+				Where("id IN (?)", bun.In(allShipmentIDs)).
+				Where("is_deleted = false").
+				Exec(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to update shipment status: %w", err)
+			}
+		}
+
+		// 5. Soft delete trip
 		tripRepo := u.Repo.WithTx(ctx, tx)
 		if err := tripRepo.SoftDelete(trip.ID); err != nil {
 			return fmt.Errorf("failed to delete trip: %w", err)
