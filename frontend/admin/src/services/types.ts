@@ -274,10 +274,7 @@ export interface Order {
 export interface FailedShipment {
   id: string;
   shipment_number: string;
-  sorting_id: number;
-  origin_location_name?: string;
-  origin_address?: string;
-  dest_location_name?: string;
+  dest_location?: string;
   dest_address?: string;
   failed_reason?: string;
 }

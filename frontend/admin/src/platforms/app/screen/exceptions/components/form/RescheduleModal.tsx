@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { Button, Modal, Steps } from "@/components";
+import { Button, Modal, Alert } from "@/components";
 import { useException } from "@/services/exception/hooks";
 import type { Driver, Vehicle, Order, FailedShipment } from "@/services/types";
-import { RescheduleStep1 } from "./RescheduleStep1";
-import { RescheduleStep2 } from "./RescheduleStep2";
+import { DriverVehicleSelector } from "@/platforms/app/components/trip/DriverVehicleSelector";
 
 /**
  * Props Interface
@@ -16,23 +15,13 @@ interface RescheduleModalProps {
 }
 
 /**
- * Step Type
- */
-type Step = 1 | 2;
-
-/**
  * TMS Onward - Reschedule Modal Component
  *
- * Simplified 2-step modal untuk reschedule failed shipments:
- *
- * Step 1: Assign New Driver + Vehicle
- * - Driver dropdown (active, not on trip)
- * - Vehicle dropdown (active, not on trip)
+ * Single-page modal untuk reschedule failed shipments:
  * - Show order info: Order Number, Customer, Reference (conditional)
  * - Show failed shipments info (read-only)
- *
- * Step 2: Confirm Reschedule
- * - Show summary: failed shipments, new driver & vehicle
+ * - Driver dropdown (active, not on trip)
+ * - Vehicle dropdown (active, not on trip)
  * - Confirm to create new trip
  */
 export const RescheduleModal = ({
@@ -41,8 +30,7 @@ export const RescheduleModal = ({
   onSuccess,
   order,
 }: RescheduleModalProps) => {
-  // State untuk multi-step form
-  const [currentStep, setCurrentStep] = useState<Step>(1);
+  // State
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
 
@@ -53,7 +41,6 @@ export const RescheduleModal = ({
   // Reset form saat modal open/close
   useEffect(() => {
     if (open) {
-      setCurrentStep(1);
       setSelectedDriver(null);
       setSelectedVehicle(null);
     }
@@ -88,19 +75,6 @@ export const RescheduleModal = ({
     setSelectedVehicle(selection.vehicle || null);
   };
 
-  // Handle step navigation
-  const handleNext = () => {
-    if (currentStep < 2) {
-      setCurrentStep((prev) => (prev + 1) as Step);
-    }
-  };
-
-  const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep((prev) => (prev - 1) as Step);
-    }
-  };
-
   // Handle submit reschedule
   const handleSubmit = async () => {
     // Get all failed shipment IDs from order
@@ -114,22 +88,7 @@ export const RescheduleModal = ({
   };
 
   // Validation
-  const isStep1Valid = selectedDriver !== null && selectedVehicle !== null;
-  const isStep2Valid = true; // No additional validation for step 2
-
-  const canProceed = () => {
-    switch (currentStep) {
-      case 1:
-        return isStep1Valid;
-      case 2:
-        return isStep2Valid;
-      default:
-        return false;
-    }
-  };
-
-  // Steps configuration
-  const steps = [{ label: "Assign Resources" }, { label: "Confirm" }];
+  const isValid = selectedDriver !== null && selectedVehicle !== null;
 
   // Get failed shipments from order
   const failedShipments: FailedShipment[] = order?.failed_shipments || [];
@@ -148,13 +107,8 @@ export const RescheduleModal = ({
         </div>
       </Modal.Header>
 
-      {/* Steps Indicator */}
-      <div className='mb-6'>
-        <Steps steps={steps} current={currentStep - 1} />
-      </div>
-
       <Modal.Body className='min-h-[300px] lg:min-h-[400px]'>
-        {/* Order Info Header - shown in both steps */}
+        {/* Order Info Header */}
         <div className='mb-6 p-4 bg-base-200 rounded-lg space-y-1'>
           <div className='text-sm'>
             <span className='font-semibold text-base-content/70'>
@@ -178,73 +132,81 @@ export const RescheduleModal = ({
           )}
         </div>
 
-        {currentStep === 1 && (
-          <RescheduleStep1
-            failedShipments={failedShipments}
-            selectedDriver={selectedDriver}
-            selectedVehicle={selectedVehicle}
-            onDriverVehicleChange={handleDriverVehicleChange}
-          />
-        )}
+        {/* Failed Shipments Info */}
+        <div className='mb-6'>
+          <h3 className='text-base lg:text-lg font-semibold mb-2'>
+            Failed Shipments ({failedShipments.length})
+          </h3>
+          <div className='space-y-2 max-h-[200px] overflow-y-auto p-3 bg-base-200 rounded-lg'>
+            {failedShipments.map((shipment, idx) => (
+              <div
+                key={shipment.id || idx}
+                className='p-2 bg-white rounded-lg border border-base-200'
+              >
+                <div className='flex items-center justify-between mb-1'>
+                  <span className='font-semibold text-sm text-primary'>
+                    {shipment.shipment_number}
+                  </span>
+                  <span className='text-xs text-base-content/60'>
+                    #{idx + 1}
+                  </span>
+                </div>
+                <div className='flex items-center gap-1 text-xs'>
+                  <span className='text-base-content/70'>
+                    ▼ {shipment.dest_location}
+                  </span>
+                </div>
+                {shipment.failed_reason && (
+                  <div className='text-error text-xs mt-1'>
+                    ⚠️ {shipment.failed_reason}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
 
-        {currentStep === 2 && (
-          <RescheduleStep2
-            failedShipments={failedShipments}
-            selectedDriver={selectedDriver}
-            selectedVehicle={selectedVehicle}
-            hasError={batchRescheduleShipmentsResult?.isError || false}
+        {/* Driver & Vehicle Selection */}
+        <div className='mb-6'>
+          <h3 className='text-base lg:text-lg font-semibold mb-2'>
+            Assign Driver & Vehicle
+          </h3>
+          <p className='text-sm text-base-content/60 mb-3'>
+            Select an active driver and vehicle for the new trip
+          </p>
+
+          <DriverVehicleSelector
+            value={{
+              driver: selectedDriver,
+              vehicle: selectedVehicle,
+            }}
+            onChange={handleDriverVehicleChange}
           />
-        )}
+        </div>
       </Modal.Body>
 
       <Modal.Footer>
-        <div className='flex flex-col sm:flex-row justify-between gap-3'>
+        <div className='flex flex-col sm:flex-row justify-end gap-3'>
           <Button
             type='button'
             variant='secondary'
-            onClick={handleBack}
-            disabled={
-              currentStep === 1 || batchRescheduleShipmentsResult?.isLoading
-            }
+            onClick={onClose}
+            disabled={batchRescheduleShipmentsResult?.isLoading}
             className='w-full sm:w-auto'
           >
-            Back
+            Cancel
           </Button>
 
-          <div className='flex flex-col sm:flex-row gap-3 w-full sm:w-auto'>
-            <Button
-              type='button'
-              variant='secondary'
-              onClick={onClose}
-              disabled={batchRescheduleShipmentsResult?.isLoading}
-              className='w-full sm:w-auto'
-            >
-              Cancel
-            </Button>
-
-            {currentStep < 2 ? (
-              <Button
-                type='button'
-                variant='primary'
-                onClick={handleNext}
-                disabled={!canProceed()}
-                className='w-full sm:w-auto'
-              >
-                Next
-              </Button>
-            ) : (
-              <Button
-                type='button'
-                variant='primary'
-                onClick={handleSubmit}
-                isLoading={batchRescheduleShipmentsResult?.isLoading}
-                disabled={!canProceed()}
-                className='w-full sm:w-auto'
-              >
-                Confirm Reschedule
-              </Button>
-            )}
-          </div>
+          <Button
+            type='button'
+            variant='primary'
+            onClick={handleSubmit}
+            isLoading={batchRescheduleShipmentsResult?.isLoading}
+            disabled={!isValid}
+            className='w-full sm:w-auto'
+          >
+            Reschedule
+          </Button>
         </div>
       </Modal.Footer>
     </Modal.Wrapper>
