@@ -2,6 +2,7 @@ import { memo } from "react";
 
 import type { ExpiredDriver } from "@/services/types";
 import { AlertCard } from "./AlertCard";
+import { dateFormat } from "@/utils/common";
 
 export interface ExpiredDriversAlertProps {
   drivers: ExpiredDriver[];
@@ -22,7 +23,7 @@ export const ExpiredDriversAlert = memo<ExpiredDriversAlertProps>(
             id: d.id,
             title: d.name,
             subtitle: `License: ${d.license_type} • ${d.phone_number}`,
-            highlight: `Expired: ${d.license_expiry}`,
+            highlight: `Expired: ${dateFormat(d.license_expiry, "YYYY")}`,
           }))}
         />
       </div>
