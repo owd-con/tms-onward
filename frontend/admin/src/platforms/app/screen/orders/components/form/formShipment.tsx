@@ -92,7 +92,7 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
           id: `shp-${Date.now()}`,
           pickup_scheduled_date: new Date().toISOString().split("T")[0],
           delivery_scheduled_date: new Date().toISOString().split("T")[0],
-          items: [{ name: "", quantity: 1 }],
+          items: [{ name: "", quantity: 1, weight: 1 }],
         },
       ];
 
@@ -134,7 +134,7 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
               id: `shp-${Date.now()}`,
               pickup_scheduled_date: new Date().toISOString().split("T")[0],
               delivery_scheduled_date: new Date().toISOString().split("T")[0],
-              items: [{ name: "", quantity: 1 }],
+              items: [{ name: "", quantity: 1, weight: 1 }],
             },
           ];
 
@@ -160,7 +160,7 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
             id: `shp-${Date.now()}`,
             pickup_scheduled_date: new Date().toISOString().split("T")[0],
             delivery_scheduled_date: new Date().toISOString().split("T")[0],
-            items: [{ name: "", quantity: 1 }],
+            items: [{ name: "", quantity: 1, weight: 1 }],
           },
         ];
         setShipments(defaultShipments);
@@ -178,7 +178,7 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
         id: `shp-${Date.now()}`,
         pickup_scheduled_date: new Date().toISOString().split("T")[0],
         delivery_scheduled_date: new Date().toISOString().split("T")[0],
-        items: [{ name: "", quantity: 1 }],
+        items: [{ name: "", quantity: 1, weight: 1 }],
       };
 
       setShipments((prev) => [...prev, newShipment]);
@@ -225,7 +225,7 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
           if (shp.id === shipmentId) {
             return {
               ...shp,
-              items: [...shp.items, { name: "", quantity: 1 }],
+              items: [...shp.items, { name: "", quantity: 1, weight: 1 }],
             };
           }
           return shp;
@@ -544,7 +544,8 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
                         >
                           <div className='flex-1 min-w-[150px]'>
                             <Input
-                              placeholder='Item name'
+                              label='Item name'
+                              placeholder='Enter item name'
                               value={item.name}
                               onChange={(e) =>
                                 updateShipmentItem(
@@ -558,8 +559,9 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
                           </div>
                           <div className='w-20'>
                             <Input
+                              label='Qty'
                               type='number'
-                              placeholder='Qty'
+                              placeholder='1'
                               value={item.quantity}
                               onChange={(e) =>
                                 updateShipmentItem(
@@ -573,15 +575,16 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
                           </div>
                           <div className='w-24'>
                             <Input
+                              label='Weight (kg)'
                               type='number'
-                              placeholder='Weight (kg)'
-                              value={item.weight || ""}
+                              placeholder='1'
+                              value={item.weight ?? ""}
                               onChange={(e) =>
                                 updateShipmentItem(
                                   shipment.id,
                                   itemIndex,
                                   "weight",
-                                  parseFloat(e.target.value) || 0,
+                                  parseFloat(e.target.value) || 1,
                                 )
                               }
                             />
