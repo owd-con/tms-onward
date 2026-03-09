@@ -24,29 +24,29 @@ type DashboardStats struct {
 
 // MapShipment - Shipment data for map visualization (origin + destination)
 type MapShipment struct {
-	ShipmentID        string  `json:"shipment_id"`
-	ShipmentNumber    string  `json:"shipment_number"`
-	OrderID           string  `json:"order_id"`
-	OrderNumber       string  `json:"order_number"`
-	CustomerName      string  `json:"customer_name"`
-	OriginAddress     string  `json:"origin_address"`
-	OriginCity        string  `json:"origin_city"`
-	OriginLatitude    float64 `json:"origin_lat"`
-	OriginLongitude   float64 `json:"origin_lng"`
-	DestAddress       string  `json:"dest_address"`
-	DestCity          string  `json:"dest_city"`
-	DestLatitude      float64 `json:"dest_lat"`
-	DestLongitude     float64 `json:"dest_lng"`
-	Status            string  `json:"status"`
+	ShipmentID      string  `json:"shipment_id"`
+	ShipmentNumber  string  `json:"shipment_number"`
+	OrderID         string  `json:"order_id"`
+	OrderNumber     string  `json:"order_number"`
+	CustomerName    string  `json:"customer_name"`
+	OriginAddress   string  `json:"origin_address"`
+	OriginCity      string  `json:"origin_city"`
+	OriginLatitude  float64 `json:"origin_lat"`
+	OriginLongitude float64 `json:"origin_lng"`
+	DestAddress     string  `json:"dest_address"`
+	DestCity        string  `json:"dest_city"`
+	DestLatitude    float64 `json:"dest_lat"`
+	DestLongitude   float64 `json:"dest_lng"`
+	Status          string  `json:"status"`
 }
 
 // MapShipmentsByArea - Shipments grouped by area (for map visualization)
 type MapShipmentsByArea struct {
-	OriginAddress  string       `json:"origin_address"`
-	OriginCity     string       `json:"origin_city"`
-	OriginLatitude float64      `json:"origin_lat"`
-	OriginLongitude float64     `json:"origin_lng"`
-	Shipments      []MapShipment `json:"shipments"`
+	OriginAddress   string        `json:"origin_address"`
+	OriginCity      string        `json:"origin_city"`
+	OriginLatitude  float64       `json:"origin_lat"`
+	OriginLongitude float64       `json:"origin_lng"`
+	Shipments       []MapShipment `json:"shipments"`
 }
 
 // ExpiredVehicle - Vehicle with expired year
@@ -81,11 +81,11 @@ type FailedOrder struct {
 
 // DashboardResponse - Complete dashboard response
 type DashboardResponse struct {
-	Stats                DashboardStats        `json:"stats"`
-	MapShipmentsByArea   []MapShipmentsByArea  `json:"map_shipments_by_area"`
-	ExpiredVehicles      []ExpiredVehicle      `json:"expired_vehicles"`
-	ExpiredDrivers       []ExpiredDriver       `json:"expired_drivers"`
-	FailedOrders         []FailedOrder         `json:"failed_orders"`
+	Stats              DashboardStats       `json:"stats"`
+	MapShipmentsByArea []MapShipmentsByArea `json:"map_shipments_by_area"`
+	ExpiredVehicles    []ExpiredVehicle     `json:"expired_vehicles"`
+	ExpiredDrivers     []ExpiredDriver      `json:"expired_drivers"`
+	FailedOrders       []FailedOrder        `json:"failed_orders"`
 }
 
 type DashboardQueryOptions struct {
@@ -234,20 +234,20 @@ func (u *DashboardUsecase) getMapShipmentsByArea(req *DashboardQueryOptions) ([]
 
 	// Query shipments with origin and destination coordinates
 	type ShipmentResult struct {
-		ShipmentID       string  `bun:"shipment_id"`
-		ShipmentNumber   string  `bun:"shipment_number"`
-		OrderID          string  `bun:"order_id"`
-		OrderNumber      string  `bun:"order_number"`
-		CustomerName     string  `bun:"customer_name"`
-		OriginAddress    string  `bun:"origin_address"`
-		OriginCity       string  `bun:"origin_city"`
-		OriginLatitude   float64 `bun:"origin_latitude"`
-		OriginLongitude  float64 `bun:"origin_longitude"`
-		DestAddress      string  `bun:"dest_address"`
-		DestCity         string  `bun:"dest_city"`
-		DestLatitude     float64 `bun:"dest_latitude"`
-		DestLongitude    float64 `bun:"dest_longitude"`
-		Status           string  `bun:"status"`
+		ShipmentID      string  `bun:"shipment_id"`
+		ShipmentNumber  string  `bun:"shipment_number"`
+		OrderID         string  `bun:"order_id"`
+		OrderNumber     string  `bun:"order_number"`
+		CustomerName    string  `bun:"customer_name"`
+		OriginAddress   string  `bun:"origin_address"`
+		OriginCity      string  `bun:"origin_city"`
+		OriginLatitude  float64 `bun:"origin_latitude"`
+		OriginLongitude float64 `bun:"origin_longitude"`
+		DestAddress     string  `bun:"dest_address"`
+		DestCity        string  `bun:"dest_city"`
+		DestLatitude    float64 `bun:"dest_latitude"`
+		DestLongitude   float64 `bun:"dest_longitude"`
+		Status          string  `bun:"status"`
 	}
 
 	var results []ShipmentResult
@@ -303,11 +303,11 @@ func (u *DashboardUsecase) getMapShipmentsByArea(req *DashboardQueryOptions) ([]
 
 		if _, exists := areaMap[key]; !exists {
 			areaMap[key] = &MapShipmentsByArea{
-				OriginAddress:  r.OriginAddress,
-				OriginCity:     r.OriginCity,
-				OriginLatitude: r.OriginLatitude,
+				OriginAddress:   r.OriginAddress,
+				OriginCity:      r.OriginCity,
+				OriginLatitude:  r.OriginLatitude,
 				OriginLongitude: r.OriginLongitude,
-				Shipments:      []MapShipment{},
+				Shipments:       []MapShipment{},
 			}
 		}
 
@@ -459,7 +459,7 @@ func (u *DashboardUsecase) getFailedOrders(req *DashboardQueryOptions) ([]Failed
 		Join("INNER JOIN customers c ON c.id = o.customer_id").
 		Where("s.company_id = ?", req.Session.CompanyID).
 		Where("s.is_deleted = false").
-		Where("s.status IN (?)", []string{"failed", "cancelled"}).
+		Where("s.status = 'failed'").
 		Where("s.failed_reason IS NOT NULL").
 		GroupExpr("o.id, o.order_number, c.name, o.status").
 		OrderExpr("failed_at DESC").

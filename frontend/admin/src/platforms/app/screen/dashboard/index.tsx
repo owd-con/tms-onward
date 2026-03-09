@@ -114,13 +114,15 @@ const DashboardScreen = () => {
             {mapShipments.length > 0 && (
               <div className='px-4'>
                 <div className='bg-white rounded-xl p-4 shadow-sm'>
-                  <h3 className='text-lg font-semibold mb-4'>
-                    Shipments Map
-                  </h3>
+                  <h3 className='text-lg font-semibold mb-4'>Shipments Map</h3>
                   <ShipmentMap shipmentsByArea={mapShipments} height='450px' />
                 </div>
               </div>
             )}
+
+            <div className='px-4'>
+              <FailedOrdersAlert orders={failedOrders} />
+            </div>
 
             {/* Alerts Section - Parent fetches data, passes via props */}
             <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 px-4'>
@@ -129,7 +131,6 @@ const DashboardScreen = () => {
             </div>
 
             {/* Failed Orders - Parent fetches data, passes via props */}
-            <FailedOrdersAlert orders={failedOrders} />
           </div>
         )}
       </Page.Body>

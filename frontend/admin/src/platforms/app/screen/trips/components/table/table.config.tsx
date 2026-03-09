@@ -2,6 +2,7 @@
 import { Button } from "@/components";
 import config from "@/services/table/const";
 import { statusBadge } from "@/shared/helper";
+import { dateFormat } from "@/utils/common";
 
 const createTableConfig = ({
   onClick,
@@ -76,9 +77,7 @@ const createTableConfig = ({
       component: (row: { created_at: string }) => (
         <div className="text-xs font-normal tracking-wide">
           <span className="font-semibold">
-            {row?.created_at
-              ? new Date(row.created_at).toLocaleDateString("id-ID")
-              : "-"}
+            {dateFormat(row.created_at)}
           </span>
         </div>
       ),
