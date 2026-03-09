@@ -202,15 +202,24 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
       shipmentId: string,
       itemIndex: number,
       field: string,
-      value: string | number,
+      value: string,
     ) => {
       setShipments((prev) =>
         prev.map((shp) => {
           if (shp.id === shipmentId) {
             const newItems = [...shp.items];
+            const processedValue = (() => {
+              // Parse numeric fields
+              if (field === "quantity" || field === "weight") {
+                return value === "" ? 0 : parseInt(value);
+              }
+
+              return value;
+            })();
+
             newItems[itemIndex] = {
               ...newItems[itemIndex],
-              [field]: value,
+              [field]: processedValue,
             };
             return { ...shp, items: newItems };
           }
@@ -555,6 +564,11 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
                                   e.target.value,
                                 )
                               }
+                              error={
+                                (FormState?.errors as any)?.[
+                                  `shipments.${index}.items.${itemIndex}.name`
+                                ]
+                              }
                             />
                           </div>
                           <div className='w-20'>
@@ -568,8 +582,13 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
                                   shipment.id,
                                   itemIndex,
                                   "quantity",
-                                  parseInt(e.target.value) || 1,
+                                  e.target.value,
                                 )
+                              }
+                              error={
+                                (FormState?.errors as any)?.[
+                                  `shipments.${index}.items.${itemIndex}.quantity`
+                                ]
                               }
                             />
                           </div>
@@ -584,8 +603,13 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
                                   shipment.id,
                                   itemIndex,
                                   "weight",
-                                  parseFloat(e.target.value) || 1,
+                                  e.target.value,
                                 )
+                              }
+                              error={
+                                (FormState?.errors as any)?.[
+                                  `shipments.${index}.items.${itemIndex}.weight`
+                                ]
                               }
                             />
                           </div>
