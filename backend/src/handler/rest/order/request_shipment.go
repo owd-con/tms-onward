@@ -113,4 +113,20 @@ func (r *ShipmentRequest) Validate(v *validate.Response, key int) {
 			v.SetError(fmt.Sprintf("shipments.%d.delivery_scheduled_time.invalid", key), "invalid delivery_scheduled_time format 15:04.")
 		}
 	}
+
+	if len(r.Items) > 0 {
+		for ik, i := range r.Items {
+			if i.Name == "" {
+				v.SetError(fmt.Sprintf("shipments.%d.items.%d.name.invalid", key, ik), "item name is required.")
+			}
+
+			if i.Quantity == 0 {
+				v.SetError(fmt.Sprintf("shipments.%d.items.%d.quantity.invalid", key, ik), "quantity is required.")
+			}
+
+			if i.Weight == 0 {
+				v.SetError(fmt.Sprintf("shipments.%d.items.%d.weight.invalid", key, ik), "weight is required.")
+			}
+		}
+	}
 }

@@ -184,12 +184,14 @@ func (u *ReportUsecase) GetCustomerReport(opts *ReportQueryOptions) ([]*Customer
 		Where("c.company_id = ?", opts.Session.CompanyID).
 		Where("c.is_deleted = false")
 
-	// Filter by date range
-	if opts.StartDate != "" {
-		query = query.Where("o.created_at >= ?", opts.StartDate+" 00:00:00")
-	}
-	if opts.EndDate != "" {
-		query = query.Where("o.created_at <= ?", opts.EndDate+" 23:59:59")
+	if opts.StartDate != "" && opts.EndDate != "" {
+		sst, _ := time.Parse("2006-01-02", opts.StartDate)
+		sst = sst.Add(time.Duration(-1 * (sst.Local().Hour() * int(time.Hour))))
+		est, _ := time.Parse("2006-01-02", opts.EndDate)
+		est = est.AddDate(0, 0, 1)
+		est = est.Add(time.Duration(-1 * (est.Local().Hour() * int(time.Hour))))
+
+		query = query.Where("o.created_at >= ? AND o.created_at < ?", sst, est)
 	}
 
 	// Filter by specific customer
@@ -216,12 +218,17 @@ func (u *ReportUsecase) GetCustomerReport(opts *ReportQueryOptions) ([]*Customer
 		Where("c.is_deleted = false")
 
 	// Apply same filters to count query
-	if opts.StartDate != "" {
-		countQuery = countQuery.Where("o.created_at >= ?", opts.StartDate+" 00:00:00")
+
+	if opts.StartDate != "" && opts.EndDate != "" {
+		sst, _ := time.Parse("2006-01-02", opts.StartDate)
+		sst = sst.Add(time.Duration(-1 * (sst.Local().Hour() * int(time.Hour))))
+		est, _ := time.Parse("2006-01-02", opts.EndDate)
+		est = est.AddDate(0, 0, 1)
+		est = est.Add(time.Duration(-1 * (est.Local().Hour() * int(time.Hour))))
+
+		query = query.Where("o.created_at >= ? AND o.created_at < ?", sst, est)
 	}
-	if opts.EndDate != "" {
-		countQuery = countQuery.Where("o.created_at <= ?", opts.EndDate+" 23:59:59")
-	}
+
 	if opts.CustomerID != "" {
 		countQuery = countQuery.Where("c.id = ?", opts.CustomerID)
 	}
@@ -279,12 +286,14 @@ func (u *ReportUsecase) GetDriverPerformance(opts *ReportQueryOptions) ([]*Drive
 		Where("d.company_id = ?", opts.Session.CompanyID).
 		Where("d.is_deleted = false")
 
-	// Filter by date range
-	if opts.StartDate != "" {
-		query = query.Where("t.created_at >= ?", opts.StartDate+" 00:00:00")
-	}
-	if opts.EndDate != "" {
-		query = query.Where("t.created_at <= ?", opts.EndDate+" 23:59:59")
+	if opts.StartDate != "" && opts.EndDate != "" {
+		sst, _ := time.Parse("2006-01-02", opts.StartDate)
+		sst = sst.Add(time.Duration(-1 * (sst.Local().Hour() * int(time.Hour))))
+		est, _ := time.Parse("2006-01-02", opts.EndDate)
+		est = est.AddDate(0, 0, 1)
+		est = est.Add(time.Duration(-1 * (est.Local().Hour() * int(time.Hour))))
+
+		query = query.Where("t.created_at >= ? AND t.created_at < ?", sst, est)
 	}
 
 	// Filter by specific driver
@@ -310,12 +319,16 @@ func (u *ReportUsecase) GetDriverPerformance(opts *ReportQueryOptions) ([]*Drive
 		Where("d.is_deleted = false")
 
 	// Apply same filters to count query
-	if opts.StartDate != "" {
-		countQuery = countQuery.Where("t.created_at >= ?", opts.StartDate+" 00:00:00")
+	if opts.StartDate != "" && opts.EndDate != "" {
+		sst, _ := time.Parse("2006-01-02", opts.StartDate)
+		sst = sst.Add(time.Duration(-1 * (sst.Local().Hour() * int(time.Hour))))
+		est, _ := time.Parse("2006-01-02", opts.EndDate)
+		est = est.AddDate(0, 0, 1)
+		est = est.Add(time.Duration(-1 * (est.Local().Hour() * int(time.Hour))))
+
+		query = query.Where("t.created_at >= ? AND t.created_at < ?", sst, est)
 	}
-	if opts.EndDate != "" {
-		countQuery = countQuery.Where("t.created_at <= ?", opts.EndDate+" 23:59:59")
-	}
+
 	if opts.DriverID != "" {
 		countQuery = countQuery.Where("d.id = ?", opts.DriverID)
 	}
@@ -369,22 +382,15 @@ func (u *ReportUsecase) GetOrderTripWaypointReport(opts *ReportQueryOptions) ([]
 	return u.ReportRepo.FindAll(opts.BuildOption(), func(f bson.M) bson.M {
 		f["company_id"] = opts.Session.CompanyID
 
-		// Date range filter
-		if opts.StartDate != "" {
-			startDate, _ := time.Parse("2006-01-02", opts.StartDate)
-			if !startDate.IsZero() {
-				f["updated_at"] = bson.M{"$gte": startDate}
-			}
-		}
-		if opts.EndDate != "" {
-			endDate, _ := time.Parse("2006-01-02", opts.EndDate)
-			if !endDate.IsZero() {
-				endDate = endDate.Add(24 * time.Hour) // End of day
-				if f["updated_at"] == nil {
-					f["updated_at"] = bson.M{}
-				}
-				f["updated_at"].(bson.M)["$lte"] = endDate
-			}
+		if opts.StartDate != "" && opts.EndDate != "" {
+			sst, _ := time.Parse("2006-01-02", opts.StartDate)
+			sst = sst.Add(time.Duration(-1 * (sst.Local().Hour() * int(time.Hour))))
+			est, _ := time.Parse("2006-01-02", opts.EndDate)
+			est = est.AddDate(0, 0, 1)
+			est = est.Add(time.Duration(-1 * (est.Local().Hour() * int(time.Hour))))
+
+			f["updated_at"] = bson.M{"$gte": sst}
+			f["updated_at"] = bson.M{"$lt": est}
 		}
 
 		// Customer filter

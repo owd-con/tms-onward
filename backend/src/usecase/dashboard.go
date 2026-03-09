@@ -101,17 +101,6 @@ func NewDashboardUsecase() *DashboardUsecase {
 	}
 }
 
-// parseDateRange - Parse start_date and end_date from YYYY-MM-DD format
-func parseDateRange(startDateStr, endDateStr string) (startAt, endAt time.Time) {
-	if startDateStr != "" {
-		startAt, _ = time.Parse("2006-01-02", startDateStr)
-	}
-	if endDateStr != "" {
-		endAt, _ = time.Parse("2006-01-02", endDateStr)
-	}
-	return startAt, endAt
-}
-
 // Get retrieves complete dashboard data
 func (u *DashboardUsecase) Get(req *DashboardQueryOptions) (*DashboardResponse, error) {
 	if req.Session == nil {
@@ -167,9 +156,6 @@ func (u *DashboardUsecase) getStats(req *DashboardQueryOptions) (*DashboardStats
 	ctx := context.Background()
 	stats := &DashboardStats{}
 
-	// Parse date range
-	startDate, endDate := parseDateRange(req.StartDate, req.EndDate)
-
 	// Get order stats with single query (GROUP BY)
 	type OrderStatsResult struct {
 		Status string `bun:"status"`
@@ -184,12 +170,14 @@ func (u *DashboardUsecase) getStats(req *DashboardQueryOptions) (*DashboardStats
 		Where("company_id = ?", req.Session.CompanyID).
 		Where("is_deleted = false")
 
-	// Add date filters only if provided (skip if zero value)
-	if !startDate.IsZero() {
-		query.Where("created_at >= ?", startDate)
-	}
-	if !endDate.IsZero() {
-		query.Where("created_at <= ?", endDate)
+	if req.StartDate != "" && req.EndDate != "" {
+		sst, _ := time.Parse("2006-01-02", req.StartDate)
+		sst = sst.Add(time.Duration(-1 * (sst.Local().Hour() * int(time.Hour))))
+		est, _ := time.Parse("2006-01-02", req.EndDate)
+		est = est.AddDate(0, 0, 1)
+		est = est.Add(time.Duration(-1 * (est.Local().Hour() * int(time.Hour))))
+
+		query = query.Where("created_at >= ? AND created_at < ?", sst, est)
 	}
 
 	err := query.
@@ -229,8 +217,6 @@ func (u *DashboardUsecase) getStats(req *DashboardQueryOptions) (*DashboardStats
 // getMapShipmentsByArea - Get shipments grouped by origin address (filtered by date)
 func (u *DashboardUsecase) getMapShipmentsByArea(req *DashboardQueryOptions) ([]MapShipmentsByArea, error) {
 	ctx := context.Background()
-	// Parse date range
-	startDate, endDate := parseDateRange(req.StartDate, req.EndDate)
 
 	// Query shipments with origin and destination coordinates
 	type ShipmentResult struct {
@@ -278,12 +264,14 @@ func (u *DashboardUsecase) getMapShipmentsByArea(req *DashboardQueryOptions) ([]
 		Where("ro.latitude != 0 AND ro.longitude != 0"). // Only shipments with valid origin coordinates
 		Where("rd.latitude != 0 AND rd.longitude != 0")  // Only shipments with valid destination coordinates
 
-	// Add date filters only if provided (skip if zero value)
-	if !startDate.IsZero() {
-		query.Where("s.created_at >= ?", startDate)
-	}
-	if !endDate.IsZero() {
-		query.Where("s.created_at <= ?", endDate)
+	if req.StartDate != "" && req.EndDate != "" {
+		sst, _ := time.Parse("2006-01-02", req.StartDate)
+		sst = sst.Add(time.Duration(-1 * (sst.Local().Hour() * int(time.Hour))))
+		est, _ := time.Parse("2006-01-02", req.EndDate)
+		est = est.AddDate(0, 0, 1)
+		est = est.Add(time.Duration(-1 * (est.Local().Hour() * int(time.Hour))))
+
+		query = query.Where("s.created_at >= ? AND s.created_at < ?", sst, est)
 	}
 
 	err := query.
