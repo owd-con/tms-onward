@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS orders (
     status VARCHAR(50) NOT NULL DEFAULT 'pending', -- pending, planned, dispatched, in_transit, completed, cancelled
     total_price DECIMAL(15, 2) DEFAULT 0,
     manual_override_price NUMERIC(15, 2) DEFAULT 0,
+    total_shipment INT DEFAULT 0, -- Total number of shipments in this order (for LTL progress tracking)
+    total_delivered INT DEFAULT 0, -- Number of delivered shipments (for LTL progress tracking)
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     created_at TIMESTAMP DEFAULT NOW(),
@@ -30,6 +32,7 @@ CREATE INDEX idx_orders_customer_id ON orders(customer_id) WHERE is_deleted = fa
 CREATE INDEX idx_orders_status ON orders(status) WHERE is_deleted = false;
 CREATE INDEX idx_orders_order_type ON orders(order_type) WHERE is_deleted = false;
 CREATE INDEX idx_orders_created_at ON orders(created_at) WHERE is_deleted = false;
+CREATE INDEX idx_orders_total_delivered ON orders(total_delivered) WHERE is_deleted = false;
 
 -- Shipments table
 -- Replaces OrderWaypoint as the planning unit (1 origin -> 1 destination)

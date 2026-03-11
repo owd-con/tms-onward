@@ -57,6 +57,61 @@ func (r *ShipmentRepository) UpdateStatus(shipmentID string, status string) erro
 	return err
 }
 
+// UpdateStatusWithOrderCounters updates the status of a shipment and syncs order counters
+// This increments/decrements order.total_delivered based on status change
+func (r *ShipmentRepository) UpdateStatusWithOrderCounters(shipmentID string, status string) error {
+	// First, get the old status and order_id
+	var oldStatus string
+	var orderID string
+	err := r.DB.NewSelect().
+		Model(&entity.Shipment{}).
+		Column("status", "order_id").
+		Where("id = ?", shipmentID).
+		Where("is_deleted = false").
+		Scan(r.Context, &oldStatus, &orderID)
+	if err != nil {
+		return err
+	}
+
+	// Calculate counter delta
+	delta := 0
+	if oldStatus != "delivered" && status == "delivered" {
+		// Not delivered -> delivered: increment
+		delta = 1
+	} else if oldStatus == "delivered" && status != "delivered" {
+		// Delivered -> not delivered: decrement
+		delta = -1
+	}
+
+	// Update shipment status
+	_, err = r.DB.NewUpdate().
+		Model(&entity.Shipment{}).
+		Set("status = ?", status).
+		Set("updated_at = NOW()").
+		Where("id = ?", shipmentID).
+		Where("is_deleted = false").
+		Exec(r.Context)
+	if err != nil {
+		return err
+	}
+
+	// Sync order counter if there's a change
+	if delta != 0 {
+		_, err = r.DB.NewUpdate().
+			Model(&entity.Order{}).
+			Set("total_delivered = total_delivered + ?", delta).
+			Set("updated_at = NOW()").
+			Where("id = ?", orderID).
+			Where("is_deleted = false").
+			Exec(r.Context)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // UpdateStatusBasedOnShipments updates order status based on its shipments
 // - If ALL shipments are "pending" → order status = "pending"
 // - If ALL shipments are final states (delivered/returned/cancelled) → order status = "completed"

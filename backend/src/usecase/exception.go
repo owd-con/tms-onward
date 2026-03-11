@@ -237,7 +237,7 @@ func (u *ExceptionUsecase) BatchRescheduleShipments(newTrip *entity.Trip, shipme
 		for _, shipment := range shipments {
 			oldStatus := shipment.Status
 
-			// Reset shipment status for new trip (failed/returned -> dispatched)
+			// Reset shipment status for new trip (failed -> dispatched)
 			shipment.Status = "dispatched"
 			shipment.RetryCount++
 			if err := shipmentRepoWithTx.Update(shipment); err != nil {

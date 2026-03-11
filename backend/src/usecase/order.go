@@ -111,13 +111,17 @@ func (u *OrderUsecase) ValidateUnique(orderNumber string, companyID, excludeID s
 // CreateWithShipments - Create order with shipments in transaction
 func (u *OrderUsecase) CreateWithShipments(order *entity.Order, shipments []*entity.Shipment) error {
 	return u.Repo.RunInTx(u.Context, func(ctx context.Context, tx bun.Tx) error {
-		// 1. Create Order first to get OrderID
+		// 1. Initialize shipment counters
+		order.TotalShipment = len(shipments)
+		order.TotalDelivered = 0
+
+		// 2. Create Order first to get OrderID
 		orderRepo := u.Repo.WithTx(ctx, tx)
 		if err := orderRepo.Insert(order); err != nil {
 			return fmt.Errorf("failed to create order: %w", err)
 		}
 
-		// 2. Create Shipments
+		// 3. Create Shipments
 		shipmentRepo := u.ShipmentRepo.WithTx(ctx, tx)
 		for _, shipment := range shipments {
 			shipment.OrderID = order.ID
@@ -126,7 +130,7 @@ func (u *OrderUsecase) CreateWithShipments(order *entity.Order, shipments []*ent
 			}
 		}
 
-		// 3. Create waypoint log (order_created)
+		// 4. Create waypoint log (order_created)
 		waypointLogRepo := u.WaypointLogRepo.WithTx(ctx, tx)
 		log := &entity.WaypointLog{
 			OrderID:   order.ID,
@@ -148,17 +152,11 @@ func (u *OrderUsecase) CreateWithShipments(order *entity.Order, shipments []*ent
 // UpdateWithShipments - Update order with shipments in transaction
 func (u *OrderUsecase) UpdateWithShipments(order *entity.Order, shipments []*entity.Shipment, fields ...string) error {
 	return u.Repo.RunInTx(u.Context, func(ctx context.Context, tx bun.Tx) error {
-		// 1. Update Order
-		orderRepo := u.Repo.WithTx(ctx, tx)
-		if err := orderRepo.Update(order, fields...); err != nil {
-			return err
-		}
-
-		// 2. Update Shipments
+		// 1. Update Shipments first (to calculate new counters)
 		shipmentRepo := u.ShipmentRepo.WithTx(ctx, tx)
 		oldShipments, _ := u.ShipmentRepo.FindByOrderID(order.ID.String())
 
-		// 2.1 Create or Update Shipments
+		// 1.1 Create or Update Shipments
 		for _, sp := range shipments {
 			if sp.ID == uuid.Nil {
 				sp.OrderID = order.ID
@@ -172,7 +170,7 @@ func (u *OrderUsecase) UpdateWithShipments(order *entity.Order, shipments []*ent
 			}
 		}
 
-		// 2.2 Delete removed shipments
+		// 1.2 Delete removed shipments
 		for _, oldSP := range oldShipments {
 			found := false
 			for _, sp := range shipments {
@@ -186,6 +184,16 @@ func (u *OrderUsecase) UpdateWithShipments(order *entity.Order, shipments []*ent
 					return err
 				}
 			}
+		}
+
+		// 2. Update shipment counter
+		order.TotalShipment = len(shipments)
+
+		// 3. Update Order (including counters)
+		orderRepo := u.Repo.WithTx(ctx, tx)
+		updateFields := append(fields, "total_shipment")
+		if err := orderRepo.Update(order, updateFields...); err != nil {
+			return err
 		}
 
 		return nil

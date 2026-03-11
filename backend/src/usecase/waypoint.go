@@ -142,6 +142,9 @@ func (u *WaypointUsecase) CompleteWaypoint(
 		shipmentRepo := &repository.ShipmentRepository{
 			BaseRepository: u.ShipmentUsecase.Repo.BaseRepository.WithTx(ctx, tx),
 		}
+		orderRepo := &repository.OrderRepository{
+			BaseRepository: u.OrderUsecase.Repo.BaseRepository.WithTx(ctx, tx),
+		}
 		logRepo := &repository.WaypointLogRepository{
 			BaseRepository: u.LogRepo.BaseRepository.WithTx(ctx, tx),
 		}
@@ -181,6 +184,19 @@ func (u *WaypointUsecase) CompleteWaypoint(
 				Exec(ctx)
 			if err != nil {
 				return fmt.Errorf("failed to update shipment status: %w", err)
+			}
+
+			// 3.1 Sync order.total_delivered counter
+			// Increment by the number of shipments being marked as delivered
+			_, err = orderRepo.DB.NewUpdate().
+				Model(&entity.Order{}).
+				Set("total_delivered = total_delivered + ?", len(tripWaypoint.ShipmentIDs)).
+				Set("updated_at = ?", now).
+				Where("id = ?", tripWaypoint.Trip.OrderID).
+				Where("is_deleted = false").
+				Exec(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to update order counter: %w", err)
 			}
 		}
 
