@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Modal, Alert } from "@/components";
+import { Button, Modal } from "@/components";
 import { useException } from "@/services/exception/hooks";
 import type { Driver, Vehicle, Order, FailedShipment } from "@/services/types";
 import { DriverVehicleSelector } from "@/platforms/app/components/trip/DriverVehicleSelector";
