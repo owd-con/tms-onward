@@ -49,6 +49,36 @@ const createTableConfig = ({
         </div>
       ),
     },
+    progress: {
+      title: "Progress",
+      sortable: false,
+      headerClass: "text-xs capitalize",
+      class: "p-4",
+      component: (row: { order_type: string; total_shipment: number; total_delivered: number }) => {
+        // Only show progress for LTL orders
+        if (row?.order_type !== "LTL") {
+          return <div className="text-xs text-base-content/40">-</div>;
+        }
+
+        const total = row?.total_shipment || 0;
+        const delivered = row?.total_delivered || 0;
+        const percentage = total > 0 ? Math.round((delivered / total) * 100) : 0;
+
+        return (
+          <div className="flex flex-col gap-1 min-w-[120px]">
+            <progress
+              className="progress progress-success w-full h-2"
+              value={percentage}
+              max="100"
+            />
+            <div className="flex justify-between text-xs">
+              <span className="text-base-content/60">{delivered}/{total} delivered</span>
+              <span className="font-semibold text-success">{percentage}%</span>
+            </div>
+          </div>
+        );
+      },
+    },
     status: {
       title: "Status",
       sortable: true,

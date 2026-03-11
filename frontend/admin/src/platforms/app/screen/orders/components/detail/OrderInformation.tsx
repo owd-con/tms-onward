@@ -103,6 +103,37 @@ export const OrderInformation = ({ order }: OrderInformationProps) => {
         )}
       </div>
 
+      {/* Delivery Progress - Only for LTL orders */}
+      {order.order_type === "LTL" && (
+        <div className="mt-4 pt-4 border-t border-base-300/50">
+          <h4 className="text-sm font-semibold text-base-content mb-3">
+            Delivery Progress
+          </h4>
+          <div className="flex flex-col gap-2">
+            <progress
+              className="progress progress-success w-full h-3"
+              value={
+                order.total_shipment && order.total_shipment > 0
+                  ? Math.round(((order.total_delivered || 0) / order.total_shipment) * 100)
+                  : 0
+              }
+              max="100"
+            />
+            <div className="flex justify-between text-sm">
+              <span className="text-base-content/70">
+                {order.total_delivered || 0} / {order.total_shipment || 0} shipments delivered
+              </span>
+              <span className="font-semibold text-success">
+                {order.total_shipment && order.total_shipment > 0
+                  ? Math.round(((order.total_delivered || 0) / order.total_shipment) * 100)
+                  : 0}
+                %
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Customer Information */}
       <div className='mt-4 pt-4 border-t border-base-300/50'>
         <h4 className='text-sm font-semibold text-base-content mb-3'>

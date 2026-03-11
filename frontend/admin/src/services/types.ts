@@ -258,6 +258,8 @@ export interface Order {
   status: OrderStatus;
   total_price: number;
   manual_override_price?: number; // FTL only
+  total_shipment?: number; // Total number of shipments in this order
+  total_delivered?: number; // Number of delivered shipments (for progress tracking)
   created_by?: string;
   updated_by?: string;
   created_at: string;
