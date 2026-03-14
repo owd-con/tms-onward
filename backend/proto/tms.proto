@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package tms;
+option go_package = "github.com/logistics-id/onward-tms/proto;proto";
+
+// ============================================
+// Dashboard Messages
+// ============================================
+
+// DashboardSummary - Summary statistics for superadmin
+message DashboardSummary {
+  int64 total_tenants = 1;
+  int64 total_shipments = 2;
+}
+
+// GetSummaryRequest - Request with optional month filter
+message GetSummaryRequest {
+  // Optional month filter in format "YYYY-MM" (e.g., "2025-03")
+  // If empty, returns all-time statistics
+  string month = 1;
+}
+
+// GetSummaryResponse - Response with summary data
+message GetSummaryResponse {
+  DashboardSummary summary = 1;
+}
+
+// ============================================
+// TMS Service - All gRPC operations
+// ============================================
+
+service TMSService {
+  // Dashboard operations
+  rpc GetSummary(GetSummaryRequest) returns (GetSummaryResponse);
+
+  // Future operations can be added here:
+  // rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
+  // rpc CreateTrip(CreateTripRequest) returns (CreateTripResponse);
+  // etc.
+}

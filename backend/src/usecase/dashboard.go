@@ -95,10 +95,63 @@ type DashboardQueryOptions struct {
 	EndDate   string `query:"end_date"`
 }
 
+// DashboardSummary - Summary statistics for superadmin
+type DashboardSummary struct {
+	TotalTenants   int64 `json:"total_tenants"`
+	TotalShipments int64 `json:"total_shipments"`
+}
+
 func NewDashboardUsecase() *DashboardUsecase {
 	return &DashboardUsecase{
 		db: postgres.GetDB(),
 	}
+}
+
+// GetSummary retrieves summary statistics (superadmin only, no company filter)
+// month: optional filter in format "YYYY-MM" (e.g., "2025-03"). If empty, returns all-time stats.
+func (u *DashboardUsecase) GetSummary(ctx context.Context, month string) (*DashboardSummary, error) {
+	summary := &DashboardSummary{}
+
+	// Count total tenants (unique company_id in companies table)
+	// Note: tenants count is not filtered by month
+	count, err := u.db.NewSelect().
+		Model((*struct{ ID string })(nil)).
+		TableExpr("companies").
+		Where("is_deleted = false").
+		Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+	summary.TotalTenants = int64(count)
+
+	// Count total shipments (with optional month filter)
+	query := u.db.NewSelect().
+		Model((*struct{ ID string })(nil)).
+		TableExpr("shipments").
+		Where("is_deleted = false")
+
+	// Add month filter if provided
+	if month != "" {
+		// Parse month string (format: "YYYY-MM")
+		startDate, err := time.Parse("2006-01", month)
+		if err != nil {
+			return nil, errors.New("invalid month format, expected YYYY-MM")
+		}
+		// Start of month
+		startOfMonth := startDate.Format("2006-01-01")
+		// Start of next month
+		startOfNextMonth := startDate.AddDate(0, 1, 0).Format("2006-01-01")
+
+		query = query.Where("created_at >= ? AND created_at < ?", startOfMonth, startOfNextMonth)
+	}
+
+	count, err = query.Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+	summary.TotalShipments = int64(count)
+
+	return summary, nil
 }
 
 // Get retrieves complete dashboard data

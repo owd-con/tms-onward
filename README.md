@@ -18,6 +18,9 @@ TMS Onward adalah Transportation Management System (TMS) SaaS yang dirancang unt
 ## Tech Stack
 
 - **Backend**: Go 1.24.4 dengan `logistics-id/engine` framework v0.0.19-dev (Clean Architecture)
+- **API**:
+  - REST API dengan `gorilla/mux`
+  - gRPC dengan Protocol Buffers (`google.golang.org/grpc`)
 - **Database**:
   - PostgreSQL (main data) dengan `uptrace/bun` ORM
   - MongoDB 5+ (audit logs)
@@ -31,6 +34,7 @@ TMS Onward adalah Transportation Management System (TMS) SaaS yang dirancang unt
 ## Prerequisites
 
 - Go 1.24.4 atau lebih tinggi
+- protoc (Protocol Buffers Compiler)
 - PostgreSQL 14+
 - MongoDB 5+
 - Redis 6+
@@ -108,9 +112,25 @@ AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
 ```bash
 go mod download
+
+# Install protoc (Protocol Buffers Compiler) - required for gRPC
+sudo apt-get install -y protobuf-compiler
+
+# Install Go protobuf plugins
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+# Install grpcurl (for gRPC testing)
+go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
 ```
 
-### 4. Run Database Migrations
+### 4. Generate Proto Files
+
+```bash
+make proto
+```
+
+### 5. Run Database Migrations
 
 ```bash
 make migrate up
@@ -118,7 +138,7 @@ make migrate up
 
 **Catatan**: Pastikan `DATABASE_URL` sudah di-set di `.env` file. Migration tool akan membaca connection string dari environment variable tersebut.
 
-### 5. Run Application
+### 6. Run Application
 
 ```bash
 # Development mode
@@ -150,6 +170,78 @@ Setelah menambahkan atau mengubah handler dengan annotations:
 swag init --parseDependency --parseInternal -g main.go -o docs/swagger
 ```
 
+## gRPC API
+
+TMS Onward juga menyediakan gRPC service untuk komunikasi antar microservices.
+
+### gRPC Service Definition
+
+**Proto Location**: `proto/tms.proto`
+
+**Available Services**:
+- `TMSService.GetSummary` - Mendapatkan statistik total tenants dan shipments
+
+### Example Usage (Go Client)
+
+```go
+import (
+    "context"
+    "google.golang.org/grpc"
+    "google.golang.org/grpc/credentials/insecure"
+    proto "github.com/logistics-id/onward-tms/proto/proto"
+)
+
+func GetSummary() {
+    conn, err := grpc.Dial("localhost:4040", grpc.WithTransportCredentials(insecure.NewCredentials()))
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer conn.Close()
+
+    client := proto.NewTMSServiceClient(conn)
+
+    // Get all-time summary
+    resp, err := client.GetSummary(context.Background(), &proto.GetSummaryRequest{})
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Printf("Total Tenants: %d\n", resp.Summary.TotalTenants)
+    fmt.Printf("Total Shipments: %d\n", resp.Summary.TotalShipments)
+
+    // Get summary for specific month
+    resp, err = client.GetSummary(context.Background(), &proto.GetSummaryRequest{
+        Month: "2025-03",
+    })
+}
+```
+
+### Testing gRPC with grpcurl
+
+```bash
+# Install grpcurl
+go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+
+# List all gRPC services
+grpcurl -plaintext localhost:4040 list
+
+# Call GetSummary (all-time statistics)
+grpcurl -plaintext -d '{}' localhost:4040 tms.TMSService/GetSummary
+
+# Call GetSummary (with month filter)
+grpcurl -plaintext -d '{"month": "2025-03"}' localhost:4040 tms.TMSService/GetSummary
+```
+
+### Generate Proto Files
+
+Setelah mengubah proto definition:
+
+```bash
+make proto
+```
+
+Ini akan generate `proto/tms.pb.go` dan `proto/tms_grpc.pb.go`.
+
 ## Development
 
 ### Project Structure
@@ -169,9 +261,16 @@ tms-onward/
 │   │   ├── dispatch.go
 │   │   └── ...
 │   │
+│   ├── proto/                # gRPC protocol definitions
+│   │   ├── go.mod            # Proto module definition
+│   │   ├── tms.proto         # TMS service definition
+│   │   ├── tms.pb.go         # Generated Go code
+│   │   └── tms_grpc.pb.go    # Generated gRPC code
+│   │
 │   ├── src/                  # Source code
 │   │   ├── handler/         # Layer 1: HTTP/gRPC handlers
-│   │   │   └── rest/       # REST handlers per domain
+│   │   │   ├── rest/       # REST handlers per domain
+│   │   │   └── grpc/       # gRPC server implementation
 │   │   ├── usecase/        # Layer 2: Business logic
 │   │   ├── repository/     # Layer 3: Data access
 │   │   ├── event/          # Event handling
@@ -180,7 +279,7 @@ tms-onward/
 │   │   └── subscriber.go   # RabbitMQ subscriptions
 │   │
 │   ├── migrations/          # Database migrations
-│   ├── proto/              # gRPC protocol definitions
+│   ├── scripts/             # Utility scripts
 │   └── charts/             # Helm charts for K8s deployment
 │
 ├── frontend/                # Frontend (React/Vue)
@@ -189,6 +288,7 @@ tms-onward/
 │   ├── requirements.md      # Business requirements
 │   ├── blueprint.md         # Technical specifications
 │   ├── tasklist.md          # Implementation status
+│   ├── task_proto.md        # gRPC implementation tasks
 │   └── PROJECT_STRUCTURE_GUIDE.md
 │
 ├── example/                 # Example implementations
@@ -242,8 +342,17 @@ go test ./...
 # Run specific package tests
 go test ./src/usecase/trip/...
 
+# Run gRPC server tests
+go test ./src/handler/grpc/... -v
+
 # Run with coverage
 go test -cover ./...
+
+# Run benchmark
+go test ./src/handler/grpc/... -bench=.
+
+# Run integration tests (requires server running)
+./scripts/grpc_integration_test.sh
 ```
 
 ### Docker Development
@@ -383,9 +492,12 @@ Untuk dokumentasi lengkap dan bantuan pengembangan:
 - **Issues**: [GitHub Issues](https://github.com/logistics-id/onward-tms/issues)
 - **Architecture**: Clean Architecture dengan engine framework
 - **Context**: Lihat `CLAUDE.md` untuk konteks proyek lengkap
+- **gRPC Tasks**: Lihat `docs/task_proto.md` untuk status implementasi gRPC
 
 ### Quick Links
 
-- [Backend Dashboard](http://localhost:8080) - REST API Base URL
+- [REST API Base URL](http://localhost:8080) - Backend Dashboard
+- [gRPC Server](localhost:4040) - gRPC Server endpoint
 - [Swagger JSON](http://localhost:8080/docs/swagger/swagger.json)
 - [Health Check](http://localhost:8080/health)
+- [Proto Definition](proto/tms.proto) - gRPC service definition

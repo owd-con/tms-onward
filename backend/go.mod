@@ -21,6 +21,7 @@ require (
 	github.com/logistics-id/engine/transport/rest v0.0.19-dev
 	github.com/logistics-id/engine/validate v0.0.19-dev
 	github.com/logistics-id/onward-tms/entity v0.0.0
+	github.com/logistics-id/onward-tms/proto/proto v0.0.0-00010101000000-000000000000
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/stretchr/testify v1.11.1
 	github.com/swaggo/swag v1.16.6
@@ -118,3 +119,5 @@ replace github.com/logistics-id/engine/transport/rest v0.0.19-dev => ../engine/t
 replace github.com/logistics-id/engine/validate v0.0.19-dev => ../engine/validate
 
 replace github.com/logistics-id/onward-tms/entity v0.0.0 => ./entity
+
+replace github.com/logistics-id/onward-tms/proto/proto => ./proto

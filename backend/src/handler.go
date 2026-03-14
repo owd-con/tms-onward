@@ -4,6 +4,8 @@ package src
 
 import (
 	"github.com/logistics-id/engine/transport/rest"
+	grpcHandler "github.com/logistics-id/onward-tms/src/handler/grpc"
+	proto "github.com/logistics-id/onward-tms/proto/proto"
 	"github.com/logistics-id/onward-tms/src/handler/rest/address"
 	"github.com/logistics-id/onward-tms/src/handler/rest/auth"
 	"github.com/logistics-id/onward-tms/src/handler/rest/company"
@@ -98,5 +100,8 @@ func RegisterRestRoutes(s *rest.RestServer) {
 
 // RegisterGrpcRoutes registers all gRPC services
 func RegisterGrpcRoutes(s *grpc.Server) {
-	// Register gRPC services here
+	factory := usecase.NewFactory()
+
+	// Register TMS service (all gRPC operations)
+	proto.RegisterTMSServiceServer(s, grpcHandler.NewServer(factory))
 }
