@@ -103,9 +103,9 @@ type DashboardSummary struct {
 
 // CompanyShipmentData - Company shipment data for superadmin dashboard
 type CompanyShipmentData struct {
-	CompanyID     string `json:"company_id" bun:"company_id"`
-	CompanyName   string `json:"company_name" bun:"company_name"`
-	TotalShipments int64 `json:"total_shipments" bun:"total_shipments"`
+	CompanyID      string `json:"company_id" bun:"company_id"`
+	CompanyName    string `json:"company_name" bun:"company_name"`
+	TotalShipments int64  `json:"total_shipments" bun:"total_shipments"`
 }
 
 func NewDashboardUsecase() *DashboardUsecase {
@@ -120,19 +120,35 @@ func (u *DashboardUsecase) GetSuperAdminSummary(ctx context.Context, month strin
 	summary := &DashboardSummary{}
 
 	// Count total tenants (unique company_id in companies table)
-	// Note: tenants count is not filtered by month
-	count, err := u.db.NewSelect().
+	queryCompanies := u.db.NewSelect().
 		Model((*struct{ ID string })(nil)).
 		TableExpr("companies").
-		Where("is_deleted = false").
-		Count(ctx)
+		Where("is_deleted = false")
+
+	// Add month filter if provided
+	if month != "" {
+		// Parse month string (format: "YYYY-MM")
+		startDate, err := time.Parse("2006-01", month)
+		if err != nil {
+			return nil, errors.New("invalid month format, expected YYYY-MM")
+		}
+		// Start of month
+		startOfMonth := startDate.Format("2006-01-01")
+		// Start of next month
+		startOfNextMonth := startDate.AddDate(0, 1, 0).Format("2006-01-01")
+
+		queryCompanies = queryCompanies.Where("created_at >= ?", startOfMonth, startOfNextMonth)
+	}
+
+	count, err := queryCompanies.Count(ctx)
 	if err != nil {
 		return nil, err
 	}
+
 	summary.TotalTenants = int64(count)
 
 	// Count total shipments (with optional month filter)
-	query := u.db.NewSelect().
+	queryShipments := u.db.NewSelect().
 		Model((*struct{ ID string })(nil)).
 		TableExpr("shipments").
 		Where("is_deleted = false")
@@ -149,10 +165,10 @@ func (u *DashboardUsecase) GetSuperAdminSummary(ctx context.Context, month strin
 		// Start of next month
 		startOfNextMonth := startDate.AddDate(0, 1, 0).Format("2006-01-01")
 
-		query = query.Where("created_at >= ? AND created_at < ?", startOfMonth, startOfNextMonth)
+		queryShipments = queryShipments.Where("created_at >= ? AND created_at < ?", startOfMonth, startOfNextMonth)
 	}
 
-	count, err = query.Count(ctx)
+	count, err = queryShipments.Count(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -173,6 +189,7 @@ func (u *DashboardUsecase) GetCompanyShipments(ctx context.Context, monthly stri
 		ColumnExpr("COUNT(s.id) as total_shipments").
 		TableExpr("companies c").
 		Where("c.is_deleted = false").
+		Join("LEFT JOIN shipments s ON s.company_id = c.id AND s.is_deleted = false").
 		GroupExpr("c.id, c.name").
 		OrderExpr("total_shipments DESC")
 
@@ -190,9 +207,8 @@ func (u *DashboardUsecase) GetCompanyShipments(ctx context.Context, monthly stri
 
 		// Add JOIN with date filter
 		query = query.Join("LEFT JOIN shipments s ON s.company_id = c.id AND s.is_deleted = false AND s.created_at >= ? AND s.created_at < ?", startOfMonth, startOfNextMonth)
-	} else {
-		// Add JOIN without date filter
-		query = query.Join("LEFT JOIN shipments s ON s.company_id = c.id AND s.is_deleted = false")
+
+		query = query.Where("s.created_at >= ? and s.created_at < ?", startOfMonth, startOfNextMonth)
 	}
 
 	err := query.Scan(ctx, &results)
