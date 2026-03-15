@@ -10,7 +10,7 @@ import (
 
 func TestNewServer(t *testing.T) {
 	uc := &usecase.Factory{}
-	server := NewServer(uc)
+	server := NewTMSServer(uc)
 
 	if server == nil {
 		t.Fatal("NewServer() should not return nil")
@@ -34,7 +34,7 @@ func TestGetSummary_EmptyMonth(t *testing.T) {
 // Benchmark test
 func BenchmarkGetSummary(b *testing.B) {
 	uc := &usecase.Factory{}
-	server := NewServer(uc)
+	server := NewTMSServer(uc)
 
 	req := &proto.GetSummaryRequest{
 		Month: "2025-03",

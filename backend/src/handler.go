@@ -103,5 +103,5 @@ func RegisterGrpcRoutes(s *grpc.Server) {
 	factory := usecase.NewFactory()
 
 	// Register TMS service (all gRPC operations)
-	proto.RegisterTMSServiceServer(s, grpcHandler.NewServer(factory))
+	proto.RegisterTMSServiceServer(s, grpcHandler.NewTMSServer(factory))
 }

@@ -7,19 +7,19 @@ import (
 	"github.com/logistics-id/onward-tms/src/usecase"
 )
 
-type Server struct {
+type TMSServer struct {
 	proto.UnimplementedTMSServiceServer
 	uc *usecase.Factory
 }
 
-func NewServer(uc *usecase.Factory) *Server {
-	return &Server{
+func NewTMSServer(uc *usecase.Factory) *TMSServer {
+	return &TMSServer{
 		uc: uc,
 	}
 }
 
 // GetSummary implements proto.TMSServiceServer
-func (s *Server) GetSummary(ctx context.Context, req *proto.GetSummaryRequest) (*proto.GetSummaryResponse, error) {
+func (s *TMSServer) GetSummary(ctx context.Context, req *proto.GetSummaryRequest) (*proto.GetSummaryResponse, error) {
 	summary, err := s.uc.Dashboard.GetSummary(ctx, req.Month)
 	if err != nil {
 		return nil, err
