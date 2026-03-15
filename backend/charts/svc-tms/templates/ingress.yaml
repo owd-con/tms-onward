@@ -18,7 +18,7 @@ spec:
     - host: {{ .Values.global.domain }}
       http:
         paths:
-          - path: /tms-dev
+          - path: /tms
             pathType: Prefix
             backend:
               service:
