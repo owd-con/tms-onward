@@ -188,7 +188,6 @@ func (u *DashboardUsecase) GetCompanyShipments(ctx context.Context, monthly stri
 		ColumnExpr("c.name as company_name").
 		ColumnExpr("COUNT(s.id) as total_shipments").
 		TableExpr("companies c").
-		Join("LEFT JOIN shipments s ON s.company_id = c.id AND s.is_deleted = false").
 		Where("c.is_deleted = false").
 		GroupExpr("c.id, c.name").
 		OrderExpr("total_shipments DESC")
@@ -204,6 +203,9 @@ func (u *DashboardUsecase) GetCompanyShipments(ctx context.Context, monthly stri
 		startOfMonth := startDate.Format("2006-01-01")
 		// Start of next month
 		startOfNextMonth := startDate.AddDate(0, 1, 0).Format("2006-01-01")
+
+		// date filter join shipments
+		query = query.Join("LEFT JOIN shipments s ON s.company_id = c.id AND s.is_deleted = false")
 
 		// date filter
 		query = query.Where("(s.created_at >= ? and s.created_at < ?)", startOfMonth, startOfNextMonth)
