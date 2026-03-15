@@ -139,7 +139,7 @@ func (u *DashboardUsecase) GetSuperAdminSummary(ctx context.Context, month strin
 		// Start of next month
 		startOfNextMonth := startDate.AddDate(0, 1, 0).Format("2006-01-01")
 
-		queryCompanies = queryCompanies.Where("created_at >= ?", startOfMonth, startOfNextMonth)
+		queryCompanies = queryCompanies.Where("created_at >= ? and created_at < ?", startOfMonth, startOfNextMonth)
 	}
 
 	count, err := queryCompanies.Count(ctx)
