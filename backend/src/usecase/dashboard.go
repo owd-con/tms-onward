@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/logistics-id/engine/ds/postgres"
@@ -183,16 +184,16 @@ func (u *DashboardUsecase) GetCompanyShipments(ctx context.Context, monthly stri
 	var results []CompanyShipmentData
 
 	// Build base query
-	query := u.db.NewSelect().
-		ColumnExpr("c.id as company_id").
-		ColumnExpr("c.name as company_name").
-		ColumnExpr("COUNT(s.id) as total_shipments").
-		TableExpr("companies c").
-		Join("LEFT JOIN shipments s ON s.company_id = c.id AND s.is_deleted = false").
-		Where("c.is_deleted = false").
-		GroupExpr("c.id, c.name").
-		OrderExpr("total_shipments DESC")
+	query := `SELECT c.id as company_id, c.name as company_name, c.created_at as created_at
+		FROM companies c
+		LEFT JOIN (
+			select company_id, count(id) from shipments
+			where is_deleted = false %s GROUP BY company_id
+		) as s ON s.company_id = c.id
+		WHERE c.is_deleted = false
+	`
 
+	var queryMonthly string
 	// Add month filter if provided
 	if monthly != "" {
 		// Parse month string (format: "YYYY-MM")
@@ -206,10 +207,10 @@ func (u *DashboardUsecase) GetCompanyShipments(ctx context.Context, monthly stri
 		startOfNextMonth := startDate.AddDate(0, 1, 0).Format("2006-01-01")
 
 		// date filter
-		query = query.Where("(s.created_at >= ? and s.created_at < ?)", startOfMonth, startOfNextMonth)
+		queryMonthly = fmt.Sprintf("and (created_at >= '%s' and created_at < '%s')", startOfMonth, startOfNextMonth)
 	}
 
-	err := query.Scan(ctx, &results)
+	err := u.db.NewRaw(fmt.Sprintf(query, queryMonthly)).Scan(ctx, &results)
 	if err != nil {
 		return nil, err
 	}
