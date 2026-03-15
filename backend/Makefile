@@ -2,9 +2,9 @@
 
 # Variables
 SERVICE_NAME := svc-tms
-IMAGE_REPO := enivent/svc-tms
+IMAGE_REPO := enivent/$(SERVICE_NAME)
 GIT_COMMIT := $(shell git rev-parse HEAD)
-CHART_PATH := ./charts/svc-tms
+CHART_PATH := ./charts/$(SERVICE_NAME)
 
 ENV ?= dev
 NAMESPACE ?= default
