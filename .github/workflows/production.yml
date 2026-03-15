@@ -45,15 +45,15 @@ jobs:
 
       # Deploy Admin
       - name: Deploy Admin to S3
-        run: aws s3 sync ./frontend/admin/dist/ s3://onward.dev/clients/tms --delete
+        run: aws s3 sync ./frontend/admin/dist/ s3://onward.prod/clients/tms --delete
 
       # Deploy Driver
       - name: Deploy Driver to S3
-        run: aws s3 sync ./frontend/driver/dist/ s3://onward.dev/clients/driver --delete
+        run: aws s3 sync ./frontend/driver/dist/ s3://onward.prod/clients/driver --delete
 
       # Deploy Tracking
       - name: Deploy Tracking to S3
-        run: aws s3 sync ./frontend/tracking/dist/ s3://onward.dev/clients/tracking --delete
+        run: aws s3 sync ./frontend/tracking/dist/ s3://onward.prod/clients/global --delete
 
       - name: Invalidate CloudFront Cache
         run: |
