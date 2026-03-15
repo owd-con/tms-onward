@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	proto "github.com/logistics-id/onward-tms/proto/proto"
+	"github.com/logistics-id/onward-tms/proto"
 	"github.com/logistics-id/onward-tms/src/usecase"
 )
 

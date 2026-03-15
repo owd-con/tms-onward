@@ -4,8 +4,8 @@ package src
 
 import (
 	"github.com/logistics-id/engine/transport/rest"
+	"github.com/logistics-id/onward-tms/proto"
 	grpcHandler "github.com/logistics-id/onward-tms/src/handler/grpc"
-	proto "github.com/logistics-id/onward-tms/proto/proto"
 	"github.com/logistics-id/onward-tms/src/handler/rest/address"
 	"github.com/logistics-id/onward-tms/src/handler/rest/auth"
 	"github.com/logistics-id/onward-tms/src/handler/rest/company"
