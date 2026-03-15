@@ -50,9 +50,13 @@ const pages = import.meta.glob<{ default: RouteConfig[] }>(
   "./**/*_subrouter.tsx",
   { eager: true },
 );
+
+console.log("====================", pages);
 const routes: RouteConfig[] = Object.values(pages).flatMap(
   (mod) => mod.default || [],
 );
+
+console.log(routes, "====================");
 
 const AppRouter = () => {
   const dispatch = useDispatch<AppDispatch>();

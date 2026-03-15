@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FaEdit, FaTrash, FaTimes } from "react-icons/fa";
+import { FaEdit, FaPrint, FaTrash, FaTimes } from "react-icons/fa";
 
 import { Button, useEnigmaUI, Modal } from "@/components";
 import { useOrder } from "@/services/order/hooks";
@@ -220,6 +220,22 @@ const OrderDetailPage = () => {
         subtitle={order.order_number}
         action={
           <div className='gap-3 flex'>
+            <Button
+              variant='secondary'
+              onClick={() => window.open(`/a/print/order/${orderId}`, "_blank")}
+            >
+              <FaPrint className='h-4 w-4 mr-1' />
+              Print Order
+            </Button>
+            <Button
+              variant='secondary'
+              onClick={() =>
+                window.open(`/a/print/resi/order/${orderId}`, "_blank")
+              }
+            >
+              <FaPrint className='h-4 w-4 mr-1' />
+              Print Resi (All)
+            </Button>
             {canEdit && (
               <Button
                 variant='secondary'
@@ -268,6 +284,7 @@ const OrderDetailPage = () => {
             <ShipmentTimeline
               shipments={order.shipments || []}
               orderType={order.order_type}
+              orderId={orderId}
               onReturnSuccess={handleReturnSuccess}
             />
           </div>

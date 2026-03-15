@@ -1,3 +1,6 @@
+import { useNavigate } from "react-router-dom";
+import { FaPrint } from "react-icons/fa";
+
 import { useEnigmaUI } from "@/components";
 import type { Shipment } from "@/services/types";
 import { dateFormat, statusBadge, statusColors, statusIcon } from "@/shared/helper";
@@ -13,6 +16,7 @@ import ReturnShipmentModal from "../modal/return.shipment";
 interface ShipmentTimelineProps {
   shipments: Shipment[];
   orderType?: "FTL" | "LTL";
+  orderId?: string;
   /**
    * Callback when return is successful (for refetching parent data)
    */
@@ -27,9 +31,11 @@ interface ShipmentTimelineProps {
 const ShipmentTimeline = ({
   shipments,
   orderType,
+  orderId,
   onReturnSuccess,
 }: ShipmentTimelineProps) => {
   const { openModal, closeModal } = useEnigmaUI();
+  const navigate = useNavigate();
 
   const openReturnShipmentModal = (shipment: Shipment) => {
     openModal({
@@ -342,19 +348,32 @@ const ShipmentTimeline = ({
               </div>
 
               {/* Action Footer */}
-              {shipment.status === "failed" && (
-                <div className='mt-4 pt-4 border-t border-base-200'>
-                  <Button
-                    variant='warning'
-                    size='sm'
-                    onClick={() => openReturnShipmentModal(shipment)}
-                    className='w-full gap-2'
-                  >
-                    <HiArrowUturnLeft className='w-4 h-4' />
-                    Return to Origin
-                  </Button>
+              <div className='mt-4 pt-4 border-t border-base-200'>
+                <div className='flex gap-2'>
+                  {orderId && (
+                    <Button
+                      variant='secondary'
+                      size='sm'
+                      onClick={() => navigate(`/a/print/resi/order/${orderId}/shipment/${shipment.id}`)}
+                      className='flex-1 gap-2'
+                    >
+                      <FaPrint className='w-3 h-3' />
+                      Print Resi
+                    </Button>
+                  )}
+                  {shipment.status === "failed" && (
+                    <Button
+                      variant='warning'
+                      size='sm'
+                      onClick={() => openReturnShipmentModal(shipment)}
+                      className='flex-1 gap-2'
+                    >
+                      <HiArrowUturnLeft className='w-4 h-4' />
+                      Return
+                    </Button>
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Returned Note */}
               {shipment.status === "returned" && shipment.returned_note && (

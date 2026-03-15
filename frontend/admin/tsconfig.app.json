@@ -28,5 +28,10 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src", "src/utils/i18n.ts", "src/global.d.ts"]
+  "include": [
+    "src",
+    "src/utils/i18n.ts",
+    "src/global.d.ts",
+    "../../example/print-design"
+  ]
 }

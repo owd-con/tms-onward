@@ -7,7 +7,9 @@ const DashboardScreen = lazy(() => import("./dashboard"));
 
 // Management screens
 const TeamScreen = lazy(() => import("./management/team"));
-const CompanyDetailPage = lazy(() => import("./management/company/CompanyDetailPage"));
+const CompanyDetailPage = lazy(
+  () => import("./management/company/CompanyDetailPage"),
+);
 
 // Master Data screens (Phase 6-10)
 const CustomerListScreen = lazy(
@@ -56,6 +58,12 @@ const OrderCreateScreen = lazy(() => import("./orders/OrderCreatePage"));
 const OrderDetailScreen = lazy(() => import("./orders/OrderDetailPage"));
 const OrderEditScreen = lazy(() => import("./orders/OrderEditPage"));
 
+// Print screens
+const PrintOrderScreen = lazy(() => import("./print/PrintOrderScreen"));
+const PrintResiOrderScreen = lazy(() => import("./print/PrintResiOrderScreen"));
+const PrintResiShipmentScreen = lazy(() => import("./print/PrintResiShipmentScreen"));
+const PrintTripScreen = lazy(() => import("./print/PrintTripScreen"));
+
 // Trip Management (Phase 12)
 const TripListScreen = lazy(() => import("./trips/TripListPage"));
 const TripCreateScreen = lazy(() => import("./trips/TripCreatePage"));
@@ -63,19 +71,21 @@ const TripEditScreen = lazy(() => import("./trips/TripEditPage"));
 const TripDetailScreen = lazy(() => import("./trips/TripDetailPage"));
 
 // Exception Management (Phase 16)
-const ExceptionListScreen = lazy(() => import("./exceptions/ExceptionListPage"));
+const ExceptionListScreen = lazy(
+  () => import("./exceptions/ExceptionListPage"),
+);
 
 // Reports (Phase 17)
 const OrderTripReportPage = lazy(() => import("./reports/OrderTripReportPage"));
-const DriverPerformanceReportPage = lazy(() => import("./reports/DriverPerformanceReportPage"));
+const DriverPerformanceReportPage = lazy(
+  () => import("./reports/DriverPerformanceReportPage"),
+);
 const CustomerReportPage = lazy(() => import("./reports/CustomerReportPage"));
 
 // Onboarding
-const OnboardingWizard = lazy(() =>
-  import("../onboarding/OnboardingWizard")
-);
-const OnboardingCompletePage = lazy(() =>
-  import("../onboarding/OnboardingCompletePage")
+const OnboardingWizard = lazy(() => import("../onboarding/OnboardingWizard"));
+const OnboardingCompletePage = lazy(
+  () => import("../onboarding/OnboardingCompletePage"),
 );
 
 // TMS Onward - Route Registry
@@ -111,6 +121,12 @@ const routes = [
   { path: "orders/create", element: OrderCreateScreen },
   { path: "orders/:id/edit", element: OrderEditScreen },
   { path: "orders/:id", element: OrderDetailScreen },
+
+  // Print
+  { path: "print/order/:id", element: PrintOrderScreen },
+  { path: "print/resi/order/:id", element: PrintResiOrderScreen },
+  { path: "print/resi/order/:orderId/shipment/:shipmentId", element: PrintResiShipmentScreen },
+  { path: "print/trip/:id", element: PrintTripScreen },
 
   // Trips
   { path: "trips", element: TripListScreen },
