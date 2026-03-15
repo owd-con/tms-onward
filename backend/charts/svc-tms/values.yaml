@@ -22,11 +22,11 @@ env:
   - name: PLATFORM
     value: "logistics-id"
   - name: POSTGRES_DATABASE
-    value: "dev_tms"
+    value: "onward_tms"
   - name: MONGODB_DATABASE
-    value: "dev_tms"
+    value: "onward_tms"
   - name: S3_BUCKET_NAME
-    value: "onward.dev"
+    value: "onward.prod"
   - name: AWS_REGION
     value: "ap-southeast-3"
   - name: AWS_ACCESS_KEY_ID
