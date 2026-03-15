@@ -1,0 +1,62 @@
+name: Production Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+        # Build Admin
+      - name: Build Admin Frontend
+        working-directory: ./frontend/admin
+        run: |
+          npm ci
+          npm run build:prod
+
+      # Build Driver
+      - name: Build Driver Frontend
+        working-directory: ./frontend/driver
+        run: |
+          npm ci --legacy-peer-deps
+          npm run build:prod
+
+      # Build Tracking
+      - name: Build Tracking Frontend
+        working-directory: ./frontend/tracking
+        run: |
+          npm ci
+          npm run build:prod
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-3
+
+      # Deploy Admin
+      - name: Deploy Admin to S3
+        run: aws s3 sync ./frontend/admin/dist/ s3://onward.dev/clients/tms --delete
+
+      # Deploy Driver
+      - name: Deploy Driver to S3
+        run: aws s3 sync ./frontend/driver/dist/ s3://onward.dev/clients/driver --delete
+
+      # Deploy Tracking
+      - name: Deploy Tracking to S3
+        run: aws s3 sync ./frontend/tracking/dist/ s3://onward.dev/clients/tracking --delete
+
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation --distribution-id E60IHS514NFDV --paths '/*'
+          aws cloudfront create-invalidation --distribution-id E3Y70817EKZBB --paths '/*'
+          aws cloudfront create-invalidation --distribution-id E2OZMTHMA8SIZN --paths '/*'
