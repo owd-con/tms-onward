@@ -5,6 +5,7 @@ import (
 
 	"github.com/logistics-id/onward-tms/proto"
 	"github.com/logistics-id/onward-tms/src/usecase"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type TMSServer struct {
@@ -36,9 +37,9 @@ func (s *TMSServer) GetDashboard(ctx context.Context, req *proto.DashboardReques
 	var protoCompanies []*proto.CompanyData
 	for _, c := range companies {
 		protoCompanies = append(protoCompanies, &proto.CompanyData{
-			CompanyId:     c.CompanyID,
-			CompanyName:   c.CompanyName,
+			CompanyName:    c.CompanyName,
 			TotalShipments: c.TotalShipments,
+			CreatedAt:      timestamppb.New(c.CreatedAt),
 		})
 	}
 

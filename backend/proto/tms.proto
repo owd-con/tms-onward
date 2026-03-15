@@ -3,6 +3,8 @@ syntax = "proto3";
 package tms;
 option go_package = "github.com/logistics-id/onward-tms/proto;proto";
 
+import "google/protobuf/timestamp.proto";
+
 // ============================================
 // Dashboard Messages
 // ============================================
@@ -15,9 +17,9 @@ message DashboardSummary {
 
 // CompanyData - Company shipment data
 message CompanyData {
-  string company_id = 1;
-  string company_name = 2;
-  int64 total_shipments = 3;
+  string company_name = 1;
+  int64 total_shipments = 2;
+  google.protobuf.Timestamp created_at = 3;
 }
 
 // DashboardRequest - Request with optional month filter

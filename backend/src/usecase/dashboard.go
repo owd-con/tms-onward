@@ -104,9 +104,10 @@ type DashboardSummary struct {
 
 // CompanyShipmentData - Company shipment data for superadmin dashboard
 type CompanyShipmentData struct {
-	CompanyID      string `json:"company_id" bun:"company_id"`
-	CompanyName    string `json:"company_name" bun:"company_name"`
-	TotalShipments int64  `json:"total_shipments" bun:"total_shipments"`
+	CompanyID      string    `json:"company_id"`
+	CompanyName    string    `json:"company_name"`
+	CreatedAt      time.Time `json:"created_at"`
+	TotalShipments int64     `json:"total_shipments"`
 }
 
 func NewDashboardUsecase() *DashboardUsecase {
@@ -184,10 +185,10 @@ func (u *DashboardUsecase) GetCompanyShipments(ctx context.Context, monthly stri
 	var results []CompanyShipmentData
 
 	// Build base query
-	query := `SELECT c.id as company_id, c.name as company_name, c.created_at as created_at
+	query := `SELECT c.id as company_id, c.name as company_name, c.created_at as created_at, s.total as total_shipments
 		FROM companies c
 		LEFT JOIN (
-			select company_id, count(id) from shipments
+			select company_id, count(id) as total from shipments
 			where is_deleted = false %s GROUP BY company_id
 		) as s ON s.company_id = c.id
 		WHERE c.is_deleted = false

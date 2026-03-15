@@ -53,7 +53,7 @@ docker:
 .PHONY: proto
 proto:
 	@echo "> Generating Go code from proto files..."
-	protoc --proto_path=proto --go_out=paths=source_relative:proto --go-grpc_out=paths=source_relative:proto proto/*.proto
+	protoc --proto_path=proto --proto_path=/tmp/proto/protobuf/src --go_out=paths=source_relative:proto --go-grpc_out=paths=source_relative:proto proto/*.proto
 
 # Install new Helm release with image tag
 .PHONY: install

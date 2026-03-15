@@ -9,6 +9,7 @@ package proto
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -77,9 +78,9 @@ func (x *DashboardSummary) GetTotalShipments() int64 {
 // CompanyData - Company shipment data
 type CompanyData struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
-	CompanyId      string                 `protobuf:"bytes,1,opt,name=company_id,json=companyId,proto3" json:"company_id,omitempty"`
-	CompanyName    string                 `protobuf:"bytes,2,opt,name=company_name,json=companyName,proto3" json:"company_name,omitempty"`
-	TotalShipments int64                  `protobuf:"varint,3,opt,name=total_shipments,json=totalShipments,proto3" json:"total_shipments,omitempty"`
+	CompanyName    string                 `protobuf:"bytes,1,opt,name=company_name,json=companyName,proto3" json:"company_name,omitempty"`
+	TotalShipments int64                  `protobuf:"varint,2,opt,name=total_shipments,json=totalShipments,proto3" json:"total_shipments,omitempty"`
+	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -114,13 +115,6 @@ func (*CompanyData) Descriptor() ([]byte, []int) {
 	return file_tms_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CompanyData) GetCompanyId() string {
-	if x != nil {
-		return x.CompanyId
-	}
-	return ""
-}
-
 func (x *CompanyData) GetCompanyName() string {
 	if x != nil {
 		return x.CompanyName
@@ -133,6 +127,13 @@ func (x *CompanyData) GetTotalShipments() int64 {
 		return x.TotalShipments
 	}
 	return 0
+}
+
+func (x *CompanyData) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
 }
 
 // DashboardRequest - Request with optional month filter
@@ -239,15 +240,15 @@ var File_tms_proto protoreflect.FileDescriptor
 
 const file_tms_proto_rawDesc = "" +
 	"\n" +
-	"\ttms.proto\x12\x03tms\"`\n" +
+	"\ttms.proto\x12\x03tms\x1a\x1fgoogle/protobuf/timestamp.proto\"`\n" +
 	"\x10DashboardSummary\x12#\n" +
 	"\rtotal_tenants\x18\x01 \x01(\x03R\ftotalTenants\x12'\n" +
-	"\x0ftotal_shipments\x18\x02 \x01(\x03R\x0etotalShipments\"x\n" +
-	"\vCompanyData\x12\x1d\n" +
+	"\x0ftotal_shipments\x18\x02 \x01(\x03R\x0etotalShipments\"\x94\x01\n" +
+	"\vCompanyData\x12!\n" +
+	"\fcompany_name\x18\x01 \x01(\tR\vcompanyName\x12'\n" +
+	"\x0ftotal_shipments\x18\x02 \x01(\x03R\x0etotalShipments\x129\n" +
 	"\n" +
-	"company_id\x18\x01 \x01(\tR\tcompanyId\x12!\n" +
-	"\fcompany_name\x18\x02 \x01(\tR\vcompanyName\x12'\n" +
-	"\x0ftotal_shipments\x18\x03 \x01(\x03R\x0etotalShipments\",\n" +
+	"created_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\",\n" +
 	"\x10DashboardRequest\x12\x18\n" +
 	"\amonthly\x18\x01 \x01(\tR\amonthly\"t\n" +
 	"\x11DashboardResponse\x12/\n" +
@@ -271,21 +272,23 @@ func file_tms_proto_rawDescGZIP() []byte {
 
 var file_tms_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_tms_proto_goTypes = []any{
-	(*DashboardSummary)(nil),  // 0: tms.DashboardSummary
-	(*CompanyData)(nil),       // 1: tms.CompanyData
-	(*DashboardRequest)(nil),  // 2: tms.DashboardRequest
-	(*DashboardResponse)(nil), // 3: tms.DashboardResponse
+	(*DashboardSummary)(nil),      // 0: tms.DashboardSummary
+	(*CompanyData)(nil),           // 1: tms.CompanyData
+	(*DashboardRequest)(nil),      // 2: tms.DashboardRequest
+	(*DashboardResponse)(nil),     // 3: tms.DashboardResponse
+	(*timestamppb.Timestamp)(nil), // 4: google.protobuf.Timestamp
 }
 var file_tms_proto_depIdxs = []int32{
-	0, // 0: tms.DashboardResponse.summary:type_name -> tms.DashboardSummary
-	1, // 1: tms.DashboardResponse.companies:type_name -> tms.CompanyData
-	2, // 2: tms.TMSService.GetDashboard:input_type -> tms.DashboardRequest
-	3, // 3: tms.TMSService.GetDashboard:output_type -> tms.DashboardResponse
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	4, // 0: tms.CompanyData.created_at:type_name -> google.protobuf.Timestamp
+	0, // 1: tms.DashboardResponse.summary:type_name -> tms.DashboardSummary
+	1, // 2: tms.DashboardResponse.companies:type_name -> tms.CompanyData
+	2, // 3: tms.TMSService.GetDashboard:input_type -> tms.DashboardRequest
+	3, // 4: tms.TMSService.GetDashboard:output_type -> tms.DashboardResponse
+	4, // [4:5] is the sub-list for method output_type
+	3, // [3:4] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_tms_proto_init() }
