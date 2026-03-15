@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: svc-tms-dev
+  name: svc-tms
   labels:
-    app: svc-tms-dev
-    devspace.dev/app: svc-tms-dev
+    app: svc-tms
+    devspace.dev/app: svc-tms
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: svc-tms-dev
+      app: svc-tms
   template:
     metadata:
       labels:
-        app: svc-tms-dev
-        devspace.dev/app: svc-tms-dev
+        app: svc-tms
+        devspace.dev/app: svc-tms
     spec:
       containers:
-        - name: svc-tms-dev
+        - name: svc-tms
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: IfNotPresent
           envFrom:

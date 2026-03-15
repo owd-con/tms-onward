@@ -1,9 +1,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: svc-tms-dev
+  name: svc-tms
   labels:
-    app: svc-tms-dev
+    app: svc-tms
   annotations:
     konghq.com/strip-path: "true"
     konghq.com/protocols: "https"
@@ -22,6 +22,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: svc-tms-dev
+                name: svc-tms
                 port:
                   number: 80
