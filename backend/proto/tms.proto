@@ -13,16 +13,24 @@ message DashboardSummary {
   int64 total_shipments = 2;
 }
 
-// GetSummaryRequest - Request with optional month filter
-message GetSummaryRequest {
-  // Optional month filter in format "YYYY-MM" (e.g., "2025-03")
-  // If empty, returns all-time statistics
-  string month = 1;
+// CompanyData - Company shipment data
+message CompanyData {
+  string company_id = 1;
+  string company_name = 2;
+  int64 total_shipments = 3;
 }
 
-// GetSummaryResponse - Response with summary data
-message GetSummaryResponse {
+// DashboardRequest - Request with optional month filter
+message DashboardRequest {
+  // Optional month filter in format "YYYY-MM" (e.g., "2025-03")
+  // If empty, returns all-time statistics
+  string monthly = 1;
+}
+
+// DashboardResponse - Response with summary data
+message DashboardResponse {
   DashboardSummary summary = 1;
+  repeated CompanyData companies = 2;
 }
 
 // ============================================
@@ -31,10 +39,5 @@ message GetSummaryResponse {
 
 service TMSService {
   // Dashboard operations
-  rpc GetSummary(GetSummaryRequest) returns (GetSummaryResponse);
-
-  // Future operations can be added here:
-  // rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
-  // rpc CreateTrip(CreateTripRequest) returns (CreateTripResponse);
-  // etc.
+  rpc GetDashboard(DashboardRequest) returns (DashboardResponse);
 }

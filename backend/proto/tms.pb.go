@@ -74,30 +74,30 @@ func (x *DashboardSummary) GetTotalShipments() int64 {
 	return 0
 }
 
-// GetSummaryRequest - Request with optional month filter
-type GetSummaryRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Optional month filter in format "YYYY-MM" (e.g., "2025-03")
-	// If empty, returns all-time statistics
-	Month         string `protobuf:"bytes,1,opt,name=month,proto3" json:"month,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+// CompanyData - Company shipment data
+type CompanyData struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	CompanyId      string                 `protobuf:"bytes,1,opt,name=company_id,json=companyId,proto3" json:"company_id,omitempty"`
+	CompanyName    string                 `protobuf:"bytes,2,opt,name=company_name,json=companyName,proto3" json:"company_name,omitempty"`
+	TotalShipments int64                  `protobuf:"varint,3,opt,name=total_shipments,json=totalShipments,proto3" json:"total_shipments,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
-func (x *GetSummaryRequest) Reset() {
-	*x = GetSummaryRequest{}
+func (x *CompanyData) Reset() {
+	*x = CompanyData{}
 	mi := &file_tms_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetSummaryRequest) String() string {
+func (x *CompanyData) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetSummaryRequest) ProtoMessage() {}
+func (*CompanyData) ProtoMessage() {}
 
-func (x *GetSummaryRequest) ProtoReflect() protoreflect.Message {
+func (x *CompanyData) ProtoReflect() protoreflect.Message {
 	mi := &file_tms_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -109,40 +109,56 @@ func (x *GetSummaryRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetSummaryRequest.ProtoReflect.Descriptor instead.
-func (*GetSummaryRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use CompanyData.ProtoReflect.Descriptor instead.
+func (*CompanyData) Descriptor() ([]byte, []int) {
 	return file_tms_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *GetSummaryRequest) GetMonth() string {
+func (x *CompanyData) GetCompanyId() string {
 	if x != nil {
-		return x.Month
+		return x.CompanyId
 	}
 	return ""
 }
 
-// GetSummaryResponse - Response with summary data
-type GetSummaryResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Summary       *DashboardSummary      `protobuf:"bytes,1,opt,name=summary,proto3" json:"summary,omitempty"`
+func (x *CompanyData) GetCompanyName() string {
+	if x != nil {
+		return x.CompanyName
+	}
+	return ""
+}
+
+func (x *CompanyData) GetTotalShipments() int64 {
+	if x != nil {
+		return x.TotalShipments
+	}
+	return 0
+}
+
+// DashboardRequest - Request with optional month filter
+type DashboardRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Optional month filter in format "YYYY-MM" (e.g., "2025-03")
+	// If empty, returns all-time statistics
+	Monthly       string `protobuf:"bytes,1,opt,name=monthly,proto3" json:"monthly,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetSummaryResponse) Reset() {
-	*x = GetSummaryResponse{}
+func (x *DashboardRequest) Reset() {
+	*x = DashboardRequest{}
 	mi := &file_tms_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetSummaryResponse) String() string {
+func (x *DashboardRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetSummaryResponse) ProtoMessage() {}
+func (*DashboardRequest) ProtoMessage() {}
 
-func (x *GetSummaryResponse) ProtoReflect() protoreflect.Message {
+func (x *DashboardRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_tms_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -154,14 +170,67 @@ func (x *GetSummaryResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetSummaryResponse.ProtoReflect.Descriptor instead.
-func (*GetSummaryResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use DashboardRequest.ProtoReflect.Descriptor instead.
+func (*DashboardRequest) Descriptor() ([]byte, []int) {
 	return file_tms_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GetSummaryResponse) GetSummary() *DashboardSummary {
+func (x *DashboardRequest) GetMonthly() string {
+	if x != nil {
+		return x.Monthly
+	}
+	return ""
+}
+
+// DashboardResponse - Response with summary data
+type DashboardResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Summary       *DashboardSummary      `protobuf:"bytes,1,opt,name=summary,proto3" json:"summary,omitempty"`
+	Companies     []*CompanyData         `protobuf:"bytes,2,rep,name=companies,proto3" json:"companies,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DashboardResponse) Reset() {
+	*x = DashboardResponse{}
+	mi := &file_tms_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DashboardResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DashboardResponse) ProtoMessage() {}
+
+func (x *DashboardResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_tms_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DashboardResponse.ProtoReflect.Descriptor instead.
+func (*DashboardResponse) Descriptor() ([]byte, []int) {
+	return file_tms_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *DashboardResponse) GetSummary() *DashboardSummary {
 	if x != nil {
 		return x.Summary
+	}
+	return nil
+}
+
+func (x *DashboardResponse) GetCompanies() []*CompanyData {
+	if x != nil {
+		return x.Companies
 	}
 	return nil
 }
@@ -173,15 +242,20 @@ const file_tms_proto_rawDesc = "" +
 	"\ttms.proto\x12\x03tms\"`\n" +
 	"\x10DashboardSummary\x12#\n" +
 	"\rtotal_tenants\x18\x01 \x01(\x03R\ftotalTenants\x12'\n" +
-	"\x0ftotal_shipments\x18\x02 \x01(\x03R\x0etotalShipments\")\n" +
-	"\x11GetSummaryRequest\x12\x14\n" +
-	"\x05month\x18\x01 \x01(\tR\x05month\"E\n" +
-	"\x12GetSummaryResponse\x12/\n" +
-	"\asummary\x18\x01 \x01(\v2\x15.tms.DashboardSummaryR\asummary2K\n" +
+	"\x0ftotal_shipments\x18\x02 \x01(\x03R\x0etotalShipments\"x\n" +
+	"\vCompanyData\x12\x1d\n" +
+	"\n" +
+	"company_id\x18\x01 \x01(\tR\tcompanyId\x12!\n" +
+	"\fcompany_name\x18\x02 \x01(\tR\vcompanyName\x12'\n" +
+	"\x0ftotal_shipments\x18\x03 \x01(\x03R\x0etotalShipments\",\n" +
+	"\x10DashboardRequest\x12\x18\n" +
+	"\amonthly\x18\x01 \x01(\tR\amonthly\"t\n" +
+	"\x11DashboardResponse\x12/\n" +
+	"\asummary\x18\x01 \x01(\v2\x15.tms.DashboardSummaryR\asummary\x12.\n" +
+	"\tcompanies\x18\x02 \x03(\v2\x10.tms.CompanyDataR\tcompanies2K\n" +
 	"\n" +
 	"TMSService\x12=\n" +
-	"\n" +
-	"GetSummary\x12\x16.tms.GetSummaryRequest\x1a\x17.tms.GetSummaryResponseB0Z.github.com/logistics-id/onward-tms/proto;protob\x06proto3"
+	"\fGetDashboard\x12\x15.tms.DashboardRequest\x1a\x16.tms.DashboardResponseB0Z.github.com/logistics-id/onward-tms/proto;protob\x06proto3"
 
 var (
 	file_tms_proto_rawDescOnce sync.Once
@@ -195,21 +269,23 @@ func file_tms_proto_rawDescGZIP() []byte {
 	return file_tms_proto_rawDescData
 }
 
-var file_tms_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_tms_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_tms_proto_goTypes = []any{
-	(*DashboardSummary)(nil),   // 0: tms.DashboardSummary
-	(*GetSummaryRequest)(nil),  // 1: tms.GetSummaryRequest
-	(*GetSummaryResponse)(nil), // 2: tms.GetSummaryResponse
+	(*DashboardSummary)(nil),  // 0: tms.DashboardSummary
+	(*CompanyData)(nil),       // 1: tms.CompanyData
+	(*DashboardRequest)(nil),  // 2: tms.DashboardRequest
+	(*DashboardResponse)(nil), // 3: tms.DashboardResponse
 }
 var file_tms_proto_depIdxs = []int32{
-	0, // 0: tms.GetSummaryResponse.summary:type_name -> tms.DashboardSummary
-	1, // 1: tms.TMSService.GetSummary:input_type -> tms.GetSummaryRequest
-	2, // 2: tms.TMSService.GetSummary:output_type -> tms.GetSummaryResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	0, // 0: tms.DashboardResponse.summary:type_name -> tms.DashboardSummary
+	1, // 1: tms.DashboardResponse.companies:type_name -> tms.CompanyData
+	2, // 2: tms.TMSService.GetDashboard:input_type -> tms.DashboardRequest
+	3, // 3: tms.TMSService.GetDashboard:output_type -> tms.DashboardResponse
+	3, // [3:4] is the sub-list for method output_type
+	2, // [2:3] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_tms_proto_init() }
@@ -223,7 +299,7 @@ func file_tms_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_tms_proto_rawDesc), len(file_tms_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

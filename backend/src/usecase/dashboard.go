@@ -101,15 +101,22 @@ type DashboardSummary struct {
 	TotalShipments int64 `json:"total_shipments"`
 }
 
+// CompanyShipmentData - Company shipment data for superadmin dashboard
+type CompanyShipmentData struct {
+	CompanyID     string `json:"company_id" bun:"company_id"`
+	CompanyName   string `json:"company_name" bun:"company_name"`
+	TotalShipments int64 `json:"total_shipments" bun:"total_shipments"`
+}
+
 func NewDashboardUsecase() *DashboardUsecase {
 	return &DashboardUsecase{
 		db: postgres.GetDB(),
 	}
 }
 
-// GetSummary retrieves summary statistics (superadmin only, no company filter)
+// GetSuperAdminSummary retrieves summary statistics (superadmin only, no company filter)
 // month: optional filter in format "YYYY-MM" (e.g., "2025-03"). If empty, returns all-time stats.
-func (u *DashboardUsecase) GetSummary(ctx context.Context, month string) (*DashboardSummary, error) {
+func (u *DashboardUsecase) GetSuperAdminSummary(ctx context.Context, month string) (*DashboardSummary, error) {
 	summary := &DashboardSummary{}
 
 	// Count total tenants (unique company_id in companies table)
@@ -152,6 +159,48 @@ func (u *DashboardUsecase) GetSummary(ctx context.Context, month string) (*Dashb
 	summary.TotalShipments = int64(count)
 
 	return summary, nil
+}
+
+// GetCompanyShipments retrieves company shipment data (superadmin only)
+// monthly: optional filter in format "YYYY-MM" (e.g., "2025-03"). If empty, returns all-time stats.
+func (u *DashboardUsecase) GetCompanyShipments(ctx context.Context, monthly string) ([]CompanyShipmentData, error) {
+	var results []CompanyShipmentData
+
+	// Build base query
+	query := u.db.NewSelect().
+		ColumnExpr("c.id as company_id").
+		ColumnExpr("c.name as company_name").
+		ColumnExpr("COUNT(s.id) as total_shipments").
+		TableExpr("companies c").
+		Where("c.is_deleted = false").
+		GroupExpr("c.id, c.name").
+		OrderExpr("total_shipments DESC")
+
+	// Add month filter if provided
+	if monthly != "" {
+		// Parse month string (format: "YYYY-MM")
+		startDate, err := time.Parse("2006-01", monthly)
+		if err != nil {
+			return nil, errors.New("invalid month format, expected YYYY-MM")
+		}
+		// Start of month
+		startOfMonth := startDate.Format("2006-01-01")
+		// Start of next month
+		startOfNextMonth := startDate.AddDate(0, 1, 0).Format("2006-01-01")
+
+		// Add JOIN with date filter
+		query = query.Join("LEFT JOIN shipments s ON s.company_id = c.id AND s.is_deleted = false AND s.created_at >= ? AND s.created_at < ?", startOfMonth, startOfNextMonth)
+	} else {
+		// Add JOIN without date filter
+		query = query.Join("LEFT JOIN shipments s ON s.company_id = c.id AND s.is_deleted = false")
+	}
+
+	err := query.Scan(ctx, &results)
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }
 
 // Get retrieves complete dashboard data

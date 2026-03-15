@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	TMSService_GetSummary_FullMethodName = "/tms.TMSService/GetSummary"
+	TMSService_GetDashboard_FullMethodName = "/tms.TMSService/GetDashboard"
 )
 
 // TMSServiceClient is the client API for TMSService service.
@@ -27,7 +27,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TMSServiceClient interface {
 	// Dashboard operations
-	GetSummary(ctx context.Context, in *GetSummaryRequest, opts ...grpc.CallOption) (*GetSummaryResponse, error)
+	GetDashboard(ctx context.Context, in *DashboardRequest, opts ...grpc.CallOption) (*DashboardResponse, error)
 }
 
 type tMSServiceClient struct {
@@ -38,10 +38,10 @@ func NewTMSServiceClient(cc grpc.ClientConnInterface) TMSServiceClient {
 	return &tMSServiceClient{cc}
 }
 
-func (c *tMSServiceClient) GetSummary(ctx context.Context, in *GetSummaryRequest, opts ...grpc.CallOption) (*GetSummaryResponse, error) {
+func (c *tMSServiceClient) GetDashboard(ctx context.Context, in *DashboardRequest, opts ...grpc.CallOption) (*DashboardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetSummaryResponse)
-	err := c.cc.Invoke(ctx, TMSService_GetSummary_FullMethodName, in, out, cOpts...)
+	out := new(DashboardResponse)
+	err := c.cc.Invoke(ctx, TMSService_GetDashboard_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (c *tMSServiceClient) GetSummary(ctx context.Context, in *GetSummaryRequest
 // for forward compatibility.
 type TMSServiceServer interface {
 	// Dashboard operations
-	GetSummary(context.Context, *GetSummaryRequest) (*GetSummaryResponse, error)
+	GetDashboard(context.Context, *DashboardRequest) (*DashboardResponse, error)
 	mustEmbedUnimplementedTMSServiceServer()
 }
 
@@ -64,8 +64,8 @@ type TMSServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedTMSServiceServer struct{}
 
-func (UnimplementedTMSServiceServer) GetSummary(context.Context, *GetSummaryRequest) (*GetSummaryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetSummary not implemented")
+func (UnimplementedTMSServiceServer) GetDashboard(context.Context, *DashboardRequest) (*DashboardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDashboard not implemented")
 }
 func (UnimplementedTMSServiceServer) mustEmbedUnimplementedTMSServiceServer() {}
 func (UnimplementedTMSServiceServer) testEmbeddedByValue()                    {}
@@ -88,20 +88,20 @@ func RegisterTMSServiceServer(s grpc.ServiceRegistrar, srv TMSServiceServer) {
 	s.RegisterService(&TMSService_ServiceDesc, srv)
 }
 
-func _TMSService_GetSummary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetSummaryRequest)
+func _TMSService_GetDashboard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DashboardRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TMSServiceServer).GetSummary(ctx, in)
+		return srv.(TMSServiceServer).GetDashboard(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: TMSService_GetSummary_FullMethodName,
+		FullMethod: TMSService_GetDashboard_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TMSServiceServer).GetSummary(ctx, req.(*GetSummaryRequest))
+		return srv.(TMSServiceServer).GetDashboard(ctx, req.(*DashboardRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -114,8 +114,8 @@ var TMSService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*TMSServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetSummary",
-			Handler:    _TMSService_GetSummary_Handler,
+			MethodName: "GetDashboard",
+			Handler:    _TMSService_GetDashboard_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

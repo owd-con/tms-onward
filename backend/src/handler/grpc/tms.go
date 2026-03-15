@@ -18,17 +18,35 @@ func NewTMSServer(uc *usecase.Factory) *TMSServer {
 	}
 }
 
-// GetSummary implements proto.TMSServiceServer
-func (s *TMSServer) GetSummary(ctx context.Context, req *proto.GetSummaryRequest) (*proto.GetSummaryResponse, error) {
-	summary, err := s.uc.Dashboard.GetSummary(ctx, req.Month)
+// GetDashboard implements proto.TMSServiceServer
+func (s *TMSServer) GetDashboard(ctx context.Context, req *proto.DashboardRequest) (*proto.DashboardResponse, error) {
+	// Get summary statistics
+	summary, err := s.uc.Dashboard.GetSuperAdminSummary(ctx, req.Monthly)
 	if err != nil {
 		return nil, err
 	}
 
-	return &proto.GetSummaryResponse{
+	// Get company shipments data
+	companies, err := s.uc.Dashboard.GetCompanyShipments(ctx, req.Monthly)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert companies to proto format
+	var protoCompanies []*proto.CompanyData
+	for _, c := range companies {
+		protoCompanies = append(protoCompanies, &proto.CompanyData{
+			CompanyId:     c.CompanyID,
+			CompanyName:   c.CompanyName,
+			TotalShipments: c.TotalShipments,
+		})
+	}
+
+	return &proto.DashboardResponse{
 		Summary: &proto.DashboardSummary{
 			TotalTenants:   summary.TotalTenants,
 			TotalShipments: summary.TotalShipments,
 		},
+		Companies: protoCompanies,
 	}, nil
 }
