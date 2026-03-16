@@ -19,8 +19,50 @@ type DashboardUsecase struct {
 type DashboardStats struct {
 	TotalOrders     int64 `json:"total_orders"`
 	ActiveTrips     int64 `json:"active_trips"`
+	ActiveOrders    int64 `json:"active_orders"`
 	PendingOrders   int64 `json:"pending_orders"`
 	CompletedOrders int64 `json:"completed_orders"`
+}
+
+// CapacityUtilization - Capacity utilization metrics (LTL vs FTL)
+type CapacityUtilization struct {
+	FTLUtilizationPercent float64 `json:"ftl_utilization_percent"`
+	LTLUtilizationPercent float64 `json:"ltl_utilization_percent"`
+}
+
+// OnTimeDeliveryRate - On-time delivery rate metric
+type OnTimeDeliveryRate struct {
+	OnTimeCount       int64   `json:"on_time_count"`
+	LateCount         int64   `json:"late_count"`
+	TotalDelivered    int64   `json:"total_delivered"`
+	OnTimeRatePercent float64 `json:"on_time_rate_percent"`
+}
+
+// ActiveTripItem - Active trip data for list
+type ActiveTripItem struct {
+	TripID             string  `json:"trip_id"`
+	TripNumber         string  `json:"trip_number"`
+	DriverName         string  `json:"driver_name"`
+	DriverPhone        string  `json:"driver_phone"`
+	VehiclePlate       string  `json:"vehicle_plate"`
+	VehicleType        string  `json:"vehicle_type"`
+	Status             string  `json:"status"`
+	StartedAt          *string `json:"started_at"`
+	TotalWaypoints     int     `json:"total_waypoints"`
+	CompletedWaypoints int     `json:"completed_waypoints"`
+}
+
+// OrderTripItem - Order with trip data for list
+type OrderTripItem struct {
+	OrderID      string  `json:"order_id"`
+	OrderNumber  string  `json:"order_number"`
+	OrderType    string  `json:"order_type"`
+	CustomerName string  `json:"customer_name"`
+	Status       string  `json:"status"`
+	CreatedAt    string  `json:"created_at"`
+	TripNumber   *string `json:"trip_number,omitempty"`
+	DriverName   *string `json:"driver_name,omitempty"`
+	VehiclePlate *string `json:"vehicle_plate,omitempty"`
 }
 
 // MapShipment - Shipment data for map visualization (origin + destination)
@@ -82,18 +124,15 @@ type FailedOrder struct {
 
 // DashboardResponse - Complete dashboard response
 type DashboardResponse struct {
-	Stats              DashboardStats       `json:"stats"`
-	MapShipmentsByArea []MapShipmentsByArea `json:"map_shipments_by_area"`
-	ExpiredVehicles    []ExpiredVehicle     `json:"expired_vehicles"`
-	ExpiredDrivers     []ExpiredDriver      `json:"expired_drivers"`
-	FailedOrders       []FailedOrder        `json:"failed_orders"`
-}
-
-type DashboardQueryOptions struct {
-	Session *entity.TMSSessionClaims
-
-	StartDate string `query:"start_date"`
-	EndDate   string `query:"end_date"`
+	Stats               DashboardStats       `json:"stats"`
+	CapacityUtilization CapacityUtilization  `json:"capacity_utilization"`
+	OnTimeDeliveryRate  OnTimeDeliveryRate   `json:"on_time_delivery_rate"`
+	ActiveTrips         []ActiveTripItem     `json:"active_trips"`
+	OrderTrips          []OrderTripItem      `json:"order_trips"`
+	MapShipmentsByArea  []MapShipmentsByArea `json:"map_shipments_by_area"`
+	ExpiredVehicles     []ExpiredVehicle     `json:"expired_vehicles"`
+	ExpiredDrivers      []ExpiredDriver      `json:"expired_drivers"`
+	FailedOrders        []FailedOrder        `json:"failed_orders"`
 }
 
 // DashboardSummary - Summary statistics for superadmin
@@ -108,6 +147,14 @@ type CompanyShipmentData struct {
 	CompanyName    string    `json:"company_name"`
 	CreatedAt      time.Time `json:"created_at"`
 	TotalShipments int64     `json:"total_shipments"`
+}
+
+type DashboardQueryOptions struct {
+	Session *entity.TMSSessionClaims
+
+	// Month filter in YYYY-MM format (e.g., "2026-03")
+	// If empty, defaults to current month
+	Month string `query:"month"`
 }
 
 func NewDashboardUsecase() *DashboardUsecase {
@@ -219,6 +266,33 @@ func (u *DashboardUsecase) GetCompanyShipments(ctx context.Context, monthly stri
 	return results, nil
 }
 
+// getMonthRange parses month parameter (YYYY-MM) and returns start and end time for query
+// If month is empty, defaults to current month
+// Returns: (startOfMonth, startOfNextMonth, error)
+func (u *DashboardUsecase) getMonthRange(month string) (time.Time, time.Time, error) {
+	layout := "2006-01"
+	var targetMonth time.Time
+	var err error
+
+	if month == "" {
+		// Default to current month
+		targetMonth = time.Now()
+	} else {
+		targetMonth, err = time.Parse(layout, month)
+		if err != nil {
+			return time.Time{}, time.Time{}, err
+		}
+	}
+
+	// Start of month: first day 00:00:00
+	startOfMonth := time.Date(targetMonth.Year(), targetMonth.Month(), 1, 0, 0, 0, 0, targetMonth.Location())
+
+	// Start of next month: for exclusive upper bound
+	startOfNextMonth := startOfMonth.AddDate(0, 1, 0)
+
+	return startOfMonth, startOfNextMonth, nil
+}
+
 // Get retrieves complete dashboard data
 func (u *DashboardUsecase) Get(req *DashboardQueryOptions) (*DashboardResponse, error) {
 	if req.Session == nil {
@@ -238,28 +312,56 @@ func (u *DashboardUsecase) Get(req *DashboardQueryOptions) (*DashboardResponse, 
 	}
 	response.Stats = *stats
 
-	// 2. Get Map Shipments by Area (filtered by date)
+	// 2. Get Capacity Utilization (LTL vs FTL)
+	capacity, err := u.getCapacityUtilization(req)
+	if err != nil {
+		return nil, err
+	}
+	response.CapacityUtilization = *capacity
+
+	// 3. Get On-Time Delivery Rate
+	onTimeRate, err := u.getOnTimeDeliveryRate(req)
+	if err != nil {
+		return nil, err
+	}
+	response.OnTimeDeliveryRate = *onTimeRate
+
+	// 4. Get Active Trips (limit 10)
+	activeTrips, err := u.getActiveTrips(req)
+	if err != nil {
+		return nil, err
+	}
+	response.ActiveTrips = activeTrips
+
+	// 5. Get Order Trips (limit 10)
+	orderTrips, err := u.getOrderTrips(req)
+	if err != nil {
+		return nil, err
+	}
+	response.OrderTrips = orderTrips
+
+	// 6. Get Map Shipments by Area (filtered by date)
 	mapShipments, err := u.getMapShipmentsByArea(req)
 	if err != nil {
 		return nil, err
 	}
 	response.MapShipmentsByArea = mapShipments
 
-	// 3. Get Expired Vehicles (no filter)
+	// 7. Get Expired Vehicles (no filter)
 	expiredVehicles, err := u.getExpiredVehicles(req)
 	if err != nil {
 		return nil, err
 	}
 	response.ExpiredVehicles = expiredVehicles
 
-	// 4. Get Expired Drivers (no filter)
+	// 8. Get Expired Drivers (no filter)
 	expiredDrivers, err := u.getExpiredDrivers(req)
 	if err != nil {
 		return nil, err
 	}
 	response.ExpiredDrivers = expiredDrivers
 
-	// 5. Get Failed Orders
+	// 9. Get Failed Orders
 	failedOrders, err := u.getFailedOrders(req)
 	if err != nil {
 		return nil, err
@@ -288,14 +390,12 @@ func (u *DashboardUsecase) getStats(req *DashboardQueryOptions) (*DashboardStats
 		Where("company_id = ?", req.Session.CompanyID).
 		Where("is_deleted = false")
 
-	if req.StartDate != "" && req.EndDate != "" {
-		sst, _ := time.Parse("2006-01-02", req.StartDate)
-		sst = sst.Add(time.Duration(-1 * (sst.Local().Hour() * int(time.Hour))))
-		est, _ := time.Parse("2006-01-02", req.EndDate)
-		est = est.AddDate(0, 0, 1)
-		est = est.Add(time.Duration(-1 * (est.Local().Hour() * int(time.Hour))))
-
-		query = query.Where("created_at >= ? AND created_at < ?", sst, est)
+	if req.Month != "" {
+		startOfMonth, endOfMonth, err := u.getMonthRange(req.Month)
+		if err != nil {
+			return nil, err
+		}
+		query = query.Where("created_at >= ? AND created_at < ?", startOfMonth, endOfMonth)
 	}
 
 	err := query.
@@ -316,18 +416,31 @@ func (u *DashboardUsecase) getStats(req *DashboardQueryOptions) (*DashboardStats
 		}
 	}
 
-	// Active Trips (real-time, no filter)
-	count, err := u.db.NewSelect().
+	// Active Orders (real-time, no filter) - orders NOT in completed/cancelled status
+	activeCount, err := u.db.NewSelect().
 		Model((*struct{ ID string })(nil)).
-		TableExpr("trips").
+		TableExpr("orders").
 		Where("company_id = ?", req.Session.CompanyID).
 		Where("is_deleted = false").
-		Where("status IN (?)", []string{"in_transit", "ongoing"}).
+		Where("status != ? AND status != ?", "completed", "cancelled").
 		Count(ctx)
 	if err != nil {
 		return nil, err
 	}
-	stats.ActiveTrips = int64(count)
+	stats.ActiveOrders = int64(activeCount)
+
+	// Active Trips (real-time, no filter) - only dispatched and in_transit
+	tripCount, err := u.db.NewSelect().
+		Model((*struct{ ID string })(nil)).
+		TableExpr("trips").
+		Where("company_id = ?", req.Session.CompanyID).
+		Where("is_deleted = false").
+		Where("status IN (?)", bun.In([]string{"dispatched", "in_transit"})).
+		Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+	stats.ActiveTrips = int64(tripCount)
 
 	return stats, nil
 }
@@ -382,14 +495,12 @@ func (u *DashboardUsecase) getMapShipmentsByArea(req *DashboardQueryOptions) ([]
 		Where("ro.latitude != 0 AND ro.longitude != 0"). // Only shipments with valid origin coordinates
 		Where("rd.latitude != 0 AND rd.longitude != 0")  // Only shipments with valid destination coordinates
 
-	if req.StartDate != "" && req.EndDate != "" {
-		sst, _ := time.Parse("2006-01-02", req.StartDate)
-		sst = sst.Add(time.Duration(-1 * (sst.Local().Hour() * int(time.Hour))))
-		est, _ := time.Parse("2006-01-02", req.EndDate)
-		est = est.AddDate(0, 0, 1)
-		est = est.Add(time.Duration(-1 * (est.Local().Hour() * int(time.Hour))))
-
-		query = query.Where("s.created_at >= ? AND s.created_at < ?", sst, est)
+	if req.Month != "" {
+		startOfMonth, endOfMonth, err := u.getMonthRange(req.Month)
+		if err != nil {
+			return nil, err
+		}
+		query = query.Where("s.created_at >= ? AND s.created_at < ?", startOfMonth, endOfMonth)
 	}
 
 	err := query.
@@ -599,4 +710,279 @@ func (u *DashboardUsecase) getFailedOrders(req *DashboardQueryOptions) ([]Failed
 	}
 
 	return failed, nil
+}
+
+// getCapacityUtilization - Calculate capacity utilization percentage for LTL and FTL
+func (u *DashboardUsecase) getCapacityUtilization(req *DashboardQueryOptions) (*CapacityUtilization, error) {
+	ctx := context.Background()
+	result := &CapacityUtilization{}
+
+	// Get active trips with vehicle and shipment data
+	type CapacityResult struct {
+		OrderType        string  `bun:"order_type"`
+		VehicleCapWeight float64 `bun:"vehicle_cap_weight"`
+		VehicleCapVolume float64 `bun:"vehicle_cap_volume"`
+		TotalWeight      float64 `bun:"total_weight"`
+		TotalVolume      float64 `bun:"total_volume"`
+	}
+
+	var results []CapacityResult
+	query := u.db.NewSelect().
+		ColumnExpr("o.order_type").
+		ColumnExpr("v.capacity_weight as vehicle_cap_weight").
+		ColumnExpr("v.capacity_volume as vehicle_cap_volume").
+		ColumnExpr("COALESCE(SUM(s.total_weight), 0) as total_weight").
+		ColumnExpr("COALESCE(SUM(s.volume), 0) as total_volume").
+		TableExpr("trips t").
+		Join("INNER JOIN orders o ON o.id = t.order_id").
+		Join("INNER JOIN vehicles v ON v.id = t.vehicle_id").
+		Join("LEFT JOIN trip_waypoints tw ON tw.trip_id = t.id").
+		Join("LEFT JOIN shipments s ON s.id::text = ANY(tw.shipment_ids)").
+		Where("t.company_id = ?", req.Session.CompanyID).
+		Where("t.is_deleted = false").
+		Where("t.status IN (?)", bun.In([]string{"dispatched", "in_transit"})).
+		GroupExpr("o.order_type, v.capacity_weight, v.capacity_volume, t.id")
+
+	if req.Month != "" {
+		startOfMonth, endOfMonth, err := u.getMonthRange(req.Month)
+		if err != nil {
+			return nil, err
+		}
+		query = query.Where("t.created_at >= ? AND t.created_at < ?", startOfMonth, endOfMonth)
+	}
+
+	err := query.Scan(ctx, &results)
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate utilization by order type
+	var ftlTotalUtil, ftlTotalCap, ltlTotalUtil, ltlTotalCap float64
+
+	for _, r := range results {
+		// Use weight-based utilization (can be changed to volume-based)
+		capacity := r.VehicleCapWeight
+		if capacity <= 0 {
+			capacity = 1 // Avoid division by zero
+		}
+
+		switch r.OrderType {
+		case "FTL", "ftl":
+			ftlTotalUtil += r.TotalWeight
+			ftlTotalCap += capacity
+		case "LTL", "ltl":
+			ltlTotalUtil += r.TotalWeight
+			ltlTotalCap += capacity
+		}
+	}
+
+	// Calculate percentages
+	if ftlTotalCap > 0 {
+		result.FTLUtilizationPercent = (ftlTotalUtil / ftlTotalCap) * 100
+	}
+	if ltlTotalCap > 0 {
+		result.LTLUtilizationPercent = (ltlTotalUtil / ltlTotalCap) * 100
+	}
+
+	return result, nil
+}
+
+// getOnTimeDeliveryRate - Calculate on-time delivery rate
+func (u *DashboardUsecase) getOnTimeDeliveryRate(req *DashboardQueryOptions) (*OnTimeDeliveryRate, error) {
+	ctx := context.Background()
+	result := &OnTimeDeliveryRate{}
+
+	// Get completed shipments with actual vs scheduled delivery time
+	type OnTimeResult struct {
+		ShipmentID            string     `bun:"shipment_id"`
+		ScheduledDeliveryDate time.Time  `bun:"scheduled_delivery_date"`
+		ScheduledDeliveryTime string     `bun:"scheduled_delivery_time"`
+		ActualDeliveryTime    *time.Time `bun:"actual_delivery_time"`
+	}
+
+	var results []OnTimeResult
+	query := u.db.NewSelect().
+		ColumnExpr("s.id as shipment_id").
+		ColumnExpr("s.scheduled_delivery_date").
+		ColumnExpr("s.scheduled_delivery_time").
+		ColumnExpr("s.actual_delivery_time").
+		TableExpr("shipments s").
+		Join("INNER JOIN orders o ON o.id = s.order_id").
+		Where("s.company_id = ?", req.Session.CompanyID).
+		Where("s.is_deleted = false").
+		Where("s.status = 'completed'").
+		Where("s.actual_delivery_time IS NOT NULL")
+
+	if req.Month != "" {
+		startOfMonth, endOfMonth, err := u.getMonthRange(req.Month)
+		if err != nil {
+			return nil, err
+		}
+		query = query.Where("s.created_at >= ? AND s.created_at < ?", startOfMonth, endOfMonth)
+	}
+
+	err := query.Scan(ctx, &results)
+	if err != nil {
+		return nil, err
+	}
+
+	result.TotalDelivered = int64(len(results))
+
+	for _, r := range results {
+		if r.ActualDeliveryTime != nil {
+			// Parse scheduled time
+			scheduledTime, _ := time.Parse("15:04", r.ScheduledDeliveryTime)
+			scheduledDateTime := time.Date(r.ScheduledDeliveryDate.Year(), r.ScheduledDeliveryDate.Month(), r.ScheduledDeliveryDate.Day(), scheduledTime.Hour(), scheduledTime.Minute(), 0, 0, r.ScheduledDeliveryDate.Location())
+
+			// Compare
+			if r.ActualDeliveryTime.Before(scheduledDateTime) || r.ActualDeliveryTime.Equal(scheduledDateTime) {
+				result.OnTimeCount++
+			} else {
+				result.LateCount++
+			}
+		}
+	}
+
+	if result.TotalDelivered > 0 {
+		result.OnTimeRatePercent = (float64(result.OnTimeCount) / float64(result.TotalDelivered)) * 100
+	}
+
+	return result, nil
+}
+
+// getActiveTrips - Get list of active trips (limit 10) - only dispatched and in_transit
+func (u *DashboardUsecase) getActiveTrips(req *DashboardQueryOptions) ([]ActiveTripItem, error) {
+	ctx := context.Background()
+
+	type ActiveTripResult struct {
+		TripID             string     `bun:"trip_id"`
+		TripNumber         string     `bun:"trip_number"`
+		DriverName         string     `bun:"driver_name"`
+		DriverPhone        string     `bun:"driver_phone"`
+		VehiclePlate       string     `bun:"vehicle_plate"`
+		VehicleType        string     `bun:"vehicle_type"`
+		Status             string     `bun:"status"`
+		StartedAt          *time.Time `bun:"started_at"`
+		TotalWaypoints     int        `bun:"total_waypoints"`
+		CompletedWaypoints int        `bun:"completed_waypoints"`
+	}
+
+	var results []ActiveTripResult
+	err := u.db.NewSelect().
+		ColumnExpr("t.id as trip_id").
+		ColumnExpr("t.trip_number").
+		ColumnExpr("d.name as driver_name").
+		ColumnExpr("d.phone as driver_phone").
+		ColumnExpr("v.plate_number as vehicle_plate").
+		ColumnExpr("v.type as vehicle_type").
+		ColumnExpr("t.status").
+		ColumnExpr("t.started_at").
+		ColumnExpr("COUNT(tw.id) as total_waypoints").
+		ColumnExpr("COUNT(CASE WHEN tw.status = 'completed' THEN 1 END) as completed_waypoints").
+		TableExpr("trips t").
+		Join("INNER JOIN drivers d ON d.id = t.driver_id").
+		Join("INNER JOIN vehicles v ON v.id = t.vehicle_id").
+		Join("LEFT JOIN trip_waypoints tw ON tw.trip_id = t.id").
+		Where("t.company_id = ?", req.Session.CompanyID).
+		Where("t.is_deleted = false").
+		Where("t.status IN (?)", bun.In([]string{"dispatched", "in_transit"})).
+		GroupExpr("t.id, t.trip_number, d.name, d.phone, v.plate_number, v.type, t.status, t.started_at").
+		OrderExpr("t.created_at DESC").
+		Limit(10).
+		Scan(ctx, &results)
+	if err != nil {
+		return nil, err
+	}
+
+	activeTrips := make([]ActiveTripItem, len(results))
+	for i, r := range results {
+		var startedAt *string
+		if r.StartedAt != nil {
+			formatted := r.StartedAt.Format("2006-01-02 15:04")
+			startedAt = &formatted
+		}
+
+		activeTrips[i] = ActiveTripItem{
+			TripID:             r.TripID,
+			TripNumber:         r.TripNumber,
+			DriverName:         r.DriverName,
+			DriverPhone:        r.DriverPhone,
+			VehiclePlate:       r.VehiclePlate,
+			VehicleType:        r.VehicleType,
+			Status:             r.Status,
+			StartedAt:          startedAt,
+			TotalWaypoints:     r.TotalWaypoints,
+			CompletedWaypoints: r.CompletedWaypoints,
+		}
+	}
+
+	return activeTrips, nil
+}
+
+// getOrderTrips - Get list of orders with trip data (limit 10)
+func (u *DashboardUsecase) getOrderTrips(req *DashboardQueryOptions) ([]OrderTripItem, error) {
+	ctx := context.Background()
+
+	type OrderTripResult struct {
+		OrderID      string    `bun:"order_id"`
+		OrderNumber  string    `bun:"order_number"`
+		OrderType    string    `bun:"order_type"`
+		CustomerName string    `bun:"customer_name"`
+		Status       string    `bun:"status"`
+		CreatedAt    time.Time `bun:"created_at"`
+		TripNumber   *string   `bun:"trip_number"`
+		DriverName   *string   `bun:"driver_name"`
+		VehiclePlate *string   `bun:"vehicle_plate"`
+	}
+
+	var results []OrderTripResult
+	query := u.db.NewSelect().
+		ColumnExpr("o.id as order_id").
+		ColumnExpr("o.order_number").
+		ColumnExpr("o.order_type").
+		ColumnExpr("c.name as customer_name").
+		ColumnExpr("o.status").
+		ColumnExpr("o.created_at").
+		ColumnExpr("t.trip_number").
+		ColumnExpr("d.name as driver_name").
+		ColumnExpr("v.plate_number as vehicle_plate").
+		TableExpr("orders o").
+		Join("INNER JOIN customers c ON c.id = o.customer_id").
+		Join("LEFT JOIN trips t ON t.order_id = o.id").
+		Join("LEFT JOIN drivers d ON d.id = t.driver_id").
+		Join("LEFT JOIN vehicles v ON v.id = t.vehicle_id").
+		Where("o.company_id = ?", req.Session.CompanyID).
+		Where("o.is_deleted = false").
+		OrderExpr("o.created_at DESC").
+		Limit(10)
+
+	if req.Month != "" {
+		startOfMonth, endOfMonth, err := u.getMonthRange(req.Month)
+		if err != nil {
+			return nil, err
+		}
+		query = query.Where("o.created_at >= ? AND o.created_at < ?", startOfMonth, endOfMonth)
+	}
+
+	err := query.Scan(ctx, &results)
+	if err != nil {
+		return nil, err
+	}
+
+	orderTrips := make([]OrderTripItem, len(results))
+	for i, r := range results {
+		orderTrips[i] = OrderTripItem{
+			OrderID:      r.OrderID,
+			OrderNumber:  r.OrderNumber,
+			OrderType:    r.OrderType,
+			CustomerName: r.CustomerName,
+			Status:       r.Status,
+			CreatedAt:    r.CreatedAt.Format("2006-01-02 15:04"),
+			TripNumber:   r.TripNumber,
+			DriverName:   r.DriverName,
+			VehiclePlate: r.VehiclePlate,
+		}
+	}
+
+	return orderTrips, nil
 }

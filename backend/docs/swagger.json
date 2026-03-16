@@ -1070,7 +1070,7 @@
         },
         "/dashboard": {
             "get": {
-                "description": "Get complete dashboard data including stats, map waypoints, expired vehicles/drivers, and failed orders",
+                "description": "Get complete dashboard data including stats, capacity utilization, on-time delivery rate, active trips, order trips, map waypoints, expired vehicles/drivers, and failed orders",
                 "consumes": [
                     "application/json"
                 ],
@@ -1084,14 +1084,8 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Start date filter (YYYY-MM-DD)",
-                        "name": "start_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "End date filter (YYYY-MM-DD)",
-                        "name": "end_date",
+                        "description": "Month filter in YYYY-MM format (e.g., 2026-03). Defaults to current month if not provided.",
+                        "name": "month",
                         "in": "query"
                     },
                     {
@@ -2303,64 +2297,6 @@
                 }
             }
         },
-        "/exceptions/waypoints": {
-            "get": {
-                "description": "Get list of waypoints with failed deliveries",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "exception"
-                ],
-                "summary": "Get failed waypoints",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Items per page",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by order ID",
-                        "name": "order_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer jwt-token...",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.ResponseBody"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
         "/me": {
             "get": {
                 "description": "Retrieve the authenticated user's profile information",
@@ -3023,9 +2959,9 @@
                 }
             }
         },
-        "/orders/{number}/by-number": {
+        "/orders/{id}/waypoint-preview": {
             "get": {
-                "description": "Get order by order number",
+                "description": "Get initial waypoint preview for trip creation based on order type and shipments",
                 "consumes": [
                     "application/json"
                 ],
@@ -3035,12 +2971,12 @@
                 "tags": [
                     "order"
                 ],
-                "summary": "Get order by number",
+                "summary": "Get waypoint preview for order",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Order number",
-                        "name": "number",
+                        "description": "Order ID",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     },
@@ -3781,7 +3717,7 @@
         },
         "/reports/order-trip-waypoint": {
             "get": {
-                "description": "Generate comprehensive order, trip, and waypoint report",
+                "description": "Generate trip waypoint report with shipment details (1 row per shipment per waypoint)",
                 "consumes": [
                     "application/json"
                 ],
@@ -3791,7 +3727,7 @@
                 "tags": [
                     "report"
                 ],
-                "summary": "Get order-trip-waypoint report",
+                "summary": "Get trip waypoint report",
                 "parameters": [
                     {
                         "type": "string",
@@ -3819,7 +3755,7 @@
                     },
                     {
                         "type": "string",
-                        "description": "Filter by status",
+                        "description": "Filter by waypoint status (pending/in_progress/completed)",
                         "name": "status",
                         "in": "query"
                     },
@@ -5718,13 +5654,22 @@
                 }
             }
         },
-        "trip.ShipmentSequenceRequest": {
+        "trip.WaypointRequest": {
             "type": "object",
             "properties": {
+                "address_id": {
+                    "type": "string"
+                },
                 "sequence_number": {
                     "type": "integer"
                 },
-                "shipment_id": {
+                "shipment_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
                     "type": "string"
                 }
             }
@@ -5741,32 +5686,36 @@
                 "order_id": {
                     "type": "string"
                 },
-                "shipment_sequences": {
-                    "description": "Custom shipment ordering",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/trip.ShipmentSequenceRequest"
-                    }
-                },
                 "vehicle_id": {
                     "type": "string"
+                },
+                "waypoints": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/trip.WaypointRequest"
+                    }
                 }
             }
         },
         "trip.updateRequest": {
             "type": "object",
             "properties": {
+                "driver_id": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
                 "notes": {
                     "type": "string"
                 },
-                "shipment_sequences": {
-                    "description": "Custom shipment ordering",
+                "vehicle_id": {
+                    "type": "string"
+                },
+                "waypoints": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/trip.ShipmentSequenceRequest"
+                        "$ref": "#/definitions/trip.WaypointRequest"
                     }
                 }
             }
