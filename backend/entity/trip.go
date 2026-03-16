@@ -19,6 +19,8 @@ type Trip struct {
 	Status      string     `bun:"status,notnull,default:'planned'" json:"status"`
 	StartedAt   *time.Time `bun:"started_at" json:"started_at"`
 	CompletedAt *time.Time `bun:"completed_at" json:"completed_at"`
+	TotalWaypoints     int `bun:"total_waypoints,default:0" json:"total_waypoints"`
+	TotalCompleted     int `bun:"total_completed,default:0" json:"total_completed"`
 	Notes       string     `bun:"notes" json:"notes"`
 	CreatedBy   string     `bun:"created_by" json:"created_by"`
 	UpdatedBy   string     `bun:"updated_by" json:"updated_by"`
