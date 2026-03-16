@@ -62,17 +62,16 @@ type ActiveTripItem struct {
 	CompletedWaypoints int     `json:"completed_waypoints"`
 }
 
-// ActiveOrderItem - Active order with trip data for list
+// ActiveOrderItem - Active order data for list
 type ActiveOrderItem struct {
-	OrderID      string  `json:"order_id"`
-	OrderNumber  string  `json:"order_number"`
-	OrderType    string  `json:"order_type"`
-	CustomerName string  `json:"customer_name"`
-	Status       string  `json:"status"`
-	CreatedAt    string  `json:"created_at"`
-	TripNumber   *string `json:"trip_number,omitempty"`
-	DriverName   *string `json:"driver_name,omitempty"`
-	VehiclePlate *string `json:"vehicle_plate,omitempty"`
+	OrderID        string  `json:"order_id"`
+	OrderNumber    string  `json:"order_number"`
+	OrderType      string  `json:"order_type"`
+	CustomerName   string  `json:"customer_name"`
+	Status         string  `json:"status"`
+	CreatedAt      string  `json:"created_at"`
+	TotalShipment  int     `json:"total_shipment"`
+	TotalDelivered int     `json:"total_delivered"`
 }
 
 // MapShipment - Shipment data for map visualization (origin + destination)
@@ -918,7 +917,7 @@ func (u *DashboardUsecase) getActiveTrips(req *DashboardQueryOptions) ([]ActiveT
 	return results, nil
 }
 
-// getActiveOrders - Get list of active orders with trip data (limit 10)
+// getActiveOrders - Get list of active orders (limit 10)
 func (u *DashboardUsecase) getActiveOrders(req *DashboardQueryOptions) ([]ActiveOrderItem, error) {
 	ctx := u.ctx
 
@@ -931,14 +930,10 @@ func (u *DashboardUsecase) getActiveOrders(req *DashboardQueryOptions) ([]Active
 		ColumnExpr("c.name as customer_name").
 		ColumnExpr("o.status").
 		ColumnExpr("TO_CHAR(o.created_at, 'YYYY-MM-DD HH24:MI:SS') as created_at").
-		ColumnExpr("t.trip_number").
-		ColumnExpr("d.name as driver_name").
-		ColumnExpr("v.plate_number as vehicle_plate").
+		ColumnExpr("o.total_shipment").
+		ColumnExpr("o.total_delivered").
 		TableExpr("orders o").
 		Join("INNER JOIN customers c ON c.id = o.customer_id").
-		Join("LEFT JOIN trips t ON t.order_id = o.id").
-		Join("LEFT JOIN drivers d ON d.id = t.driver_id").
-		Join("LEFT JOIN vehicles v ON v.id = t.vehicle_id").
 		Where("o.company_id = ?", req.Session.CompanyID).
 		Where("o.is_deleted = false").
 		Where("o.status NOT IN (?)", bun.In([]string{"completed", "cancelled"})).
