@@ -16,6 +16,7 @@ func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 	h := &handler{uc: factory}
 
 	s.GET("/dashboard", h.get, middleware.WithActiveCheck(s))
+	s.GET("/dashboard/driver", h.getDriver, middleware.WithActiveCheck(s))
 }
 
 // get handles GET /dashboard
@@ -35,6 +36,26 @@ func (h *handler) get(ctx *rest.Context) (err error) {
 
 	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
 		res, err = req.get()
+	}
+	return ctx.Respond(res, err)
+}
+
+// getDriver handles GET /dashboard/driver
+// @Summary Get driver dashboard
+// @Description Get dashboard data for driver including active trips count, completed trips count, and active trips list
+// @Tags dashboard
+// @Accept json
+// @Produce json
+// @Param authorization header string true "Bearer jwt-token..."
+// @Success 200 {object} rest.ResponseBody
+// @Failure 400 {object} rest.HTTPError
+// @Router /dashboard/driver [get]
+func (h *handler) getDriver(ctx *rest.Context) (err error) {
+	var req getRequest
+	var res *rest.ResponseBody
+
+	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
+		res, err = req.getDriver()
 	}
 	return ctx.Respond(res, err)
 }

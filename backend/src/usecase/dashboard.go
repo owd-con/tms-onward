@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/engine/ds/postgres"
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/uptrace/bun"
@@ -13,6 +14,7 @@ import (
 
 type DashboardUsecase struct {
 	db bun.IDB
+	ctx context.Context
 }
 
 // DashboardStats - Statistics with date filter
@@ -26,9 +28,9 @@ type DashboardStats struct {
 
 // ShipmentByType - Shipment count and percentage by order type
 type ShipmentByType struct {
-	Type     string  `json:"type"`      // FTL or LTL
-	Count    int64   `json:"count"`
-	Percent  float64 `json:"percent"`
+	Type    string  `json:"type"` // FTL or LTL
+	Count   int64   `json:"count"`
+	Percent float64 `json:"percent"`
 }
 
 // TopCustomer - Customer with most shipments
@@ -60,8 +62,8 @@ type ActiveTripItem struct {
 	CompletedWaypoints int     `json:"completed_waypoints"`
 }
 
-// OrderTripItem - Order with trip data for list
-type OrderTripItem struct {
+// ActiveOrderItem - Active order with trip data for list
+type ActiveOrderItem struct {
 	OrderID      string  `json:"order_id"`
 	OrderNumber  string  `json:"order_number"`
 	OrderType    string  `json:"order_type"`
@@ -131,16 +133,34 @@ type FailedOrder struct {
 
 // DashboardResponse - Complete dashboard response
 type DashboardResponse struct {
-	Stats                DashboardStats      `json:"stats"`
-	ShipmentsByType      []ShipmentByType    `json:"shipments_by_type"`
-	TopCustomers         []TopCustomer       `json:"top_customers"`
-	OnTimeDeliveryRate   OnTimeDeliveryRate  `json:"on_time_delivery_rate"`
-	ActiveTrips          []ActiveTripItem    `json:"active_trips"`
-	OrderTrips           []OrderTripItem     `json:"order_trips"`
-	MapShipmentsByArea   []MapShipmentsByArea `json:"map_shipments_by_area"`
-	ExpiredVehicles      []ExpiredVehicle    `json:"expired_vehicles"`
-	ExpiredDrivers       []ExpiredDriver     `json:"expired_drivers"`
-	FailedOrders         []FailedOrder       `json:"failed_orders"`
+	Stats              DashboardStats       `json:"stats"`
+	ShipmentsByType    []ShipmentByType     `json:"shipments_by_type"`
+	TopCustomers       []TopCustomer        `json:"top_customers"`
+	OnTimeDeliveryRate OnTimeDeliveryRate   `json:"on_time_delivery_rate"`
+	ActiveTrips        []ActiveTripItem     `json:"active_trips"`
+	ActiveOrders       []ActiveOrderItem    `json:"active_orders"`
+	MapShipmentsByArea []MapShipmentsByArea `json:"map_shipments_by_area"`
+	ExpiredVehicles    []ExpiredVehicle     `json:"expired_vehicles"`
+	ExpiredDrivers     []ExpiredDriver      `json:"expired_drivers"`
+	FailedOrders       []FailedOrder        `json:"failed_orders"`
+}
+
+// DriverDashboardResponse - Dashboard response for driver
+type DriverDashboardResponse struct {
+	ActiveTripsCount    int64            `json:"active_trips_count"`
+	CompletedTripsCount int64            `json:"completed_trips_count"`
+	ActiveTrips         []DriverTripItem `json:"active_trips"`
+}
+
+// DriverTripItem - Active trip data for driver dashboard
+type DriverTripItem struct {
+	TripID             string  `json:"trip_id"`
+	TripNumber         string  `json:"trip_number"`
+	VehiclePlate       string  `json:"vehicle_plate"`
+	Status             string  `json:"status"`
+	StartedAt          *string `json:"started_at"`
+	TotalWaypoints     int     `json:"total_waypoints"`
+	CompletedWaypoints int     `json:"completed_waypoints"`
 }
 
 // DashboardSummary - Summary statistics for superadmin
@@ -158,6 +178,8 @@ type CompanyShipmentData struct {
 }
 
 type DashboardQueryOptions struct {
+	common.QueryOption
+
 	Session *entity.TMSSessionClaims
 
 	// Month filter in YYYY-MM format (e.g., "2026-03")
@@ -165,9 +187,21 @@ type DashboardQueryOptions struct {
 	Month string `query:"month"`
 }
 
+func (o *DashboardQueryOptions) BuildQueryOption() *DashboardQueryOptions {
+	return o
+}
+
 func NewDashboardUsecase() *DashboardUsecase {
 	return &DashboardUsecase{
-		db: postgres.GetDB(),
+		db:  postgres.GetDB(),
+		ctx: context.Background(),
+	}
+}
+
+func (u *DashboardUsecase) WithContext(ctx context.Context) *DashboardUsecase {
+	return &DashboardUsecase{
+		db:  u.db,
+		ctx: ctx,
 	}
 }
 
@@ -342,12 +376,12 @@ func (u *DashboardUsecase) Get(req *DashboardQueryOptions) (*DashboardResponse, 
 	}
 	response.ActiveTrips = activeTrips
 
-	// 5. Get Order Trips (limit 10)
-	orderTrips, err := u.getOrderTrips(req)
+	// 5. Get Active Orders (limit 10)
+	activeOrders, err := u.getActiveOrders(req)
 	if err != nil {
 		return nil, err
 	}
-	response.OrderTrips = orderTrips
+	response.ActiveOrders = activeOrders
 
 	// 6. Get Map Shipments by Area (filtered by date)
 	mapShipments, err := u.getMapShipmentsByArea(req)
@@ -382,7 +416,7 @@ func (u *DashboardUsecase) Get(req *DashboardQueryOptions) (*DashboardResponse, 
 
 // getStats - Get statistics with date filter
 func (u *DashboardUsecase) getStats(req *DashboardQueryOptions) (*DashboardStats, error) {
-	ctx := context.Background()
+	ctx := u.ctx
 	stats := &DashboardStats{}
 
 	// Get order stats with single query (GROUP BY)
@@ -456,7 +490,7 @@ func (u *DashboardUsecase) getStats(req *DashboardQueryOptions) (*DashboardStats
 
 // getMapShipmentsByArea - Get shipments grouped by origin address (filtered by date)
 func (u *DashboardUsecase) getMapShipmentsByArea(req *DashboardQueryOptions) ([]MapShipmentsByArea, error) {
-	ctx := context.Background()
+	ctx := u.ctx
 
 	// Query shipments with origin and destination coordinates
 	type ShipmentResult struct {
@@ -566,7 +600,7 @@ func (u *DashboardUsecase) getMapShipmentsByArea(req *DashboardQueryOptions) ([]
 
 // getExpiredVehicles - Get vehicles with expired year (no filter)
 func (u *DashboardUsecase) getExpiredVehicles(req *DashboardQueryOptions) ([]ExpiredVehicle, error) {
-	ctx := context.Background()
+	ctx := u.ctx
 	// Expired drivers: year < now
 	expiredYear := time.Now()
 
@@ -611,7 +645,7 @@ func (u *DashboardUsecase) getExpiredVehicles(req *DashboardQueryOptions) ([]Exp
 
 // getExpiredDrivers - Get drivers with expired license (no filter)
 func (u *DashboardUsecase) getExpiredDrivers(req *DashboardQueryOptions) ([]ExpiredDriver, error) {
-	ctx := context.Background()
+	ctx := u.ctx
 	// Expired drivers: license_expiry < now
 	now := time.Now()
 
@@ -656,7 +690,7 @@ func (u *DashboardUsecase) getExpiredDrivers(req *DashboardQueryOptions) ([]Expi
 
 // getFailedOrders - Get orders with failed shipments, grouped by order with failed_shipments_count
 func (u *DashboardUsecase) getFailedOrders(req *DashboardQueryOptions) ([]FailedOrder, error) {
-	ctx := context.Background()
+	ctx := u.ctx
 
 	type FailedOrderResult struct {
 		ID                   string     `bun:"id"`
@@ -722,7 +756,7 @@ func (u *DashboardUsecase) getFailedOrders(req *DashboardQueryOptions) ([]Failed
 
 // getShipmentStats - Get shipment statistics by type and top customers
 func (u *DashboardUsecase) getShipmentStats(req *DashboardQueryOptions) ([]ShipmentByType, []TopCustomer, error) {
-	ctx := context.Background()
+	ctx := u.ctx
 
 	// 1. Get shipment count by type
 	type TypeResult struct {
@@ -822,7 +856,7 @@ func (u *DashboardUsecase) getShipmentStats(req *DashboardQueryOptions) ([]Shipm
 
 // getOnTimeDeliveryRate - Calculate on-time delivery rate
 func (u *DashboardUsecase) getOnTimeDeliveryRate(req *DashboardQueryOptions) (*OnTimeDeliveryRate, error) {
-	ctx := context.Background()
+	ctx := u.ctx
 	result := &OnTimeDeliveryRate{}
 
 	// Get completed shipments with actual vs scheduled delivery time
@@ -885,7 +919,7 @@ func (u *DashboardUsecase) getOnTimeDeliveryRate(req *DashboardQueryOptions) (*O
 
 // getActiveTrips - Get list of active trips (limit 10) - only dispatched and in_transit
 func (u *DashboardUsecase) getActiveTrips(req *DashboardQueryOptions) ([]ActiveTripItem, error) {
-	ctx := context.Background()
+	ctx := u.ctx
 
 	type ActiveTripResult struct {
 		TripID             string     `bun:"trip_id"`
@@ -952,9 +986,9 @@ func (u *DashboardUsecase) getActiveTrips(req *DashboardQueryOptions) ([]ActiveT
 	return activeTrips, nil
 }
 
-// getOrderTrips - Get list of orders with trip data (limit 10)
-func (u *DashboardUsecase) getOrderTrips(req *DashboardQueryOptions) ([]OrderTripItem, error) {
-	ctx := context.Background()
+// getActiveOrders - Get list of active orders with trip data (limit 10)
+func (u *DashboardUsecase) getActiveOrders(req *DashboardQueryOptions) ([]ActiveOrderItem, error) {
+	ctx := u.ctx
 
 	type OrderTripResult struct {
 		OrderID      string    `bun:"order_id"`
@@ -986,6 +1020,7 @@ func (u *DashboardUsecase) getOrderTrips(req *DashboardQueryOptions) ([]OrderTri
 		Join("LEFT JOIN vehicles v ON v.id = t.vehicle_id").
 		Where("o.company_id = ?", req.Session.CompanyID).
 		Where("o.is_deleted = false").
+		Where("o.status NOT IN (?)", bun.In([]string{"completed", "cancelled"})).
 		OrderExpr("o.created_at DESC").
 		Limit(10)
 
@@ -1002,9 +1037,9 @@ func (u *DashboardUsecase) getOrderTrips(req *DashboardQueryOptions) ([]OrderTri
 		return nil, err
 	}
 
-	orderTrips := make([]OrderTripItem, len(results))
+	activeOrders := make([]ActiveOrderItem, len(results))
 	for i, r := range results {
-		orderTrips[i] = OrderTripItem{
+		activeOrders[i] = ActiveOrderItem{
 			OrderID:      r.OrderID,
 			OrderNumber:  r.OrderNumber,
 			OrderType:    r.OrderType,
@@ -1017,5 +1052,94 @@ func (u *DashboardUsecase) getOrderTrips(req *DashboardQueryOptions) ([]OrderTri
 		}
 	}
 
-	return orderTrips, nil
+	return activeOrders, nil
+}
+
+// GetDriverDashboard retrieves dashboard data for driver (filtered by driver_id)
+func (u *DashboardUsecase) GetDriverDashboard(opts *DashboardQueryOptions) (*DriverDashboardResponse, error) {
+	result := &DriverDashboardResponse{}
+	ctx := u.ctx
+	driverID := opts.Session.UserID
+
+	// Count active trips (dispatched, in_transit)
+	activeCount, err := u.db.NewSelect().
+		Model((*struct{ ID string })(nil)).
+		TableExpr("trips").
+		Where("driver_id = ?", driverID).
+		Where("is_deleted = false").
+		Where("status IN (?)", bun.In([]string{"dispatched", "in_transit"})).
+		Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result.ActiveTripsCount = int64(activeCount)
+
+	// Count completed trips
+	completedCount, err := u.db.NewSelect().
+		Model((*struct{ ID string })(nil)).
+		TableExpr("trips").
+		Where("driver_id = ?", driverID).
+		Where("is_deleted = false").
+		Where("status = ?", "completed").
+		Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result.CompletedTripsCount = int64(completedCount)
+
+	// Get active trips with details
+	type DriverTripResult struct {
+		TripID             string     `bun:"trip_id"`
+		TripNumber         string     `bun:"trip_number"`
+		VehiclePlate       string     `bun:"vehicle_plate"`
+		Status             string     `bun:"status"`
+		StartedAt          *time.Time `bun:"started_at"`
+		TotalWaypoints     int        `bun:"total_waypoints"`
+		CompletedWaypoints int        `bun:"completed_waypoints"`
+	}
+
+	var tripResults []DriverTripResult
+	err = u.db.NewSelect().
+		ColumnExpr("t.id as trip_id").
+		ColumnExpr("t.trip_number").
+		ColumnExpr("v.plate_number as vehicle_plate").
+		ColumnExpr("t.status").
+		ColumnExpr("t.started_at").
+		ColumnExpr("COUNT(tw.id) as total_waypoints").
+		ColumnExpr("COUNT(CASE WHEN tw.status = 'completed' THEN 1 END) as completed_waypoints").
+		TableExpr("trips t").
+		Join("INNER JOIN vehicles v ON v.id = t.vehicle_id").
+		Join("LEFT JOIN trip_waypoints tw ON tw.trip_id = t.id").
+		Where("t.driver_id = ?", driverID).
+		Where("t.is_deleted = false").
+		Where("t.status IN (?)", bun.In([]string{"dispatched", "in_transit"})).
+		GroupExpr("t.id, t.trip_number, v.plate_number, t.status, t.started_at").
+		OrderExpr("t.created_at DESC").
+		Scan(ctx, &tripResults)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build active trips result
+	activeTrips := make([]DriverTripItem, len(tripResults))
+	for i, r := range tripResults {
+		var startedAt *string
+		if r.StartedAt != nil {
+			formatted := r.StartedAt.Format("2006-01-02 15:04")
+			startedAt = &formatted
+		}
+
+		activeTrips[i] = DriverTripItem{
+			TripID:             r.TripID,
+			TripNumber:         r.TripNumber,
+			VehiclePlate:       r.VehiclePlate,
+			Status:             r.Status,
+			StartedAt:          startedAt,
+			TotalWaypoints:     r.TotalWaypoints,
+			CompletedWaypoints: r.CompletedWaypoints,
+		}
+	}
+	result.ActiveTrips = activeTrips
+
+	return result, nil
 }
