@@ -24,10 +24,18 @@ type DashboardStats struct {
 	CompletedOrders int64 `json:"completed_orders"`
 }
 
-// CapacityUtilization - Capacity utilization metrics (LTL vs FTL)
-type CapacityUtilization struct {
-	FTLUtilizationPercent float64 `json:"ftl_utilization_percent"`
-	LTLUtilizationPercent float64 `json:"ltl_utilization_percent"`
+// ShipmentByType - Shipment count and percentage by order type
+type ShipmentByType struct {
+	Type     string  `json:"type"`      // FTL or LTL
+	Count    int64   `json:"count"`
+	Percent  float64 `json:"percent"`
+}
+
+// TopCustomer - Customer with most shipments
+type TopCustomer struct {
+	CustomerID   string `json:"customer_id"`
+	CustomerName string `json:"customer_name"`
+	TotalCount   int64  `json:"total_count"`
 }
 
 // OnTimeDeliveryRate - On-time delivery rate metric
@@ -123,15 +131,16 @@ type FailedOrder struct {
 
 // DashboardResponse - Complete dashboard response
 type DashboardResponse struct {
-	Stats               DashboardStats       `json:"stats"`
-	CapacityUtilization CapacityUtilization  `json:"capacity_utilization"`
-	OnTimeDeliveryRate  OnTimeDeliveryRate   `json:"on_time_delivery_rate"`
-	ActiveTrips         []ActiveTripItem     `json:"active_trips"`
-	OrderTrips          []OrderTripItem      `json:"order_trips"`
-	MapShipmentsByArea  []MapShipmentsByArea `json:"map_shipments_by_area"`
-	ExpiredVehicles     []ExpiredVehicle     `json:"expired_vehicles"`
-	ExpiredDrivers      []ExpiredDriver      `json:"expired_drivers"`
-	FailedOrders        []FailedOrder        `json:"failed_orders"`
+	Stats                DashboardStats      `json:"stats"`
+	ShipmentsByType      []ShipmentByType    `json:"shipments_by_type"`
+	TopCustomers         []TopCustomer       `json:"top_customers"`
+	OnTimeDeliveryRate   OnTimeDeliveryRate  `json:"on_time_delivery_rate"`
+	ActiveTrips          []ActiveTripItem    `json:"active_trips"`
+	OrderTrips           []OrderTripItem     `json:"order_trips"`
+	MapShipmentsByArea   []MapShipmentsByArea `json:"map_shipments_by_area"`
+	ExpiredVehicles      []ExpiredVehicle    `json:"expired_vehicles"`
+	ExpiredDrivers       []ExpiredDriver     `json:"expired_drivers"`
+	FailedOrders         []FailedOrder       `json:"failed_orders"`
 }
 
 // DashboardSummary - Summary statistics for superadmin
@@ -311,12 +320,13 @@ func (u *DashboardUsecase) Get(req *DashboardQueryOptions) (*DashboardResponse, 
 	}
 	response.Stats = *stats
 
-	// 2. Get Capacity Utilization (LTL vs FTL)
-	capacity, err := u.getCapacityUtilization(req)
+	// 2. Get Shipment Stats (by type and top customers)
+	shipmentsByType, topCustomers, err := u.getShipmentStats(req)
 	if err != nil {
 		return nil, err
 	}
-	response.CapacityUtilization = *capacity
+	response.ShipmentsByType = shipmentsByType
+	response.TopCustomers = topCustomers
 
 	// 3. Get On-Time Delivery Rate
 	onTimeRate, err := u.getOnTimeDeliveryRate(req)
@@ -710,79 +720,104 @@ func (u *DashboardUsecase) getFailedOrders(req *DashboardQueryOptions) ([]Failed
 	return failed, nil
 }
 
-// getCapacityUtilization - Calculate capacity utilization percentage for LTL and FTL
-func (u *DashboardUsecase) getCapacityUtilization(req *DashboardQueryOptions) (*CapacityUtilization, error) {
+// getShipmentStats - Get shipment statistics by type and top customers
+func (u *DashboardUsecase) getShipmentStats(req *DashboardQueryOptions) ([]ShipmentByType, []TopCustomer, error) {
 	ctx := context.Background()
-	result := &CapacityUtilization{}
 
-	// Get active trips with vehicle and shipment data
-	type CapacityResult struct {
-		OrderType        string  `bun:"order_type"`
-		VehicleCapWeight float64 `bun:"vehicle_cap_weight"`
-		VehicleCapVolume float64 `bun:"vehicle_cap_volume"`
-		TotalWeight      float64 `bun:"total_weight"`
-		TotalVolume      float64 `bun:"total_volume"`
+	// 1. Get shipment count by type
+	type TypeResult struct {
+		OrderType string `bun:"order_type"`
+		Count     int64  `bun:"count"`
 	}
 
-	var results []CapacityResult
-	query := u.db.NewSelect().
+	var typeResults []TypeResult
+	typeQuery := u.db.NewSelect().
 		ColumnExpr("o.order_type").
-		ColumnExpr("v.capacity_weight as vehicle_cap_weight").
-		ColumnExpr("v.capacity_volume as vehicle_cap_volume").
-		ColumnExpr("COALESCE(SUM(s.total_weight), 0) as total_weight").
-		ColumnExpr("COALESCE(SUM(s.volume), 0) as total_volume").
-		TableExpr("trips t").
-		Join("INNER JOIN orders o ON o.id = t.order_id").
-		Join("INNER JOIN vehicles v ON v.id = t.vehicle_id").
-		Join("LEFT JOIN trip_waypoints tw ON tw.trip_id = t.id").
-		Join("LEFT JOIN shipments s ON s.id::text = ANY(tw.shipment_ids)").
-		Where("t.company_id = ?", req.Session.CompanyID).
-		Where("t.is_deleted = false").
-		Where("t.status IN (?)", bun.In([]string{"dispatched", "in_transit"})).
-		GroupExpr("o.order_type, v.capacity_weight, v.capacity_volume, t.id")
+		ColumnExpr("COUNT(s.id) as count").
+		TableExpr("shipments s").
+		Join("INNER JOIN orders o ON o.id = s.order_id").
+		Where("s.company_id = ?", req.Session.CompanyID).
+		Where("s.is_deleted = false").
+		GroupExpr("o.order_type")
 
 	if req.Month != "" {
 		startOfMonth, endOfMonth, err := u.getMonthRange(req.Month)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		query = query.Where("t.created_at >= ? AND t.created_at < ?", startOfMonth, endOfMonth)
+		typeQuery = typeQuery.Where("s.created_at >= ? AND s.created_at < ?", startOfMonth, endOfMonth)
 	}
 
-	err := query.Scan(ctx, &results)
+	err := typeQuery.Scan(ctx, &typeResults)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	// Calculate utilization by order type
-	var ftlTotalUtil, ftlTotalCap, ltlTotalUtil, ltlTotalCap float64
+	// Calculate total for percentage
+	var totalShipments int64
+	for _, r := range typeResults {
+		totalShipments += r.Count
+	}
 
-	for _, r := range results {
-		// Use weight-based utilization (can be changed to volume-based)
-		capacity := r.VehicleCapWeight
-		if capacity <= 0 {
-			capacity = 1 // Avoid division by zero
+	// Build shipment by type result
+	shipmentsByType := make([]ShipmentByType, 0, len(typeResults))
+	for _, r := range typeResults {
+		percent := 0.0
+		if totalShipments > 0 {
+			percent = (float64(r.Count) / float64(totalShipments)) * 100
 		}
+		shipmentsByType = append(shipmentsByType, ShipmentByType{
+			Type:    r.OrderType,
+			Count:   r.Count,
+			Percent: percent,
+		})
+	}
 
-		switch r.OrderType {
-		case "FTL", "ftl":
-			ftlTotalUtil += r.TotalWeight
-			ftlTotalCap += capacity
-		case "LTL", "ltl":
-			ltlTotalUtil += r.TotalWeight
-			ltlTotalCap += capacity
+	// 2. Get top customers by shipment count
+	type CustomerResult struct {
+		CustomerID   string `bun:"customer_id"`
+		CustomerName string `bun:"customer_name"`
+		TotalCount   int64  `bun:"total_count"`
+	}
+
+	var customerResults []CustomerResult
+	customerQuery := u.db.NewSelect().
+		ColumnExpr("c.id as customer_id").
+		ColumnExpr("c.name as customer_name").
+		ColumnExpr("COUNT(s.id) as total_count").
+		TableExpr("shipments s").
+		Join("INNER JOIN orders o ON o.id = s.order_id").
+		Join("INNER JOIN customers c ON c.id = o.customer_id").
+		Where("s.company_id = ?", req.Session.CompanyID).
+		Where("s.is_deleted = false").
+		GroupExpr("c.id, c.name").
+		OrderExpr("total_count DESC").
+		Limit(10)
+
+	if req.Month != "" {
+		startOfMonth, endOfMonth, err := u.getMonthRange(req.Month)
+		if err != nil {
+			return nil, nil, err
+		}
+		customerQuery = customerQuery.Where("s.created_at >= ? AND s.created_at < ?", startOfMonth, endOfMonth)
+	}
+
+	err = customerQuery.Scan(ctx, &customerResults)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Build top customers result
+	topCustomers := make([]TopCustomer, len(customerResults))
+	for i, r := range customerResults {
+		topCustomers[i] = TopCustomer{
+			CustomerID:   r.CustomerID,
+			CustomerName: r.CustomerName,
+			TotalCount:   r.TotalCount,
 		}
 	}
 
-	// Calculate percentages
-	if ftlTotalCap > 0 {
-		result.FTLUtilizationPercent = (ftlTotalUtil / ftlTotalCap) * 100
-	}
-	if ltlTotalCap > 0 {
-		result.LTLUtilizationPercent = (ltlTotalUtil / ltlTotalCap) * 100
-	}
-
-	return result, nil
+	return shipmentsByType, topCustomers, nil
 }
 
 // getOnTimeDeliveryRate - Calculate on-time delivery rate

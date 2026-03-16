@@ -28,7 +28,7 @@ type Shipment struct {
 	// Format: SHP-YYYYMMDD-XXX (per company, auto-increment)
 
 	// Sorting - ORDER BY sorting_id when querying shipments by order_id
-	SortingID int `bun:"sorting_id,pgtype:serial" json:"sorting_id"`
+	// SortingID int64 `bun:"sorting_id,type:bigserial" json:"sorting_id"`
 	// Auto-increment, maintains order based on when order was created
 
 	// Route
