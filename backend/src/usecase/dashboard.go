@@ -578,7 +578,7 @@ func (u *DashboardUsecase) getExpiredVehicles(req *DashboardQueryOptions) ([]Exp
 		TableExpr("vehicles v").
 		Where("v.company_id = ?", req.Session.CompanyID).
 		Where("v.is_deleted = false").
-		Where("v.year < ?", expiredYear).
+		Where("v.year < ?", expiredYear.Year()).
 		OrderExpr("v.year ASC").
 		Scan(ctx, &results)
 	if err != nil {
