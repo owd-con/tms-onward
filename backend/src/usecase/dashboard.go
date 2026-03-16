@@ -692,26 +692,16 @@ func (u *DashboardUsecase) getExpiredDrivers(req *DashboardQueryOptions) ([]Expi
 func (u *DashboardUsecase) getFailedOrders(req *DashboardQueryOptions) ([]FailedOrder, error) {
 	ctx := u.ctx
 
-	type FailedOrderResult struct {
-		ID                   string     `bun:"id"`
-		OrderNumber          string     `bun:"order_number"`
-		CustomerName         string     `bun:"customer_name"`
-		Status               string     `bun:"status"`
-		FailedShipmentsCount int        `bun:"failed_shipments_count"`
-		FailedReason         *string    `bun:"failed_reason"`
-		FailedAt             *time.Time `bun:"failed_at"`
-		CreatedAt            time.Time  `bun:"created_at"` // For ordering only
-	}
-
-	var results []FailedOrderResult
+	var results []FailedOrder
 	err := u.db.NewSelect().
+		Model(&results).
 		ColumnExpr("o.id").
 		ColumnExpr("o.order_number").
 		ColumnExpr("c.name as customer_name").
 		ColumnExpr("o.status").
 		ColumnExpr("COUNT(s.id) as failed_shipments_count").
 		ColumnExpr("MAX(s.failed_reason) as failed_reason").
-		ColumnExpr("MAX(s.failed_at) as failed_at").
+		ColumnExpr("TO_CHAR(MAX(s.failed_at), 'YYYY-MM-DD HH24:MI:SS') as failed_at").
 		ColumnExpr("MAX(o.created_at) as created_at").
 		TableExpr("shipments s").
 		Join("INNER JOIN orders o ON o.id = s.order_id").
@@ -727,31 +717,7 @@ func (u *DashboardUsecase) getFailedOrders(req *DashboardQueryOptions) ([]Failed
 		return nil, err
 	}
 
-	failed := make([]FailedOrder, len(results))
-	for i, r := range results {
-		reason := ""
-		if r.FailedReason != nil {
-			reason = *r.FailedReason
-		}
-
-		var failedAt *string
-		if r.FailedAt != nil {
-			formatted := r.FailedAt.Format("2006-01-02 15:04")
-			failedAt = &formatted
-		}
-
-		failed[i] = FailedOrder{
-			ID:                   r.ID,
-			OrderNumber:          r.OrderNumber,
-			CustomerName:         r.CustomerName,
-			FailedShipmentsCount: r.FailedShipmentsCount,
-			FailedReason:         reason,
-			Status:               r.Status,
-			FailedAt:             failedAt,
-		}
-	}
-
-	return failed, nil
+	return results, nil
 }
 
 // getShipmentStats - Get shipment statistics by type and top customers
@@ -921,21 +887,9 @@ func (u *DashboardUsecase) getOnTimeDeliveryRate(req *DashboardQueryOptions) (*O
 func (u *DashboardUsecase) getActiveTrips(req *DashboardQueryOptions) ([]ActiveTripItem, error) {
 	ctx := u.ctx
 
-	type ActiveTripResult struct {
-		TripID             string     `bun:"trip_id"`
-		TripNumber         string     `bun:"trip_number"`
-		DriverName         string     `bun:"driver_name"`
-		DriverPhone        string     `bun:"driver_phone"`
-		VehiclePlate       string     `bun:"vehicle_plate"`
-		VehicleType        string     `bun:"vehicle_type"`
-		Status             string     `bun:"status"`
-		StartedAt          *time.Time `bun:"started_at"`
-		TotalWaypoints     int        `bun:"total_waypoints"`
-		CompletedWaypoints int        `bun:"completed_waypoints"`
-	}
-
-	var results []ActiveTripResult
+	var results []ActiveTripItem
 	err := u.db.NewSelect().
+		Model(&results).
 		ColumnExpr("t.id as trip_id").
 		ColumnExpr("t.trip_number").
 		ColumnExpr("d.name as driver_name").
@@ -943,7 +897,7 @@ func (u *DashboardUsecase) getActiveTrips(req *DashboardQueryOptions) ([]ActiveT
 		ColumnExpr("v.plate_number as vehicle_plate").
 		ColumnExpr("v.type as vehicle_type").
 		ColumnExpr("t.status").
-		ColumnExpr("t.started_at").
+		ColumnExpr("TO_CHAR(t.started_at, 'YYYY-MM-DD HH24:MI:SS') as started_at").
 		ColumnExpr("COUNT(tw.id) as total_waypoints").
 		ColumnExpr("COUNT(CASE WHEN tw.status = 'completed' THEN 1 END) as completed_waypoints").
 		TableExpr("trips t").
@@ -961,55 +915,22 @@ func (u *DashboardUsecase) getActiveTrips(req *DashboardQueryOptions) ([]ActiveT
 		return nil, err
 	}
 
-	activeTrips := make([]ActiveTripItem, len(results))
-	for i, r := range results {
-		var startedAt *string
-		if r.StartedAt != nil {
-			formatted := r.StartedAt.Format("2006-01-02 15:04")
-			startedAt = &formatted
-		}
-
-		activeTrips[i] = ActiveTripItem{
-			TripID:             r.TripID,
-			TripNumber:         r.TripNumber,
-			DriverName:         r.DriverName,
-			DriverPhone:        r.DriverPhone,
-			VehiclePlate:       r.VehiclePlate,
-			VehicleType:        r.VehicleType,
-			Status:             r.Status,
-			StartedAt:          startedAt,
-			TotalWaypoints:     r.TotalWaypoints,
-			CompletedWaypoints: r.CompletedWaypoints,
-		}
-	}
-
-	return activeTrips, nil
+	return results, nil
 }
 
 // getActiveOrders - Get list of active orders with trip data (limit 10)
 func (u *DashboardUsecase) getActiveOrders(req *DashboardQueryOptions) ([]ActiveOrderItem, error) {
 	ctx := u.ctx
 
-	type OrderTripResult struct {
-		OrderID      string    `bun:"order_id"`
-		OrderNumber  string    `bun:"order_number"`
-		OrderType    string    `bun:"order_type"`
-		CustomerName string    `bun:"customer_name"`
-		Status       string    `bun:"status"`
-		CreatedAt    time.Time `bun:"created_at"`
-		TripNumber   *string   `bun:"trip_number"`
-		DriverName   *string   `bun:"driver_name"`
-		VehiclePlate *string   `bun:"vehicle_plate"`
-	}
-
-	var results []OrderTripResult
+	var results []ActiveOrderItem
 	query := u.db.NewSelect().
+		Model(&results).
 		ColumnExpr("o.id as order_id").
 		ColumnExpr("o.order_number").
 		ColumnExpr("o.order_type").
 		ColumnExpr("c.name as customer_name").
 		ColumnExpr("o.status").
-		ColumnExpr("o.created_at").
+		ColumnExpr("TO_CHAR(o.created_at, 'YYYY-MM-DD HH24:MI:SS') as created_at").
 		ColumnExpr("t.trip_number").
 		ColumnExpr("d.name as driver_name").
 		ColumnExpr("v.plate_number as vehicle_plate").
@@ -1037,22 +958,7 @@ func (u *DashboardUsecase) getActiveOrders(req *DashboardQueryOptions) ([]Active
 		return nil, err
 	}
 
-	activeOrders := make([]ActiveOrderItem, len(results))
-	for i, r := range results {
-		activeOrders[i] = ActiveOrderItem{
-			OrderID:      r.OrderID,
-			OrderNumber:  r.OrderNumber,
-			OrderType:    r.OrderType,
-			CustomerName: r.CustomerName,
-			Status:       r.Status,
-			CreatedAt:    r.CreatedAt.Format("2006-01-02 15:04"),
-			TripNumber:   r.TripNumber,
-			DriverName:   r.DriverName,
-			VehiclePlate: r.VehiclePlate,
-		}
-	}
-
-	return activeOrders, nil
+	return results, nil
 }
 
 // GetDriverDashboard retrieves dashboard data for driver (filtered by driver_id)
@@ -1088,23 +994,14 @@ func (u *DashboardUsecase) GetDriverDashboard(opts *DashboardQueryOptions) (*Dri
 	result.CompletedTripsCount = int64(completedCount)
 
 	// Get active trips with details
-	type DriverTripResult struct {
-		TripID             string     `bun:"trip_id"`
-		TripNumber         string     `bun:"trip_number"`
-		VehiclePlate       string     `bun:"vehicle_plate"`
-		Status             string     `bun:"status"`
-		StartedAt          *time.Time `bun:"started_at"`
-		TotalWaypoints     int        `bun:"total_waypoints"`
-		CompletedWaypoints int        `bun:"completed_waypoints"`
-	}
-
-	var tripResults []DriverTripResult
+	var tripResults []DriverTripItem
 	err = u.db.NewSelect().
+		Model(&tripResults).
 		ColumnExpr("t.id as trip_id").
 		ColumnExpr("t.trip_number").
 		ColumnExpr("v.plate_number as vehicle_plate").
 		ColumnExpr("t.status").
-		ColumnExpr("t.started_at").
+		ColumnExpr("TO_CHAR(t.started_at, 'YYYY-MM-DD HH24:MI:SS') as started_at").
 		ColumnExpr("COUNT(tw.id) as total_waypoints").
 		ColumnExpr("COUNT(CASE WHEN tw.status = 'completed' THEN 1 END) as completed_waypoints").
 		TableExpr("trips t").
@@ -1119,27 +1016,7 @@ func (u *DashboardUsecase) GetDriverDashboard(opts *DashboardQueryOptions) (*Dri
 	if err != nil {
 		return nil, err
 	}
-
-	// Build active trips result
-	activeTrips := make([]DriverTripItem, len(tripResults))
-	for i, r := range tripResults {
-		var startedAt *string
-		if r.StartedAt != nil {
-			formatted := r.StartedAt.Format("2006-01-02 15:04")
-			startedAt = &formatted
-		}
-
-		activeTrips[i] = DriverTripItem{
-			TripID:             r.TripID,
-			TripNumber:         r.TripNumber,
-			VehiclePlate:       r.VehiclePlate,
-			Status:             r.Status,
-			StartedAt:          startedAt,
-			TotalWaypoints:     r.TotalWaypoints,
-			CompletedWaypoints: r.CompletedWaypoints,
-		}
-	}
-	result.ActiveTrips = activeTrips
+	result.ActiveTrips = tripResults
 
 	return result, nil
 }
