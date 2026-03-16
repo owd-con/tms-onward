@@ -223,6 +223,11 @@ func (u *WaypointUsecase) CompleteWaypoint(
 
 	tripWaypoint.Status = "completed"
 
+	// Increment trip.total_completed counter
+	if err := u.TripUsecase.Repo.IncrementTotalCompleted(tripWaypoint.TripID.String()); err != nil {
+		return fmt.Errorf("failed to increment trip counter: %w", err)
+	}
+
 	// Update order status based on all shipments (outside transaction, uses its own transaction)
 	if err := u.ShipmentUsecase.UpdateOrderStatusBasedOnShipments(tripWaypoint.Trip.OrderID.String()); err != nil {
 		return fmt.Errorf("failed to update order status: %w", err)
@@ -510,6 +515,11 @@ func (u *WaypointUsecase) CompleteLoading(
 
 	tripWaypoint.Status = "completed"
 
+	// Increment trip.total_completed counter
+	if err := u.TripUsecase.Repo.IncrementTotalCompleted(tripWaypoint.TripID.String()); err != nil {
+		return fmt.Errorf("failed to increment trip counter: %w", err)
+	}
+
 	// Update order status based on all shipments (outside transaction, uses its own transaction)
 	if err := u.ShipmentUsecase.UpdateOrderStatusBasedOnShipments(tripWaypoint.Trip.OrderID.String()); err != nil {
 		return fmt.Errorf("failed to update order status: %w", err)
@@ -676,6 +686,11 @@ func (u *WaypointUsecase) FailPickup(
 
 	tripWaypoint.Status = "completed"
 
+	// Increment trip.total_completed counter
+	if err := u.TripUsecase.Repo.IncrementTotalCompleted(tripWaypoint.TripID.String()); err != nil {
+		return fmt.Errorf("failed to increment trip counter: %w", err)
+	}
+
 	// Update order status based on all shipments
 	if err := u.ShipmentUsecase.UpdateOrderStatusBasedOnShipments(tripWaypoint.Trip.OrderID.String()); err != nil {
 		return fmt.Errorf("failed to update order status: %w", err)
@@ -777,6 +792,11 @@ func (u *WaypointUsecase) FailDelivery(
 	}
 
 	tripWaypoint.Status = "completed"
+
+	// Increment trip.total_completed counter
+	if err := u.TripUsecase.Repo.IncrementTotalCompleted(tripWaypoint.TripID.String()); err != nil {
+		return fmt.Errorf("failed to increment trip counter: %w", err)
+	}
 
 	// Update order status based on all shipments
 	if err := u.ShipmentUsecase.UpdateOrderStatusBasedOnShipments(tripWaypoint.Trip.OrderID.String()); err != nil {

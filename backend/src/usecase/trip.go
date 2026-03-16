@@ -409,7 +409,11 @@ func (u *TripUsecase) GetTripWaypointsByTripID(tripID string) ([]*entity.TripWay
 // This allows frontend to specify exact waypoint configuration without deriving from shipments
 func (u *TripUsecase) CreateWithWaypoints(trip *entity.Trip, orderID string, waypoints []*entity.TripWaypoint) error {
 	return u.Repo.RunInTx(u.Context, func(ctx context.Context, tx bun.Tx) error {
-		// 1. Insert trip
+		// 1. Set total waypoints
+		trip.TotalWaypoints = len(waypoints)
+		trip.TotalCompleted = 0
+
+		// 2. Insert trip
 		tripRepo := u.Repo.WithTx(ctx, tx)
 		if err := tripRepo.Insert(trip); err != nil {
 			return fmt.Errorf("failed to create trip: %w", err)

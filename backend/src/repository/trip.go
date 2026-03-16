@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/engine/ds/postgres"
@@ -62,4 +63,16 @@ func (r *TripRepository) FindWithWaypoints(id string) (*entity.Trip, error) {
 		return nil, err
 	}
 	return &trip, nil
+}
+
+// IncrementTotalCompleted increments the total_completed counter for a trip
+func (r *TripRepository) IncrementTotalCompleted(tripID string) error {
+	_, err := r.DB.NewUpdate().
+		Model(&entity.Trip{}).
+		Set("total_completed = total_completed + 1").
+		Set("updated_at = ?", time.Now()).
+		Where("id = ?", tripID).
+		Where("is_deleted = false").
+		Exec(r.Context)
+	return err
 }
