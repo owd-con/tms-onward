@@ -20,12 +20,11 @@ func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 
 // get handles GET /dashboard
 // @Summary Get dashboard
-// @Description Get complete dashboard data including stats, map waypoints, expired vehicles/drivers, and failed orders
+// @Description Get complete dashboard data including stats, capacity utilization, on-time delivery rate, active trips, order trips, map waypoints, expired vehicles/drivers, and failed orders
 // @Tags dashboard
 // @Accept json
 // @Produce json
-// @Param start_date query string false "Start date filter (YYYY-MM-DD)"
-// @Param end_date query string false "End date filter (YYYY-MM-DD)"
+// @Param month query string false "Month filter in YYYY-MM format (e.g., 2026-03). Defaults to current month if not provided."
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError

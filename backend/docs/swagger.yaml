@@ -457,11 +457,17 @@ definitions:
       success:
         type: boolean
     type: object
-  trip.ShipmentSequenceRequest:
+  trip.WaypointRequest:
     properties:
+      address_id:
+        type: string
       sequence_number:
         type: integer
-      shipment_id:
+      shipment_ids:
+        items:
+          type: string
+        type: array
+      type:
         type: string
     type: object
   trip.createRequest:
@@ -472,24 +478,26 @@ definitions:
         type: string
       order_id:
         type: string
-      shipment_sequences:
-        description: Custom shipment ordering
-        items:
-          $ref: '#/definitions/trip.ShipmentSequenceRequest'
-        type: array
       vehicle_id:
         type: string
+      waypoints:
+        items:
+          $ref: '#/definitions/trip.WaypointRequest'
+        type: array
     type: object
   trip.updateRequest:
     properties:
+      driver_id:
+        type: string
       id:
         type: string
       notes:
         type: string
-      shipment_sequences:
-        description: Custom shipment ordering
+      vehicle_id:
+        type: string
+      waypoints:
         items:
-          $ref: '#/definitions/trip.ShipmentSequenceRequest'
+          $ref: '#/definitions/trip.WaypointRequest'
         type: array
     type: object
   upload.presignedURLRequest:
@@ -1289,16 +1297,14 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get complete dashboard data including stats, map waypoints, expired
-        vehicles/drivers, and failed orders
+      description: Get complete dashboard data including stats, capacity utilization,
+        on-time delivery rate, active trips, order trips, map waypoints, expired vehicles/drivers,
+        and failed orders
       parameters:
-      - description: Start date filter (YYYY-MM-DD)
+      - description: Month filter in YYYY-MM format (e.g., 2026-03). Defaults to current
+          month if not provided.
         in: query
-        name: start_date
-        type: string
-      - description: End date filter (YYYY-MM-DD)
-        in: query
-        name: end_date
+        name: month
         type: string
       - description: Bearer jwt-token...
         in: header
@@ -2117,45 +2123,6 @@ paths:
       summary: Batch reschedule failed shipments
       tags:
       - exception
-  /exceptions/waypoints:
-    get:
-      consumes:
-      - application/json
-      description: Get list of waypoints with failed deliveries
-      parameters:
-      - default: 1
-        description: Page number
-        in: query
-        name: page
-        type: integer
-      - default: 10
-        description: Items per page
-        in: query
-        name: limit
-        type: integer
-      - description: Filter by order ID
-        in: query
-        name: order_id
-        type: string
-      - description: Bearer jwt-token...
-        in: header
-        name: authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.ResponseBody'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-      summary: Get failed waypoints
-      tags:
-      - exception
   /me:
     get:
       consumes:
@@ -2597,15 +2564,16 @@ paths:
       summary: Cancel order
       tags:
       - order
-  /orders/{number}/by-number:
+  /orders/{id}/waypoint-preview:
     get:
       consumes:
       - application/json
-      description: Get order by order number
+      description: Get initial waypoint preview for trip creation based on order type
+        and shipments
       parameters:
-      - description: Order number
+      - description: Order ID
         in: path
-        name: number
+        name: id
         required: true
         type: string
       - description: Bearer jwt-token...
@@ -2624,7 +2592,7 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/rest.HTTPError'
-      summary: Get order by number
+      summary: Get waypoint preview for order
       tags:
       - order
   /pricing-matrices:
@@ -3112,7 +3080,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Generate comprehensive order, trip, and waypoint report
+      description: Generate trip waypoint report with shipment details (1 row per
+        shipment per waypoint)
       parameters:
       - description: Start date (YYYY-MM-DD)
         in: query
@@ -3130,7 +3099,7 @@ paths:
         in: query
         name: driver_id
         type: string
-      - description: Filter by status
+      - description: Filter by waypoint status (pending/in_progress/completed)
         in: query
         name: status
         type: string
@@ -3174,7 +3143,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.HTTPError'
-      summary: Get order-trip-waypoint report
+      summary: Get trip waypoint report
       tags:
       - report
   /trips:
