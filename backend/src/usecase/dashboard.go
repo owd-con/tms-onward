@@ -96,7 +96,6 @@ type MapShipmentsByArea struct {
 type ExpiredVehicle struct {
 	ID          string `json:"id"`
 	PlateNumber string `json:"plate_number"`
-	Year        int    `json:"year"`
 	ExpiredYear int    `json:"expired_year"`
 	Brand       string `json:"brand"`
 	Model       string `json:"model"`
@@ -558,8 +557,8 @@ func (u *DashboardUsecase) getMapShipmentsByArea(req *DashboardQueryOptions) ([]
 // getExpiredVehicles - Get vehicles with expired year (no filter)
 func (u *DashboardUsecase) getExpiredVehicles(req *DashboardQueryOptions) ([]ExpiredVehicle, error) {
 	ctx := context.Background()
-	// Define expired year (10 years ago from now)
-	expiredYear := time.Now().Year() - 10
+	// Expired drivers: year < now
+	expiredYear := time.Now()
 
 	type VehicleResult struct {
 		ID          string `bun:"id"`
@@ -591,8 +590,7 @@ func (u *DashboardUsecase) getExpiredVehicles(req *DashboardQueryOptions) ([]Exp
 		expired[i] = ExpiredVehicle{
 			ID:          r.ID,
 			PlateNumber: r.PlateNumber,
-			Year:        r.Year,
-			ExpiredYear: expiredYear,
+			ExpiredYear: r.Year,
 			Brand:       r.Make,
 			Model:       r.Model,
 		}
@@ -638,7 +636,7 @@ func (u *DashboardUsecase) getExpiredDrivers(req *DashboardQueryOptions) ([]Expi
 			ID:            r.ID,
 			Name:          r.Name,
 			LicenseType:   r.LicenseType,
-			LicenseExpiry: r.LicenseExpiry.Format("2006-01-02"),
+			LicenseExpiry: r.LicenseExpiry.Format("2006"),
 			PhoneNumber:   r.Phone,
 		}
 	}
