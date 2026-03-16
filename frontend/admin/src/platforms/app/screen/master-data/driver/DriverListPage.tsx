@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { HiIdentification } from "react-icons/hi2";
+import { Database } from "lucide-react";
 
 import useTable from "@/services/table/hooks";
 import type { TableConfig } from "@/services/table/const";
@@ -162,9 +163,12 @@ const DriverListPage = () => {
   return (
     <Page className="h-full flex flex-col min-h-0">
       <Page.Header
-        title="Drivers"
-        titleClassName="!text-2xl"
-        subtitle="Manage your driver team"
+        pillLabel="MASTER DATA"
+        pillIcon={<Database size={12} strokeWidth={2.5} />}
+        title="Driver Directory"
+        titleClassName="text-3xl font-black text-slate-900 tracking-tight leading-none mb-1"
+        subtitle="Manage fleet operators, licenses, and performance profiles."
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
         action={
           <Button
             variant="primary"

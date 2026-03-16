@@ -3,6 +3,7 @@ import { Fragment, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { HiSignal, HiTrash } from "react-icons/hi2";
 import { FaEdit } from "react-icons/fa";
+import { Database } from "lucide-react";
 
 import { Button, Modal, useEnigmaUI } from "@/components";
 import { useTrip } from "@/services/trip/hooks";
@@ -187,7 +188,12 @@ const TripDetailPage = () => {
     if (showTripResult?.isLoading) {
       return (
         <Page>
-          <Page.Header title='Trip Detail' />
+          <Page.Header 
+            pillLabel="OPERATIONS"
+            pillIcon={<Database size={12} strokeWidth={2.5} />}
+            title='Trip Overview' 
+            titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
+          />
           <Page.Body>
             <div className='flex justify-center items-center h-64'>
               <div className='loading loading-spinner loading-lg'></div>
@@ -200,7 +206,12 @@ const TripDetailPage = () => {
     // Show error state if trip not found
     return (
       <Page>
-        <Page.Header title='Trip Detail' />
+        <Page.Header 
+          pillLabel="OPERATIONS"
+          pillIcon={<Database size={12} strokeWidth={2.5} />}
+          title='Trip Overview' 
+          titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
+        />
         <Page.Body>
           <div className='flex flex-col items-center justify-center h-64 gap-4'>
             <div className='text-error text-6xl'>:(</div>
@@ -226,10 +237,13 @@ const TripDetailPage = () => {
     <Fragment>
       <Page className='h-full flex flex-col min-h-0'>
         <Page.Header
+          pillLabel="OPERATIONS"
+          pillIcon={<Database size={12} strokeWidth={2.5} />}
           backTo={() => navigate(-1)}
-          title='Trip Detail'
-          titleClassName='!text-2xl'
-          subtitle={trip.trip_number}
+          title='Trip Overview'
+          titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
+          subtitle={`Trip Reference: ${trip.trip_number}`}
+          subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
           action={
             <div className='gap-3 flex'>
               {canModify && (

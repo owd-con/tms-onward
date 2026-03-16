@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useMemo } from "react";
 import { HiUser } from "react-icons/hi2";
+import { BarChart2 } from "lucide-react";
 
 import useTable from "@/services/table/hooks";
 import type { TableConfig } from "@/services/table/const";
@@ -24,9 +25,12 @@ const DriverPerformanceReportPage = () => {
   return (
     <Page className="h-full flex flex-col min-h-0">
       <Page.Header
+        pillLabel="REPORTS"
+        pillIcon={<BarChart2 size={12} strokeWidth={2.5} />}
         title="Driver Performance Report"
-        titleClassName="!text-2xl"
-        subtitle="View driver performance metrics"
+        titleClassName="text-3xl font-black text-slate-900 tracking-tight leading-none mb-1"
+        subtitle="Evaluate driver efficiency, completion rates, and historical analytics."
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
       />
 
       <Page.Body className="flex-1 flex flex-col space-y-3 lg:space-y-4 min-h-0">

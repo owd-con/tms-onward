@@ -1,42 +1,47 @@
-// Export types for external use
-export interface AlertItem {
-  id: string;
-  title: string;
-  subtitle?: string;
-  highlight?: string;
-}
+import type { ReactNode } from "react";
+import clsx from "clsx";
 
 export interface AlertCardProps {
-  icon: string;
+  icon: ReactNode;
   title: string;
-  count: number;
-  items: AlertItem[];
+  description: string;
+  count?: number;
+  color?: "rose" | "orange" | "amber" | "indigo" | "emerald";
+  onClick?: () => void;
 }
 
-export function AlertCard({ icon, title, count, items }: AlertCardProps) {
+export default function AlertCard({ icon, title, description, count, color = "rose", onClick }: AlertCardProps) {
+  const colorConfig = {
+    rose: { border: "border-rose-100", bg: "bg-rose-50/40", text: "text-rose-600", textDark: "text-rose-950" },
+    orange: { border: "border-orange-100", bg: "bg-orange-50/40", text: "text-orange-600", textDark: "text-orange-950" },
+    amber: { border: "border-amber-100", bg: "bg-amber-50/40", text: "text-amber-600", textDark: "text-amber-950" },
+    indigo: { border: "border-indigo-100", bg: "bg-indigo-50/40", text: "text-indigo-600", textDark: "text-indigo-950" },
+    emerald: { border: "border-emerald-100", bg: "bg-emerald-50/40", text: "text-emerald-600", textDark: "text-emerald-950" },
+  };
+
+  const selectedColor = colorConfig[color] || colorConfig.rose;
+
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm">
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-lg">{icon}</span>
-        <h3 className="text-lg font-semibold">{title}</h3>
-        <span className="badge badge-error badge-sm">{count}</span>
+    <div 
+      onClick={onClick}
+      className={clsx(
+        "flex items-start gap-4 p-5 rounded-2xl border bg-white shadow-sm transition-shadow", 
+        selectedColor.border,
+        onClick ? "cursor-pointer hover:shadow-md hover:border-slate-300" : "cursor-default hover:shadow"
+      )}
+    >
+      <div className={clsx("mt-0.5 shrink-0", selectedColor.text)}>
+        {icon}
       </div>
-      <div className="space-y-2 max-h-64 overflow-y-auto">
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className="p-3 bg-red-50 rounded-lg border border-red-100"
-          >
-            <div className="font-medium text-sm">{item.title}</div>
-            {item.subtitle && (
-              <div className="text-xs text-gray-600 mt-1">{item.subtitle}</div>
-            )}
-            {item.highlight && (
-              <div className="text-xs text-red-600 mt-1">{item.highlight}</div>
-            )}
-          </div>
-        ))}
+      <div className="flex flex-col min-w-0 flex-1">
+        <h4 className={clsx("text-[15px] font-bold tracking-tight", selectedColor.textDark)}>{title}</h4>
+        <p className="text-[13px] font-medium text-slate-500 mt-1.5 leading-relaxed">{description}</p>
       </div>
+      {count !== undefined && count > 0 && (
+        <div className="shrink-0 flex items-center justify-center text-[13px] font-bold text-slate-500 ml-3 mt-0.5">
+          ({count})
+        </div>
+      )}
     </div>
   );
 }

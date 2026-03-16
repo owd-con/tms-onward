@@ -2,6 +2,7 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { Database } from "lucide-react";
 
 import { Button, Input, RemoteSelect, useEnigmaUI } from "@/components";
 import { useTrip } from "@/services/trip/hooks";
@@ -106,9 +107,12 @@ const TripCreatePage = memo(() => {
   return (
     <Page className='h-full flex flex-col min-h-0'>
       <Page.Header
+        pillLabel="OPERATIONS"
+        pillIcon={<Database size={12} strokeWidth={2.5} />}
         title='Create Trip'
-        titleClassName='!text-2xl'
-        subtitle='Assign driver and vehicle to an order'
+        titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
+        subtitle='Configure a new fleet trip and assign driver resources.'
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
       />
 
       <Page.Body className='flex-1 flex flex-col min-h-0 overflow-y-auto'>

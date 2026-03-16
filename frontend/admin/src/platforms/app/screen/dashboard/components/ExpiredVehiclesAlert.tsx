@@ -1,31 +1,19 @@
-import { memo } from "react";
+import { ShieldAlert } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import AlertCard from "./AlertCard";
 
-import type { ExpiredVehicle } from "@/services/types";
-import { AlertCard } from "./AlertCard";
+export default function ExpiredVehiclesAlert({ vehicles }: { vehicles: any[] }) {
+  const navigate = useNavigate();
+  if (vehicles.length === 0) return null;
 
-export interface ExpiredVehiclesAlertProps {
-  vehicles: ExpiredVehicle[];
-  className?: string;
+  return (
+    <AlertCard
+      icon={<ShieldAlert size={20} />}
+      title="Expired Permits"
+      description="Vehicles with expired permits requiring immediate renewal."
+      color="orange"
+      count={vehicles.length}
+      onClick={() => navigate('/a/master-data/vehicles')}
+    />
+  );
 }
-
-export const ExpiredVehiclesAlert = memo<ExpiredVehiclesAlertProps>(
-  ({ vehicles, className }) => {
-    if (vehicles.length === 0) return null;
-
-    return (
-      <div className={className}>
-        <AlertCard
-          icon="🚚"
-          title="Expired Vehicles"
-          count={vehicles.length}
-          items={vehicles.map((v) => ({
-            id: v.id,
-            title: v.plate_number,
-            subtitle: `${v.brand} ${v.model} (${v.year})`,
-            highlight: `Expired year: ${v.expired_year}`,
-          }))}
-        />
-      </div>
-    );
-  }
-);

@@ -299,24 +299,46 @@ export default function ShipmentMap({ shipmentsByArea, height = "400px" }: Shipm
 
       // Create popup content
       const html = `
-        <div style="min-width: 220px; padding: 8px;">
-          <div style="font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 4px;">
-            ${props.shipmentNumber}
-          </div>
-          <div style="font-size: 12px; color: #6B7280; margin-bottom: 6px;">
-            ${props.orderNumber} - ${props.customerName}
-          </div>
-          <div style="padding-top: 6px; border-top: 1px solid #E5E7EB;">
-            <div style="display: flex; align-items: gap; 4px;">
-              <span style="color: #6B7280;">▲</span>
-              <span style="font-size: 12px; color: #374151;">${props.originAddress}</span>
+        <div style="min-width: 250px; padding: 16px; font-family: 'Inter', sans-serif; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); border-radius: 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="font-size: 14px; font-weight: 900; color: #111827; letter-spacing: -0.02em;">
+              ${props.shipmentNumber}
             </div>
-            ${props.originCity ? `<div style="font-size: 11px; color: #6B7280; margin-left: 14px;">${props.originCity}</div>` : ""}
-            <div style="display: flex; align-items: gap; 4px; margin-top: 4px;">
-              <span style="color: #6B7280;">▼</span>
-              <span style="font-size: 12px; color: #374151;">${props.destAddress}</span>
+            <div style="font-size: 10px; font-weight: 800; color: ${props.statusColor}; background: ${props.statusColor}15; padding: 4px 8px; border-radius: 8px; text-transform: uppercase; border: 1px solid ${props.statusColor}30;">
+              ${props.status}
             </div>
-            ${props.destCity ? `<div style="font-size: 11px; color: #6B7280; margin-left: 14px;">${props.destCity}</div>` : ""}
+          </div>
+          
+          <div style="font-size: 12px; color: #6b7280; font-weight: 600; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f3f4f6;">
+            ${props.customerName}
+          </div>
+          
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 10px;">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; border: 2px solid #10b981; background: #fff;"></div>
+                <div style="width: 1px; height: 20px; background: #e5e7eb;"></div>
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444;"></div>
+              </div>
+              <div style="flex: 1;">
+                <div style="margin-bottom: 14px;">
+                   <div style="font-size: 10px; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Origin</div>
+                   <div style="font-size: 12px; font-weight: 700; color: #1f2937; line-height: 1.4;">${props.originAddress}</div>
+                   <div style="font-size: 11px; font-weight: 500; color: #6b7280;">${props.originCity || "Jakarta"}</div>
+                </div>
+                <div>
+                   <div style="font-size: 10px; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Destination</div>
+                   <div style="font-size: 12px; font-weight: 700; color: #1f2937; line-height: 1.4;">${props.destAddress}</div>
+                   <div style="font-size: 11px; font-weight: 500; color: #6b7280;">${props.destCity || "Tangerang"}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #f3f4f6;">
+             <button style="width: 100%; padding: 10px; background: #022c22; color: #fff; border: none; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s;">
+               VIEW SHIPMENT DETAILS
+             </button>
           </div>
         </div>
       `;
@@ -374,7 +396,7 @@ export default function ShipmentMap({ shipmentsByArea, height = "400px" }: Shipm
   }
 
   return (
-    <div className="w-full rounded-xl overflow-hidden shadow-sm">
+    <div className="w-full h-full rounded-xl overflow-hidden shadow-sm flex flex-col">
       <style>{`
         .mapboxgl-ctrl-logo {
           display: none !important;

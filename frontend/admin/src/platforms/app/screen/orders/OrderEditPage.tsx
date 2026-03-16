@@ -3,6 +3,7 @@ import { useOrder } from "@/services/order/hooks";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
+import { Database } from "lucide-react";
 import { Page } from "../../components/layout";
 import {
   FormGeneral,
@@ -184,7 +185,12 @@ const OrderEditPage = () => {
   if (!orderData) {
     return (
       <Page>
-        <Page.Header title='Edit Order' />
+        <Page.Header 
+          pillLabel="OPERATIONS"
+          pillIcon={<Database size={12} strokeWidth={2.5} />}
+          title='Edit Order Configuration' 
+          titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1' 
+        />
         <Page.Body>
           <div className='flex justify-center items-center h-64'>
             <div className='loading loading-spinner loading-lg'></div>
@@ -197,9 +203,12 @@ const OrderEditPage = () => {
   return (
     <Page className='h-full flex flex-col min-h-0'>
       <Page.Header
-        title='Edit Order'
-        titleClassName='!text-2xl'
-        subtitle={orderData.order_number}
+        pillLabel="OPERATIONS"
+        pillIcon={<Database size={12} strokeWidth={2.5} />}
+        title='Edit Order Configuration'
+        titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
+        subtitle={`Order Reference: ${orderData.order_number}`}
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
       />
 
       <Page.Body className='flex-1 flex flex-col min-h-0 overflow-y-auto'>

@@ -1,20 +1,49 @@
 import type { ReactNode } from "react";
+import clsx from "clsx";
 
 interface StatCardProps {
   label: string;
   value: string | number;
-  icon?: ReactNode;
+  icon: ReactNode;
   onClick?: () => void;
+  color?: "emerald" | "blue" | "orange" | "purple" | "amber" | "indigo";
 }
 
-export default function StatCard({ label, value, icon: _icon, onClick }: StatCardProps) {
+export default function StatCard({ label, value, icon, onClick, color = "emerald" }: StatCardProps) {
+  const colorConfig = {
+    emerald: { text: "text-emerald-600/30", circle: "bg-emerald-100/60" },
+    blue: { text: "text-blue-600/30", circle: "bg-blue-100/60" },
+    orange: { text: "text-orange-600/30", circle: "bg-orange-100/60" },
+    purple: { text: "text-purple-600/30", circle: "bg-purple-100/60" },
+    amber: { text: "text-amber-600/30", circle: "bg-amber-100/60" },
+    indigo: { text: "text-indigo-600/30", circle: "bg-indigo-100/60" },
+  };
+
+  const { text: textClass, circle: circleClass } = colorConfig[color];
+
   return (
     <div
-      className="bg-white rounded-xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      className="relative overflow-hidden bg-white border border-slate-200/60 rounded-3xl p-6 shadow-[0_2px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col justify-center h-[120px]"
       onClick={onClick}
     >
-      <div className="text-sm text-gray-500">{label}</div>
-      <div className="text-2xl font-semibold mt-2">{value}</div>
+      <div className="flex flex-col gap-1 relative z-10">
+        <div className="text-4xl font-black text-slate-800 tracking-tight transition-colors">
+          {value}
+        </div>
+        <div className="text-sm font-medium text-slate-500 tracking-wide mt-1">
+          {label}
+        </div>
+      </div>
+
+      {/* Decorative background circle with icon */}
+      <div className={clsx(
+        "absolute -bottom-6 -right-6 w-32 h-32 rounded-full flex items-center justify-center transition-transform duration-500 group-hover:scale-[1.8] pointer-events-none",
+        circleClass
+      )}>
+        <div className={clsx("relative scale-[2.5] transition-transform duration-500 group-hover:-rotate-6", textClass)}>
+          {icon}
+        </div>
+      </div>
     </div>
   );
 }

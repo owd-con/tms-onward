@@ -595,6 +595,7 @@ export type TripWaypointStatus =
 export interface DashboardStats {
   total_orders: number;
   active_trips: number;
+  active_orders: number;
   pending_orders: number;
   completed_orders: number;
 }
@@ -627,7 +628,6 @@ export interface MapShipmentsByArea {
 export interface ExpiredVehicle {
   id: string;
   plate_number: string;
-  year: number;
   expired_year: number;
   brand: string;
   model: string;
@@ -651,8 +651,60 @@ export interface FailedOrder {
   failed_at?: string;
 }
 
+export interface CapacityUtilization {
+  ftl_utilization_percent: number;
+  ltl_utilization_percent: number;
+}
+
+export interface OnTimeDeliveryRate {
+  on_time_count: number;
+  late_count: number;
+  total_delivered: number;
+  on_time_rate_percent: number;
+}
+
+export interface DashboardActiveTrip {
+  trip_id: string;
+  trip_number: string;
+  driver_name: string;
+  driver_phone: string;
+  vehicle_plate: string;
+  vehicle_type: string;
+  status: string;
+  started_at: string | null;
+  total_waypoints: number;
+  completed_waypoints: number;
+}
+
+export interface DashboardOrderTrip {
+  order_id: string;
+  order_number: string;
+  order_type: string;
+  customer_name: string;
+  status: string;
+  created_at: string;
+  trip_number?: string;
+  driver_name?: string;
+  vehicle_plate?: string;
+  total_shipment?: number;
+  total_delivered?: number;
+}
+
 export interface Dashboard {
   stats: DashboardStats;
+  shipments_by_type?: {
+    type: string;
+    count: number;
+    percent: number;
+  }[];
+  top_customers?: {
+    customer_id: string;
+    customer_name: string;
+    total_count: number;
+  }[];
+  on_time_delivery_rate: OnTimeDeliveryRate;
+  active_trips: DashboardActiveTrip[];
+  active_orders: DashboardOrderTrip[];
   map_shipments_by_area: MapShipmentsByArea[];
   expired_vehicles: ExpiredVehicle[];
   expired_drivers: ExpiredDriver[];

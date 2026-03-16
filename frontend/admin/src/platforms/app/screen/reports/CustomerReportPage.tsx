@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useMemo } from "react";
 import { HiBuildingOffice2 } from "react-icons/hi2";
+import { BarChart2 } from "lucide-react";
 
 import useTable from "@/services/table/hooks";
 import type { TableConfig } from "@/services/table/const";
@@ -24,9 +25,12 @@ const CustomerReportPage = () => {
   return (
     <Page className="h-full flex flex-col min-h-0">
       <Page.Header
+        pillLabel="REPORTS"
+        pillIcon={<BarChart2 size={12} strokeWidth={2.5} />}
         title="Customer Report"
-        titleClassName="!text-2xl"
-        subtitle="View customer statistics and performance"
+        titleClassName="text-3xl font-black text-slate-900 tracking-tight leading-none mb-1"
+        subtitle="Analyze customer behavior, transaction volume, and overall performance metrics."
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
       />
 
       <Page.Body className="flex-1 flex flex-col space-y-3 lg:space-y-4 min-h-0">

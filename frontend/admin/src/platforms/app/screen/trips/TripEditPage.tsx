@@ -2,6 +2,7 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
+import { Database } from "lucide-react";
 
 import { Button, Input, useEnigmaUI } from "@/components";
 import { useTrip } from "@/services/trip/hooks";
@@ -115,7 +116,12 @@ const TripEditPage = memo(() => {
   if (!trip && showTripResult?.isLoading) {
     return (
       <Page>
-        <Page.Header title='Edit Trip' />
+        <Page.Header 
+          pillLabel="OPERATIONS"
+          pillIcon={<Database size={12} strokeWidth={2.5} />}
+          title='Edit Trip Configuration' 
+          titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
+        />
         <Page.Body>
           <div className='flex justify-center items-center h-64'>
             <div className='loading loading-spinner loading-lg'></div>
@@ -129,7 +135,12 @@ const TripEditPage = memo(() => {
   if (!trip && showTripResult?.isError) {
     return (
       <Page>
-        <Page.Header title='Edit Trip' />
+        <Page.Header 
+          pillLabel="OPERATIONS"
+          pillIcon={<Database size={12} strokeWidth={2.5} />}
+          title='Edit Trip Configuration' 
+          titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
+        />
         <Page.Body>
           <div className='flex flex-col items-center justify-center h-64 gap-4'>
             <div className='text-error text-6xl'>:(</div>
@@ -152,7 +163,12 @@ const TripEditPage = memo(() => {
   if (!trip) {
     return (
       <Page>
-        <Page.Header title='Edit Trip' />
+        <Page.Header 
+          pillLabel="OPERATIONS"
+          pillIcon={<Database size={12} strokeWidth={2.5} />}
+          title='Edit Trip Configuration' 
+          titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
+        />
         <Page.Body>
           <div className='flex flex-col items-center justify-center h-64 gap-4'>
             <div className='text-error text-6xl'>:(</div>
@@ -174,9 +190,12 @@ const TripEditPage = memo(() => {
   return (
     <Page className='h-full flex flex-col min-h-0'>
       <Page.Header
-        title='Edit Trip'
-        titleClassName='!text-2xl'
-        subtitle={trip.trip_number}
+        pillLabel="OPERATIONS"
+        pillIcon={<Database size={12} strokeWidth={2.5} />}
+        title='Edit Trip Configuration'
+        titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
+        subtitle={`Trip Reference: ${trip.trip_number}`}
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
       />
 
       <Page.Body className='flex-1 flex flex-col min-h-0 overflow-y-auto'>

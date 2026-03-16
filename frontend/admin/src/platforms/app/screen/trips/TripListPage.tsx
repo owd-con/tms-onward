@@ -1,7 +1,7 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { HiFlag } from "react-icons/hi2";
+import { Database } from "lucide-react";
 
 import useTable from "@/services/table/hooks";
 import type { TableConfig } from "@/services/table/const";
@@ -33,9 +33,12 @@ const TripListPage = () => {
   return (
     <Page className="h-full flex flex-col min-h-0">
       <Page.Header
-        title="Trips"
-        titleClassName="!text-2xl"
-        subtitle="Manage your trips and driver assignments"
+        pillLabel="OPERATIONS"
+        pillIcon={<Database size={12} strokeWidth={2.5} />}
+        title="Trip Management"
+        titleClassName="text-3xl font-black text-slate-900 tracking-tight leading-none mb-1"
+        subtitle="Comprehensive overview of all fleet trips, driver assignments, and execution states."
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
         action={
           <Button variant="primary" onClick={() => navigate("/a/trips/create")}>
             + Create Trip

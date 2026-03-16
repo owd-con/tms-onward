@@ -1,15 +1,21 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import {
-  HiPower,
-  HiRectangleGroup,
-  HiUserGroup,
-  HiTruck,
-  HiCube,
-  HiDocumentText,
-  HiExclamationTriangle,
-  HiChartBar,
-} from "react-icons/hi2";
+  LayoutDashboard,
+  Users as UsersIcon,
+  FileText,
+  AlertTriangle,
+  BarChart3,
+  Power,
+  MapIcon,
+  PieChart,
+  LineChart,
+  Users2,
+  CarFront,
+  Building2,
+  UserCircle
+} from "lucide-react";
+import clsx from "clsx";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Route,
@@ -19,14 +25,12 @@ import {
   useLocation,
 } from "react-router-dom";
 
-import Logo from "@/assets/logo_dark.svg";
+import Logo from "@/assets/logo_light.svg";
 import {
   Avatar,
   Dropdown,
   FullPageLoading,
-  Menu,
   Navbar,
-  type MenuItem,
 } from "@/components";
 import { signout } from "@/services/auth/slice";
 import type { AppDispatch, RootState } from "@/services/store";
@@ -51,12 +55,9 @@ const pages = import.meta.glob<{ default: RouteConfig[] }>(
   { eager: true },
 );
 
-console.log("====================", pages);
 const routes: RouteConfig[] = Object.values(pages).flatMap(
   (mod) => mod.default || [],
 );
-
-console.log(routes, "====================");
 
 const AppRouter = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -69,20 +70,17 @@ const AppRouter = () => {
 
   // Call ALL hooks at the top level - Rules of Hooks
   const matchDashboard = useMatch("/a/dashboard");
-  const matchMasterData = useMatch("/a/master-data/*");
   const matchCustomers = useMatch("/a/master-data/customers");
   const matchVehicles = useMatch("/a/master-data/vehicles");
   const matchDrivers = useMatch("/a/master-data/drivers");
   const matchOrders = useMatch("/a/orders");
   const matchTrips = useMatch("/a/trips");
   const matchExceptions = useMatch("/a/exceptions");
-  const matchReports = useMatch("/a/reports");
   const matchReportOrderTrip = useMatch("/a/reports/order-trip");
   const matchReportDriverPerformance = useMatch(
     "/a/reports/driver-performance",
   );
   const matchReportCustomer = useMatch("/a/reports/customer");
-  const matchManagement = useMatch("/a/management/*");
   const matchCompany = useMatch("/a/management/company");
   const matchTeam = useMatch("/a/management/team");
   const mainRef = useRef<HTMLElement>(null);
@@ -129,97 +127,95 @@ const AppRouter = () => {
     location.pathname === "/a/onboarding" ||
     location.pathname === "/a/onboarding/complete";
 
-  // TMS Onward - Full menu structure
-  const menuOverview: MenuItem[] = [
+  // TMS Onward - Full menu structure (Flattened with Sections)
+  const menuOverview = [
     {
       label: "Dashboard",
       onClick: () => navigate("/a/dashboard"),
       active: !!matchDashboard,
-      icon: <HiRectangleGroup size={18} />,
+      icon: <LayoutDashboard size={18} />,
     },
     {
-      label: "Master Data",
-      active: !!matchMasterData,
-      icon: <HiCube size={18} />,
-      collapsible: true,
-      children: [
-        {
-          label: "Customers",
-          onClick: () => navigate("/a/master-data/customers"),
-          active: !!matchCustomers,
-        },
-        {
-          label: "Vehicles",
-          onClick: () => navigate("/a/master-data/vehicles"),
-          active: !!matchVehicles,
-        },
-        {
-          label: "Drivers",
-          onClick: () => navigate("/a/master-data/drivers"),
-          active: !!matchDrivers,
-        },
-        // Pricing removed - managed via Customer detail page (Customer-Specific Pricing)
-        // Addresses removed - managed via Customer detail page
-      ],
+      isSection: true,
+      label: "Operations",
     },
     {
       label: "Orders",
       onClick: () => navigate("/a/orders"),
       active: !!matchOrders,
-      icon: <HiDocumentText size={18} />,
+      icon: <FileText size={18} />,
     },
     {
       label: "Trips",
       onClick: () => navigate("/a/trips"),
       active: !!matchTrips,
-      icon: <HiTruck size={18} />,
+      icon: <MapIcon size={18} />,
     },
     {
       label: "Exceptions",
       onClick: () => navigate("/a/exceptions"),
       active: !!matchExceptions,
-      icon: <HiExclamationTriangle size={18} />,
+      icon: <AlertTriangle size={18} />,
     },
     {
+      isSection: true,
       label: "Reports",
-      active: !!matchReports,
-      icon: <HiChartBar size={18} />,
-      collapsible: true,
-      children: [
-        {
-          label: "Order Trip",
-          onClick: () => navigate("/a/reports/order-trip"),
-          active: !!matchReportOrderTrip,
-        },
-        {
-          label: "Driver Performance",
-          onClick: () => navigate("/a/reports/driver-performance"),
-          active: !!matchReportDriverPerformance,
-        },
-        {
-          label: "Customer",
-          onClick: () => navigate("/a/reports/customer"),
-          active: !!matchReportCustomer,
-        },
-      ],
     },
     {
+      label: "Order Trip",
+      onClick: () => navigate("/a/reports/order-trip"),
+      active: !!matchReportOrderTrip,
+      icon: <LineChart size={18} />,
+    },
+    {
+      label: "Driver Performance",
+      onClick: () => navigate("/a/reports/driver-performance"),
+      active: !!matchReportDriverPerformance,
+      icon: <PieChart size={18} />,
+    },
+    {
+      label: "Customer",
+      onClick: () => navigate("/a/reports/customer"),
+      active: !!matchReportCustomer,
+      icon: <BarChart3 size={18} />,
+    },
+    {
+      isSection: true,
+      label: "Master Data",
+    },
+    {
+      label: "Customers",
+      onClick: () => navigate("/a/master-data/customers"),
+      active: !!matchCustomers,
+      icon: <Users2 size={18} />,
+    },
+    {
+      label: "Vehicles",
+      onClick: () => navigate("/a/master-data/vehicles"),
+      active: !!matchVehicles,
+      icon: <CarFront size={18} />,
+    },
+    {
+      label: "Drivers",
+      onClick: () => navigate("/a/master-data/drivers"),
+      active: !!matchDrivers,
+      icon: <UserCircle size={18} />,
+    },
+    {
+      isSection: true,
       label: "Management",
-      active: !!matchManagement,
-      icon: <HiUserGroup size={18} />,
-      collapsible: true,
-      children: [
-        {
-          label: "Company",
-          onClick: () => navigate("/a/management/company"),
-          active: !!matchCompany,
-        },
-        {
-          label: "Team",
-          onClick: () => navigate("/a/management/team"),
-          active: !!matchTeam,
-        },
-      ],
+    },
+    {
+      label: "Company",
+      onClick: () => navigate("/a/management/company"),
+      active: !!matchCompany,
+      icon: <Building2 size={18} />,
+    },
+    {
+      label: "Team",
+      onClick: () => navigate("/a/management/team"),
+      active: !!matchTeam,
+      icon: <UsersIcon size={18} />,
     },
   ];
 
@@ -248,57 +244,79 @@ const AppRouter = () => {
   return (
     <div
       ref={containerRef}
-      className='flex w-full min-h-screen h-auto lg:h-screen lg:overflow-hidden '
+      className='flex w-full min-h-screen h-auto lg:h-screen lg:overflow-hidden bg-[#f8fafc]'
     >
-      <aside className='w-64 bg-secondary border-r border-white hidden lg:flex flex-col space-y-5 z-30'>
-        <div className='flex flex-col items-center mt-4'>
-          <div className='bg-primary shadow rounded-full p-2 h-10 w-10'>
-            <img
-              src={Logo}
-              alt='Logo'
-              className='object-center cursor-pointer'
-              onClick={() => navigate("/")}
-            />
+      <aside className='w-[280px] bg-[#022c22] border-r border-white/5 hidden lg:flex flex-col z-30 shadow-2xl transition-all duration-300'>
+        <div className='h-28 flex flex-col justify-center px-6'>
+          <div className='flex items-center gap-4 w-full'>
+            <div className='w-12 h-12 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-center shrink-0 shadow-inner overflow-hidden p-2'>
+              <img
+                src={Logo}
+                alt='Logo'
+                className='w-full h-full object-contain cursor-pointer'
+                onClick={() => navigate("/")}
+              />
+            </div>
+            <div className='flex flex-col overflow-hidden'>
+              <span className='font-black text-white tracking-widest leading-none uppercase text-2xl'>ONWARD</span>
+              <span className='text-[10px] text-white/40 font-bold tracking-[0.4em] leading-none mt-1.5 '>TRANSPORTATION</span>
+            </div>
           </div>
         </div>
 
-        <div className='flex flex-col flex-1 overflow-auto scrollbar-hide'>
-          <Menu
-            items={menuOverview}
-            className='bg-transparent text-base-100 w-full gap-1'
-            inactiveClass='py-2'
-            activeClass='bg-base-200/10 py-2'
-            size='md'
-          />
+        <div className="px-6 mb-6">
+          <div className="h-[1px] bg-white/5 w-full" />
         </div>
-        <div className='flex flex-col p-3 '>
-          <div className='space-y-1 mb-3 border-t border-base-100/20 pt-2'>
-            <div
-              className='flex place-items-center place-content-between py-2 px-2 text-base-100 rounded-xl cursor-pointer hover:bg-base-100/20 group bg-base-300/20'
-              onClick={() => dispatch(signout())}
-            >
-              <div className='flex gap-2 place-items-center text-sm '>
-                <HiPower size={18} />
-                Log Out
+
+        <div className='flex flex-col flex-1 overflow-auto scrollbar-hide px-4 gap-1 pb-4'>
+          {menuOverview.map((item, i) => {
+            const isActive = item.active;
+
+            if (item.isSection) {
+              return (
+                <div key={i} className="pt-6 pb-2 px-4 text-[10px] font-semibold text-white/40 uppercase tracking-widest">
+                  {item.label}
+                </div>
+              );
+            }
+
+            return (
+              <div key={i} className="flex flex-col gap-1">
+                <div
+                  onClick={item.onClick}
+                  className={clsx(
+                    "flex items-center gap-4 h-12 px-4 rounded-2xl transition-all duration-300 relative cursor-pointer group/item",
+                    isActive
+                      ? "bg-emerald-500/10 text-white shadow-lg shadow-black/10"
+                      : "text-white/40 hover:text-white/70 hover:bg-white/[0.02]"
+                  )}
+                >
+                  <div className={clsx(
+                    "shrink-0 transition-all duration-300",
+                    isActive ? "text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "text-white/20 group-hover/item:text-white/40"
+                  )}>
+                    {item.icon}
+                  </div>
+                  <span className='text-[14px] font-semibold tracking-wide flex-1'>{item.label}</span>
+                  {isActive && (
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-emerald-500 rounded-l-full shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+                  )}
+                </div>
               </div>
+            );
+          })}
+        </div>
+
+        <div className='p-3'>
+          <div className="flex items-center gap-3 p-3 bg-white/[0.03] hover:bg-white/[0.06] rounded-2xl transition-all cursor-pointer group border border-white/[0.05]">
+            <div className="h-10 w-10 rounded-xl border border-white/10 shrink-0 bg-orange-600 flex items-center justify-center text-white text-xs font-black ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-[#022c22] overflow-hidden">
+              {Profile?.user?.name?.[0]?.toUpperCase() || "J"}D
             </div>
-          </div>
-          <div className='flex place-items-center px-4 py-2 bg-base-100/5 rounded-xl text-base-100 gap-3 w-full'>
-            <Avatar
-              placeholder={!Profile?.user?.avatar_url}
-              size='sm'
-              mask='circle'
-              status='online'
-              className='capitalize text-base-100!'
-              src={Profile?.user?.avatar_url}
-            >
-              {Profile?.user?.name?.[0] ?? ""}
-            </Avatar>
-            <div>
-              <div className='font-bold text-base leading-6 capitalize'>
-                {Profile?.user?.name || "User"}
-              </div>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-bold text-white/90 leading-tight">{Profile?.user?.name || "John Doe"}</span>
+              <span className="truncate text-[11px] text-white/30 font-medium leading-tight">john@onward.co.id</span>
             </div>
+            <div className="bg-emerald-500/20 text-emerald-400 border-none text-[9px] font-black px-1.5 h-5 flex items-center rounded-md tracking-tighter">ADMIN</div>
           </div>
         </div>
       </aside>
@@ -338,7 +356,7 @@ const AppRouter = () => {
                   onClick={() => dispatch(signout())}
                 >
                   <div className='flex gap-2 place-items-center text-sm text-error'>
-                    <HiPower size={18} />
+                    <Power size={18} />
                     Log Out
                   </div>
                 </div>

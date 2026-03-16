@@ -1,7 +1,7 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HiExclamationTriangle } from "react-icons/hi2";
+import { Database } from "lucide-react";
 
 import useTable from "@/services/table/hooks";
 import type { TableConfig } from "@/services/table/const";
@@ -47,9 +47,12 @@ const ExceptionListPage = () => {
   return (
     <Page className='h-full flex flex-col min-h-0'>
       <Page.Header
-        title='Exceptions'
-        titleClassName='!text-2xl'
-        subtitle='Manage failed shipments and reschedule operations'
+        pillLabel="OPERATIONS"
+        pillIcon={<Database size={12} strokeWidth={2.5} />}
+        title="Exception Management"
+        titleClassName="text-3xl font-black text-slate-900 tracking-tight leading-none mb-1"
+        subtitle="Review failed shipments, resolve operational blockers, and reschedule routes."
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
       />
 
       <Page.Body className='flex-1 flex flex-col space-y-3 lg:space-y-4 min-h-0'>

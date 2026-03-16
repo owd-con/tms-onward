@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { HiUser } from "react-icons/hi2";
+import { Database } from "lucide-react";
 
 import useTable from "@/services/table/hooks";
 import type { TableConfig } from "@/services/table/const";
@@ -76,9 +77,12 @@ const CustomerListPage = () => {
   return (
     <Page className='h-full flex flex-col min-h-0'>
       <Page.Header
-        title='Customers'
-        titleClassName='!text-2xl'
-        subtitle='Manage your customer data'
+        pillLabel="MASTER DATA"
+        pillIcon={<Database size={12} strokeWidth={2.5} />}
+        title="Customer Management"
+        titleClassName="text-3xl font-black text-slate-900 tracking-tight leading-none mb-1"
+        subtitle="Maintain client records, configurations, and address registries."
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
         action={
           <Button variant='primary' onClick={openCreate}>
             + Add Customer

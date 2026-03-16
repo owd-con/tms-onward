@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import { Database } from "lucide-react";
 
 import { Button, useEnigmaUI, Modal } from "@/components";
 import { useCustomer } from "@/services/customer/hooks";
@@ -127,7 +128,12 @@ const CustomerDetailPage = () => {
   if (!customer) {
     return (
       <Page>
-        <Page.Header title='Customer Detail' />
+        <Page.Header 
+          pillLabel="MASTER DATA"
+          pillIcon={<Database size={12} strokeWidth={2.5} />}
+          title='Customer Profile' 
+          titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
+        />
         <Page.Body>
           {showResult?.isError ? (
             <div className='flex flex-col items-center justify-center h-64 gap-4'>
@@ -153,10 +159,13 @@ const CustomerDetailPage = () => {
   return (
     <Page className='h-full flex flex-col min-h-0'>
       <Page.Header
+        pillLabel="MASTER DATA"
+        pillIcon={<Database size={12} strokeWidth={2.5} />}
         backTo={() => navigate(-1)}
-        title='Customer Detail'
-        titleClassName='!text-2xl'
-        subtitle={customer.name}
+        title='Customer Profile'
+        titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
+        subtitle={`${customer.name}`}
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
         action={
           <div className='gap-4 flex'>
             <Button className='btn-neutral' onClick={handleEditCustomer}>

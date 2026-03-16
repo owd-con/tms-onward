@@ -1,7 +1,7 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { HiCube } from "react-icons/hi2";
+import { Database } from "lucide-react";
 
 import useTable from "@/services/table/hooks";
 import type { TableConfig } from "@/services/table/const";
@@ -30,9 +30,12 @@ const OrderListPage = () => {
   return (
     <Page className="h-full flex flex-col min-h-0">
       <Page.Header
-        title="Orders"
-        titleClassName="!text-2xl"
-        subtitle="Manage your orders"
+        pillLabel="OPERATIONS"
+        pillIcon={<Database size={12} strokeWidth={2.5} />}
+        title="Order Management"
+        titleClassName="text-3xl font-black text-slate-900 tracking-tight leading-none mb-1"
+        subtitle="Comprehensive overview of all customer orders, shipments, and processing states."
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
         action={
           <Button variant="primary" onClick={() => navigate("/a/orders/create")}>
             + Create Order

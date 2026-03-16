@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { HiTruck } from "react-icons/hi2";
+import { Database } from "lucide-react";
 
 import useTable from "@/services/table/hooks";
 import type { TableConfig } from "@/services/table/const";
@@ -162,9 +163,12 @@ const VehicleListPage = () => {
   return (
     <Page className="h-full flex flex-col min-h-0">
       <Page.Header
-        title="Vehicles"
-        titleClassName="!text-2xl"
-        subtitle="Manage your vehicle fleet"
+        pillLabel="MASTER DATA"
+        pillIcon={<Database size={12} strokeWidth={2.5} />}
+        title="Vehicle Registry"
+        titleClassName="text-3xl font-black text-slate-900 tracking-tight leading-none mb-1"
+        subtitle="Track fleet assets, configurations, and maintenance statuses."
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
         action={
           <Button
             variant="primary"

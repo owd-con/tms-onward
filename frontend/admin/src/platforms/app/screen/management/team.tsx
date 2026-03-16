@@ -5,6 +5,7 @@ import useTable from "@/services/table/hooks";
 import type { TableConfig } from "@/services/table/const";
 import { Button, useEnigmaUI } from "@/components";
 import { usePermission } from "@/hooks/usePermission";
+import { Database } from "lucide-react";
 
 import { useUser } from "@/services/user/hooks";
 import createTableConfig from "./components/table/table.config.team";
@@ -105,9 +106,12 @@ const TeamScreen = () => {
   return (
     <Page className="h-full flex flex-col min-h-0">
       <Page.Header
-        title="Team Management"
-        titleClassName="text-2xl"
-        subtitle="Manage users, roles, and access permissions"
+        pillLabel="MANAGEMENT"
+        pillIcon={<Database size={12} strokeWidth={2.5} />}
+        title="Team Directory"
+        titleClassName="text-3xl font-black text-slate-900 tracking-tight leading-none mb-1"
+        subtitle="Manage operators, system roles, and platform access control."
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
         action={
           canManage("user") && (
             <Button
