@@ -17,7 +17,7 @@ func NewTripRepository() *TripRepository {
 	base := postgres.NewBaseRepository[entity.Trip](postgres.GetDB(),
 		"trips",
 		[]string{"trip_number"},
-		[]string{"Company", "Driver", "Vehicle", "Order.Customer"},
+		[]string{"Company", "Driver", "Vehicle", "Orders.Customer"},
 		true,
 	)
 
@@ -52,7 +52,7 @@ func (r *TripRepository) FindWithWaypoints(id string) (*entity.Trip, error) {
 	err := r.DB.NewSelect().
 		Model(&trip).
 		Relation("Company").
-		Relation("Order.Customer").
+		Relation("Orders.Customer").
 		Relation("Driver").
 		Relation("Vehicle").
 		Relation("TripWaypoints.AddressRel").
