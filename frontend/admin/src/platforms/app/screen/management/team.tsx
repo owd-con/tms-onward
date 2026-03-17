@@ -115,9 +115,7 @@ const TeamScreen = () => {
         action={
           canManage("user") && (
             <Button
-              size="sm"
-              variant="primary"
-              className="hover:text-white"
+              className="rounded-full shadow-lg text-[15px] font-bold tracking-wide bg-emerald-600 text-white border border-emerald-700 outline outline-2 outline-offset-2 outline-emerald-500/20 hover:bg-emerald-500 transition-colors h-13 px-10"
               onClick={handleOpenModal}
             >
               Add Team Member
@@ -125,14 +123,13 @@ const TeamScreen = () => {
           )
         }
       />
-      <Page.Body className="flex-1 flex flex-col space-y-3 lg:space-y-4 min-h-0">
-        <div className="w-full">
-          <Table.Tools />
-        </div>
-        <div className="bg-base-100 rounded-xl shadow-sm w-full overflow-x-auto">
-          <Table.Render />
-          <Table.Pagination />
-        </div>
+      <Page.Body>
+        <Table.Tools />
+        <Table.Render 
+          emptyTitle="No Team Members Found"
+          emptyDescription="Get started by adding your first team member using the button above."
+        />
+        <Table.Pagination />
       </Page.Body>
     </Page>
   );

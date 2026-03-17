@@ -1,5 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
+import { FiChevronDown } from "react-icons/fi";
 import type { RootState } from "../../../services/store";
 import { Pagination } from "../pagination";
 
@@ -14,7 +15,7 @@ const TablePagination: React.FC<PaginationProps> = ({
   name,
   onChangePage,
   onChangeLimit,
-  pageLimit = [25, 50, 100, 200],
+  pageLimit = [8, 10, 25, 50, 100],
 }) => {
   const StateLimit = useSelector(
     (state: RootState) => state?.table?.data[name]?.limit
@@ -50,49 +51,65 @@ const TablePagination: React.FC<PaginationProps> = ({
     [StateLimit, onChangeLimit]
   );
 
-  const range = React.useMemo(() => {
-    if (!StateTotal || !StateLimit || !StateCurrentPage) return "0 - 0";
-    const first_num = (StateCurrentPage - 1) * StateLimit + 1;
-    const last_num = Math.min(StateTotal, StateCurrentPage * StateLimit);
-    return `${first_num} - ${last_num}`;
-  }, [StateCurrentPage, StateLimit, StateTotal]);
+  const showingCount = React.useMemo(() => {
+    if (!StateTotal || !StateLimit) return 0;
+    const remaining = StateTotal - ((StateCurrentPage || 1) - 1) * StateLimit;
+    return Math.min(StateLimit, Math.max(0, remaining));
+  }, [StateTotal, StateLimit, StateCurrentPage]);
 
   return (
-    <div className="border-base-200 bg-base-100 mt-4 flex min-h-[62px] w-full flex-col items-center justify-between gap-4 border-t p-4 md:flex-row">
-      <div className="text-sm text-gray-500">
-        Showing <span className="font-semibold">{range}</span> of{" "}
-        <span className="font-semibold">{StateTotal}</span> results
+    <div className="border border-gray-200 border-t-0 bg-white min-h-[60px] w-full grid grid-cols-1 xl:grid-cols-3 items-center px-6 py-4 rounded-b-xl gap-4 xl:gap-0">
+      
+      {/* Left: Showing Count & Limit */}
+      <div className="flex items-center gap-4 justify-center xl:justify-start">
+        <div className="text-[13px] text-gray-500 font-medium">
+          Showing&nbsp;<span className="font-semibold text-[#59A7CE]">{showingCount}</span>&nbsp;of {StateTotal} {name}
+        </div>
       </div>
 
-      <div className="relative flex items-center gap-2">
+      {/* Center: Pagination Buttons */}
+      <div className="flex justify-center">
         <Pagination
-          size="sm"
           currentPage={StateCurrentPage}
           totalPages={numberOfPages}
           onChange={(page: number) => changedPage(page)}
         />
+      </div>
 
-        {/* Dropdown limit */}
+      {/* Right: Limit Dropdown */}
+      <div className="flex items-center justify-center xl:justify-end gap-2 text-[13px] text-gray-500 font-medium">
         <div className="dropdown dropdown-top dropdown-end">
-          <div
-            tabIndex={0}
-            role="button"
-            className="btn btn-soft text-sm font-thin btn-sm"
+          <div 
+            tabIndex={0} 
+            role="button" 
+            className="flex items-center justify-between gap-3 border border-gray-200 bg-white text-[13px] font-medium text-gray-600 rounded-md py-1.5 px-3 hover:bg-gray-50 transition-colors"
           >
-            {StateLimit} / page
+            Show {StateLimit} Row
+            <FiChevronDown className="text-gray-400 w-3.5 h-3.5" />
           </div>
-          <ul
-            tabIndex={0}
-            className="dropdown-content menu bg-base-100 w-52 p-2 shadow-sm"
+          <ul 
+            tabIndex={0} 
+            className="dropdown-content z-50 menu p-1.5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] bg-white rounded-lg w-36 border border-gray-100 mb-2"
           >
-            {pageLimit.map((limit) => (
+            {pageLimit.map(limit => (
               <li key={limit}>
-                <a onClick={() => changedLimit(limit)}>{limit} / page</a>
+                <a 
+                  className={`text-[13px] py-1.5 px-3 rounded-md mb-0.5 last:mb-0 ${StateLimit === limit ? "bg-[#59A7CE]/10 text-[#59A7CE] font-semibold" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
+                  onClick={() => {
+                    changedLimit(limit);
+                    if (document.activeElement instanceof HTMLElement) {
+                      document.activeElement.blur();
+                    }
+                  }}
+                >
+                  Show {limit} Row
+                </a>
               </li>
             ))}
           </ul>
         </div>
       </div>
+
     </div>
   );
 };

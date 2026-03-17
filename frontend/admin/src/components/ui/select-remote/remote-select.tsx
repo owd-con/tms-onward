@@ -297,7 +297,7 @@ export const RemoteSelect = <T,>({
         <div
           ref={listRef}
           onScroll={handleScroll}
-          className='max-h-80 overflow-auto border border-base-200 rounded'
+          className='max-h-80 overflow-auto py-1 bg-white border border-gray-100 rounded-lg shadow-sm'
         >
           {listData.map((item, i) => {
             const isCreate = (item as CreateItem).is_create;
@@ -319,8 +319,8 @@ export const RemoteSelect = <T,>({
               <div
                 key={i}
                 className={clsx(
-                  "px-2 py-3 border-b border-base-200 hover:bg-base-200 cursor-pointer",
-                  selected && "text-primary bg-primary/5",
+                  "px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors",
+                  selected && "text-blue-600 bg-blue-50 font-medium",
                 )}
                 onClick={() => {
                   if (isCreate) {

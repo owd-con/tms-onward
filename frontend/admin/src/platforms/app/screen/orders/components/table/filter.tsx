@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 
 import { RemoteSelect } from "@/components";
-import TableFilters from "@/components/ui/table/filter";
+import { FiChevronDown } from "react-icons/fi";
 import type { SelectOptionValue } from "@/shared/types";
 import { orderStatusOptions, orderTypeOptions } from "@/shared/options";
 import { useCustomer } from "@/services/customer/hooks";
@@ -67,81 +67,79 @@ const TableFilter: React.FC<TableFilterProps> = ({ table }) => {
     }
   }, [current.customer_id, getResult?.data?.data]);
 
-  const handleClear = () => {
-    setStatus(null);
-    setOrderType(null);
-    setCustomer(null);
-    table.filter({ status: "", order_type: "", customer_id: "" });
-  };
-
-  const handleFilter = () => {
+  const handleFilterChange = (key: string, val: any) => {
     table.filter({
-      status: status?.value ? String(status.value) : "",
-      order_type: orderType?.value ? String(orderType.value) : "",
-      customer_id: customer?.id ? String(customer.id) : "",
+      status: key === "status" ? (val?.value ? String(val.value) : "") : (status?.value ? String(status.value) : ""),
+      order_type: key === "orderType" ? (val?.value ? String(val.value) : "") : (orderType?.value ? String(orderType.value) : ""),
+      customer_id: key === "customer" ? (val?.id ? String(val.id) : "") : (customer?.id ? String(customer.id) : ""),
     });
   };
 
-  const isDirty = useMemo(() => {
-    const currentStatus = current.status ?? "";
-    const newStatus = status?.value ? String(status.value) : "";
-    const currentOrderType = current.order_type ?? "";
-    const newOrderType = orderType?.value ? String(orderType.value) : "";
-    const currentCustomer = current.customer_id ?? "";
-    const newCustomer = customer?.id ? String(customer.id) : "";
-
-    return newStatus !== currentStatus || newOrderType !== currentOrderType || newCustomer !== currentCustomer;
-  }, [status, orderType, customer, current.status, current.order_type, current.customer_id]);
-
-  const anyActive = !!current.status || !!current.order_type || !!current.customer_id;
-
   return (
-    <TableFilters
-      isActive={anyActive}
-      isDirty={isDirty}
-      handleClear={handleClear}
-      handleFilter={handleFilter}
-    >
-      <div className="space-y-3">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <RemoteSelect<SelectOptionValue>
-            label="Status"
-            placeholder="All Status"
-            data={orderStatusOptions}
-            value={status}
-            onChange={setStatus}
-            onClear={() => setStatus(null)}
-            getLabel={(item) => item?.label ?? ""}
-            renderItem={(item) => item?.label}
-          />
-          <RemoteSelect
-            label="Customer"
-            placeholder="All Customers"
-            value={customer}
-            onChange={setCustomer}
-            onClear={() => setCustomer(null)}
-            fetchData={(page, search) =>
-              getCustomers({ page: page || 1, limit: 20, search, status: "active" })
-            }
-            hook={getResult as any}
-            getLabel={(item: any) => item.name}
-            getValue={(item: any) => item.id}
-          />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <RemoteSelect<SelectOptionValue>
-            label="Order Type"
-            placeholder="All Types"
-            data={orderTypeOptions}
-            value={orderType}
-            onChange={setOrderType}
-            onClear={() => setOrderType(null)}
-            getLabel={(item) => item?.label ?? ""}
-            renderItem={(item) => item?.label}
-          />
-        </div>
+    <div className="flex flex-row items-center gap-3 w-full shrink-0">
+      <div className="w-40 md:w-52">
+        <RemoteSelect<SelectOptionValue>
+          placeholder="Status: All"
+          inputClassName="!bg-white !border-gray-200 !h-9 !min-h-0 !py-0 !shadow-sm hover:!bg-gray-50 !text-gray-700 cursor-pointer !rounded-lg text-sm font-medium"
+          suffix={<FiChevronDown className="text-gray-400 w-4 h-4" />}
+          data={orderStatusOptions}
+          value={status}
+          onChange={(val) => {
+            setStatus(val);
+            handleFilterChange("status", val);
+          }}
+          onClear={() => {
+            setStatus(null);
+            handleFilterChange("status", null);
+          }}
+          getLabel={(item) => item ? `Status: ${item.label}` : ""}
+          renderItem={(item) => item?.label}
+        />
       </div>
-    </TableFilters>
+      <div className="w-40 md:w-56">
+        <RemoteSelect
+          placeholder="Customer: All"
+          inputClassName="!bg-white !border-gray-200 !h-9 !min-h-0 !py-0 !shadow-sm hover:!bg-gray-50 !text-gray-700 cursor-pointer !rounded-lg text-sm font-medium"
+          suffix={<FiChevronDown className="text-gray-400 w-4 h-4" />}
+          value={customer}
+          onChange={(val) => {
+            setCustomer(val);
+            handleFilterChange("customer", val);
+          }}
+          onClear={() => {
+            setCustomer(null);
+            handleFilterChange("customer", null);
+          }}
+          fetchData={(page, search) =>
+            getCustomers({ page: page || 1, limit: 20, search, status: "active" })
+          }
+          hook={getResult as any}
+          getLabel={(item: any) => item ? `Customer: ${item.name}` : ""}
+          renderItem={(item: any) => item?.name}
+          getValue={(item: any) => item.id}
+        />
+      </div>
+      <div className="w-40 md:w-52">
+        <RemoteSelect<SelectOptionValue>
+          placeholder="Type: All"
+          inputClassName="!bg-white !border-gray-200 !h-9 !min-h-0 !py-0 !shadow-sm hover:!bg-gray-50 !text-gray-700 cursor-pointer !rounded-lg text-sm font-medium"
+          suffix={<FiChevronDown className="text-gray-400 w-4 h-4" />}
+          data={orderTypeOptions}
+          value={orderType}
+          onChange={(val) => {
+            setOrderType(val);
+            handleFilterChange("orderType", val);
+          }}
+          onClear={() => {
+            setOrderType(null);
+            handleFilterChange("orderType", null);
+          }}
+          getLabel={(item) => item ? `Type: ${item.label}` : ""}
+          renderItem={(item) => item?.label}
+        />
+      </div>
+
+    </div>
   );
 };
 

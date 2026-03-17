@@ -214,7 +214,7 @@ const OrderDetailPage = () => {
   }
 
   const canEdit = order.status === "pending";
-  const canCancel = order.status === "pending" || order.status === "planned";
+  const canCancel = order.status === "pending";
   const canDelete = !order.is_deleted && order.status === "pending";
 
   return (

@@ -3,12 +3,16 @@ import { useSelector } from "react-redux";
 import { currencyFormat } from "../../../utils/common";
 import type { RootState } from "../../../services/store";
 import type { TableColumn } from "../../../services/table/const";
+import EmptyState from "./empty-state";
 
 interface TableRenderProps<T> {
   name: string;
   columns: Record<string, TableColumn<T>>;
   onSorted: (field: string) => void;
   onRowClick?: (row: T) => void;
+  onClearFilters?: () => void;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }
 
 function TableRender<T>({
@@ -16,6 +20,9 @@ function TableRender<T>({
   columns,
   onSorted,
   onRowClick,
+  onClearFilters,
+  emptyTitle,
+  emptyDescription,
 }: TableRenderProps<T>) {
   const StateTable = useSelector(
     (state: RootState) => state?.table?.data[name]?.data
@@ -25,6 +32,12 @@ function TableRender<T>({
   );
   const StateEmpty = useSelector(
     (state: RootState) => state?.table?.data[name]?.isEmpty
+  );
+  const StateFilter = useSelector(
+    (state: RootState) => state?.table?.data[name]?.filter
+  );
+  const StateSearch = useSelector(
+    (state: RootState) => state?.table?.data[name]?.textSearch
   );
 
   const rows: T[] = Array.isArray(StateTable) ? (StateTable as T[]) : [];
@@ -61,20 +74,45 @@ function TableRender<T>({
     const className = column?.headerClass ?? "";
     const sorting = checkSorted();
 
+    const isSortable = column?.sortable !== false;
+    const isSortedField = sorting.field === field || sorting.field === column?.alias;
+
     return (
       <th
-        className={`cursor-pointer px-4 py-4 text-left text-sm font-semibold tracking-wide text-black uppercase select-none ${
-          column.sortable ? "sorting" : ""
-        } ${
-          sorting.field === field || sorting.field === column?.alias
-            ? "sorting_" + sorting.sort
-            : ""
-        } ${className}`}
+        className={`px-4 py-4 text-left select-none ${isSortable ? "cursor-pointer" : ""} ${className}`}
         style={{ width: column?.width as string | number | undefined }}
-        onClick={() => onFieldSorted(field, column)}
+        onClick={() => isSortable && onFieldSorted(field, column)}
       >
-        {column?.title}
-        {column?.sortable !== false && <span className="sort" />}
+        <div className="flex items-center justify-between w-full gap-2 group">
+          <span className="text-[11px] font-bold tracking-[0.05em] text-[#8B95A5] uppercase">{column?.title}</span>
+
+          {isSortable && (
+            <div className={`flex items-center -space-x-1.5 transition-colors ${isSortedField ? "text-gray-200" : "text-[#D1D5DB] group-hover:text-gray-400"}`}>
+              <svg
+                className={`w-3.5 h-3.5 ${isSortedField && sorting.sort === 'asc' ? 'text-gray-500' : ''}`}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m12 19V5m0 0l-6 6m6-6 6 6" />
+              </svg>
+              <svg
+                className={`w-3.5 h-3.5 ${isSortedField && sorting.sort === 'desc' ? 'text-gray-500' : ''}`}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m12 5v14m0 0l-6-6m6 6 6-6" />
+              </svg>
+            </div>
+          )}
+        </div>
       </th>
     );
   };
@@ -93,7 +131,7 @@ function TableRender<T>({
     if (column?.component && React.isValidElement(column.component(data))) {
       return (
         <td
-          className={`px-4 py-2 text-sm ${className}`}
+          className={`px-4 py-3 align-middle ${className}`}
           style={{ width: column?.width as string | number | undefined }}
         >
           {column.component(data)}
@@ -107,7 +145,7 @@ function TableRender<T>({
 
     return (
       <td
-        className={`px-4 py-2 text-sm ${className}`}
+        className={`px-4 py-3 align-middle text-[13px] font-medium text-gray-700 ${className}`}
         style={{ width: column?.width as string | number | undefined }}
       >
         {value}
@@ -116,23 +154,29 @@ function TableRender<T>({
   };
 
   if (StateEmpty) {
+    const isFiltered =
+      StateSearch !== "" ||
+      Object.values(StateFilter || {}).some(
+        (v) => v !== undefined && v !== "" && v !== null
+      );
+
     return (
-      <div className="h-[calc(100vh-390px)] w-full py-20 text-center">
-        <h3 className="text-lg font-semibold">No results found</h3>
-        <p className="text-sm text-gray-500">
-          Try adjusting your search or filters to find what you're looking for.
-          <br />
-          Or maybe there's no data yet!
-        </p>
+      <div className="bg-white border border-gray-200 p-10 min-h-[400px] flex items-center justify-center">
+        <EmptyState
+          type={isFiltered ? "filtered" : "empty"}
+          onClearFilters={onClearFilters}
+          title={isFiltered ? undefined : emptyTitle}
+          description={isFiltered ? undefined : emptyDescription}
+        />
       </div>
     );
   }
 
   return (
-    <div className="table-responsive m-0 flex h-[calc(100vh-390px)] flex-col">
+    <div className="flex h-[calc(100vh-390px)] flex-col bg-white border border-gray-200">
       <div className="flex-1 overflow-auto">
         <table
-          className="table-hover table-vcenter card-table datatable table-striped table"
+          className="table-hover table-vcenter card-table datatable table"
           width="100%"
         >
           <thead>
@@ -145,7 +189,7 @@ function TableRender<T>({
           <tbody>
             {rows.map((row, rowIndex) => (
               <tr
-                className="hover:text-primary! text-xs font-medium tracking-wide uppercase hover:cursor-pointer"
+                className="hover:bg-gray-50/50 border-b border-gray-100 last:border-0 hover:cursor-pointer transition-colors group"
                 key={rowIndex}
                 onClick={() => onRowClick?.(row)}
               >

@@ -1,15 +1,15 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { HiCube } from "react-icons/hi2";
 import { Database } from "lucide-react";
 
 import useTable from "@/services/table/hooks";
 import type { TableConfig } from "@/services/table/const";
 
-import { Button } from "@/components";
+import { Button, Modal } from "@/components";
 import { Page } from "../../components/layout";
 import createTableConfig from "./components/table/table.config";
 import TableFilter from "./components/table/filter";
+import { useCancelOrderMutation } from "@/services/order/api";
 
 /**
  * TMS Onward - Order List Page
@@ -17,15 +17,31 @@ import TableFilter from "./components/table/filter";
 const OrderListPage = () => {
   const navigate = useNavigate();
 
+  const [cancelOrder, cancelResult] = useCancelOrderMutation();
+  const [orderToCancel, setOrderToCancel] = useState<any>(null);
+
   const tableConfig = useMemo(() => {
     return createTableConfig({
       onClick: (e: any) => {
         navigate(`/a/orders/${e?.id}`);
       },
+      navigate,
+      onCancel: (e: any) => {
+        setOrderToCancel(e);
+      },
     });
   }, [navigate]);
 
   const Table = useTable("order", tableConfig as TableConfig<unknown>);
+
+  // Reload order data after successful cancel
+  useEffect(() => {
+    if (cancelResult?.isSuccess) {
+      setOrderToCancel(null);
+      Table.refetch();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cancelResult?.isSuccess]);
 
   return (
     <Page className="h-full flex flex-col min-h-0">
@@ -37,40 +53,64 @@ const OrderListPage = () => {
         subtitle="Comprehensive overview of all customer orders, shipments, and processing states."
         subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
         action={
-          <Button variant="primary" onClick={() => navigate("/a/orders/create")}>
+          <Button
+            className="rounded-full shadow-lg text-[15px] font-bold tracking-wide bg-emerald-600 text-white border border-emerald-700 outline outline-2 outline-offset-2 outline-emerald-500/20 hover:bg-emerald-500 transition-colors h-13 px-10"
+            onClick={() => navigate("/a/orders/create")}
+          >
             + Create Order
           </Button>
         }
       />
 
-      <Page.Body className="flex-1 flex flex-col space-y-3 lg:space-y-4 min-h-0">
-        <div className="w-full flex gap-2 lg:gap-4 bg-base-100 p-2 rounded-xl">
-          <div className="w-full">
-            <Table.Tools>
-              <TableFilter table={Table} />
-            </Table.Tools>
-          </div>
-        </div>
-        <div className="bg-base-100 rounded-xl shadow-sm w-full overflow-x-auto">
-          {Table.State?.data && Table.State.data.length === 0 && !Table.State.loading ? (
-            <div className="flex flex-col items-center justify-center h-48 lg:h-64 gap-3 lg:gap-4 px-4">
-              <div className="text-base-content/40 text-4xl lg:text-6xl">
-                <HiCube />
-              </div>
-              <div className="text-center">
-                <h3 className="text-base lg:text-lg font-semibold">No Orders Found</h3>
-                <p className="text-base-content/60 mt-1 text-sm lg:text-base">
-                  Get started by creating your first order using the button above.
-                </p>
-              </div>
+      <Page.Body>
+        <Table.Tools>
+          <TableFilter table={Table} />
+        </Table.Tools>
+        
+        <Table.Render 
+          emptyTitle="No Orders Found"
+          emptyDescription="Get started by creating your first order using the button above."
+        />
+        <Table.Pagination />
+
+        <Modal.Wrapper
+          open={!!orderToCancel}
+          onClose={() => setOrderToCancel(null)}
+          className="max-w-md"
+        >
+          <Modal.Header>
+            <div className="text-lg font-bold">Cancel Order</div>
+          </Modal.Header>
+          <Modal.Body className="py-2">
+            <div className="text-base-content/70">
+              Are you sure you want to cancel order <strong>{orderToCancel?.order_number}</strong>?
             </div>
-          ) : (
-            <>
-              <Table.Render />
-              <Table.Pagination />
-            </>
-          )}
-        </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <div className="flex gap-2 justify-end mt-4">
+              <Button
+                variant="default"
+                styleType="ghost"
+                onClick={() => setOrderToCancel(null)}
+                disabled={cancelResult?.isLoading}
+              >
+                Kembali
+              </Button>
+              <Button
+                variant="error"
+                isLoading={cancelResult?.isLoading}
+                disabled={cancelResult?.isLoading}
+                onClick={() => {
+                  if (orderToCancel?.id) {
+                    cancelOrder({ id: orderToCancel.id });
+                  }
+                }}
+              >
+                Cancel Order
+              </Button>
+            </div>
+          </Modal.Footer>
+        </Modal.Wrapper>
       </Page.Body>
     </Page>
   );

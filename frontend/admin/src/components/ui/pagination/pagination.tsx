@@ -9,20 +9,18 @@ export const Pagination = memo(({
   totalPages,
   onChange,
   className,
-  size = "md",
   ariaLabelledBy,
 }: PaginationProps) => {
   const pages = useMemo(() => generatePages(currentPage, totalPages), [currentPage, totalPages]);
 
   return (
     <nav
-      className={clsx("join", className)}
+      className={clsx("flex items-center gap-1.5", className)}
       aria-label="Pagination"
       aria-labelledby={ariaLabelledBy}
     >
       <Button
-        size={size}
-        className="join-item"
+        className="w-[30px] h-[30px] min-h-[30px] p-0 flex items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 font-medium hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-75 disabled:cursor-not-allowed transition-colors"
         disabled={currentPage === 1}
         onClick={() => onChange(currentPage - 1)}
         aria-label="Go to previous page"
@@ -34,8 +32,7 @@ export const Pagination = memo(({
         page === "..." ? (
           <Button
             key={i}
-            size={size}
-            className="join-item"
+            className="w-[30px] h-[30px] min-h-[30px] p-0 flex items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 font-medium disabled:bg-white disabled:opacity-100 disabled:cursor-default"
             disabled
             aria-hidden="true"
           >
@@ -44,9 +41,9 @@ export const Pagination = memo(({
         ) : (
           <Button
             key={i}
-            size={size}
-            className={clsx("join-item", {
-              "btn-active": page === currentPage,
+            className={clsx("w-[30px] h-[30px] min-h-[30px] p-0 flex items-center justify-center rounded-md border text-[13px] font-medium transition-colors", {
+              "border-gray-300 bg-white text-gray-800": page === currentPage,
+              "border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700": page !== currentPage,
             })}
             onClick={() => onChange(page)}
             aria-label={`Go to page ${page}`}
@@ -58,8 +55,7 @@ export const Pagination = memo(({
       )}
 
       <Button
-        size={size}
-        className="join-item"
+        className="w-[30px] h-[30px] min-h-[30px] p-0 flex items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 font-medium hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-75 disabled:cursor-not-allowed transition-colors"
         disabled={currentPage === totalPages}
         onClick={() => onChange(currentPage + 1)}
         aria-label="Go to next page"

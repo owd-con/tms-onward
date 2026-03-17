@@ -19,14 +19,14 @@ export const Table = memo(<T,>({
   const tableId = `table-${Math.random().toString(36).substr(2, 9)}`;
 
   return (
-    <div className={clsx("w-full overflow-x-auto", className)}>
+    <div className={clsx("w-full overflow-x-auto rounded-lg border border-gray-200 bg-white", className)}>
       <table
-        className="table table-zebra table-pin-rows table-pin-cols min-w-full"
+        className="table table-pin-rows table-pin-cols min-w-full"
         aria-busy={loading}
       >
         {caption && <caption className="sr-only">{caption}</caption>}
-        <thead className="bg-base-200 sticky top-0 z-10">
-          <tr>
+        <thead className="bg-gray-50 sticky top-0 z-10">
+          <tr className="border-b border-gray-200">
             {columns.map((col, i) => (
               <th
                 key={i}
@@ -83,7 +83,7 @@ export const Table = memo(<T,>({
             </tr>
           ) : (
             data.map((row, i) => (
-              <tr key={i}>
+              <tr key={i} className="border-b border-gray-100 last:border-b-0">
                 {columns.map((col, j) => (
                   <td key={j} className={clsx("text-sm", col.class)}>
                     {col.render
