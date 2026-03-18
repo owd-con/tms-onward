@@ -94,6 +94,8 @@ func (u *TripUsecase) Get(req *TripQueryOptions) ([]*entity.Trip, int64, error) 
 		if req.Status != "" {
 			if req.Status == "active" {
 				q.Where("trips.status IN (?)", bun.In([]string{"dispatched", "in_transit"}))
+			} else if req.Status == "on_delivery" {
+				q.Where("trips.status IN (?)", bun.In([]string{"planned", "dispatched", "in_transit"}))
 			} else {
 				q.Where("trips.status = ?", req.Status)
 			}

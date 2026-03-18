@@ -176,24 +176,51 @@ func (u *ReportUsecase) WithContext(ctx context.Context) *ReportUsecase {
 	}
 }
 
-// GetTripsCounter retrieves order statistics counter
-// Counts orders by status: pending, on progress (planned/dispatched/in_transit), history (completed/cancelled),
-// and exceptions (orders with failed shipments)
+// GetTripsCounter retrieves trip statistics counter
+// Counts orders by status: pending, and exceptions (orders with failed shipments)
+// Counts trips by status: on progress (planned/dispatched/in_transit), history (completed/cancelled)
 func (u *ReportUsecase) GetTripsCounter(opts *ReportQueryOptions) (*TripsCounter, error) {
 	mx := new(TripsCounter)
+
+	// Query orders for pending and exception counts
+	var orderCounts struct {
+		TotalOrderPending int64 `bun:"total_order_pending"`
+		TotalException    int64 `bun:"total_exception"`
+	}
 
 	query := u.db.NewSelect().
 		TableExpr("orders AS o").
 		ColumnExpr("SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) total_order_pending").
-		ColumnExpr("SUM(CASE WHEN status IN('planned', 'dispatched', 'in_transit') THEN 1 ELSE 0 END) total_on_progress").
-		ColumnExpr("SUM(CASE WHEN status IN('completed', 'cancelled') THEN 1 ELSE 0 END) total_history").
 		ColumnExpr("SUM(CASE WHEN EXISTS (SELECT 1 FROM shipments sx WHERE sx.order_id = o.id AND sx.status = 'failed') THEN 1 ELSE 0 END) total_exception").
 		Where("o.is_deleted = false").
 		Where("o.company_id = ?", opts.Session.CompanyID)
 
-	if err := query.Scan(u.ctx, mx); err != nil {
+	if err := query.Scan(u.ctx, &orderCounts); err != nil {
 		return nil, err
 	}
+
+	// Query trips for on_progress and history counts
+	var tripCounts struct {
+		TotalOnProgress int64 `bun:"total_on_progress"`
+		TotalHistory    int64 `bun:"total_history"`
+	}
+
+	tripQuery := u.db.NewSelect().
+		TableExpr("trips AS t").
+		ColumnExpr("SUM(CASE WHEN status IN('planned', 'dispatched', 'in_transit') THEN 1 ELSE 0 END) total_on_progress").
+		ColumnExpr("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) total_history").
+		Where("t.is_deleted = false").
+		Where("t.company_id = ?", opts.Session.CompanyID)
+
+	if err := tripQuery.Scan(u.ctx, &tripCounts); err != nil {
+		return nil, err
+	}
+
+	// Combine results
+	mx.TotalOrderPending = orderCounts.TotalOrderPending
+	mx.TotalException = orderCounts.TotalException
+	mx.TotalOnProgress = tripCounts.TotalOnProgress
+	mx.TotalHistory = tripCounts.TotalHistory
 
 	return mx, nil
 }
