@@ -19,6 +19,13 @@ type ReportUsecase struct {
 	ReportRepo *repository.TripWaypointReportRepository
 }
 
+type TripsCounter struct {
+	TotalOrderPending int64 `json:"total_order_pending"`
+	TotalException    int64 `json:"total_exception"`
+	TotalOnProgress   int64 `json:"total_on_progress"`
+	TotalHistory      int64 `json:"total_history"`
+}
+
 // OrderSummaryReport represents order summary statistics
 type OrderSummaryReport struct {
 	TotalOrders    int64              `json:"total_orders"`
@@ -167,6 +174,28 @@ func (u *ReportUsecase) WithContext(ctx context.Context) *ReportUsecase {
 		ctx:        ctx,
 		ReportRepo: u.ReportRepo.WithContext(ctx).(*repository.TripWaypointReportRepository),
 	}
+}
+
+// GetTripsCounter retrieves order statistics counter
+// Counts orders by status: pending, on progress (planned/dispatched/in_transit), history (completed/cancelled),
+// and exceptions (orders with failed shipments)
+func (u *ReportUsecase) GetTripsCounter(opts *ReportQueryOptions) (*TripsCounter, error) {
+	mx := new(TripsCounter)
+
+	query := u.db.NewSelect().
+		TableExpr("orders AS o").
+		ColumnExpr("SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) total_order_pending").
+		ColumnExpr("SUM(CASE WHEN status IN('planned', 'dispatched', 'in_transit') THEN 1 ELSE 0 END) total_on_progress").
+		ColumnExpr("SUM(CASE WHEN status IN('completed', 'cancelled') THEN 1 ELSE 0 END) total_history").
+		ColumnExpr("SUM(CASE WHEN EXISTS (SELECT 1 FROM shipments sx WHERE sx.order_id = o.id AND sx.status = 'failed') THEN 1 ELSE 0 END) total_exception").
+		Where("o.is_deleted = false").
+		Where("o.company_id = ?", opts.Session.CompanyID)
+
+	if err := query.Scan(u.ctx, mx); err != nil {
+		return nil, err
+	}
+
+	return mx, nil
 }
 
 // GetCustomerReport retrieves customer statistics report
