@@ -55,7 +55,7 @@ func (r *TripRepository) FindWithWaypoints(id string) (*entity.Trip, error) {
 		Relation("Orders.Customer").
 		Relation("Driver").
 		Relation("Vehicle").
-		Relation("TripWaypoints.AddressRel").
+		Relation("TripWaypoints.AddressRel.Region").
 		Where("trips.id = ?", id).
 		Where("trips.is_deleted = false").
 		Scan(r.Context)

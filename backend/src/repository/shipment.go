@@ -17,7 +17,7 @@ func NewShipmentRepository() *ShipmentRepository {
 	base := postgres.NewBaseRepository[entity.Shipment](postgres.GetDB(),
 		"shipments",
 		[]string{"shipment_number"},
-		[]string{"Order", "OriginAddressRel", "DestAddressRel"},
+		[]string{"Order", "OriginAddressRel.Region", "DestAddressRel.Region"},
 		true,
 	)
 
@@ -39,8 +39,8 @@ func (r *ShipmentRepository) FindByOrderID(orderID string) ([]*entity.Shipment, 
 		Where("shipments.order_id = ?", orderID).
 		Where("shipments.is_deleted = false").
 		OrderExpr("shipments.sorting_id ASC").
-		Relation("OriginAddressRel").
-		Relation("DestAddressRel").
+		Relation("OriginAddressRel.Region").
+		Relation("DestAddressRel.Region").
 		Scan(r.Context)
 	return shipments, err
 }

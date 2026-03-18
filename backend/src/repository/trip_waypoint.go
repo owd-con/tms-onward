@@ -16,7 +16,7 @@ func NewTripWaypointRepository() *TripWaypointRepository {
 	base := postgres.NewBaseRepository[entity.TripWaypoint](postgres.GetDB(),
 		"trip_waypoints",
 		[]string{},
-		[]string{"Trip.Driver", "Trip.Vehicle", "AddressRel"},
+		[]string{"Trip.Driver", "Trip.Vehicle", "AddressRel.Region"},
 		true,
 	)
 
@@ -34,7 +34,7 @@ func (r *TripWaypointRepository) WithContext(ctx context.Context) common.BaseRep
 func (r *TripWaypointRepository) GetByTripID(tripID string) (mx []*entity.TripWaypoint, err error) {
 	qs := r.DB.NewSelect().Model(&mx)
 
-	qs.Relation("AddressRel")
+	qs.Relation("AddressRel.Region")
 	qs.Relation("Trip")
 
 	qs.Where("trip_waypoints.is_deleted = false")
@@ -109,7 +109,7 @@ func (r *TripWaypointRepository) GetPendingByTripID(tripID string) ([]*entity.Tr
 		Where("trip_id = ?", tripID).
 		Where("status = ?", "pending").
 		Where("trip_waypoints.is_deleted = false").
-		Relation("AddressRel").
+		Relation("AddressRel.Region").
 		OrderExpr("sequence_number ASC").
 		Scan(r.Context)
 	return waypoints, err
