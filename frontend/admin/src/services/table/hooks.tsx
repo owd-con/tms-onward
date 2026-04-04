@@ -9,6 +9,7 @@ import {
   setSearch,
   setSorting,
   setTable,
+  resetFilter,
 } from "./slice";
 
 import type { RootState } from "../store";
@@ -16,10 +17,12 @@ import type { TableState, TableConfig } from "./const";
 import type { PaginatedResponse, ApiResponse } from "../types/api";
 import { useEffect, useCallback, useRef } from "react";
 import { logger } from "@/utils/logger";
-import TableWrapper from "../../components/ui/table/wrapper";
-import TableRender from "../../components/ui/table/render";
-import TablePagination from "../../components/ui/table/pagination";
-import TableTool from "../../components/ui/table/tools";
+import {
+  TableWrapper,
+  TableRender,
+  TablePagination,
+  TableTool,
+} from "../../components/ui/table";
 
 /**
  * Custom hook for table state management and data fetching
@@ -261,7 +264,24 @@ const useTable = <T = unknown,>(
     });
   }, [TableState, triggerDownload]);
 
-  const Render = () => {
+  const onClearFilters = useCallback(() => {
+    dispatch(resetFilter({ name }));
+    const newState = {
+      ...TableState,
+      filter: {},
+      textSearch: "",
+      page: 1,
+    } as TableState<T>;
+    fetchData(newState);
+  }, [name, dispatch, TableState, fetchData]);
+
+  const Render = ({
+    emptyTitle,
+    emptyDescription,
+  }: {
+    emptyTitle?: string;
+    emptyDescription?: string;
+  } = {}) => {
     if (!TableState) return null;
 
     return (
@@ -271,6 +291,9 @@ const useTable = <T = unknown,>(
           columns={config?.columns}
           onSorted={onSorted}
           onRowClick={config?.onRowClick}
+          onClearFilters={onClearFilters}
+          emptyTitle={emptyTitle}
+          emptyDescription={emptyDescription}
         />
       </TableWrapper>
     );

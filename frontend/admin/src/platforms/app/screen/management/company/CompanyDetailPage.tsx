@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 
 import { Button, useEnigmaUI } from "@/components";
+import { Database } from "lucide-react";
 import { useCompany } from "@/services/company/hooks";
 import type { Company } from "@/services/types";
 import { Page } from "@/platforms/app/components/layout/index";
@@ -69,9 +70,12 @@ const CompanyDetailPage = () => {
     return (
       <Page className='h-full flex flex-col min-h-0'>
         <Page.Header
-          title='Company Management'
-          titleClassName='text-2xl'
-          subtitle='Manage your company information'
+          pillLabel="MANAGEMENT"
+          pillIcon={<Database size={12} strokeWidth={2.5} />}
+          title='Company Configuration'
+          titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
+          subtitle='Manage your core business entity details and branding.'
+          subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
         />
         <Page.Body className='flex-1 flex items-center justify-center'>
           <div className='loading loading-spinner loading-lg'></div>
@@ -83,9 +87,12 @@ const CompanyDetailPage = () => {
   return (
     <Page className='h-full flex flex-col min-h-0'>
       <Page.Header
-        title='Company Management'
-        titleClassName='text-2xl'
-        subtitle='Manage your company information'
+        pillLabel="MANAGEMENT"
+        pillIcon={<Database size={12} strokeWidth={2.5} />}
+        title='Company Configuration'
+        titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
+        subtitle='Manage your core business entity details and branding.'
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
         action={
           <Button
             size='sm'

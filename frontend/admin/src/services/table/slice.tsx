@@ -88,6 +88,14 @@ const tableSlice = createSlice({
 
       state.data[name].page = 1;
     },
+    resetFilter: (state, action: PayloadAction<{ name: string }>) => {
+      const { name } = action.payload;
+      if (state.data[name]) {
+        state.data[name].filter = {};
+        state.data[name].textSearch = "";
+        state.data[name].page = 1;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder.addCase($reset, () => defineInitialState());
@@ -102,6 +110,7 @@ export const {
   setSearch,
   setSorting,
   setFilter,
+  resetFilter,
 } = tableSlice.actions;
 
 export const tableReducer = tableSlice.reducer;

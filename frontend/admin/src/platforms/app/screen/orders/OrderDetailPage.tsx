@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaEdit, FaPrint, FaTrash, FaTimes } from "react-icons/fa";
+import { Database } from "lucide-react";
 
 import { Button, useEnigmaUI, Modal } from "@/components";
 import { useOrder } from "@/services/order/hooks";
@@ -182,7 +183,12 @@ const OrderDetailPage = () => {
   if (!order) {
     return (
       <Page>
-        <Page.Header title='Order Detail' />
+        <Page.Header 
+          pillLabel="OPERATIONS"
+          pillIcon={<Database size={12} strokeWidth={2.5} />}
+          title='Order Overview'
+          titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1' 
+        />
         <Page.Body>
           {showOrderResult?.isError ? (
             <div className='flex flex-col items-center justify-center h-64 gap-4'>
@@ -208,16 +214,19 @@ const OrderDetailPage = () => {
   }
 
   const canEdit = order.status === "pending";
-  const canCancel = order.status === "pending" || order.status === "planned";
+  const canCancel = order.status === "pending";
   const canDelete = !order.is_deleted && order.status === "pending";
 
   return (
     <Page className='h-full flex flex-col min-h-0'>
       <Page.Header
+        pillLabel="OPERATIONS"
+        pillIcon={<Database size={12} strokeWidth={2.5} />}
         backTo={() => navigate(-1)}
-        title='Order Detail'
-        titleClassName='!text-2xl'
-        subtitle={order.order_number}
+        title='Order Overview'
+        titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
+        subtitle={`Order Reference: ${order.order_number}`}
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
         action={
           <div className='gap-3 flex'>
             <Button

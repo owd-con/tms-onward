@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { RemoteSelect } from "@/components";
-import TableFilters from "@/components/ui/table/filter";
+import { FiChevronDown } from "react-icons/fi";
 import type { SelectOptionValue } from "@/shared/types";
 import {
   statusOptions,
@@ -40,7 +40,6 @@ const TableFilter: React.FC<TableFilterProps> = ({ table }) => {
   );
 
   // Initialize state from current filter values
-  // State can differ from current until user clicks "Apply Filter"
   const [status, setStatus] = useState<SelectOptionValue | null>(() => {
     const value = current.status;
     return value
@@ -57,61 +56,54 @@ const TableFilter: React.FC<TableFilterProps> = ({ table }) => {
     },
   );
 
-  const handleClear = () => {
-    setStatus(null);
-    setLicenseType(null);
-    table.filter({ status: "", license_type: "" });
-  };
-
-  const handleFilter = () => {
+  const handleFilterChange = (key: string, val: any) => {
     table.filter({
-      status: status?.value ? String(status.value) : "",
-      license_type: licenseType?.value ? String(licenseType.value) : "",
+      status: key === "status" ? (val?.value ? String(val.value) : "") : (status?.value ? String(status.value) : ""),
+      license_type: key === "licenseType" ? (val?.value ? String(val.value) : "") : (licenseType?.value ? String(licenseType.value) : ""),
     });
   };
 
-  const isDirty = useMemo(() => {
-    const currentStatus = current.status ?? "";
-    const currentLicenseType = current.license_type ?? "";
-    const newStatus = status?.value ? String(status.value) : "";
-    const newLicenseType = licenseType?.value ? String(licenseType.value) : "";
-
-    return newStatus !== currentStatus || newLicenseType !== currentLicenseType;
-  }, [status, licenseType, current.status, current.license_type]);
-
-  const anyActive = !!current.status || !!current.license_type;
-
   return (
-    <TableFilters
-      isActive={anyActive}
-      isDirty={isDirty}
-      handleClear={handleClear}
-      handleFilter={handleFilter}
-    >
-      <div className='grid grid-cols-1 lg:grid-cols-2 gap-3'>
+    <div className="flex flex-row items-center gap-3 w-full shrink-0">
+      <div className="w-40 md:w-52">
         <RemoteSelect<SelectOptionValue>
-          label='Status'
-          placeholder='Filter Status'
+          placeholder="Status: All"
+          inputClassName="!bg-white !border-gray-200 !h-9 !min-h-0 !py-0 !shadow-sm hover:!bg-gray-50 !text-gray-700 cursor-pointer !rounded-lg text-sm font-medium"
+          suffix={<FiChevronDown className="text-gray-400 w-4 h-4" />}
           data={statusOptions}
           value={status}
-          onChange={(opt) => setStatus(opt)}
-          onClear={() => setStatus(null)}
-          getLabel={(item) => item?.label ?? ""}
-          renderItem={(item) => item?.label}
-        />
-
-        <RemoteSelect<SelectOptionValue>
-          label='License Type'
-          placeholder='Filter License Type'
-          data={licenseTypeOptions}
-          value={licenseType}
-          onChange={(opt) => setLicenseType(opt)}
-          onClear={() => setLicenseType(null)}
-          getLabel={(item) => item?.label ?? ""}
+          onChange={(val) => {
+            setStatus(val);
+            handleFilterChange("status", val);
+          }}
+          onClear={() => {
+            setStatus(null);
+            handleFilterChange("status", null);
+          }}
+          getLabel={(item) => item ? `Status: ${item.label}` : ""}
           renderItem={(item) => item?.label}
         />
       </div>
-    </TableFilters>
+      <div className="w-40 md:w-52">
+        <RemoteSelect<SelectOptionValue>
+          placeholder="License: All"
+          inputClassName="!bg-white !border-gray-200 !h-9 !min-h-0 !py-0 !shadow-sm hover:!bg-gray-50 !text-gray-700 cursor-pointer !rounded-lg text-sm font-medium"
+          suffix={<FiChevronDown className="text-gray-400 w-4 h-4" />}
+          data={licenseTypeOptions}
+          value={licenseType}
+          onChange={(val) => {
+            setLicenseType(val);
+            handleFilterChange("licenseType", val);
+          }}
+          onClear={() => {
+            setLicenseType(null);
+            handleFilterChange("licenseType", null);
+          }}
+          getLabel={(item) => item ? `License: ${item.label}` : ""}
+          renderItem={(item) => item?.label}
+        />
+      </div>
+    </div>
   );
 };
 

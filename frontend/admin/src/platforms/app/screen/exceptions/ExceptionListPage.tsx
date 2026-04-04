@@ -1,7 +1,6 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { HiExclamationTriangle } from "react-icons/hi2";
+import { Database } from "lucide-react";
 
 import useTable from "@/services/table/hooks";
 import type { TableConfig } from "@/services/table/const";
@@ -47,36 +46,21 @@ const ExceptionListPage = () => {
   return (
     <Page className='h-full flex flex-col min-h-0'>
       <Page.Header
-        title='Exceptions'
-        titleClassName='!text-2xl'
-        subtitle='Manage failed shipments and reschedule operations'
+        pillLabel="OPERATIONS"
+        pillIcon={<Database size={12} strokeWidth={2.5} />}
+        title="Exception Management"
+        titleClassName="text-3xl font-black text-slate-900 tracking-tight leading-none mb-1"
+        subtitle="Review failed shipments, resolve operational blockers, and reschedule routes."
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
       />
 
-      <Page.Body className='flex-1 flex flex-col space-y-3 lg:space-y-4 min-h-0'>
-        <div className='bg-base-100 rounded-xl shadow-sm w-full overflow-x-auto'>
-          {Table.State?.data &&
-          Table.State.data.length === 0 &&
-          !Table.State.loading ? (
-            <div className='flex flex-col items-center justify-center h-48 lg:h-64 gap-3 lg:gap-4 px-4'>
-              <div className='text-base-content/40 text-4xl lg:text-6xl'>
-                <HiExclamationTriangle />
-              </div>
-              <div className='text-center'>
-                <h3 className='text-base lg:text-lg font-semibold'>
-                  No Exceptions Found
-                </h3>
-                <p className='text-base-content/60 mt-1 text-sm lg:text-base'>
-                  No failed shipments at the moment. Your operations are running
-                  smoothly.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <>
-              <Table.Render />
-              <Table.Pagination />
-            </>
-          )}
+      <Page.Body className='flex-1 flex flex-col min-h-0'>
+        <div className="flex flex-col">
+          <Table.Render 
+            emptyTitle="No Exceptions Found"
+            emptyDescription="No failed shipments at the moment. Your operations are running smoothly."
+          />
+          <Table.Pagination />
         </div>
       </Page.Body>
 

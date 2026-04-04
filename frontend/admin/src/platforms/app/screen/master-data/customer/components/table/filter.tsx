@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { RemoteSelect } from "@/components";
-import TableFilters from "@/components/ui/table/filter";
+import { FiChevronDown } from "react-icons/fi";
 import type { SelectOptionValue } from "@/shared/types";
 import { statusOptions } from "@/shared/options";
 
@@ -27,7 +27,6 @@ const TableFilter: React.FC<TableFilterProps> = ({ table }) => {
   );
 
   // Initialize state from current filter values
-  // State can differ from current until user clicks "Apply Filter"
   const [status, setStatus] = useState<SelectOptionValue | null>(() => {
     const value = current.status;
     return value
@@ -35,45 +34,34 @@ const TableFilter: React.FC<TableFilterProps> = ({ table }) => {
       : null;
   });
 
-  const handleClear = () => {
-    setStatus(null);
-    table.filter({ status: "" });
-  };
-
-  const handleFilter = () => {
+  const handleFilterChange = (val: any) => {
     table.filter({
-      status: status?.value ? String(status.value) : "",
+      status: val?.value ? String(val.value) : "",
     });
   };
 
-  const isDirty = useMemo(() => {
-    const currentStatus = current.status ?? "";
-    const newStatus = status?.value ? String(status.value) : "";
-    return newStatus !== currentStatus;
-  }, [status, current.status]);
-
-  const anyActive = !!current.status;
-
   return (
-    <TableFilters
-      isActive={anyActive}
-      isDirty={isDirty}
-      handleClear={handleClear}
-      handleFilter={handleFilter}
-    >
-      <div className="grid grid-cols-1 gap-3">
+    <div className="flex flex-row items-center gap-3 w-full shrink-0">
+      <div className="w-40 md:w-52">
         <RemoteSelect<SelectOptionValue>
-          label="Status"
-          placeholder="Filter Status"
+          placeholder="Status: All"
+          inputClassName="!bg-white !border-gray-200 !h-9 !min-h-0 !py-0 !shadow-sm hover:!bg-gray-50 !text-gray-700 cursor-pointer !rounded-lg text-sm font-medium"
+          suffix={<FiChevronDown className="text-gray-400 w-4 h-4" />}
           data={statusOptions}
           value={status}
-          onChange={(opt) => setStatus(opt)}
-          onClear={() => setStatus(null)}
-          getLabel={(item) => item?.label ?? ""}
+          onChange={(val) => {
+            setStatus(val);
+            handleFilterChange(val);
+          }}
+          onClear={() => {
+            setStatus(null);
+            handleFilterChange(null);
+          }}
+          getLabel={(item) => item ? `Status: ${item.label}` : ""}
           renderItem={(item) => item?.label}
         />
       </div>
-    </TableFilters>
+    </div>
   );
 };
 

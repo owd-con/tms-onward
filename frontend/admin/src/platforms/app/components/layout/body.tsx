@@ -7,7 +7,7 @@ interface BodyProps {
 }
 
 const Body: FC<BodyProps> = ({ className, children }) => {
-  return <div className={clsx("p-4 lg:p-6", className)}>{children}</div>;
+  return <div className={clsx("p-4 py-0 lg:p-6 lg:py-0", className)}>{children}</div>;
 };
 
 export default Body;

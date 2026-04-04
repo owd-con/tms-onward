@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { HiUser } from "react-icons/hi2";
+import { Database } from "lucide-react";
 
 import useTable from "@/services/table/hooks";
 import type { TableConfig } from "@/services/table/const";
@@ -76,48 +76,31 @@ const CustomerListPage = () => {
   return (
     <Page className='h-full flex flex-col min-h-0'>
       <Page.Header
-        title='Customers'
-        titleClassName='!text-2xl'
-        subtitle='Manage your customer data'
+        pillLabel="MASTER DATA"
+        pillIcon={<Database size={12} strokeWidth={2.5} />}
+        title="Customer Management"
+        titleClassName="text-3xl font-black text-slate-900 tracking-tight leading-none mb-1"
+        subtitle="Maintain client records, configurations, and address registries."
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
         action={
-          <Button variant='primary' onClick={openCreate}>
+          <Button
+            className="rounded-full shadow-lg text-[15px] font-bold tracking-wide bg-emerald-600 text-white border border-emerald-700 outline outline-2 outline-offset-2 outline-emerald-500/20 hover:bg-emerald-500 transition-colors h-13 px-10"
+            onClick={openCreate}
+          >
             + Add Customer
           </Button>
         }
       />
 
-      <Page.Body className='flex-1 flex flex-col space-y-3 lg:space-y-4 min-h-0'>
-        <div className='w-full flex gap-2 lg:gap-4 bg-base-100 p-2 rounded-xl'>
-          <div className='w-full'>
-            <Table.Tools>
-              <TableFilter table={Table} />
-            </Table.Tools>
-          </div>
-        </div>
-        <div className='bg-base-100 rounded-xl shadow-sm w-full overflow-x-auto'>
-          {Table.State?.data &&
-          Table.State.data.length === 0 &&
-          !Table.State.loading ? (
-            <div className='flex flex-col items-center justify-center h-48 lg:h-64 gap-3 lg:gap-4 px-4'>
-              <div className='text-base-content/40 text-4xl lg:text-6xl'>
-                <HiUser />
-              </div>
-              <div className='text-center'>
-                <h3 className='text-base lg:text-lg font-semibold'>
-                  No Customers Found
-                </h3>
-                <p className='text-base-content/60 mt-1 text-sm lg:text-base'>
-                  Get started by creating your first customer using the button above.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <>
-              <Table.Render />
-              <Table.Pagination />
-            </>
-          )}
-        </div>
+      <Page.Body>
+        <Table.Tools>
+          <TableFilter table={Table} />
+        </Table.Tools>
+        <Table.Render 
+          emptyTitle="No Customers Found"
+          emptyDescription="Get started by creating your first customer using the button above."
+        />
+        <Table.Pagination />
       </Page.Body>
     </Page>
   );

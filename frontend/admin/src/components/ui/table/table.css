@@ -13,7 +13,7 @@ table td:last-child {
 }
 
 .table thead th {
-  @apply bg-base-200 sticky top-0 z-10 py-3 font-semibold tracking-wider text-gray-600 uppercase shadow-xl;
+  @apply bg-[#FCFDFE] sticky top-0 z-10 py-5 px-4 text-[11px] font-bold tracking-[0.05em] text-gray-400 uppercase border-b border-gray-200 shadow-none align-middle;
 }
 
 @media print {
@@ -26,42 +26,6 @@ table td:last-child {
 .table thead th.sorting_asc,
 .table thead th.sorting_desc {
   @apply cursor-pointer;
-}
-
-.table thead th.sorting::before,
-.table thead th.sorting_asc::before,
-.table thead th.sorting_desc::before {
-  content: "";
-  position: absolute;
-  z-index: 10;
-  top: 12px;
-  right: 8px;
-  border-width: 4px;
-  border-color: transparent;
-  border-style: solid;
-  border-bottom-color: theme("colors.gray.400");
-}
-
-.table thead th.sorting::after,
-.table thead th.sorting_asc::after,
-.table thead th.sorting_desc::after {
-  content: "";
-  position: absolute;
-  z-index: 10;
-  top: 22px;
-  right: 8px;
-  border-width: 4px;
-  border-color: transparent;
-  border-style: solid;
-  border-top-color: theme("colors.gray.400");
-}
-
-.table thead th.sorting_asc::before {
-  border-bottom-color: theme("colors.gray.800");
-}
-
-.table thead th.sorting_desc::after {
-  border-top-color: theme("colors.gray.800");
 }
 
 .table th.center,
@@ -81,16 +45,24 @@ table td:last-child {
 
 .table-hover tbody tr:hover td,
 .table-hover tbody tr:hover th {
-  @apply cursor-pointer;
+  @apply cursor-pointer bg-gray-50/50;
 }
 
 /* Striped */
 .table-striped tbody tr:nth-of-type(odd) {
-  @apply bg-base-100;
+  @apply bg-white;
 }
 
 .table-striped tbody tr:nth-of-type(even) {
-  @apply bg-base-200/70;
+  @apply bg-white;
+}
+
+.table tbody tr {
+  @apply border-b border-gray-100;
+}
+
+.table tbody tr:last-child {
+  @apply border-b-0;
 }
 
 /* Responsive */
@@ -108,17 +80,17 @@ table td:last-child {
 }
 
 /* No wrap */
-.table-nowrap > :not(caption) > * > * {
+.table-nowrap> :not(caption)>*>* {
   @apply whitespace-nowrap;
 }
 
 /* Vertically center */
-.table-vcenter > :not(caption) > * > * {
+.table-vcenter> :not(caption)>*>* {
   @apply align-middle;
 }
 
 /* Text center */
-.table-center > :not(caption) > * > * {
+.table-center> :not(caption)>*>* {
   @apply text-center;
 }
 

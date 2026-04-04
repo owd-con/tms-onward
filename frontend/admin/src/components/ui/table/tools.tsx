@@ -43,13 +43,13 @@ const TableTool: React.FC<TableToolProps> = ({
   }, [searchTerm]);
 
   return (
-    <div className='ml-auto flex place-items-center gap-3'>
+    <div className='flex flex-col xl:flex-row w-full items-start xl:items-center justify-between gap-4 p-4 bg-white border border-gray-200 rounded-t-xl border-b-0 relative z-30'>
       <Input
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         placeholder='Search ...'
-        className='rounded-xl'
-        prefix={<IconSearch className='h-5 w-5' />}
+        className='!border-0 !shadow-none !bg-transparent focus:!outline-none focus:!ring-0 w-full xl:w-64 text-sm'
+        prefix={<IconSearch className='h-5 w-5 text-gray-400' />}
         suffix={
           searchTerm && (
             <Button
@@ -70,14 +70,14 @@ const TableTool: React.FC<TableToolProps> = ({
         }
       />
 
-      {children && <div className='flex gap-3'>{children}</div>}
+      {children && <div className='flex w-full xl:w-auto flex-wrap xl:flex-nowrap gap-3 pb-2 xl:pb-0 z-10'>{children}</div>}
 
       {downloadable && (
         <Button
           onClick={onDownload}
           size='md'
           variant='accent'
-          className='text-base-100'
+          className='text-base-100 shrink-0'
           aria-label='Download table data'
         >
           <IoCloudDownload aria-hidden='true' />

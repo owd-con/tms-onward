@@ -1,32 +1,19 @@
-import { memo } from "react";
+import { UserCheck } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import AlertCard from "./AlertCard";
 
-import type { ExpiredDriver } from "@/services/types";
-import { AlertCard } from "./AlertCard";
-import { dateFormat } from "@/utils/common";
+export default function ExpiredDriversAlert({ drivers }: { drivers: any[] }) {
+  const navigate = useNavigate();
+  if (drivers.length === 0) return null;
 
-export interface ExpiredDriversAlertProps {
-  drivers: ExpiredDriver[];
-  className?: string;
+  return (
+    <AlertCard
+      icon={<UserCheck size={20} />}
+      title="License Renewals"
+      description="Drivers with expired licenses pending review and updates."
+      color="amber"
+      count={drivers.length}
+      onClick={() => navigate('/a/master-data/drivers')}
+    />
+  );
 }
-
-export const ExpiredDriversAlert = memo<ExpiredDriversAlertProps>(
-  ({ drivers, className }) => {
-    if (drivers.length === 0) return null;
-
-    return (
-      <div className={className}>
-        <AlertCard
-          icon='👤'
-          title='Expired Driver Licenses'
-          count={drivers.length}
-          items={drivers.map((d) => ({
-            id: d.id,
-            title: d.name,
-            subtitle: `License: ${d.license_type} • ${d.phone_number}`,
-            highlight: `Expired: ${dateFormat(d.license_expiry, "YYYY")}`,
-          }))}
-        />
-      </div>
-    );
-  }
-);

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Button } from "@/components";
 import config from "@/services/table/const";
 import { statusBadge } from "@/shared/helper";
 import { dateFormat } from "@/utils/common";
+import { FiEye, FiMoreVertical } from "react-icons/fi";
 
 const createTableConfig = ({
   onClick,
@@ -13,48 +13,41 @@ const createTableConfig = ({
   url: "/trips",
   columns: {
     trip_number: {
-      title: "Trip Number",
+      title: "Trip Reference",
       sortable: true,
-      headerClass: "text-xs capitalize",
-    class: "p-4",
+      headerClass: "capitalize",
+      class: "p-4",
       component: (row: { trip_number: string }) => (
-        <div className="text-xs font-normal tracking-wide">
-          <span className="font-semibold">{row?.trip_number || "-"}</span>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[13px] font-semibold text-gray-900">{row?.trip_number || "-"}</span>
         </div>
       ),
     },
     order: {
-      title: "Order",
-      sortable: true,
-      headerClass: "text-xs capitalize",
-    class: "p-4",
+      title: "Related Order",
+      sortable: false,
+      headerClass: "capitalize",
+      class: "p-4",
       component: (row: { order: any }) => (
-        <div className="text-xs font-normal tracking-wide">
-          <span className="font-semibold">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[13px] font-medium text-gray-700">
             {row?.order?.order_number || "-"}
+          </span>
+          <span className="text-[12px] text-gray-500 line-clamp-1">
+            {row?.order?.customer?.name || ""}
           </span>
         </div>
       ),
     },
-    driver: {
-      title: "Driver",
+    assignment: {
+      title: "Assignment",
       sortable: true,
-      headerClass: "text-xs capitalize",
-    class: "p-4",
-      component: (row: { driver: any }) => (
-        <div className="text-xs font-normal tracking-wide">
-          <span className="font-semibold">{row?.driver?.name || "-"}</span>
-        </div>
-      ),
-    },
-    vehicle: {
-      title: "Vehicle",
-      sortable: true,
-      headerClass: "text-xs capitalize",
-    class: "p-4",
-      component: (row: { vehicle: any }) => (
-        <div className="text-xs font-normal tracking-wide">
-          <span className="font-semibold">
+      headerClass: "capitalize",
+      class: "p-4",
+      component: (row: { driver: any; vehicle: any }) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[13px] font-semibold text-emerald-700">{row?.driver?.name || "-"}</span>
+          <span className="text-[12px] font-mono font-medium text-gray-500 uppercase">
             {row?.vehicle?.plate_number || "-"}
           </span>
         </div>
@@ -63,35 +56,55 @@ const createTableConfig = ({
     status: {
       title: "Status",
       sortable: true,
-      headerClass: "text-xs capitalize",
-    class: "p-4",
+      headerClass: "capitalize",
+      class: "p-4",
       component: (row: { status: string }) => {
         return statusBadge(row.status);
       },
     },
     created_at: {
-      title: "Created",
+      title: "Scheduled",
       sortable: true,
-      headerClass: "text-xs capitalize",
-    class: "p-4",
+      headerClass: "capitalize",
+      class: "p-4",
       component: (row: { created_at: string }) => (
-        <div className="text-xs font-normal tracking-wide">
-          <span className="font-semibold">
-            {dateFormat(row.created_at)}
-          </span>
+        <div className="text-[13px] font-medium text-gray-700">
+          {dateFormat(row.created_at)}
         </div>
       ),
     },
     actions: {
-      title: "Actions",
+      title: "Aksi",
       sortable: false,
-      headerClass: "text-xs capitalize",
-    class: "p-4",
+      headerClass: "capitalize text-center w-[50px]",
+      class: "p-4 text-center w-[50px]",
       component: (row: any) => (
-        <div className="flex place-items-center gap-1">
-          <Button size="xs" onClick={() => onClick(row)}>
-            View
-          </Button>
+        <div className="flex justify-center">
+          <div className="dropdown dropdown-end md:dropdown-click" onClick={(e) => e.stopPropagation()}>
+            <button
+              tabIndex={0}
+              className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <FiMoreVertical className="w-5 h-5" />
+            </button>
+            <ul
+              tabIndex={0}
+              className="dropdown-content z-50 menu p-2 shadow-lg bg-white rounded-xl w-44 border border-gray-100 mt-1"
+            >
+              <li>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClick(row);
+                  }}
+                  className="flex items-center gap-2 hover:bg-gray-50 hover:text-gray-900 text-gray-700 py-2"
+                >
+                  <FiEye className="w-4 h-4 text-gray-400" />
+                  <span className="font-medium text-[13px]">View Detail</span>
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       ),
     },

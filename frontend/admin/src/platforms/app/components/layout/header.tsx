@@ -13,6 +13,8 @@ interface HeaderProps {
   subtitleClassName?: string;
   children?: ReactNode;
   backTo?: () => void;
+  pillLabel?: string;
+  pillIcon?: ReactNode;
 }
 
 const Header: FC<HeaderProps> = ({
@@ -24,41 +26,46 @@ const Header: FC<HeaderProps> = ({
   title,
   titleClassName,
   children,
+  pillLabel,
+  pillIcon,
 }) => {
   return (
-    <div className={clsx("p-4 lg:p-6 pb-0", className)}>
-      <div
-        className={clsx(
-          action &&
-            "flex flex-col space-y-3 lg:space-y-0 lg:flex-row lg:place-items-center place-content-between"
+    <div className={clsx("p-6 lg:px-8 lg:pt-8 bg-white shrink-0 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-200 pb-6 mb-6", className)}>
+      <div className="flex flex-col">
+        {/* Pill */}
+        {pillLabel && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#f1f5f9] border border-[#e2e8f0]/60 rounded-full w-fit mb-3">
+            {pillIcon && <div className="text-emerald-500 flex items-center">{pillIcon}</div>}
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{pillLabel}</span>
+          </div>
         )}
-      >
-        <div className="flex gap-4 place-items-center">
+
+        {/* Title & Back Button */}
+        <div className="flex items-center gap-3">
           {backTo && (
-            <Button onClick={backTo} styleType="ghost">
-              <FiArrowLeft />
+            <Button onClick={backTo} styleType="ghost" size="sm" className="mb-2">
+              <FiArrowLeft size={18} />
             </Button>
           )}
-
-          <div>
-            <h1
-              className={clsx("text-xl font-bold leading-8 ", titleClassName)}
-            >
-              {title}
-            </h1>
-            <div
-              className={clsx(
-                "text-sm font-normal leading-5 text-base-content/50",
-                subtitleClassName
-              )}
-            >
-              {subtitle}
-            </div>
-          </div>
+          <h1 className={clsx("text-3xl font-black text-slate-900 tracking-tight leading-none mb-1", titleClassName)}>
+            {title}
+          </h1>
         </div>
 
-        {action}
+        {/* Subtitle */}
+        {subtitle && (
+          <p className={clsx("text-sm text-slate-500 font-medium tracking-wide mt-1", subtitleClassName)}>
+            {subtitle}
+          </p>
+        )}
       </div>
+
+      {action && (
+        <div className="flex items-center gap-3 mt-4 md:mt-0">
+          {action}
+        </div>
+      )}
+
       {children}
     </div>
   );

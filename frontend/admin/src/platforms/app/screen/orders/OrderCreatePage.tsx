@@ -2,6 +2,7 @@
 import { useOrder } from "@/services/order/hooks";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Database } from "lucide-react";
 import { Page } from "../../components/layout";
 import { useEnigmaUI } from "@/components";
 import {
@@ -92,9 +93,12 @@ const OrderCreatePage = () => {
   return (
     <Page className='h-full flex flex-col min-h-0'>
       <Page.Header
+        pillLabel="OPERATIONS"
+        pillIcon={<Database size={12} strokeWidth={2.5} />}
         title='Create Order'
-        titleClassName='!text-2xl'
-        subtitle='Create a new order with shipments'
+        titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
+        subtitle='Configure a new customer order and assign initial shipments.'
+        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
       />
 
       <Page.Body className='flex-1 flex flex-col min-h-0 overflow-y-auto'>
