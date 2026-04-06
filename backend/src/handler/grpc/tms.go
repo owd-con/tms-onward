@@ -2,7 +2,9 @@ package grpc
 
 import (
 	"context"
+	"errors"
 
+	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/proto"
 	"github.com/logistics-id/onward-tms/src/usecase"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -17,6 +19,75 @@ func NewTMSServer(uc *usecase.Factory) *TMSServer {
 	return &TMSServer{
 		uc: uc,
 	}
+}
+
+// Signup implements proto.TMSServiceServer
+func (s *TMSServer) Signup(ctx context.Context, req *proto.SignupRequest) (*proto.SignupResponse, error) {
+	uc := s.uc.Auth.WithContext(ctx)
+
+	// Validate company name uniqueness
+	if !uc.ValidateCompanyUnique("name", req.CompanyName, "") {
+		return nil, errors.New("company name already exists")
+	}
+
+	// Validate email uniqueness
+	if !uc.ValidateUserUnique("email", req.Email, "") {
+		return nil, errors.New("email already exists")
+	}
+
+	// Prepare user entity
+	user := &entity.User{
+		Name:         req.Name,
+		Email:        req.Email,
+		PasswordHash: req.Password,
+		Role:         "admin",
+		Phone:        req.Phone,
+		IsActive:     true,
+	}
+
+	// Prepare company entity
+	company := &entity.Company{
+		Name:     req.CompanyName,
+		Type:     req.CompanyType,
+		Timezone: "Asia/Jakarta",
+		Currency: "IDR",
+		Language: "id",
+		IsActive: true,
+	}
+
+	// Execute signup
+	_, err := uc.Signup(user, company)
+	if err != nil {
+		return nil, err
+	}
+
+	return &proto.SignupResponse{
+		Message: "Signup successful",
+	}, nil
+}
+
+// FindCompanyByName implements proto.TMSServiceServer
+func (s *TMSServer) FindCompanyByName(ctx context.Context, req *proto.FindCompanyByNameRequest) (*proto.FindCompanyByNameResponse, error) {
+	uc := s.uc.Auth.WithContext(ctx)
+
+	// Check if company exists (not unique = exists)
+	exists := !uc.ValidateCompanyUnique("name", req.Name, "")
+
+	return &proto.FindCompanyByNameResponse{
+		Exists: exists,
+	}, nil
+}
+
+// FindUserByEmail implements proto.TMSServiceServer
+func (s *TMSServer) FindUserByEmail(ctx context.Context, req *proto.FindUserByEmailRequest) (*proto.FindUserByEmailResponse, error) {
+	uc := s.uc.Auth.WithContext(ctx)
+
+	// Check if user exists (not unique = exists)
+	exists := !uc.ValidateUserUnique("email", req.Email, "")
+
+	return &proto.FindUserByEmailResponse{
+		Exists: exists,
+	}, nil
 }
 
 // GetDashboard implements proto.TMSServiceServer
