@@ -40,11 +40,10 @@ export type UserRole = "admin" | "dispatcher" | "driver";
 
 export interface Company {
   id: string;
-  name: string;
+  company_name: string;
   type: CompanyType;
-  timezone?: string;
-  currency?: string;
-  language?: string;
+  address?: string;
+  brand_name?: string;
   logo_url?: string;
   is_active: boolean;
   onboarding_completed: boolean;
