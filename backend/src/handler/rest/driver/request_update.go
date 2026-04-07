@@ -23,7 +23,7 @@ type updateRequest struct {
 	AvatarURL     string     `json:"avatar_url" valid:"omitempty|url"`
 	// Add login account fields (one-way: no login → has login)
 	HasLogin        bool   `json:"has_login"`
-	Email           string `json:"email" valid:"email"`
+	Username        string `json:"username"`
 	Password        string `json:"password"`
 	ConfirmPassword string `json:"confirm_password"`
 
@@ -62,8 +62,8 @@ func (r *updateRequest) Validate() *validate.Response {
 	// Validate add login account (one-way: no login → has login)
 	if r.HasLogin {
 		// check if kosong
-		if r.Email == "" {
-			v.SetError("email.invalid", "this email is required.")
+		if r.Username == "" {
+			v.SetError("username.invalid", "this username is required.")
 		}
 
 		if r.Password == "" {
@@ -75,10 +75,10 @@ func (r *updateRequest) Validate() *validate.Response {
 			v.SetError("has_login.invalid", "Driver already has a login account. Cannot add another login.")
 		}
 
-		// Validate email is unique
-		if r.Email != "" {
-			if !r.uc.User.ValidateUserUnique("email", r.Email, r.session.CompanyID, "") {
-				v.SetError("email.unique", "Email already used.")
+		// Validate username is unique
+		if r.Username != "" {
+			if !r.uc.User.ValidateUserUnique("username", r.Username, r.session.CompanyID, "") {
+				v.SetError("username.unique", "Username already used.")
 			}
 		}
 
@@ -124,7 +124,7 @@ func (r *updateRequest) toUserEntity() *entity.User {
 	companyID, _ := uuid.Parse(r.session.CompanyID)
 	return &entity.User{
 		Name:      r.Name,
-		Email:     r.Email,
+		Username:  r.Username,
 		Password:  r.PasswordHash,
 		Role:      "driver",
 		Phone:     r.Phone,
