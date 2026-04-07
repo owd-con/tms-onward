@@ -19,10 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	TMSService_Signup_FullMethodName            = "/tms.TMSService/Signup"
-	TMSService_FindCompanyByName_FullMethodName = "/tms.TMSService/FindCompanyByName"
-	TMSService_FindUserByEmail_FullMethodName   = "/tms.TMSService/FindUserByEmail"
-	TMSService_GetDashboard_FullMethodName      = "/tms.TMSService/GetDashboard"
+	TMSService_Signup_FullMethodName             = "/tms.TMSService/Signup"
+	TMSService_FindCompanyByName_FullMethodName  = "/tms.TMSService/FindCompanyByName"
+	TMSService_FindUserByEmail_FullMethodName    = "/tms.TMSService/FindUserByEmail"
+	TMSService_FindUserByUsername_FullMethodName = "/tms.TMSService/FindUserByUsername"
+	TMSService_GetDashboard_FullMethodName       = "/tms.TMSService/GetDashboard"
 )
 
 // TMSServiceClient is the client API for TMSService service.
@@ -33,6 +34,7 @@ type TMSServiceClient interface {
 	Signup(ctx context.Context, in *SignupRequest, opts ...grpc.CallOption) (*SignupResponse, error)
 	FindCompanyByName(ctx context.Context, in *FindCompanyByNameRequest, opts ...grpc.CallOption) (*FindCompanyByNameResponse, error)
 	FindUserByEmail(ctx context.Context, in *FindUserByEmailRequest, opts ...grpc.CallOption) (*FindUserByEmailResponse, error)
+	FindUserByUsername(ctx context.Context, in *FindUserByUsernameRequest, opts ...grpc.CallOption) (*FindUserByUsernameResponse, error)
 	// Dashboard operations
 	GetDashboard(ctx context.Context, in *DashboardRequest, opts ...grpc.CallOption) (*DashboardResponse, error)
 }
@@ -75,6 +77,16 @@ func (c *tMSServiceClient) FindUserByEmail(ctx context.Context, in *FindUserByEm
 	return out, nil
 }
 
+func (c *tMSServiceClient) FindUserByUsername(ctx context.Context, in *FindUserByUsernameRequest, opts ...grpc.CallOption) (*FindUserByUsernameResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FindUserByUsernameResponse)
+	err := c.cc.Invoke(ctx, TMSService_FindUserByUsername_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *tMSServiceClient) GetDashboard(ctx context.Context, in *DashboardRequest, opts ...grpc.CallOption) (*DashboardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DashboardResponse)
@@ -93,6 +105,7 @@ type TMSServiceServer interface {
 	Signup(context.Context, *SignupRequest) (*SignupResponse, error)
 	FindCompanyByName(context.Context, *FindCompanyByNameRequest) (*FindCompanyByNameResponse, error)
 	FindUserByEmail(context.Context, *FindUserByEmailRequest) (*FindUserByEmailResponse, error)
+	FindUserByUsername(context.Context, *FindUserByUsernameRequest) (*FindUserByUsernameResponse, error)
 	// Dashboard operations
 	GetDashboard(context.Context, *DashboardRequest) (*DashboardResponse, error)
 	mustEmbedUnimplementedTMSServiceServer()
@@ -113,6 +126,9 @@ func (UnimplementedTMSServiceServer) FindCompanyByName(context.Context, *FindCom
 }
 func (UnimplementedTMSServiceServer) FindUserByEmail(context.Context, *FindUserByEmailRequest) (*FindUserByEmailResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method FindUserByEmail not implemented")
+}
+func (UnimplementedTMSServiceServer) FindUserByUsername(context.Context, *FindUserByUsernameRequest) (*FindUserByUsernameResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method FindUserByUsername not implemented")
 }
 func (UnimplementedTMSServiceServer) GetDashboard(context.Context, *DashboardRequest) (*DashboardResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetDashboard not implemented")
@@ -192,6 +208,24 @@ func _TMSService_FindUserByEmail_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TMSService_FindUserByUsername_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FindUserByUsernameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TMSServiceServer).FindUserByUsername(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TMSService_FindUserByUsername_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TMSServiceServer).FindUserByUsername(ctx, req.(*FindUserByUsernameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _TMSService_GetDashboard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DashboardRequest)
 	if err := dec(in); err != nil {
@@ -228,6 +262,10 @@ var TMSService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "FindUserByEmail",
 			Handler:    _TMSService_FindUserByEmail_Handler,
+		},
+		{
+			MethodName: "FindUserByUsername",
+			Handler:    _TMSService_FindUserByUsername_Handler,
 		},
 		{
 			MethodName: "GetDashboard",

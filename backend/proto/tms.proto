@@ -98,6 +98,7 @@ service TMSService {
   rpc Signup(SignupRequest) returns (SignupResponse);
   rpc FindCompanyByName(FindCompanyByNameRequest) returns (FindCompanyByNameResponse);
   rpc FindUserByEmail(FindUserByEmailRequest) returns (FindUserByEmailResponse);
+  rpc FindUserByUsername(FindUserByUsernameRequest) returns (FindUserByUsernameResponse);
 
   // Dashboard operations
   rpc GetDashboard(DashboardRequest) returns (DashboardResponse);

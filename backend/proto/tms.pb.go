@@ -694,12 +694,13 @@ const file_tms_proto_rawDesc = "" +
 	"\amonthly\x18\x01 \x01(\tR\amonthly\"t\n" +
 	"\x11DashboardResponse\x12/\n" +
 	"\asummary\x18\x01 \x01(\v2\x15.tms.DashboardSummaryR\asummary\x12.\n" +
-	"\tcompanies\x18\x02 \x03(\v2\x10.tms.CompanyDataR\tcompanies2\xa0\x02\n" +
+	"\tcompanies\x18\x02 \x03(\v2\x10.tms.CompanyDataR\tcompanies2\xf7\x02\n" +
 	"\n" +
 	"TMSService\x121\n" +
 	"\x06Signup\x12\x12.tms.SignupRequest\x1a\x13.tms.SignupResponse\x12R\n" +
 	"\x11FindCompanyByName\x12\x1d.tms.FindCompanyByNameRequest\x1a\x1e.tms.FindCompanyByNameResponse\x12L\n" +
-	"\x0fFindUserByEmail\x12\x1b.tms.FindUserByEmailRequest\x1a\x1c.tms.FindUserByEmailResponse\x12=\n" +
+	"\x0fFindUserByEmail\x12\x1b.tms.FindUserByEmailRequest\x1a\x1c.tms.FindUserByEmailResponse\x12U\n" +
+	"\x12FindUserByUsername\x12\x1e.tms.FindUserByUsernameRequest\x1a\x1f.tms.FindUserByUsernameResponse\x12=\n" +
 	"\fGetDashboard\x12\x15.tms.DashboardRequest\x1a\x16.tms.DashboardResponseB0Z.github.com/logistics-id/onward-tms/proto;protob\x06proto3"
 
 var (
@@ -737,13 +738,15 @@ var file_tms_proto_depIdxs = []int32{
 	0,  // 3: tms.TMSService.Signup:input_type -> tms.SignupRequest
 	2,  // 4: tms.TMSService.FindCompanyByName:input_type -> tms.FindCompanyByNameRequest
 	4,  // 5: tms.TMSService.FindUserByEmail:input_type -> tms.FindUserByEmailRequest
-	10, // 6: tms.TMSService.GetDashboard:input_type -> tms.DashboardRequest
-	1,  // 7: tms.TMSService.Signup:output_type -> tms.SignupResponse
-	3,  // 8: tms.TMSService.FindCompanyByName:output_type -> tms.FindCompanyByNameResponse
-	5,  // 9: tms.TMSService.FindUserByEmail:output_type -> tms.FindUserByEmailResponse
-	11, // 10: tms.TMSService.GetDashboard:output_type -> tms.DashboardResponse
-	7,  // [7:11] is the sub-list for method output_type
-	3,  // [3:7] is the sub-list for method input_type
+	6,  // 6: tms.TMSService.FindUserByUsername:input_type -> tms.FindUserByUsernameRequest
+	10, // 7: tms.TMSService.GetDashboard:input_type -> tms.DashboardRequest
+	1,  // 8: tms.TMSService.Signup:output_type -> tms.SignupResponse
+	3,  // 9: tms.TMSService.FindCompanyByName:output_type -> tms.FindCompanyByNameResponse
+	5,  // 10: tms.TMSService.FindUserByEmail:output_type -> tms.FindUserByEmailResponse
+	7,  // 11: tms.TMSService.FindUserByUsername:output_type -> tms.FindUserByUsernameResponse
+	11, // 12: tms.TMSService.GetDashboard:output_type -> tms.DashboardResponse
+	8,  // [8:13] is the sub-list for method output_type
+	3,  // [3:8] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
 	3,  // [3:3] is the sub-list for extension extendee
 	0,  // [0:3] is the sub-list for field type_name
