@@ -144,6 +144,12 @@ const CompanyDetailPage = () => {
                     </span>
                   </p>
                   <p className='text-sm text-base-content/60 mt-1'>
+                    Phone:{" "}
+                    <span className='font-semibold'>
+                      {company?.phone || "-"}
+                    </span>
+                  </p>
+                  <p className='text-sm text-base-content/60 mt-1'>
                     Address:{" "}
                     <span className='font-semibold'>
                       {company?.address || "-"}

@@ -46,6 +46,7 @@ export interface Company {
   brand_name?: string;
   logo_url?: string;
   is_active: boolean;
+  phone: string;
   onboarding_completed: boolean;
   created_at: string;
   updated_at: string;

@@ -22,6 +22,7 @@ const CompanyEditModal = ({
   const [company_name, setCompanyName] = useState(data?.company_name || "");
   const [brand_name, setBrandName] = useState(data?.brand_name || "");
   const [address, setAddress] = useState(data?.address || "");
+  const [phone, setPhone] = useState(data?.phone || "");
   const [type, setType] = useState<{ label: string; value: "3PL" | "Carrier" }>(
     companyTypeOptions.find((opt) => opt.value === (data?.type || "3PL")) ||
       companyTypeOptions[0],
@@ -34,10 +35,11 @@ const CompanyEditModal = ({
     await updateCompany({
       id: data?.id || "",
       payload: {
-        company_name: company_name.trim(),
+        company_name,
         type: type.value,
-        brand_name: brand_name.trim(),
+        brand_name,
         address,
+        phone,
         logo_url: logoPhotos[0] || undefined,
       },
     });
@@ -56,6 +58,7 @@ const CompanyEditModal = ({
     if (data) {
       setCompanyName(data.company_name || "");
       setBrandName(data.brand_name || "");
+      setPhone(data.phone || "");
       setAddress(data.address || "");
       setType(
         companyTypeOptions.find((opt) => opt.value === data.type) ||
@@ -110,7 +113,14 @@ const CompanyEditModal = ({
         />
 
         <Input
-          label='Address '
+          label='Phone'
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+
+        <Input
+          label='Address'
+          type='textarea'
           value={address}
           onChange={(e) => setAddress(e.target.value)}
         />
