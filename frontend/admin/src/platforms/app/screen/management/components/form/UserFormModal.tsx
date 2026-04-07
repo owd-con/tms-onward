@@ -18,6 +18,7 @@ import type { User, UserRole } from "@/services/types";
 export interface UserFormModalRef {
   buildPayload: () => {
     name: string;
+    username: string;
     email: string;
     password?: string;
     confirm_password?: string;
@@ -50,6 +51,7 @@ const UserFormModal = forwardRef<UserFormModalRef, UserFormModalProps>(
 
     // 5. State management untuk form fields
     const [name, setName] = useState("");
+    const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -60,6 +62,7 @@ const UserFormModal = forwardRef<UserFormModalRef, UserFormModalProps>(
     const buildPayload = () => {
       const payload: {
         name: string;
+        username: string;
         email: string;
         password?: string;
         confirm_password?: string;
@@ -67,6 +70,7 @@ const UserFormModal = forwardRef<UserFormModalRef, UserFormModalProps>(
         role: UserRole;
       } = {
         name,
+        username,
         email,
         role,
       };
@@ -88,6 +92,7 @@ const UserFormModal = forwardRef<UserFormModalRef, UserFormModalProps>(
     // 7. Reset form method
     const reset = () => {
       setName("");
+      setUsername("");
       setEmail("");
       setPassword("");
       setConfirmPassword("");
@@ -105,6 +110,7 @@ const UserFormModal = forwardRef<UserFormModalRef, UserFormModalProps>(
     useEffect(() => {
       if (mode === "update" && data) {
         setName(data.name ?? "");
+        setUsername(data.username ?? "");
         setEmail(data.email ?? "");
         setPassword(""); // Don't populate password on update
         setConfirmPassword("");
@@ -207,13 +213,21 @@ const UserFormModal = forwardRef<UserFormModalRef, UserFormModalProps>(
                 />
 
                 <Input
+                  label='Username'
+                  placeholder='Enter your username'
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  error={FormState?.errors?.username as string}
+                  required
+                />
+
+                <Input
                   label='Email'
                   placeholder='user@example.com'
                   type='email'
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   error={FormState?.errors?.email as string}
-                  required
                 />
 
                 <Input
@@ -285,11 +299,7 @@ const UserFormModal = forwardRef<UserFormModalRef, UserFormModalProps>(
               >
                 Cancel
               </Button>
-              <Button
-                type='submit'
-                variant='primary'
-                isLoading={isLoading}
-              >
+              <Button type='submit' variant='primary' isLoading={isLoading}>
                 {mode === "create" ? "Create Account" : "Update Account"}
               </Button>
             </div>

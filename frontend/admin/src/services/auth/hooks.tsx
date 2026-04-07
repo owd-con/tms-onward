@@ -1,6 +1,11 @@
 import { useDispatch } from "react-redux";
 import { useFormActions } from "../form/hooks";
-import { useLoginMutation, useRegisterMutation, useLogoutMutation, useChangePasswordMutation } from "./api";
+import {
+  useLoginMutation,
+  useRegisterMutation,
+  useLogoutMutation,
+  useChangePasswordMutation,
+} from "./api";
 import { signin, signout } from "./slice";
 import { useProfile } from "../profile";
 
@@ -16,20 +21,23 @@ export const useAuth = () => {
   const [loginMutation, loginResult] = useLoginMutation();
   const [registerMutation, registerResult] = useRegisterMutation();
   const [logoutMutation, logoutResult] = useLogoutMutation();
-  const [changePasswordMutation, changePasswordResult] = useChangePasswordMutation();
+  const [changePasswordMutation, changePasswordResult] =
+    useChangePasswordMutation();
 
   /**
-   * Login with email and password
+   * Login with identifier and password
    */
-  const login = async (email: string, password: string) => {
+  const login = async (identifier: string, password: string) => {
     try {
-      const res = await loginMutation({ email, password }).unwrap();
+      const res = await loginMutation({ identifier, password }).unwrap();
       if (res?.data?.access_token) {
         // Dispatch signin action with session data
-        dispatch(signin({
-          access_token: res.data.access_token,
-          user: res.data.user,
-        }));
+        dispatch(
+          signin({
+            access_token: res.data.access_token,
+            user: res.data.user,
+          }),
+        );
         // Fetch full user profile
         getMe();
       }
@@ -46,16 +54,18 @@ export const useAuth = () => {
    */
   const register = async (
     companyName: string,
-    companyType: '3PL' | 'Carrier',
+    companyType: "3PL" | "Carrier",
+    username: string,
     name: string,
     email: string,
     password: string,
-    phone?: string
+    phone?: string,
   ) => {
     try {
       await registerMutation({
         company_name: companyName,
         company_type: companyType,
+        username,
         name,
         email,
         password,
@@ -89,7 +99,7 @@ export const useAuth = () => {
   const changePassword = async (
     oldPassword: string,
     newPassword: string,
-    confirmNewPassword: string
+    confirmNewPassword: string,
   ) => {
     try {
       await changePasswordMutation({

@@ -34,7 +34,7 @@ export interface DriverFormModalRef {
     license_expiry?: string;
     phone: string;
     has_login?: boolean;
-    email?: string;
+    username?: string;
     password?: string;
   };
   reset: () => void;
@@ -48,7 +48,6 @@ interface DriverFormModalProps {
   mode: "create" | "update";
   data?: Driver;
 }
-
 
 // 3. Component dengan forwardRef
 const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
@@ -68,12 +67,14 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
     const [licenseType, setLicenseType] = useState<SelectOptionValue | null>(
       null,
     );
-    const [licenseExpiryYear, setLicenseExpiryYear] = useState<dayjs.Dayjs | undefined>(undefined);
+    const [licenseExpiryYear, setLicenseExpiryYear] = useState<
+      dayjs.Dayjs | undefined
+    >(undefined);
     const [phone, setPhone] = useState("");
 
     // Login account fields
     const [hasLogin, setHasLogin] = useState(false);
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -92,7 +93,7 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
         license_expiry?: string;
         phone: string;
         has_login?: boolean;
-        email?: string;
+        username?: string;
         password?: string;
       } = {
         name,
@@ -105,7 +106,7 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
       // Include login fields only if hasLogin is true
       if (hasLogin) {
         payload.has_login = true;
-        payload.email = email;
+        payload.username = username;
         payload.password = password;
       }
 
@@ -120,7 +121,7 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
       setLicenseExpiryYear(undefined);
       setPhone("");
       setHasLogin(false);
-      setEmail("");
+      setUsername("");
       setPassword("");
       setConfirmPassword("");
     };
@@ -154,7 +155,7 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
         // user_id is valid (not null, not empty UUID) means driver has login
         // NOTE: Don't set hasLogin=true for existing users - hasLogin is only for form control
         // If driver already has login, hasLogin should stay false so the form doesn't
-        // validate the email/password fields that are not shown
+        // validate the username/password fields that are not shown
         // hasLogin stays false - checkbox/form controls won't show for drivers with existing login
       }
     }, [data, mode]);
@@ -300,12 +301,11 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
                     </h3>
 
                     <Input
-                      label='Email'
-                      placeholder='driver@example.com'
-                      type='email'
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      error={FormState?.errors?.email as string}
+                      label='Username'
+                      placeholder='Enter your username'
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      error={FormState?.errors?.username as string}
                       required
                     />
 
@@ -370,7 +370,9 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
                   pickerMode='year'
                   format='YYYY'
                   value={licenseExpiryYear}
-                  onChange={(date) => setLicenseExpiryYear(date as dayjs.Dayjs | undefined)}
+                  onChange={(date) =>
+                    setLicenseExpiryYear(date as dayjs.Dayjs | undefined)
+                  }
                   error={FormState?.errors?.license_expiry as string}
                   required
                 />
@@ -388,11 +390,7 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
               >
                 Cancel
               </Button>
-              <Button
-                type='submit'
-                variant='primary'
-                isLoading={isLoading}
-              >
+              <Button type='submit' variant='primary' isLoading={isLoading}>
                 {mode === "create" ? "Create Driver" : "Update Driver"}
               </Button>
             </div>
