@@ -273,7 +273,7 @@ func (u *DashboardUsecase) GetCompanyShipments(ctx context.Context, monthly stri
 	var results []CompanyShipmentData
 
 	// Build base query
-	query := `SELECT c.id as company_id, c.name as company_name, c.created_at as created_at, s.total as total_shipments
+	query := `SELECT c.id as company_id, c.company_name as company_name, c.created_at as created_at, s.total as total_shipments
 		FROM companies c
 		LEFT JOIN (
 			select company_id, count(id) as total from shipments
