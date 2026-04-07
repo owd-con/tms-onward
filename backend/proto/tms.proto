@@ -49,6 +49,16 @@ message FindUserByEmailResponse {
   bool exists = 1;
 }
 
+// FindUserByUsernameRequest - Request to find user by email
+message FindUserByUsernameRequest {
+  string username = 1;
+}
+
+// FindUserByUsernameResponse - Response with user exists status
+message FindUserByUsernameResponse {
+  bool exists = 1;
+}
+
 // ============================================
 // Dashboard Messages
 // ============================================

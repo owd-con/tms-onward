@@ -95,6 +95,18 @@ func (s *TMSServer) FindUserByEmail(ctx context.Context, req *proto.FindUserByEm
 	}, nil
 }
 
+// FindUserByUsername implements proto.TMSServiceServer
+func (s *TMSServer) FindUserByUsername(ctx context.Context, req *proto.FindUserByUsernameRequest) (*proto.FindUserByUsernameResponse, error) {
+	uc := s.uc.Auth.WithContext(ctx)
+
+	// Check if user exists (not unique = exists)
+	exists := !uc.ValidateUserUnique("username", req.Username, "")
+
+	return &proto.FindUserByUsernameResponse{
+		Exists: exists,
+	}, nil
+}
+
 // GetDashboard implements proto.TMSServiceServer
 func (s *TMSServer) GetDashboard(ctx context.Context, req *proto.DashboardRequest) (*proto.DashboardResponse, error) {
 	// Get summary statistics

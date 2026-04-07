@@ -350,6 +350,96 @@ func (x *FindUserByEmailResponse) GetExists() bool {
 	return false
 }
 
+// FindUserByUsernameRequest - Request to find user by email
+type FindUserByUsernameRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FindUserByUsernameRequest) Reset() {
+	*x = FindUserByUsernameRequest{}
+	mi := &file_tms_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FindUserByUsernameRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FindUserByUsernameRequest) ProtoMessage() {}
+
+func (x *FindUserByUsernameRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_tms_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FindUserByUsernameRequest.ProtoReflect.Descriptor instead.
+func (*FindUserByUsernameRequest) Descriptor() ([]byte, []int) {
+	return file_tms_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *FindUserByUsernameRequest) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+// FindUserByUsernameResponse - Response with user exists status
+type FindUserByUsernameResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Exists        bool                   `protobuf:"varint,1,opt,name=exists,proto3" json:"exists,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FindUserByUsernameResponse) Reset() {
+	*x = FindUserByUsernameResponse{}
+	mi := &file_tms_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FindUserByUsernameResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FindUserByUsernameResponse) ProtoMessage() {}
+
+func (x *FindUserByUsernameResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_tms_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FindUserByUsernameResponse.ProtoReflect.Descriptor instead.
+func (*FindUserByUsernameResponse) Descriptor() ([]byte, []int) {
+	return file_tms_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *FindUserByUsernameResponse) GetExists() bool {
+	if x != nil {
+		return x.Exists
+	}
+	return false
+}
+
 // DashboardSummary - Summary statistics for superadmin
 type DashboardSummary struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
@@ -361,7 +451,7 @@ type DashboardSummary struct {
 
 func (x *DashboardSummary) Reset() {
 	*x = DashboardSummary{}
-	mi := &file_tms_proto_msgTypes[6]
+	mi := &file_tms_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -373,7 +463,7 @@ func (x *DashboardSummary) String() string {
 func (*DashboardSummary) ProtoMessage() {}
 
 func (x *DashboardSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_tms_proto_msgTypes[6]
+	mi := &file_tms_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -386,7 +476,7 @@ func (x *DashboardSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DashboardSummary.ProtoReflect.Descriptor instead.
 func (*DashboardSummary) Descriptor() ([]byte, []int) {
-	return file_tms_proto_rawDescGZIP(), []int{6}
+	return file_tms_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DashboardSummary) GetTotalTenants() int64 {
@@ -415,7 +505,7 @@ type CompanyData struct {
 
 func (x *CompanyData) Reset() {
 	*x = CompanyData{}
-	mi := &file_tms_proto_msgTypes[7]
+	mi := &file_tms_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -427,7 +517,7 @@ func (x *CompanyData) String() string {
 func (*CompanyData) ProtoMessage() {}
 
 func (x *CompanyData) ProtoReflect() protoreflect.Message {
-	mi := &file_tms_proto_msgTypes[7]
+	mi := &file_tms_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -440,7 +530,7 @@ func (x *CompanyData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CompanyData.ProtoReflect.Descriptor instead.
 func (*CompanyData) Descriptor() ([]byte, []int) {
-	return file_tms_proto_rawDescGZIP(), []int{7}
+	return file_tms_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *CompanyData) GetCompanyName() string {
@@ -476,7 +566,7 @@ type DashboardRequest struct {
 
 func (x *DashboardRequest) Reset() {
 	*x = DashboardRequest{}
-	mi := &file_tms_proto_msgTypes[8]
+	mi := &file_tms_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -488,7 +578,7 @@ func (x *DashboardRequest) String() string {
 func (*DashboardRequest) ProtoMessage() {}
 
 func (x *DashboardRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_tms_proto_msgTypes[8]
+	mi := &file_tms_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -501,7 +591,7 @@ func (x *DashboardRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DashboardRequest.ProtoReflect.Descriptor instead.
 func (*DashboardRequest) Descriptor() ([]byte, []int) {
-	return file_tms_proto_rawDescGZIP(), []int{8}
+	return file_tms_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *DashboardRequest) GetMonthly() string {
@@ -522,7 +612,7 @@ type DashboardResponse struct {
 
 func (x *DashboardResponse) Reset() {
 	*x = DashboardResponse{}
-	mi := &file_tms_proto_msgTypes[9]
+	mi := &file_tms_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -534,7 +624,7 @@ func (x *DashboardResponse) String() string {
 func (*DashboardResponse) ProtoMessage() {}
 
 func (x *DashboardResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_tms_proto_msgTypes[9]
+	mi := &file_tms_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -547,7 +637,7 @@ func (x *DashboardResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DashboardResponse.ProtoReflect.Descriptor instead.
 func (*DashboardResponse) Descriptor() ([]byte, []int) {
-	return file_tms_proto_rawDescGZIP(), []int{9}
+	return file_tms_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *DashboardResponse) GetSummary() *DashboardSummary {
@@ -587,6 +677,10 @@ const file_tms_proto_rawDesc = "" +
 	"\x16FindUserByEmailRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\"1\n" +
 	"\x17FindUserByEmailResponse\x12\x16\n" +
+	"\x06exists\x18\x01 \x01(\bR\x06exists\"7\n" +
+	"\x19FindUserByUsernameRequest\x12\x1a\n" +
+	"\busername\x18\x01 \x01(\tR\busername\"4\n" +
+	"\x1aFindUserByUsernameResponse\x12\x16\n" +
 	"\x06exists\x18\x01 \x01(\bR\x06exists\"`\n" +
 	"\x10DashboardSummary\x12#\n" +
 	"\rtotal_tenants\x18\x01 \x01(\x03R\ftotalTenants\x12'\n" +
@@ -620,32 +714,34 @@ func file_tms_proto_rawDescGZIP() []byte {
 	return file_tms_proto_rawDescData
 }
 
-var file_tms_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_tms_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_tms_proto_goTypes = []any{
-	(*SignupRequest)(nil),             // 0: tms.SignupRequest
-	(*SignupResponse)(nil),            // 1: tms.SignupResponse
-	(*FindCompanyByNameRequest)(nil),  // 2: tms.FindCompanyByNameRequest
-	(*FindCompanyByNameResponse)(nil), // 3: tms.FindCompanyByNameResponse
-	(*FindUserByEmailRequest)(nil),    // 4: tms.FindUserByEmailRequest
-	(*FindUserByEmailResponse)(nil),   // 5: tms.FindUserByEmailResponse
-	(*DashboardSummary)(nil),          // 6: tms.DashboardSummary
-	(*CompanyData)(nil),               // 7: tms.CompanyData
-	(*DashboardRequest)(nil),          // 8: tms.DashboardRequest
-	(*DashboardResponse)(nil),         // 9: tms.DashboardResponse
-	(*timestamppb.Timestamp)(nil),     // 10: google.protobuf.Timestamp
+	(*SignupRequest)(nil),              // 0: tms.SignupRequest
+	(*SignupResponse)(nil),             // 1: tms.SignupResponse
+	(*FindCompanyByNameRequest)(nil),   // 2: tms.FindCompanyByNameRequest
+	(*FindCompanyByNameResponse)(nil),  // 3: tms.FindCompanyByNameResponse
+	(*FindUserByEmailRequest)(nil),     // 4: tms.FindUserByEmailRequest
+	(*FindUserByEmailResponse)(nil),    // 5: tms.FindUserByEmailResponse
+	(*FindUserByUsernameRequest)(nil),  // 6: tms.FindUserByUsernameRequest
+	(*FindUserByUsernameResponse)(nil), // 7: tms.FindUserByUsernameResponse
+	(*DashboardSummary)(nil),           // 8: tms.DashboardSummary
+	(*CompanyData)(nil),                // 9: tms.CompanyData
+	(*DashboardRequest)(nil),           // 10: tms.DashboardRequest
+	(*DashboardResponse)(nil),          // 11: tms.DashboardResponse
+	(*timestamppb.Timestamp)(nil),      // 12: google.protobuf.Timestamp
 }
 var file_tms_proto_depIdxs = []int32{
-	10, // 0: tms.CompanyData.created_at:type_name -> google.protobuf.Timestamp
-	6,  // 1: tms.DashboardResponse.summary:type_name -> tms.DashboardSummary
-	7,  // 2: tms.DashboardResponse.companies:type_name -> tms.CompanyData
+	12, // 0: tms.CompanyData.created_at:type_name -> google.protobuf.Timestamp
+	8,  // 1: tms.DashboardResponse.summary:type_name -> tms.DashboardSummary
+	9,  // 2: tms.DashboardResponse.companies:type_name -> tms.CompanyData
 	0,  // 3: tms.TMSService.Signup:input_type -> tms.SignupRequest
 	2,  // 4: tms.TMSService.FindCompanyByName:input_type -> tms.FindCompanyByNameRequest
 	4,  // 5: tms.TMSService.FindUserByEmail:input_type -> tms.FindUserByEmailRequest
-	8,  // 6: tms.TMSService.GetDashboard:input_type -> tms.DashboardRequest
+	10, // 6: tms.TMSService.GetDashboard:input_type -> tms.DashboardRequest
 	1,  // 7: tms.TMSService.Signup:output_type -> tms.SignupResponse
 	3,  // 8: tms.TMSService.FindCompanyByName:output_type -> tms.FindCompanyByNameResponse
 	5,  // 9: tms.TMSService.FindUserByEmail:output_type -> tms.FindUserByEmailResponse
-	9,  // 10: tms.TMSService.GetDashboard:output_type -> tms.DashboardResponse
+	11, // 10: tms.TMSService.GetDashboard:output_type -> tms.DashboardResponse
 	7,  // [7:11] is the sub-list for method output_type
 	3,  // [3:7] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
@@ -664,7 +760,7 @@ func file_tms_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_tms_proto_rawDesc), len(file_tms_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
