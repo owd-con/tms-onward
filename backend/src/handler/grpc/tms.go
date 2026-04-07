@@ -76,7 +76,7 @@ func (s *TMSServer) FindCompanyByName(ctx context.Context, req *proto.FindCompan
 	uc := s.uc.Auth.WithContext(ctx)
 
 	// Check if company exists (not unique = exists)
-	exists := !uc.ValidateCompanyUnique("name", req.Name, "")
+	exists := !uc.ValidateCompanyUnique("company_name", req.Name, "")
 
 	return &proto.FindCompanyByNameResponse{
 		Exists: exists,
