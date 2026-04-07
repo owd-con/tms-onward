@@ -42,6 +42,24 @@ func (r *UserRepository) FindByEmail(email string) (*entity.User, error) {
 	return mx, nil
 }
 
+// FindByUsername finds a user by username
+func (r *UserRepository) FindByUsername(username string) (*entity.User, error) {
+	mx := new(entity.User)
+
+	qs := r.DB.NewSelect().Model(mx)
+	qs.Where("username = ? and users.is_deleted = false", username)
+	qs.Relation("Company")
+
+	if err := qs.Scan(r.Context); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
+		return nil, err
+	}
+
+	return mx, nil
+}
+
 // UpdateLastLogin updates the last_login_at field for a user
 func (r *UserRepository) UpdateLastLogin(userID string) error {
 	_, err := r.DB.NewUpdate().

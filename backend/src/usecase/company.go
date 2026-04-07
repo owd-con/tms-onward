@@ -2,11 +2,16 @@ package usecase
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"strings"
 
+	"github.com/logistics-id/engine"
 	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/repository"
 	"github.com/uptrace/bun"
+	"go.uber.org/zap"
 )
 
 type CompanyUsecase struct {
@@ -88,4 +93,29 @@ func (u *CompanyUsecase) Activate(company *entity.Company) error {
 func (u *CompanyUsecase) Deactivate(company *entity.Company) error {
 	company.IsActive = false
 	return u.repo.Update(company, "is_active")
+}
+
+// ValidateCompanyUnique checks if a company field value is unique
+func (u *CompanyUsecase) ValidateCompanyUnique(field string, value string, excludeID string) bool {
+	query := func(q *bun.SelectQuery) *bun.SelectQuery {
+		q.Where("lower(?) = lower(?)", bun.Ident(field), strings.ToLower(value))
+		q.Where("is_deleted = false")
+
+		if excludeID != "" {
+			q.Where("id != ?", excludeID)
+		}
+
+		return q
+	}
+
+	_, err := u.repo.FindOne(query)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return true // value is unique
+		}
+		engine.Logger.Error("error checking user unique "+field, zap.Error(err))
+		return false
+	}
+
+	return false
 }

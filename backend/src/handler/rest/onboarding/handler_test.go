@@ -56,11 +56,8 @@ func createTestCompanyUser(t *testing.T) (*entity.Company, *entity.User) {
 	repoCompany := repository.NewCompanyRepository().WithContext(ctx)
 
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: false,
 	}
@@ -69,12 +66,12 @@ func createTestCompanyUser(t *testing.T) (*entity.Company, *entity.User) {
 
 	repoUser := repository.NewUserRepository().WithContext(ctx)
 	user := &entity.User{
-		CompanyID:    company.ID,
-		Name:         "Test User",
-		Email:        fmt.Sprintf("test%s@example.com", uuid.New().String()),
-		PasswordHash: "hashedpassword",
-		Role:         "admin",
-		IsActive:     true,
+		CompanyID: company.ID,
+		Name:      "Test User",
+		Email:     fmt.Sprintf("test%s@example.com", uuid.New().String()),
+		Password:  "hashedpassword",
+		Role:      "admin",
+		IsActive:  true,
 	}
 	err = repoUser.Insert(user)
 	require.NoError(t, err)
@@ -154,10 +151,10 @@ func TestOnboardingHandler_Step3CreateVehicle_Success(t *testing.T) {
 	companyID := company.ID.String()
 
 	body := map[string]interface{}{
-		"plate_number":     fmt.Sprintf("B %d XYZ", 1000+uuid.New().ID()%9000),
-		"vehicle_type":     "Truck",
-		"capacity_weight":  5000.0,
-		"capacity_volume":  100.0,
+		"plate_number":    fmt.Sprintf("B %d XYZ", 1000+uuid.New().ID()%9000),
+		"vehicle_type":    "Truck",
+		"capacity_weight": 5000.0,
+		"capacity_volume": 100.0,
 	}
 
 	bodyJSON, _ := json.Marshal(body)

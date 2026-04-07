@@ -60,14 +60,22 @@ func (u *AuthUsecase) Signup(user *entity.User, company *entity.Company) (*entit
 }
 
 // ValidLogin validates user credentials
-func (u *AuthUsecase) ValidLogin(email string, password string) (*entity.User, error) {
-	// Find user by email
-	user, err := u.RepoUser.FindByEmail(email)
+func (u *AuthUsecase) ValidLogin(identifier string, password string) (*entity.User, error) {
+	// Try to find user by username first
+	user, err := u.RepoUser.FindByUsername(identifier)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("invalid email or password")
+			// If not found by username, try email (if email is provided)
+			user, err = u.RepoUser.FindByEmail(identifier)
+			if err != nil {
+				if errors.Is(err, sql.ErrNoRows) {
+					return nil, errors.New("invalid username or password")
+				}
+				return nil, err
+			}
+		} else {
+			return nil, err
 		}
-		return nil, err
 	}
 
 	// Check if user is active
@@ -88,8 +96,8 @@ func (u *AuthUsecase) ValidLogin(email string, password string) (*entity.User, e
 	}
 
 	// Verify password
-	if err := common.CheckPassword(user.PasswordHash, password); err != nil {
-		return nil, errors.New("invalid email or password")
+	if err := common.CheckPassword(user.Password, password); err != nil {
+		return nil, errors.New("invalid username or password")
 	}
 
 	// Update last login
@@ -109,7 +117,7 @@ func (u *AuthUsecase) MakeSession(user *entity.User, companyID uuid.UUID) (*enti
 	claims := &entity.TMSSessionClaims{
 		SessionClaims: &common.SessionClaims{
 			UserID:      user.ID.String(),
-			Username:    user.Email,
+			Username:    user.Username,
 			DisplayName: user.Name,
 			Email:       user.Email,
 			RegisteredClaims: jwt.RegisteredClaims{

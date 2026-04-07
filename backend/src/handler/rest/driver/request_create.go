@@ -115,13 +115,13 @@ func (r *createRequest) toEntity() *entity.Driver {
 func (r *createRequest) toUserEntity() *entity.User {
 	companyID, _ := uuid.Parse(r.session.CompanyID)
 	return &entity.User{
-		Name:         r.Name,
-		Email:        r.Email,
-		PasswordHash: r.PasswordHash,
-		Role:         "driver",
-		Phone:        r.Phone,
-		CompanyID:    companyID,
-		IsActive:     true,
+		Name:      r.Name,
+		Email:     r.Email,
+		Password:  r.PasswordHash,
+		Role:      "driver",
+		Phone:     r.Phone,
+		CompanyID: companyID,
+		IsActive:  true,
 	}
 }
 

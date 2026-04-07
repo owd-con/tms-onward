@@ -26,7 +26,7 @@ func (s *TMSServer) Signup(ctx context.Context, req *proto.SignupRequest) (*prot
 	uc := s.uc.Auth.WithContext(ctx)
 
 	// Validate company name uniqueness
-	if !uc.ValidateCompanyUnique("name", req.CompanyName, "") {
+	if !uc.ValidateCompanyUnique("company_name", req.CompanyName, "") {
 		return nil, errors.New("company name already exists")
 	}
 
@@ -35,24 +35,29 @@ func (s *TMSServer) Signup(ctx context.Context, req *proto.SignupRequest) (*prot
 		return nil, errors.New("email already exists")
 	}
 
+	// Validate username uniqueness
+	if !uc.ValidateUserUnique("username", req.Username, "") {
+		return nil, errors.New("username already exists")
+	}
+
 	// Prepare user entity
 	user := &entity.User{
-		Name:         req.Name,
-		Email:        req.Email,
-		PasswordHash: req.Password,
-		Role:         "admin",
-		Phone:        req.Phone,
-		IsActive:     true,
+		Username: req.Username,
+		Name:     req.Name,
+		Email:    req.Email,
+		Password: req.Password,
+		Role:     "admin",
+		Phone:    req.Phone,
+		IsActive: true,
 	}
 
 	// Prepare company entity
 	company := &entity.Company{
-		Name:     req.CompanyName,
-		Type:     req.CompanyType,
-		Timezone: "Asia/Jakarta",
-		Currency: "IDR",
-		Language: "id",
-		IsActive: true,
+		CompanyName: req.CompanyName,
+		Address:     req.Address,
+		IsActive:    true,
+		Phone:       req.Phone,
+		Type:        "3PL",
 	}
 
 	// Execute signup

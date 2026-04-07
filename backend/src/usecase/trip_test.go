@@ -57,11 +57,8 @@ func TestTripUsecase_Create_Success(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -118,11 +115,8 @@ func TestTripUsecase_Update_Success(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -188,11 +182,8 @@ func TestTripUsecase_UpdateStatus_ValidTransitions(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -262,11 +253,8 @@ func TestTripUsecase_UpdateStatus_InvalidTransition(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -326,11 +314,8 @@ func TestTripUsecase_UpdateStatus_FromCompleted(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -389,11 +374,8 @@ func TestTripUsecase_Start_Success(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -454,11 +436,8 @@ func TestTripUsecase_Start_InvalidStatus(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -518,11 +497,8 @@ func TestTripUsecase_Complete_Success(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -582,11 +558,8 @@ func TestTripUsecase_Delete_Success(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -660,11 +633,8 @@ func TestTripUsecase_Get_WithTenantIsolation(t *testing.T) {
 
 	// Create two companies
 	company1 := &entity.Company{
-		Name:                fmt.Sprintf("Company 1 %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Company 1 %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -672,11 +642,8 @@ func TestTripUsecase_Get_WithTenantIsolation(t *testing.T) {
 	require.NoError(t, err)
 
 	company2 := &entity.Company{
-		Name:                fmt.Sprintf("Company 2 %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Company 2 %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -686,7 +653,6 @@ func TestTripUsecase_Get_WithTenantIsolation(t *testing.T) {
 	// Create driver for company1
 	driver1 := &entity.Driver{
 		CompanyID:     company1.ID,
-		Name:          "Test Driver 1",
 		Phone:         fmt.Sprintf("081%d56789", uuid.New().ID()%1000000000),
 		LicenseNumber: fmt.Sprintf("B%d%s", uuid.New().ID()%1000000, uuid.New().String()[:6]),
 		IsActive:      true,
@@ -707,7 +673,6 @@ func TestTripUsecase_Get_WithTenantIsolation(t *testing.T) {
 	// Create driver for company2
 	driver2 := &entity.Driver{
 		CompanyID:     company2.ID,
-		Name:          "Test Driver 2",
 		Phone:         fmt.Sprintf("081%d56789", uuid.New().ID()%1000000000),
 		LicenseNumber: fmt.Sprintf("B%d%s", uuid.New().ID()%1000000, uuid.New().String()[:6]),
 		IsActive:      true,

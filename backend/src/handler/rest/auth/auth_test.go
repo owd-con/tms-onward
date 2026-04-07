@@ -25,20 +25,17 @@ func TestAuthUsecase_Signup_Success(t *testing.T) {
 	uc := usecase.NewAuthUsecase().WithContext(context.Background())
 
 	user := &entity.User{
-		Name:         "Test User",
-		Email:        "authsignup_" + uuid.New().String() + "@example.com",
-		PasswordHash: "hashed_password",
-		Role:         "Admin",
-		IsActive:     true,
+		Name:     "Test User",
+		Email:    "authsignup_" + uuid.New().String() + "@example.com",
+		Password: "hashed_password",
+		Role:     "Admin",
+		IsActive: true,
 	}
 
 	company := &entity.Company{
-		Name:     "Test Company",
-		Type:     "3PL",
-		Timezone: "Asia/Jakarta",
-		Currency: "IDR",
-		Language: "id",
-		IsActive: true,
+		CompanyName: "Test Company",
+		Type:        "3PL",
+		IsActive:    true,
 	}
 
 	// Note: This test requires actual repository implementation
@@ -60,13 +57,13 @@ func TestAuthUsecase_ValidLogin_Success(t *testing.T) {
 
 	// This test requires actual user in database
 	// For now, we'll test the logic structure
-	user, err := uc.ValidLogin("test@example.com", "correctpassword")
+	user, err := uc.ValidLogin("testuser", "correctpassword")
 
 	// Since we're using real repository, this will fail without database
 	// In real scenario, user would exist
 	if err == nil {
 		assert.NotNil(t, user)
-		assert.Equal(t, "test@example.com", user.Email)
+		assert.Equal(t, "testuser", user.Username)
 		assert.Equal(t, "Admin", user.Role)
 		assert.True(t, user.IsActive)
 	}
@@ -77,7 +74,7 @@ func TestAuthUsecase_ValidLogin_WrongPassword(t *testing.T) {
 
 	// This test requires actual user in database
 	// For now, we'll test the logic structure
-	user, err := uc.ValidLogin("test@example.com", "wrongpassword")
+	user, err := uc.ValidLogin("testuser", "wrongpassword")
 
 	// Since we're using real repository, this will fail without database
 	// In real scenario, user would not exist
@@ -92,7 +89,7 @@ func TestAuthUsecase_ValidLogin_UserNotFound(t *testing.T) {
 
 	// This test requires actual user in database
 	// For now, we'll test the logic structure
-	user, err := uc.ValidLogin("nonexistent@example.com", "password")
+	user, err := uc.ValidLogin("nonexistentuser", "password")
 
 	// Since we're using real repository, this will fail without database
 	// In real scenario, user would not exist
@@ -107,7 +104,7 @@ func TestAuthUsecase_ValidLogin_UserInactive(t *testing.T) {
 
 	// This test requires actual inactive user in database
 	// For now, we'll test the logic structure
-	user, err := uc.ValidLogin("inactive@example.com", "password")
+	user, err := uc.ValidLogin("inactiveuser", "password")
 
 	// Since we're using real repository, this will fail without database
 	// In real scenario, user would be inactive
@@ -149,12 +146,9 @@ func TestAuthUsecase_ValidateUserUnique_EmailExists(t *testing.T) {
 
 	uniqueEmail := "uniquexx" + uuid.New().String() + "@example.com"
 	company := &entity.Company{
-		Name:     "Test Company",
-		Type:     "3PL",
-		Timezone: "Asia/Jakarta",
-		Currency: "IDR",
-		Language: "id",
-		IsActive: true,
+		CompanyName: "Test Company",
+		Type:        "3PL",
+		IsActive:    true,
 	}
 	err := repository.NewCompanyRepository().WithContext(ctx).Insert(company)
 	if err != nil {
@@ -162,12 +156,12 @@ func TestAuthUsecase_ValidateUserUnique_EmailExists(t *testing.T) {
 	}
 
 	user := &entity.User{
-		CompanyID:    company.ID,
-		Name:         "Test User",
-		Email:        uniqueEmail,
-		PasswordHash: "hashedpassword",
-		Role:         "admin",
-		IsActive:     true,
+		CompanyID: company.ID,
+		Name:      "Test User",
+		Email:     uniqueEmail,
+		Password:  "hashedpassword",
+		Role:      "admin",
+		IsActive:  true,
 	}
 
 	if err := repository.NewUserRepository().WithContext(ctx).Insert(user); err != nil {
@@ -200,11 +194,8 @@ func TestAuthUsecase_ValidateUserUnique_ExcludeID(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -214,12 +205,12 @@ func TestAuthUsecase_ValidateUserUnique_ExcludeID(t *testing.T) {
 	// Create existing user with specific email
 	existingEmail := fmt.Sprintf("existing-%s@example.com", uuid.New().String())
 	existingUser := &entity.User{
-		CompanyID:    company.ID,
-		Name:         "Existing User",
-		Email:        existingEmail,
-		PasswordHash: "hashedpassword",
-		Role:         "admin",
-		IsActive:     true,
+		CompanyID: company.ID,
+		Name:      "Existing User",
+		Email:     existingEmail,
+		Password:  "hashedpassword",
+		Role:      "admin",
+		IsActive:  true,
 	}
 	err = repository.NewUserRepository().WithContext(ctx).Insert(existingUser)
 	require.NoError(t, err)
@@ -241,12 +232,9 @@ func TestAuthUsecase_ValidateCompanyUnique_NameExists(t *testing.T) {
 
 	uniqueEmail := "uniquexx" + uuid.New().String() + "@example.com"
 	company := &entity.Company{
-		Name:     "Existing Company",
-		Type:     "3PL",
-		Timezone: "Asia/Jakarta",
-		Currency: "IDR",
-		Language: "id",
-		IsActive: true,
+		CompanyName: "Existing Company",
+		Type:        "3PL",
+		IsActive:    true,
 	}
 	err := repository.NewCompanyRepository().WithContext(ctx).Insert(company)
 	if err != nil {
@@ -254,12 +242,12 @@ func TestAuthUsecase_ValidateCompanyUnique_NameExists(t *testing.T) {
 	}
 
 	user := &entity.User{
-		CompanyID:    company.ID,
-		Name:         "Test User",
-		Email:        uniqueEmail,
-		PasswordHash: "hashedpassword",
-		Role:         "admin",
-		IsActive:     true,
+		CompanyID: company.ID,
+		Name:      "Test User",
+		Email:     uniqueEmail,
+		Password:  "hashedpassword",
+		Role:      "admin",
+		IsActive:  true,
 	}
 
 	if err := repository.NewUserRepository().WithContext(ctx).Insert(user); err != nil {

@@ -102,12 +102,9 @@ func createTestContext(method, path string, body []byte, pathParams map[string]s
 func createTestCompanyForTracking(t *testing.T) *entity.Company {
 	ctx := context.Background()
 	company := &entity.Company{
-		Name:     "Test Company " + uuid.New().String(),
-		Type:     "3PL",
-		Timezone: "Asia/Jakarta",
-		Currency: "IDR",
-		Language: "id",
-		IsActive: true,
+		CompanyName: "Test Company " + uuid.New().String(),
+		Type:        "3PL",
+		IsActive:    true,
 	}
 	if err := repository.NewCompanyRepository().WithContext(ctx).Insert(company); err != nil {
 		t.Skip("Cannot create test company")
@@ -173,7 +170,6 @@ func createTestDriverForTracking(t *testing.T, companyID uuid.UUID) *entity.Driv
 	ctx := context.Background()
 	driver := &entity.Driver{
 		CompanyID:     companyID,
-		Name:          "Test Driver",
 		LicenseNumber: "B 1234 XYZ",
 		LicenseType:   "SIM_A",
 		Phone:         "081234567890",

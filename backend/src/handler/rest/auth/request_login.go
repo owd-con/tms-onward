@@ -11,8 +11,8 @@ import (
 )
 
 type loginRequest struct {
-	Email    string `json:"email" valid:"required|email"`
-	Password string `json:"password" valid:"required"`
+	Identifier string `json:"identifier" valid:"required"`
+	Password   string `json:"password" valid:"required"`
 
 	uc   *usecase.AuthUsecase
 	ctx  context.Context
@@ -22,11 +22,11 @@ type loginRequest struct {
 func (r *loginRequest) Validate() *validate.Response {
 	v := validate.NewResponse()
 
-	if r.Email != "" && r.Password != "" {
+	if r.Identifier != "" && r.Password != "" {
 		var err error
 		if r.uc != nil {
-			if r.user, err = r.uc.ValidLogin(r.Email, r.Password); err != nil {
-				v.SetError("email.invalid", "email or password is not valid.")
+			if r.user, err = r.uc.ValidLogin(r.Identifier, r.Password); err != nil {
+				v.SetError("identifier.invalid", "username or password is not valid.")
 			}
 		}
 	}

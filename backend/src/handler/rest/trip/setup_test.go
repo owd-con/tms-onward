@@ -118,11 +118,8 @@ func createTestCompany(t *testing.T) *entity.Company {
 	ctx := context.Background()
 
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -152,7 +149,6 @@ func createTestDriver(t *testing.T, companyID uuid.UUID, vehicleID uuid.UUID) *e
 
 	driver := &entity.Driver{
 		CompanyID:     companyID,
-		Name:          "Test Driver",
 		Phone:         fmt.Sprintf("081%d56789", uuid.New().ID()%1000000000),
 		LicenseNumber: fmt.Sprintf("B%d%s", uuid.New().ID()%1000000, uuid.New().String()[:6]),
 		IsActive:      true,

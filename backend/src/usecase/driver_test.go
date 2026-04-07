@@ -20,11 +20,8 @@ func TestDriverUsecase_ValidateUnique_Success(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -46,11 +43,8 @@ func TestDriverUsecase_ValidateUnique_NotUnique(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -61,7 +55,6 @@ func TestDriverUsecase_ValidateUnique_NotUnique(t *testing.T) {
 	driverUUID := uuid.New().String()
 	existingDriver := &entity.Driver{
 		CompanyID:     company.ID,
-		Name:          fmt.Sprintf("Test Driver %s", driverUUID),
 		Phone:         fmt.Sprintf("0812%s", driverUUID[:8]),
 		LicenseNumber: fmt.Sprintf("B%s", driverUUID[:6]),
 		IsActive:      true,
@@ -84,11 +77,8 @@ func TestDriverUsecase_ValidateUnique_ExcludeID(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -99,7 +89,6 @@ func TestDriverUsecase_ValidateUnique_ExcludeID(t *testing.T) {
 	driverUUID := uuid.New().String()
 	existingDriver := &entity.Driver{
 		CompanyID:     company.ID,
-		Name:          fmt.Sprintf("Test Driver %s", driverUUID),
 		Phone:         fmt.Sprintf("0812%s", driverUUID[:8]),
 		LicenseNumber: fmt.Sprintf("B%s", driverUUID[:6]),
 		IsActive:      true,
@@ -122,11 +111,8 @@ func TestDriverUsecase_ValidateUnique_PhoneUnique(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -137,7 +123,6 @@ func TestDriverUsecase_ValidateUnique_PhoneUnique(t *testing.T) {
 	driverUUID := uuid.New().String()
 	existingDriver := &entity.Driver{
 		CompanyID:     company.ID,
-		Name:          fmt.Sprintf("Test Driver %s", driverUUID),
 		Phone:         fmt.Sprintf("0812%s", driverUUID[:8]),
 		LicenseNumber: fmt.Sprintf("B%s", driverUUID[:6]),
 		IsActive:      true,
@@ -161,11 +146,8 @@ func TestDriverUsecase_Get_WithTenantIsolation(t *testing.T) {
 
 	// Create two companies
 	company1 := &entity.Company{
-		Name:                fmt.Sprintf("Company 1 %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Company 1 %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -173,11 +155,8 @@ func TestDriverUsecase_Get_WithTenantIsolation(t *testing.T) {
 	require.NoError(t, err)
 
 	company2 := &entity.Company{
-		Name:                fmt.Sprintf("Company 2 %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Company 2 %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -188,7 +167,6 @@ func TestDriverUsecase_Get_WithTenantIsolation(t *testing.T) {
 	driver1UUID := uuid.New().String()
 	driver1 := &entity.Driver{
 		CompanyID:     company1.ID,
-		Name:          fmt.Sprintf("Driver 1 %s", driver1UUID),
 		Phone:         fmt.Sprintf("0812%s", driver1UUID[:8]),
 		LicenseNumber: fmt.Sprintf("B%s", driver1UUID[:6]),
 		IsActive:      true,
@@ -200,7 +178,6 @@ func TestDriverUsecase_Get_WithTenantIsolation(t *testing.T) {
 	driver2UUID := uuid.New().String()
 	driver2 := &entity.Driver{
 		CompanyID:     company2.ID,
-		Name:          fmt.Sprintf("Driver 2 %s", driver2UUID),
 		Phone:         fmt.Sprintf("0812%s", driver2UUID[:8]),
 		LicenseNumber: fmt.Sprintf("B%s", driver2UUID[:6]),
 		IsActive:      true,
@@ -233,11 +210,8 @@ func TestDriverUsecase_Get_WithActiveFilter(t *testing.T) {
 
 	// Create a company
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -248,7 +222,6 @@ func TestDriverUsecase_Get_WithActiveFilter(t *testing.T) {
 	driver1UUID := uuid.New().String()
 	driver1 := &entity.Driver{
 		CompanyID:     company.ID,
-		Name:          fmt.Sprintf("Active Driver %s", driver1UUID),
 		Phone:         fmt.Sprintf("0812%s", driver1UUID[:8]),
 		LicenseNumber: fmt.Sprintf("B%s", driver1UUID[:6]),
 		IsActive:      true,
@@ -260,7 +233,6 @@ func TestDriverUsecase_Get_WithActiveFilter(t *testing.T) {
 	driver2UUID := uuid.New().String()
 	driver2 := &entity.Driver{
 		CompanyID:     company.ID,
-		Name:          fmt.Sprintf("Another Driver %s", driver2UUID),
 		Phone:         fmt.Sprintf("0812%s", driver2UUID[:8]),
 		LicenseNumber: fmt.Sprintf("B%s", driver2UUID[:6]),
 		IsActive:      true,
@@ -278,7 +250,7 @@ func TestDriverUsecase_Get_WithActiveFilter(t *testing.T) {
 
 	drivers, count, err := uc.Get(req)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(2), count)  // Both drivers are active due to default value
+	assert.Equal(t, int64(2), count) // Both drivers are active due to default value
 	assert.Len(t, drivers, 2)
 }
 
@@ -292,11 +264,8 @@ func TestDriverUsecase_GetByID_Success(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -307,7 +276,6 @@ func TestDriverUsecase_GetByID_Success(t *testing.T) {
 	driverUUID := uuid.New().String()
 	driver := &entity.Driver{
 		CompanyID:     company.ID,
-		Name:          fmt.Sprintf("Test Driver %s", driverUUID),
 		Phone:         fmt.Sprintf("0812%s", driverUUID[:8]),
 		LicenseNumber: fmt.Sprintf("B%s", driverUUID[:6]),
 		IsActive:      true,
@@ -333,11 +301,8 @@ func TestDriverUsecase_Update_Success(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -348,7 +313,6 @@ func TestDriverUsecase_Update_Success(t *testing.T) {
 	driverUUID := uuid.New().String()
 	driver := &entity.Driver{
 		CompanyID:     company.ID,
-		Name:          fmt.Sprintf("Test Driver %s", driverUUID),
 		Phone:         fmt.Sprintf("0812%s", driverUUID[:8]),
 		LicenseNumber: fmt.Sprintf("B%s", driverUUID[:6]),
 		IsActive:      true,

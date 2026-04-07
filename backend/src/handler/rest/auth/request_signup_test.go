@@ -22,9 +22,6 @@ func TestSignupRequest_Validate_Success(t *testing.T) {
 	req := &signupRequest{
 		CompanyName:     uniqueCompanyName,
 		CompanyType:     "3PL",
-		Timezone:        "Asia/Jakarta",
-		Currency:        "IDR",
-		Language:        "id",
 		Name:            "Test User",
 		Email:           uniqueEmail,
 		Password:        "password123",
@@ -46,10 +43,7 @@ func TestSignupRequest_Validate_MissingCompanyName(t *testing.T) {
 
 	req := &signupRequest{
 		CompanyType:     "3PL",
-		Timezone:        "Asia/Jakarta",
-		Currency:        "IDR",
-		Language:        "id",
-		Name:            "Test User",
+		CompanyName:     "Test User",
 		Email:           "newuser@example.com",
 		Password:        "password123",
 		ConfirmPassword: "password123",
@@ -70,9 +64,6 @@ func TestSignupRequest_Validate_MissingCompanyType(t *testing.T) {
 
 	req := &signupRequest{
 		CompanyName:     "Test Company",
-		Timezone:        "Asia/Jakarta",
-		Currency:        "IDR",
-		Language:        "id",
 		Name:            "Test User",
 		Email:           "newuser@example.com",
 		Password:        "password123",
@@ -94,9 +85,6 @@ func TestSignupRequest_Validate_MissingName(t *testing.T) {
 
 	req := &signupRequest{
 		CompanyType:     "3PL",
-		Timezone:        "Asia/Jakarta",
-		Currency:        "IDR",
-		Language:        "id",
 		Email:           "newuser@example.com",
 		Password:        "password123",
 		ConfirmPassword: "password123",
@@ -118,9 +106,6 @@ func TestSignupRequest_Validate_MissingEmail(t *testing.T) {
 	req := &signupRequest{
 		CompanyName:     "Test Company",
 		CompanyType:     "3PL",
-		Timezone:        "Asia/Jakarta",
-		Currency:        "IDR",
-		Language:        "id",
 		Name:            "Test User",
 		Password:        "password123",
 		ConfirmPassword: "password123",
@@ -142,9 +127,6 @@ func TestSignupRequest_Validate_MissingPassword(t *testing.T) {
 	req := &signupRequest{
 		CompanyName: "Test Company",
 		CompanyType: "3PL",
-		Timezone:    "Asia/Jakarta",
-		Currency:    "IDR",
-		Language:    "id",
 		Name:        "Test User",
 		Email:       "newuser@example.com",
 	}
@@ -165,9 +147,6 @@ func TestSignupRequest_Validate_PasswordTooShort(t *testing.T) {
 	req := &signupRequest{
 		CompanyName:     "Test Company",
 		CompanyType:     "3PL",
-		Timezone:        "Asia/Jakarta",
-		Currency:        "IDR",
-		Language:        "id",
 		Name:            "Test User",
 		Email:           "newuser@example.com",
 		Password:        "short",
@@ -189,12 +168,9 @@ func TestSignupRequest_Validate_CompanyNameExists(t *testing.T) {
 
 	// Create existing company first
 	company := &entity.Company{
-		Name:     "Existing Company",
-		Type:     "3PL",
-		Timezone: "Asia/Jakarta",
-		Currency: "IDR",
-		Language: "id",
-		IsActive: true,
+		CompanyName: "Existing Company",
+		Type:        "3PL",
+		IsActive:    true,
 	}
 
 	if err := repository.NewCompanyRepository().WithContext(ctx).Insert(company); err != nil {
@@ -204,9 +180,6 @@ func TestSignupRequest_Validate_CompanyNameExists(t *testing.T) {
 	req := &signupRequest{
 		CompanyName:     "Existing Company",
 		CompanyType:     "3PL",
-		Timezone:        "Asia/Jakarta",
-		Currency:        "IDR",
-		Language:        "id",
 		Name:            "Test User",
 		Email:           "newuser@example.com",
 		Password:        "password123",
@@ -229,12 +202,9 @@ func TestSignupRequest_Validate_EmailExists(t *testing.T) {
 	// Create existing user first
 	uniqueCompanyName := "Test Company " + uuid.New().String()
 	company := &entity.Company{
-		Name:     uniqueCompanyName,
-		Type:     "3PL",
-		Timezone: "Asia/Jakarta",
-		Currency: "IDR",
-		Language: "id",
-		IsActive: true,
+		CompanyName: uniqueCompanyName,
+		Type:        "3PL",
+		IsActive:    true,
 	}
 
 	if err := repository.NewCompanyRepository().WithContext(ctx).Insert(company); err != nil {
@@ -244,12 +214,12 @@ func TestSignupRequest_Validate_EmailExists(t *testing.T) {
 	uniqueEmail := "existing" + uuid.New().String() + "@example.com"
 	pwdHash, _ := common.HashPassword("password123")
 	user := &entity.User{
-		CompanyID:    company.ID,
-		Name:         "Test User",
-		Email:        uniqueEmail,
-		PasswordHash: pwdHash,
-		Role:         "admin",
-		IsActive:     true,
+		CompanyID: company.ID,
+		Name:      "Test User",
+		Email:     uniqueEmail,
+		Password:  pwdHash,
+		Role:      "admin",
+		IsActive:  true,
 	}
 
 	if err := repository.NewUserRepository().WithContext(ctx).Insert(user); err != nil {
@@ -259,9 +229,6 @@ func TestSignupRequest_Validate_EmailExists(t *testing.T) {
 	req := &signupRequest{
 		CompanyName:     uniqueCompanyName,
 		CompanyType:     "3PL",
-		Timezone:        "Asia/Jakarta",
-		Currency:        "IDR",
-		Language:        "id",
 		Name:            "Test User",
 		Email:           uniqueEmail,
 		Password:        "password123",
@@ -284,9 +251,6 @@ func TestSignupRequest_Validate_InvalidCompanyType(t *testing.T) {
 	req := &signupRequest{
 		CompanyName:     "Test Company",
 		CompanyType:     "INVALID",
-		Timezone:        "Asia/Jakarta",
-		Currency:        "IDR",
-		Language:        "id",
 		Name:            "Test User",
 		Email:           "newuser@example.com",
 		Password:        "password123",
@@ -309,9 +273,6 @@ func TestSignupRequest_Validate_PasswordMismatch(t *testing.T) {
 	req := &signupRequest{
 		CompanyName:     "Test Company",
 		CompanyType:     "3PL",
-		Timezone:        "Asia/Jakarta",
-		Currency:        "IDR",
-		Language:        "id",
 		Name:            "Test User",
 		Email:           "newuser@example.com",
 		Password:        "password123",
@@ -340,9 +301,6 @@ func TestSignupRequest_ToEntity(t *testing.T) {
 	req := &signupRequest{
 		CompanyName:     "Test Company",
 		CompanyType:     "3PL",
-		Timezone:        "Asia/Jakarta",
-		Currency:        "IDR",
-		Language:        "id",
 		Name:            "Test User",
 		Email:           "newuser@example.com",
 		Password:        "password123",
@@ -355,16 +313,12 @@ func TestSignupRequest_ToEntity(t *testing.T) {
 	assert.NotNil(t, user)
 	assert.Equal(t, "Test User", user.Name)
 	assert.Equal(t, "newuser@example.com", user.Email)
-	assert.Equal(t, "Admin", user.Role)
+	assert.Equal(t, "admin", user.Role)
 	assert.Equal(t, "08123456789", user.Phone)
-	assert.Equal(t, "id", user.Language)
 	assert.True(t, user.IsActive)
 
 	assert.NotNil(t, company)
-	assert.Equal(t, "Test Company", company.Name)
+	assert.Equal(t, "Test Company", company.CompanyName)
 	assert.Equal(t, "3PL", company.Type)
-	assert.Equal(t, "Asia/Jakarta", company.Timezone)
-	assert.Equal(t, "IDR", company.Currency)
-	assert.Equal(t, "id", company.Language)
 	assert.True(t, company.IsActive)
 }

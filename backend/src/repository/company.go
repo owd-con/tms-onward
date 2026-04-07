@@ -17,7 +17,7 @@ type CompanyRepository struct {
 func NewCompanyRepository() *CompanyRepository {
 	base := postgres.NewBaseRepository[entity.Company](postgres.GetDB(),
 		"companies",
-		[]string{"name", "type"},
+		[]string{"company_name", "brand_name"},
 		nil,
 		true,
 	)

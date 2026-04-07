@@ -31,11 +31,8 @@ func TestVehicleUsecase_ValidateUnique_NotUnique(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                "Test Company",
+		CompanyName:"Test Company",
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -74,11 +71,8 @@ func TestVehicleUsecase_ValidateUnique_ExcludeID(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                "Test Company",
+		CompanyName:"Test Company",
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}

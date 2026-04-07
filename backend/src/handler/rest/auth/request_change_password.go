@@ -16,8 +16,8 @@ type changePasswordRequest struct {
 	NewPassword        string `json:"new_password" valid:"required|gte:8"`
 	ConfirmNewPassword string `json:"confirm_new_password" valid:"required"`
 
-	user         *entity.User
-	passwordHash string
+	user     *entity.User
+	Password string
 
 	uc     *usecase.AuthUsecase
 	ctx    context.Context
@@ -41,7 +41,7 @@ func (r *changePasswordRequest) Validate() *validate.Response {
 			v.SetError("confirm_new_password.invalid", "new password confirmation does not match.")
 		} else {
 			// Hash new password
-			r.passwordHash, err = common.HashPassword(r.NewPassword)
+			r.Password, err = common.HashPassword(r.NewPassword)
 			if err != nil {
 				v.SetError("confirm_new_password.invalid", fmt.Sprintf("failed to hash password: %v", err))
 			}
@@ -50,7 +50,7 @@ func (r *changePasswordRequest) Validate() *validate.Response {
 
 	if r.user != nil {
 		// Verify old password
-		if err := common.CheckPassword(r.user.PasswordHash, r.OldPassword); err != nil {
+		if err := common.CheckPassword(r.user.Password, r.OldPassword); err != nil {
 			v.SetError("old_password.invalid", "invalid old password.")
 		}
 	}
@@ -63,9 +63,9 @@ func (r *changePasswordRequest) Messages() map[string]string {
 }
 
 func (r *changePasswordRequest) execute() (*rest.ResponseBody, error) {
-	r.user.PasswordHash = r.passwordHash
+	r.user.Password = r.Password
 
-	if err := r.uc.RepoUser.Update(r.user, "password_hash"); err != nil {
+	if err := r.uc.RepoUser.Update(r.user, "password"); err != nil {
 		return nil, err
 	}
 

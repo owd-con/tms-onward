@@ -56,7 +56,7 @@ func (r *step1Request) Messages() map[string]string {
 
 func (r *step1Request) execute() (*rest.ResponseBody, error) {
 	// Update entity with request data
-	r.company.Name = r.CompanyName
+	r.company.CompanyName = r.CompanyName
 	r.company.Type = r.CompanyType
 
 	if err := r.uc.Onboarding.Step1UpdateProfile(r.ctx, r.company); err != nil {

@@ -72,7 +72,7 @@ func (u *OnboardingUsecase) Step2CreateUsersBatch(ctx context.Context, users []*
 			result.Users = append(result.Users, user)
 		} else {
 			// Update existing user - specify fields to update
-			if err := u.UserRepo.Update(user, "name", "email", "phone", "role", "password_hash"); err != nil {
+			if err := u.UserRepo.Update(user, "name", "email", "phone", "role", "password"); err != nil {
 				return nil, err
 			}
 			result.Updated++

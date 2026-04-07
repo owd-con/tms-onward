@@ -27,13 +27,14 @@ type SignupRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Company data
 	CompanyName string `protobuf:"bytes,1,opt,name=company_name,json=companyName,proto3" json:"company_name,omitempty"`
-	CompanyType string `protobuf:"bytes,2,opt,name=company_type,json=companyType,proto3" json:"company_type,omitempty"` // 3PL or Carrier
+	Address     string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
 	// User data
-	Name            string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Email           string `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`
-	Password        string `protobuf:"bytes,5,opt,name=password,proto3" json:"password,omitempty"`
-	ConfirmPassword string `protobuf:"bytes,6,opt,name=confirm_password,json=confirmPassword,proto3" json:"confirm_password,omitempty"`
-	Phone           string `protobuf:"bytes,7,opt,name=phone,proto3" json:"phone,omitempty"`
+	Username        string `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
+	Name            string `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	Email           string `protobuf:"bytes,5,opt,name=email,proto3" json:"email,omitempty"`
+	Password        string `protobuf:"bytes,6,opt,name=password,proto3" json:"password,omitempty"`
+	ConfirmPassword string `protobuf:"bytes,7,opt,name=confirm_password,json=confirmPassword,proto3" json:"confirm_password,omitempty"`
+	Phone           string `protobuf:"bytes,8,opt,name=phone,proto3" json:"phone,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -75,9 +76,16 @@ func (x *SignupRequest) GetCompanyName() string {
 	return ""
 }
 
-func (x *SignupRequest) GetCompanyType() string {
+func (x *SignupRequest) GetAddress() string {
 	if x != nil {
-		return x.CompanyType
+		return x.Address
+	}
+	return ""
+}
+
+func (x *SignupRequest) GetUsername() string {
+	if x != nil {
+		return x.Username
 	}
 	return ""
 }
@@ -560,15 +568,16 @@ var File_tms_proto protoreflect.FileDescriptor
 
 const file_tms_proto_rawDesc = "" +
 	"\n" +
-	"\ttms.proto\x12\x03tms\x1a\x1fgoogle/protobuf/timestamp.proto\"\xdc\x01\n" +
+	"\ttms.proto\x12\x03tms\x1a\x1fgoogle/protobuf/timestamp.proto\"\xef\x01\n" +
 	"\rSignupRequest\x12!\n" +
-	"\fcompany_name\x18\x01 \x01(\tR\vcompanyName\x12!\n" +
-	"\fcompany_type\x18\x02 \x01(\tR\vcompanyType\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\x12\x14\n" +
-	"\x05email\x18\x04 \x01(\tR\x05email\x12\x1a\n" +
-	"\bpassword\x18\x05 \x01(\tR\bpassword\x12)\n" +
-	"\x10confirm_password\x18\x06 \x01(\tR\x0fconfirmPassword\x12\x14\n" +
-	"\x05phone\x18\a \x01(\tR\x05phone\"*\n" +
+	"\fcompany_name\x18\x01 \x01(\tR\vcompanyName\x12\x18\n" +
+	"\aaddress\x18\x02 \x01(\tR\aaddress\x12\x1a\n" +
+	"\busername\x18\x03 \x01(\tR\busername\x12\x12\n" +
+	"\x04name\x18\x04 \x01(\tR\x04name\x12\x14\n" +
+	"\x05email\x18\x05 \x01(\tR\x05email\x12\x1a\n" +
+	"\bpassword\x18\x06 \x01(\tR\bpassword\x12)\n" +
+	"\x10confirm_password\x18\a \x01(\tR\x0fconfirmPassword\x12\x14\n" +
+	"\x05phone\x18\b \x01(\tR\x05phone\"*\n" +
 	"\x0eSignupResponse\x12\x18\n" +
 	"\amessage\x18\x01 \x01(\tR\amessage\".\n" +
 	"\x18FindCompanyByNameRequest\x12\x12\n" +

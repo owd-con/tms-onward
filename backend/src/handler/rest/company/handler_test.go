@@ -23,11 +23,8 @@ func createTestCompany(t *testing.T) (company *entity.Company, user *entity.User
 
 	uniqueEmail := "uniquexx" + uuid.New().String() + "@example.com"
 	company = &entity.Company{
-		Name:                "Test Company " + uuid.New().String(),
+		CompanyName:         "Test Company " + uuid.New().String(),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: false,
 	}
@@ -38,12 +35,12 @@ func createTestCompany(t *testing.T) (company *entity.Company, user *entity.User
 
 	pwdhash, _ := common.HashPassword("testingbrow")
 	user = &entity.User{
-		CompanyID:    company.ID,
-		Name:         "Test User",
-		Email:        uniqueEmail,
-		PasswordHash: pwdhash,
-		Role:         "admin",
-		IsActive:     true,
+		CompanyID: company.ID,
+		Name:      "Test User",
+		Email:     uniqueEmail,
+		Password:  pwdhash,
+		Role:      "admin",
+		IsActive:  true,
 	}
 
 	if err := repository.NewUserRepository().WithContext(ctx).Insert(user); err != nil {
@@ -107,7 +104,7 @@ func TestHandler_Get_Success(t *testing.T) {
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, company.ID.String(), data["id"])
-	assert.Equal(t, company.Name, data["name"])
+	assert.Equal(t, company.CompanyName, data["name"])
 }
 
 // Test Handler_Get_Unauthorized
@@ -135,9 +132,6 @@ func TestHandler_Update_Success(t *testing.T) {
 	body := map[string]interface{}{
 		"name":      "Updated Company Name",
 		"type":      "3PL",
-		"timezone":  "Asia/Singapore",
-		"currency":  "IDR",
-		"language":  "id",
 		"is_active": true,
 	}
 
@@ -158,7 +152,6 @@ func TestHandler_Update_Success(t *testing.T) {
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, "Updated Company Name", data["name"])
-	assert.Equal(t, "Asia/Singapore", data["timezone"])
 }
 
 // Test Handler_Update_PartialUpdate
@@ -168,13 +161,10 @@ func TestHandler_Update_PartialUpdate(t *testing.T) {
 
 	company, user, _ := createTestCompany(t)
 
-	originalName := company.Name
+	originalName := company.CompanyName
 
 	body := map[string]interface{}{
 		"type":      "3PL",
-		"timezone":  "Asia/Bangkok",
-		"currency":  "IDR",
-		"language":  "id",
 		"is_active": true,
 	}
 
@@ -192,7 +182,6 @@ func TestHandler_Update_PartialUpdate(t *testing.T) {
 	json.Unmarshal(recorder.Body.Bytes(), &response)
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, originalName, data["name"]) // Name should not change
-	assert.Equal(t, "Asia/Bangkok", data["timezone"])
 }
 
 // Test Handler_Update_Unauthorized
@@ -203,9 +192,6 @@ func TestHandler_Update_Unauthorized(t *testing.T) {
 	body := map[string]interface{}{
 		"type":      "3PL",
 		"name":      "Updated Company Name",
-		"currency":  "IDR",
-		"language":  "id",
-		"timezone":  "Asia/Jakarta",
 		"is_active": true,
 	}
 

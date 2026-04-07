@@ -165,13 +165,13 @@ func (r *step2Request) execute() (*rest.ResponseBody, error) {
 
 	for _, userReq := range r.Users {
 		user := &entity.User{
-			CompanyID:    r.company.ID,
-			Name:         userReq.Name,
-			Email:        userReq.Email,
-			PasswordHash: userReq.Password,
-			Role:         userReq.Role,
-			Phone:        userReq.Phone,
-			IsActive:     true,
+			CompanyID: r.company.ID,
+			Name:      userReq.Name,
+			Email:     userReq.Email,
+			Password:  userReq.Password,
+			Role:      userReq.Role,
+			Phone:     userReq.Phone,
+			IsActive:  true,
 		}
 
 		// For update operations, use the existing ID and set updated timestamp
@@ -180,8 +180,8 @@ func (r *step2Request) execute() (*rest.ResponseBody, error) {
 			user.UpdatedAt = time.Now()
 
 			// If password is empty, keep existing password
-			if user.PasswordHash == "" {
-				user.PasswordHash = userReq.user.PasswordHash
+			if user.Password == "" {
+				user.Password = userReq.user.Password
 			}
 		}
 

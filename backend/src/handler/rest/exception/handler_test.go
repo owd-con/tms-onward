@@ -58,11 +58,8 @@ func createTestCompanyDriverVehicle(t *testing.T) (*entity.Company, *entity.Driv
 
 	// Create company
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -84,7 +81,6 @@ func createTestCompanyDriverVehicle(t *testing.T) (*entity.Company, *entity.Driv
 	// Create driver
 	driver := &entity.Driver{
 		CompanyID:     company.ID,
-		Name:          "Test Driver",
 		Phone:         "08123456789",
 		LicenseNumber: fmt.Sprintf("B%d%s", uuid.New().ID()%1000000, uuid.New().String()[:6]),
 		IsActive:      true,
