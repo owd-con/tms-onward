@@ -16,9 +16,9 @@ type updateRequest struct {
 	ctx     context.Context
 	session *entity.TMSSessionClaims
 
-	CompanyName string `json:"company_name"`
+	CompanyName string `json:"company_name" valid:"required"`
 	BrandName   string `json:"brand_name"`
-	Type        string `json:"type" valid:"in:3PL,Carrier"`
+	Type        string `json:"type" valid:"required|in:3PL,Carrier"`
 	Phone       string `json:"phone"`
 	Address     string `json:"address"`
 	LogoURL     string `json:"logo_url"`
