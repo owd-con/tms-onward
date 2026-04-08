@@ -101,7 +101,7 @@ func (r *updateRequest) Validate() *validate.Response {
 			v.SetError("confirm_password.invalid", "password confirmation does not match.")
 		}
 
-		if r.Password, err = common.HashPassword(r.Password); err != nil {
+		if r.PasswordHash, err = common.HashPassword(r.Password); err != nil {
 			v.SetError("password.invalid", "failed to hash password.")
 		}
 	}

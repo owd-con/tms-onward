@@ -79,7 +79,7 @@ func (r *updateRequest) execute() (*rest.ResponseBody, error) {
 	// Profile updates: name, phone, avatar_url only
 	fields := []string{"name", "phone", "avatar_url"}
 
-	if r.Password != "" {
+	if r.PasswordHash != "" {
 		r.user.Password = r.PasswordHash
 		fields = append(fields, "password")
 	}
