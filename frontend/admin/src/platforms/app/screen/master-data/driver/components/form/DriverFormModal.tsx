@@ -95,6 +95,7 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
         has_login?: boolean;
         username?: string;
         password?: string;
+        confirm_password?: string;
       } = {
         name,
         license_number: licenseNumber,
@@ -108,6 +109,7 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
         payload.has_login = true;
         payload.username = username;
         payload.password = password;
+        payload.confirm_password = confirmPassword;
       }
 
       return payload;
