@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	TMSService_Signup_FullMethodName             = "/tms.TMSService/Signup"
+	TMSService_Login_FullMethodName              = "/tms.TMSService/Login"
 	TMSService_FindCompanyByName_FullMethodName  = "/tms.TMSService/FindCompanyByName"
 	TMSService_FindUserByEmail_FullMethodName    = "/tms.TMSService/FindUserByEmail"
 	TMSService_FindUserByUsername_FullMethodName = "/tms.TMSService/FindUserByUsername"
@@ -32,6 +33,7 @@ const (
 type TMSServiceClient interface {
 	// Auth operations
 	Signup(ctx context.Context, in *SignupRequest, opts ...grpc.CallOption) (*SignupResponse, error)
+	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	FindCompanyByName(ctx context.Context, in *FindCompanyByNameRequest, opts ...grpc.CallOption) (*FindCompanyByNameResponse, error)
 	FindUserByEmail(ctx context.Context, in *FindUserByEmailRequest, opts ...grpc.CallOption) (*FindUserByEmailResponse, error)
 	FindUserByUsername(ctx context.Context, in *FindUserByUsernameRequest, opts ...grpc.CallOption) (*FindUserByUsernameResponse, error)
@@ -51,6 +53,16 @@ func (c *tMSServiceClient) Signup(ctx context.Context, in *SignupRequest, opts .
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SignupResponse)
 	err := c.cc.Invoke(ctx, TMSService_Signup_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tMSServiceClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LoginResponse)
+	err := c.cc.Invoke(ctx, TMSService_Login_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +115,7 @@ func (c *tMSServiceClient) GetDashboard(ctx context.Context, in *DashboardReques
 type TMSServiceServer interface {
 	// Auth operations
 	Signup(context.Context, *SignupRequest) (*SignupResponse, error)
+	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	FindCompanyByName(context.Context, *FindCompanyByNameRequest) (*FindCompanyByNameResponse, error)
 	FindUserByEmail(context.Context, *FindUserByEmailRequest) (*FindUserByEmailResponse, error)
 	FindUserByUsername(context.Context, *FindUserByUsernameRequest) (*FindUserByUsernameResponse, error)
@@ -120,6 +133,9 @@ type UnimplementedTMSServiceServer struct{}
 
 func (UnimplementedTMSServiceServer) Signup(context.Context, *SignupRequest) (*SignupResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Signup not implemented")
+}
+func (UnimplementedTMSServiceServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Login not implemented")
 }
 func (UnimplementedTMSServiceServer) FindCompanyByName(context.Context, *FindCompanyByNameRequest) (*FindCompanyByNameResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method FindCompanyByName not implemented")
@@ -168,6 +184,24 @@ func _TMSService_Signup_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TMSServiceServer).Signup(ctx, req.(*SignupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TMSService_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TMSServiceServer).Login(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TMSService_Login_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TMSServiceServer).Login(ctx, req.(*LoginRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -254,6 +288,10 @@ var TMSService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Signup",
 			Handler:    _TMSService_Signup_Handler,
+		},
+		{
+			MethodName: "Login",
+			Handler:    _TMSService_Login_Handler,
 		},
 		{
 			MethodName: "FindCompanyByName",

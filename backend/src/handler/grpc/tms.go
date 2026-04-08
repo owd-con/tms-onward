@@ -21,6 +21,27 @@ func NewTMSServer(uc *usecase.Factory) *TMSServer {
 	}
 }
 
+// Login implements proto.TMSServiceServer
+func (s *TMSServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto.LoginResponse, error) {
+	uc := s.uc.Auth.WithContext(ctx)
+
+	// Validate credentials and get user
+	user, err := uc.ValidLogin(req.Identifier, req.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create session and generate access token
+	session, err := uc.MakeSession(user, user.CompanyID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &proto.LoginResponse{
+		AccessToken: session.AccessToken,
+	}, nil
+}
+
 // Signup implements proto.TMSServiceServer
 func (s *TMSServer) Signup(ctx context.Context, req *proto.SignupRequest) (*proto.SignupResponse, error) {
 	uc := s.uc.Auth.WithContext(ctx)

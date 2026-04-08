@@ -60,6 +60,22 @@ message FindUserByUsernameResponse {
 }
 
 // ============================================
+// Login Messages
+// ============================================
+
+// LoginRequest - Request for user login
+message LoginRequest {
+  // Identifier can be email or username
+  string identifier = 1;
+  string password = 2;
+}
+
+// LoginResponse - Response after successful login
+message LoginResponse {
+  string access_token = 1;
+}
+
+// ============================================
 // Dashboard Messages
 // ============================================
 
@@ -96,6 +112,7 @@ message DashboardResponse {
 service TMSService {
   // Auth operations
   rpc Signup(SignupRequest) returns (SignupResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
   rpc FindCompanyByName(FindCompanyByNameRequest) returns (FindCompanyByNameResponse);
   rpc FindUserByEmail(FindUserByEmailRequest) returns (FindUserByEmailResponse);
   rpc FindUserByUsername(FindUserByUsernameRequest) returns (FindUserByUsernameResponse);
