@@ -83,7 +83,7 @@ func (r *updateRequest) Validate() *validate.Response {
 		}
 
 		// Validate password match
-		if r.Password != "" && r.ConfirmPassword != "" {
+		if r.Password != "" {
 			if r.Password != r.ConfirmPassword {
 				v.SetError("confirm_password.invalid", "Password confirmation does not match.")
 			}
