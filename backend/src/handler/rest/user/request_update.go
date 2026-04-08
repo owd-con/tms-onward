@@ -141,10 +141,6 @@ func (r *updateRequest) execute() (*rest.ResponseBody, error) {
 	// Build fields to update - ini adalah yang langsung di parse ke entity
 	fields := []string{"username", "email", "name", "phone", "role", "updated_at"}
 
-	if r.Password != "" {
-		fields = append(fields, "password")
-	}
-
 	if r.company != nil {
 		fields = append(fields, "company_id")
 	}
