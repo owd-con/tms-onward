@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS drivers (
     company_id UUID NOT NULL REFERENCES companies(id),
     user_id UUID REFERENCES users(id),
     name VARCHAR(255) NOT NULL,
-    license_number VARCHAR(100) UNIQUE NOT NULL,
+    license_number VARCHAR(100) NOT NULL,
     license_type VARCHAR(50), -- SIM A, SIM B1, dll
     license_expiry DATE,
     phone VARCHAR(50),
