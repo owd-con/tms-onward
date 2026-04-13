@@ -111,6 +111,7 @@ const TrackingResult = memo(
 
     const {
       order_number,
+      reference_code,
       status,
       customer_name,
       created_at,
@@ -145,6 +146,11 @@ const TrackingResult = memo(
                   </h2>
                   {statusBadge(status)}
                 </div>
+                {reference_code && (
+                  <p className='text-gray-600'>
+                    Reference Code: {reference_code}
+                  </p>
+                )}
                 <p className='text-gray-600'>
                   Customer: {customer_name || "-"}
                 </p>
