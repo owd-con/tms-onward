@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"time"
 
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/usecase"
@@ -80,13 +81,14 @@ func (r *signupRequest) Messages() map[string]string {
 
 func (r *signupRequest) toEntity() (user *entity.User, company *entity.Company) {
 	user = &entity.User{
-		Name:     r.Name,
-		Username: r.Username,
-		Email:    r.Email,
-		Password: r.PasswordHash, // Already hashed in Validate()
-		Role:     "admin",
-		Phone:    r.Phone,
-		IsActive: true,
+		Name:      r.Name,
+		Username:  r.Username,
+		Email:     r.Email,
+		Password:  r.PasswordHash, // Already hashed in Validate()
+		Role:      "admin",
+		Phone:     r.Phone,
+		IsActive:  true,
+		CreatedAt: time.Now(),
 	}
 
 	company = &entity.Company{
@@ -96,6 +98,7 @@ func (r *signupRequest) toEntity() (user *entity.User, company *entity.Company) 
 		Type:        r.CompanyType,
 		Address:     r.Address,
 		IsActive:    true,
+		CreatedAt:   time.Now(),
 	}
 
 	return

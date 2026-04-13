@@ -258,6 +258,7 @@ func (u *ExceptionUsecase) BatchRescheduleShipments(newTrip *entity.Trip, shipme
 				NewStatus:   "dispatched",
 				Notes:       "Shipment rescheduled for retry",
 				CreatedBy:   "System",
+				CreatedAt:   time.Now(),
 			}
 			if err := logRepoWithTx.Insert(log); err != nil {
 				return fmt.Errorf("failed to create waypoint log: %w", err)
@@ -312,6 +313,7 @@ func (u *ExceptionUsecase) ReturnShipment(ctx context.Context, shipment *entity.
 			NewStatus:   "returned",
 			Notes:       returnedNote,
 			CreatedBy:   createdBy,
+			CreatedAt:   time.Now(),
 		}
 		if err := logRepoWithTx.Insert(log); err != nil {
 			return fmt.Errorf("failed to create waypoint log: %w", err)

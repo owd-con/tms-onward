@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/proto"
@@ -63,13 +64,14 @@ func (s *TMSServer) Signup(ctx context.Context, req *proto.SignupRequest) (*prot
 
 	// Prepare user entity
 	user := &entity.User{
-		Username: req.Username,
-		Name:     req.Name,
-		Email:    req.Email,
-		Password: req.Password,
-		Role:     "admin",
-		Phone:    req.Phone,
-		IsActive: true,
+		Username:  req.Username,
+		Name:      req.Name,
+		Email:     req.Email,
+		Password:  req.Password,
+		Role:      "admin",
+		Phone:     req.Phone,
+		IsActive:  true,
+		CreatedAt: time.Now(),
 	}
 
 	// Prepare company entity
@@ -79,6 +81,7 @@ func (s *TMSServer) Signup(ctx context.Context, req *proto.SignupRequest) (*prot
 		IsActive:    true,
 		Phone:       req.Phone,
 		Type:        "3PL",
+		CreatedAt:   time.Now(),
 	}
 
 	// Execute signup

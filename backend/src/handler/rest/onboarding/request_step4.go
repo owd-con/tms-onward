@@ -139,6 +139,7 @@ func (r *step4Request) execute() (*rest.ResponseBody, error) {
 			LicenseType:   driverReq.LicenseType,
 			LicenseExpiry: driverReq.LicenseExpiry,
 			IsActive:      true,
+			CreatedAt:     time.Now(),
 		}
 
 		// For update operations, use the existing ID and set updated timestamp

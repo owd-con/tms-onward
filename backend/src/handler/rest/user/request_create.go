@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"time"
 
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/usecase"
@@ -95,13 +96,14 @@ func (r *createRequest) Messages() map[string]string {
 
 func (r *createRequest) toEntity() *entity.User {
 	mx := &entity.User{
-		Username: r.Username,
-		Name:     r.Name,
-		Email:    r.Email,
-		Phone:    r.Phone,
-		Password: r.PasswordHash,
-		Role:     r.Role,
-		IsActive: true,
+		Username:  r.Username,
+		Name:      r.Name,
+		Email:     r.Email,
+		Phone:     r.Phone,
+		Password:  r.PasswordHash,
+		Role:      r.Role,
+		IsActive:  true,
+		CreatedAt: time.Now(),
 	}
 
 	if r.company != nil {

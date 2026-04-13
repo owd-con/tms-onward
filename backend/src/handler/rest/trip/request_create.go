@@ -2,6 +2,7 @@ package trip
 
 import (
 	"context"
+	"time"
 
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/usecase"
@@ -105,6 +106,7 @@ func (r *createRequest) toEntity() *entity.Trip {
 		Status:     "planned",
 		Notes:      r.Notes,
 		CreatedBy:  r.session.DisplayName,
+		CreatedAt:  time.Now(),
 	}
 }
 

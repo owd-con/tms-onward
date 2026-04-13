@@ -6,8 +6,10 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/logistics-id/engine"
 	"github.com/logistics-id/onward-tms/entity"
+	"github.com/logistics-id/onward-tms/src/region"
 	"github.com/logistics-id/onward-tms/src/repository"
 	"github.com/uptrace/bun"
 	"go.uber.org/zap"
@@ -121,7 +123,14 @@ func (u *AddressUsecase) ValidateAddressUnique(field string, value string, custo
 // This method is deprecated and should not be used
 func (u *AddressUsecase) ValidateRegionID(regionID string) error {
 	// This method is no longer needed as validation is done using region.Repository in handlers
-	return nil
+	regionId, err := uuid.Parse(regionID)
+	if err != nil {
+		return errors.New("invalid region_id format")
+	}
+
+	_, err = region.Repository.FindByID(u.ctx, regionId)
+
+	return err
 }
 
 // ValidateCustomerID validates if customer ID exists and belongs to the same company

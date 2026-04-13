@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/logistics-id/onward-tms/entity"
@@ -53,6 +54,7 @@ func (r *createRequest) toEntity() *entity.Vehicle {
 		CapacityWeight: r.CapacityWeight,
 		CapacityVolume: r.CapacityVolume,
 		CompanyID:      companyID,
+		CreatedAt:      time.Now(),
 	}
 }
 

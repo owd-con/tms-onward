@@ -15,7 +15,7 @@ type OrderRepository struct {
 func NewOrderRepository() *OrderRepository {
 	base := postgres.NewBaseRepository[entity.Order](postgres.GetDB(),
 		"orders",
-		[]string{"order_number"},
+		[]string{"order_number", "reference_code"},
 		[]string{"Company", "Customer", "Shipments"},
 		true,
 	)

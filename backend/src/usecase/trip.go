@@ -305,6 +305,7 @@ func (u *TripUsecase) Start(trip *entity.Trip) error {
 				OldStatus:      "dispatched",
 				NewStatus:      "in_transit",
 				Notes:          "Waypoint dimulai oleh driver",
+				CreatedAt:      time.Now(),
 			}
 			if err := waypointLogRepo.Insert(log); err != nil {
 				return fmt.Errorf("failed to create waypoint log: %w", err)

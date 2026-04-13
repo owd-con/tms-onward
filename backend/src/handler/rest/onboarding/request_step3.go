@@ -138,6 +138,7 @@ func (r *step3Request) execute() (*rest.ResponseBody, error) {
 			Make:           vehicleReq.Make,
 			Model:          vehicleReq.Model,
 			IsActive:       true,
+			CreatedAt:      time.Now(),
 		}
 
 		// For update operations, use the existing ID and set updated timestamp

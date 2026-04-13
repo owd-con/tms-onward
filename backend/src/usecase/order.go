@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/logistics-id/onward-tms/entity"
@@ -140,6 +141,7 @@ func (u *OrderUsecase) CreateWithShipments(order *entity.Order, shipments []*ent
 			NewStatus: "pending",
 			Notes:     fmt.Sprintf("Order %s dibuat dengan %d shipment(s)", order.OrderNumber, len(shipments)),
 			CreatedBy: order.CreatedBy,
+			CreatedAt: time.Now(),
 		}
 		if err := waypointLogRepo.Insert(log); err != nil {
 			return fmt.Errorf("failed to create waypoint log: %w", err)

@@ -16,7 +16,7 @@ type TripRepository struct {
 func NewTripRepository() *TripRepository {
 	base := postgres.NewBaseRepository[entity.Trip](postgres.GetDB(),
 		"trips",
-		[]string{"trip_number"},
+		[]string{"trip_number", "orders.order_number", "orders.reference_code"},
 		[]string{"Company", "Driver", "Vehicle", "Orders.Customer"},
 		true,
 	)

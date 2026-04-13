@@ -100,6 +100,7 @@ func (u *WaypointUsecase) StartWaypoint(tripWaypoint *entity.TripWaypoint) error
 			OldStatus:      "pending",
 			NewStatus:      "in_transit",
 			Notes:          "Waypoint dimulai oleh driver",
+			CreatedAt:      time.Now(),
 		}
 		if err := logRepo.Insert(log); err != nil {
 			return fmt.Errorf("failed to create waypoint log: %w", err)
@@ -159,6 +160,7 @@ func (u *WaypointUsecase) CompleteWaypoint(
 				SignatureURL:   &signatureURL,
 				Images:         images,
 				CreatedBy:      createdBy,
+				CreatedAt:      time.Now(),
 			}
 			if err := waypointImageRepo.Insert(waypointImage); err != nil {
 				return fmt.Errorf("failed to create waypoint_image: %w", err)
@@ -210,6 +212,7 @@ func (u *WaypointUsecase) CompleteWaypoint(
 			OldStatus:      "in_transit",
 			NewStatus:      "completed",
 			Notes:          note,
+			CreatedAt:      time.Now(),
 		}
 		if err := logRepo.Insert(log); err != nil {
 			return fmt.Errorf("failed to create waypoint log: %w", err)
@@ -371,6 +374,7 @@ func (u *WaypointUsecase) CompleteLoading(
 				Type:           "pickup",
 				Images:         images,
 				CreatedBy:      createdBy,
+				CreatedAt:      time.Now(),
 			}
 			if err := waypointImageRepo.Insert(waypointImage); err != nil {
 				return fmt.Errorf("failed to create waypoint_image: %w", err)
@@ -431,6 +435,7 @@ func (u *WaypointUsecase) CompleteLoading(
 				OldStatus:      "in_transit",
 				NewStatus:      "picked_up",
 				Notes:          loadedBy,
+				CreatedAt:      time.Now(),
 			}
 			if err := logRepo.Insert(log); err != nil {
 				return fmt.Errorf("failed to create waypoint log: %w", err)
@@ -448,6 +453,7 @@ func (u *WaypointUsecase) CompleteLoading(
 				OldStatus:      "on_pickup",
 				NewStatus:      "cancelled",
 				Notes:          loadedBy,
+				CreatedAt:      time.Now(),
 			}
 			if err := logRepo.Insert(log); err != nil {
 				return fmt.Errorf("failed to create waypoint log: %w", err)
@@ -587,6 +593,7 @@ func (u *WaypointUsecase) FailPickup(
 				Type:           "failed",
 				Images:         images,
 				CreatedBy:      createdBy,
+				CreatedAt:      time.Now(),
 			}
 			if err := waypointImageRepo.Insert(waypointImage); err != nil {
 				return fmt.Errorf("failed to create waypoint_image: %w", err)
@@ -625,6 +632,7 @@ func (u *WaypointUsecase) FailPickup(
 			OldStatus:      "in_transit",
 			NewStatus:      "cancelled",
 			Notes:          fmt.Sprintf("Alasan gagal: %s", failedReason),
+			CreatedAt:      time.Now(),
 		}
 		if err := logRepo.Insert(log); err != nil {
 			return fmt.Errorf("failed to create waypoint log: %w", err)
@@ -742,6 +750,7 @@ func (u *WaypointUsecase) FailDelivery(
 				Type:           "failed",
 				Images:         images,
 				CreatedBy:      createdBy,
+				CreatedAt:      time.Now(),
 			}
 			if err := waypointImageRepo.Insert(waypointImage); err != nil {
 				return fmt.Errorf("failed to create waypoint_image: %w", err)
@@ -780,6 +789,7 @@ func (u *WaypointUsecase) FailDelivery(
 			OldStatus:      "in_transit",
 			NewStatus:      "failed",
 			Notes:          fmt.Sprintf("Alasan gagal: %s", failedReason),
+			CreatedAt:      time.Now(),
 		}
 		if err := logRepo.Insert(log); err != nil {
 			return fmt.Errorf("failed to create waypoint log: %w", err)

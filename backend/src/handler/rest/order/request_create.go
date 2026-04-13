@@ -2,6 +2,7 @@ package order
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/logistics-id/onward-tms/entity"
@@ -96,6 +97,7 @@ func (r *createRequest) toEntity() *entity.Order {
 		ManualOverridePrice: r.ManualOverridePrice,
 		Status:              "pending",
 		CompanyID:           companyID,
+		CreatedAt:           time.Now(),
 		CreatedBy:           r.session.DisplayName,
 	}
 }
@@ -139,7 +141,8 @@ func (r *createRequest) toShipmentEntity(sp *ShipmentRequest, orderID uuid.UUID,
 		ScheduledDeliveryDate: sp.deliveryScheduleAt,
 		ScheduledDeliveryTime: sp.DeliveryScheduledTime,
 		// Status
-		Status: "pending",
+		Status:    "pending",
+		CreatedAt: time.Now(),
 	}
 
 	// Add items to shipment

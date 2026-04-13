@@ -2,6 +2,7 @@ package pricing_matrix
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	regionid "github.com/enigma-id/region-id/pkg/entity"
@@ -74,6 +75,7 @@ func (r *createRequest) toEntity() *entity.PricingMatrix {
 		Price:     r.Price,
 		CompanyID: companyID,
 		IsActive:  true,
+		CreatedAt: time.Now(),
 	}
 
 	// Set CustomerID only if customer is provided

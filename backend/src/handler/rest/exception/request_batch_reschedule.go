@@ -3,6 +3,7 @@ package exception
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/logistics-id/onward-tms/entity"
@@ -130,6 +131,7 @@ func (r *batchRescheduleShipmentsRequest) toEntity() *entity.Trip {
 		VehicleID:  r.vehicle.ID,
 		Status:     "planned",
 		Notes:      notes,
+		CreatedAt:  time.Now(),
 	}
 }
 

@@ -104,6 +104,7 @@ func (r *createRequest) toEntity() *entity.Driver {
 		AvatarURL:     r.AvatarURL,
 		IsActive:      r.IsActive,
 		CompanyID:     companyID,
+		CreatedAt:     time.Now(),
 	}
 	// Set UserID only if user is provided
 	if r.user != nil {
@@ -122,6 +123,7 @@ func (r *createRequest) toUserEntity() *entity.User {
 		Phone:     r.Phone,
 		CompanyID: companyID,
 		IsActive:  true,
+		CreatedAt: time.Now(),
 	}
 }
 

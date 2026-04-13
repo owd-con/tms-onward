@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/logistics-id/onward-tms/entity"
@@ -40,6 +41,7 @@ func SubscribeDeliveryFailed(event interface{}, msg amqp.Delivery) error {
 		Body:      req.Body,
 		Type:      req.Type,
 		Data:      "", // will be set from JSON
+		SentAt:    time.Now(),
 	}
 
 	// Parse data for storage
@@ -95,6 +97,7 @@ func SubscribeDeliveryCompleted(event interface{}, msg amqp.Delivery) error {
 		Body:      req.Body,
 		Type:      req.Type,
 		Data:      "", // will be set from JSON
+		SentAt:    time.Now(),
 	}
 
 	// Parse data for storage
@@ -164,7 +167,7 @@ func processFailedDeliveryEmail(ctx context.Context, uc *usecase.Factory, req *p
 		TripNumber:   req.Data["trip_number"].(string),
 		LocationName: waypoint.LocationName,
 		Address:      waypoint.Address,
-		Timestamp:    req.PublishedAt.Format("2006-01-02 15:04:05"),
+		Timestamp:    req.PublishedAt.Local().Format("2006-01-02 15:04:05"),
 		Notes:        req.Body,
 		DashboardURL: "https://tms-onward.com/dashboard",
 		Year:         req.PublishedAt.Year(),
@@ -214,7 +217,7 @@ func processDeliveryCompletedEmail(ctx context.Context, uc *usecase.Factory, req
 		LocationName:  waypoint.LocationName,
 		Address:       waypoint.Address,
 		RecipientName: recipientName,
-		Timestamp:     req.PublishedAt.Format("2006-01-02 15:04:05"),
+		Timestamp:     req.PublishedAt.Local().Format("2006-01-02 15:04:05"),
 		DashboardURL:  "https://tms-onward.com/dashboard",
 		Year:          req.PublishedAt.Year(),
 	}

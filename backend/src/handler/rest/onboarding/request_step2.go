@@ -172,6 +172,7 @@ func (r *step2Request) execute() (*rest.ResponseBody, error) {
 			Role:      userReq.Role,
 			Phone:     userReq.Phone,
 			IsActive:  true,
+			CreatedAt: time.Now(),
 		}
 
 		// For update operations, use the existing ID and set updated timestamp

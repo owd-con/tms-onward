@@ -130,6 +130,7 @@ func (r *updateRequest) toUserEntity() *entity.User {
 		Phone:     r.Phone,
 		CompanyID: companyID,
 		IsActive:  true,
+		CreatedAt: time.Now(),
 	}
 }
 

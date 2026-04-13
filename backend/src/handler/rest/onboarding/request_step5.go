@@ -133,6 +133,7 @@ func (r *step5Request) execute() (*rest.ResponseBody, error) {
 			Phone:     customerReq.Phone,
 			Address:   customerReq.Address,
 			IsActive:  true,
+			CreatedAt: time.Now(),
 		}
 
 		// For update operations, use the existing ID and CreatedAt

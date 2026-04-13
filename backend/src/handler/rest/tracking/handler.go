@@ -30,7 +30,7 @@ func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 // @Failure 400 {object} rest.HTTPError
 // @Router /public/tracking/{orderNumber} [get]
 func (h *handler) trackOrder(ctx *rest.Context) (err error) {
-	var req trackOrderRequest
+	var req getRequest
 	var res *rest.ResponseBody
 
 	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {

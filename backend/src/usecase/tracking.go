@@ -18,6 +18,7 @@ type TrackingUsecase struct {
 // TrackingResponse represents the public tracking information
 type TrackingResponse struct {
 	OrderNumber     string              `json:"order_number"`
+	ReferenceCode   string              `json:"reference_code"`
 	Status          string              `json:"status"`
 	OrderType       string              `json:"order_type"`
 	CustomerName    string              `json:"customer_name"`
@@ -113,11 +114,12 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 	}
 
 	response := &TrackingResponse{
-		OrderNumber:  order.OrderNumber,
-		Status:       order.Status,
-		OrderType:    order.OrderType,
-		CustomerName: order.Customer.Name,
-		CreatedAt:    order.CreatedAt.Format("2006-01-02 15:04:05"),
+		OrderNumber:   order.OrderNumber,
+		ReferenceCode: order.ReferenceCode,
+		Status:        order.Status,
+		OrderType:     order.OrderType,
+		CustomerName:  order.Customer.Name,
+		CreatedAt:     order.CreatedAt.Local().Format("2006-01-02 15:04:05"),
 	}
 
 	// Get shipments for this order
@@ -146,17 +148,17 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 			ScheduledPickupTime: s.ScheduledPickupTime,
 		}
 		if s.ActualPickupTime != nil {
-			formatted := s.ActualPickupTime.Format("2006-01-02 15:04:05")
+			formatted := s.ActualPickupTime.Local().Format("2006-01-02 15:04:05")
 			si.ActualPickupTime = &formatted
 		}
 		if s.ActualDeliveryTime != nil {
-			formatted := s.ActualDeliveryTime.Format("2006-01-02 15:04:05")
+			formatted := s.ActualDeliveryTime.Local().Format("2006-01-02 15:04:05")
 			si.ActualDeliveryTime = &formatted
 		}
 		si.ReceivedBy = s.ReceivedBy
 		si.FailedReason = s.FailedReason
 		if s.FailedAt != nil {
-			formatted := s.FailedAt.Format("2006-01-02 15:04:05")
+			formatted := s.FailedAt.Local().Format("2006-01-02 15:04:05")
 			si.FailedAt = &formatted
 		}
 		shipmentInfos = append(shipmentInfos, si)
@@ -193,7 +195,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 			Status:    log.NewStatus,
 			OldStatus: log.OldStatus,
 			Notes:     log.Message,
-			ChangedAt: log.CreatedAt.Format("2006-01-02 15:04:05"),
+			ChangedAt: log.CreatedAt.Local().Format("2006-01-02 15:04:05"),
 		}
 
 		if log.TripWaypoint != nil {
@@ -230,7 +232,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 				NewStatus:      log.NewStatus,
 				OldStatus:      log.OldStatus,
 				Notes:          log.Notes,
-				ChangedAt:      log.CreatedAt.Format("2006-01-02 15:04:05"),
+				ChangedAt:      log.CreatedAt.Local().Format("2006-01-02 15:04:05"),
 			}
 
 			shipmentHistory = append(shipmentHistory, sh)
@@ -277,7 +279,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 					WaypointImageID: wi.ID.String(),
 					Type:            wi.Type,
 					Photos:          wi.Images, // Already []string from TEXT[]
-					SubmittedAt:     wi.CreatedAt.Format("2006-01-02 15:04:05"),
+					SubmittedAt:     wi.CreatedAt.Local().Format("2006-01-02 15:04:05"),
 				}
 				if wi.SignatureURL != nil {
 					imageInfo.SignatureURL = *wi.SignatureURL

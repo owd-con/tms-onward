@@ -114,7 +114,7 @@ func (r *getOrderTripWaypointRequest) getDownload(data any, c *rest.Context) err
 			f.SetCellValue(sheet, fmt.Sprintf("K%d", row), "")
 		}
 		if item.CompletedAt != nil {
-			f.SetCellValue(sheet, fmt.Sprintf("L%d", row), item.CompletedAt.Format("2006-01-02 15:04:05"))
+			f.SetCellValue(sheet, fmt.Sprintf("L%d", row), item.CompletedAt.Local().Format("2006-01-02 15:04:05"))
 		} else {
 			f.SetCellValue(sheet, fmt.Sprintf("L%d", row), "")
 		}
