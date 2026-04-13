@@ -25,8 +25,9 @@ export default function AlertCard({ icon, title, description, count, color = "ro
     <div
       onClick={onClick}
       className={clsx(
-        "flex items-start gap-3 p-4 rounded-xl border bg-white shadow-sm transition-shadow",
+        "flex items-start gap-3 p-4 rounded-xl border shadow-sm transition-shadow",
         selectedColor.border,
+        selectedColor.bg,
         onClick ? "cursor-pointer hover:shadow-md hover:border-slate-300" : "cursor-default hover:shadow"
       )}
     >

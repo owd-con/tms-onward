@@ -26,7 +26,10 @@ const STATUS_COLORS: Record<string, string> = {
 
 const getStatusColor = (status: string) => STATUS_COLORS[status] || "#6B7280";
 
-export default function ShipmentMap({ shipmentsByArea, height = "400px" }: ShipmentMapProps) {
+export default function ShipmentMap({
+  shipmentsByArea,
+  height = "400px",
+}: ShipmentMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
@@ -63,7 +66,7 @@ export default function ShipmentMap({ shipmentsByArea, height = "400px" }: Shipm
     // Initialize popup
     popup.current = new mapboxgl.Popup({
       closeButton: true,
-      closeOnClick: true,
+      closeOnClick: false,
       offset: 15,
     });
 
@@ -103,6 +106,7 @@ export default function ShipmentMap({ shipmentsByArea, height = "400px" }: Shipm
               id: shipment.shipment_id,
               type: "origin",
               shipmentNumber: shipment.shipment_number,
+              orderId: shipment.order_id,
               orderNumber: shipment.order_number,
               customerName: shipment.customer_name,
               originAddress: shipment.origin_address,
@@ -126,6 +130,7 @@ export default function ShipmentMap({ shipmentsByArea, height = "400px" }: Shipm
               id: shipment.shipment_id,
               type: "destination",
               shipmentNumber: shipment.shipment_number,
+              orderId: shipment.order_id,
               orderNumber: shipment.order_number,
               customerName: shipment.customer_name,
               originAddress: shipment.origin_address,
@@ -175,7 +180,11 @@ export default function ShipmentMap({ shipmentsByArea, height = "400px" }: Shipm
       }
     });
 
-    const sourcesToRemove = ["shipment-origins", "shipment-destinations", "shipment-routes"];
+    const sourcesToRemove = [
+      "shipment-origins",
+      "shipment-destinations",
+      "shipment-routes",
+    ];
     sourcesToRemove.forEach((sourceId) => {
       if (mapInstance.getSource(sourceId)) {
         mapInstance.removeSource(sourceId);
@@ -295,7 +304,10 @@ export default function ShipmentMap({ shipmentsByArea, height = "400px" }: Shipm
       const feature = features[0];
       const props = feature.properties as any;
 
-      const coordinates = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+      const coordinates = (feature.geometry as GeoJSON.Point).coordinates as [
+        number,
+        number,
+      ];
 
       // Create popup content
       const html = `
@@ -308,11 +320,11 @@ export default function ShipmentMap({ shipmentsByArea, height = "400px" }: Shipm
               ${props.status}
             </div>
           </div>
-          
+
           <div style="font-size: 12px; color: #6b7280; font-weight: 600; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f3f4f6;">
             ${props.customerName}
           </div>
-          
+
           <div style="display: flex; flex-direction: column; gap: 12px;">
             <div style="display: flex; gap: 10px;">
               <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
@@ -334,17 +346,32 @@ export default function ShipmentMap({ shipmentsByArea, height = "400px" }: Shipm
               </div>
             </div>
           </div>
-          
+
           <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #f3f4f6;">
-             <button style="width: 100%; padding: 10px; background: #022c22; color: #fff; border: none; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s;">
-               VIEW SHIPMENT DETAILS
+             <button id="view-shipment-btn" data-order-id="${props.orderId}" style="width: 100%; padding: 10px; background: #022c22; color: #fff; border: none; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s;" >
+               VIEW ORDER DETAILS
              </button>
           </div>
         </div>
       `;
 
       if (popup.current) {
+        // Store order ID for the open handler
+        const orderId = props.orderId;
+
         popup.current.setLngLat(coordinates).setHTML(html).addTo(mapInstance);
+
+        // Add one-time open handler for button click
+        requestAnimationFrame(() => {
+          const btn = document.getElementById("view-shipment-btn");
+          if (btn) {
+            btn.onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              window.location.href = `/a/orders/${orderId}`;
+            };
+          }
+        });
       }
     };
 
@@ -353,7 +380,8 @@ export default function ShipmentMap({ shipmentsByArea, height = "400px" }: Shipm
       const features = mapInstance.queryRenderedFeatures(e.point, {
         layers: ["shipment-origins", "shipment-destinations"],
       });
-      mapInstance.getCanvas().style.cursor = features.length > 0 ? "pointer" : "";
+      mapInstance.getCanvas().style.cursor =
+        features.length > 0 ? "pointer" : "";
     };
 
     mapInstance.on("click", onMapClick);
@@ -363,11 +391,17 @@ export default function ShipmentMap({ shipmentsByArea, height = "400px" }: Shipm
     if (!hasInitializedLayers.current && originFeatures.length > 0) {
       const bounds = new mapboxgl.LngLatBounds();
       originFeatures.forEach((f) => {
-        const coords = (f.geometry as GeoJSON.Point).coordinates as [number, number];
+        const coords = (f.geometry as GeoJSON.Point).coordinates as [
+          number,
+          number,
+        ];
         bounds.extend(coords);
       });
       destFeatures.forEach((f) => {
-        const coords = (f.geometry as GeoJSON.Point).coordinates as [number, number];
+        const coords = (f.geometry as GeoJSON.Point).coordinates as [
+          number,
+          number,
+        ];
         bounds.extend(coords);
       });
       mapInstance.fitBounds(bounds, { padding: 50, maxZoom: 14 });
@@ -389,7 +423,9 @@ export default function ShipmentMap({ shipmentsByArea, height = "400px" }: Shipm
       >
         <div className="text-center p-6">
           <p className="text-gray-500">Mapbox access token not configured</p>
-          <p className="text-sm text-gray-400 mt-1">Set VITE_MAPBOX_TOKEN in your environment</p>
+          <p className="text-sm text-gray-400 mt-1">
+            Set VITE_MAPBOX_TOKEN in your environment
+          </p>
         </div>
       </div>
     );

@@ -139,82 +139,91 @@ const CustomerFormModal = forwardRef<
       open
       onClose={handleClose}
       closeOnOutsideClick={false}
-      className='max-w-2xl w-full mx-4'
+      className='max-w-3xl w-11/12 mx-4'
     >
-      <Modal.Header className='mb-2'>
-        <div className='text-xl font-bold'>
+      <Modal.Header className='mb-4'>
+        <div className='text-secondary font-bold leading-7 text-lg'>
           {mode === "create" ? "Add New Customer" : "Edit Customer"}
         </div>
-        <div className='text-sm text-base-content/60'>
+        <div className='text-sm text-base-content/60 leading-5 font-normal'>
           {mode === "create"
-            ? "Fill in the customer information below"
-            : "Update customer information"}
+            ? "Create a new client profile and contact record"
+            : "Update customer information and preferences"}
         </div>
       </Modal.Header>
 
       <form onSubmit={handleSubmit}>
-        <Modal.Body className='max-h-[60vh] overflow-y-auto'>
-          <div className='space-y-4'>
-            {/* Customer Information */}
-            <div>
-              <h3 className='text-sm font-semibold text-gray-700 mb-3'>
-                Customer Information
-              </h3>
+        <Modal.Body className='max-h-[75vh] overflow-y-auto px-2 pb-6'>
+          <div className='space-y-6 pt-2'>
+            
+            {/* GROUP 1: Customer Profile */}
+            <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+              <div className="mb-5 border-b border-slate-200/60 pb-3">
+                <h3 className="text-[15px] font-bold text-slate-800">Customer Profile</h3>
+                <p className="text-xs text-slate-500 mt-1">Core identity and primary communication methods</p>
+              </div>
 
-              <Input
-                label='Customer Name'
-                placeholder='Enter customer name'
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                error={FormState?.errors?.name as string}
-                required
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="sm:col-span-2">
+                  <Input
+                    label='Customer Name'
+                    placeholder='Enter customer name'
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    error={FormState?.errors?.name as string}
+                    required
+                  />
+                </div>
 
-              <Input
-                label='Email'
-                placeholder='customer@email.com'
-                type='email'
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                error={FormState?.errors?.email as string}
-              />
+                <Input
+                  label='Email'
+                  placeholder='customer@email.com'
+                  type='email'
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  error={FormState?.errors?.email as string}
+                />
 
-              <Input
-                label='Phone'
-                placeholder='08xxxxxxxxxx'
-                type='phone'
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                error={FormState?.errors?.phone as string}
-              />
+                <Input
+                  label='Phone'
+                  placeholder='08xxxxxxxxxx'
+                  type='phone'
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  error={FormState?.errors?.phone as string}
+                />
+              </div>
             </div>
 
-            {/* Address Information */}
-            <div className='mt-6'>
-              <h3 className='text-sm font-semibold text-gray-700 mb-3'>
-                Address Information
-              </h3>
+            {/* GROUP 2: Address Information */}
+            <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+              <div className="mb-5 border-b border-slate-200/60 pb-3">
+                <h3 className="text-[15px] font-bold text-slate-800">Location</h3>
+                <p className="text-xs text-slate-500 mt-1">Registered address and operational headquarters</p>
+              </div>
 
-              <Input
-                label='Address'
-                placeholder='Street address'
-                type='textarea'
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                error={FormState?.errors?.address as string}
-              />
+              <div className="grid grid-cols-1 gap-5">
+                <Input
+                  label='Registration Address'
+                  placeholder='Street address'
+                  type='textarea'
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  error={FormState?.errors?.address as string}
+                />
+              </div>
             </div>
+
           </div>
         </Modal.Body>
 
         <Modal.Footer>
-          <div className='flex flex-col sm:flex-row justify-end gap-3'>
+          <div className='flex justify-end gap-3'>
             <Button
               type='button'
               variant='secondary'
               onClick={handleClose}
               disabled={isLoading}
-              className='w-full sm:w-auto'
             >
               Cancel
             </Button>
@@ -222,9 +231,8 @@ const CustomerFormModal = forwardRef<
               type='submit'
               variant='primary'
               isLoading={isLoading}
-              className='w-full sm:w-auto'
             >
-              {mode === "create" ? "Create Customer" : "Update Customer"}
+              {mode === "create" ? "Create Customer" : "Save Changes"}
             </Button>
           </div>
         </Modal.Footer>

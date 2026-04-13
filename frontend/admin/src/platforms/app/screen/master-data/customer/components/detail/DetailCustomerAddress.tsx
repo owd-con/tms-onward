@@ -109,17 +109,26 @@ const DetailCustomerAddress: React.FC<DetailCustomerAddressProps> = ({
           open
           onClose={() => closeModal("delete-address-confirm")}
           closeOnOutsideClick={false}
-          className='max-w-md'
+          className='!max-w-md !w-11/12 mx-4'
         >
-          <Modal.Header>
-            <div className='text-lg font-bold'>Delete Address</div>
+          <Modal.Header className='mb-4'>
+            <div className='text-rose-600 font-bold leading-7 text-lg'>
+              Delete Saved Address
+            </div>
+            <div className='text-sm text-slate-500 leading-5 font-normal'>
+              This action is permanent and cannot be undone. Are you sure?
+            </div>
           </Modal.Header>
           <Modal.Body>
-            <p className='text-sm text-gray-600'>
-              Are you sure you want to delete this address?
-            </p>
-            <p className='mt-2 text-sm font-medium'>{address.name}</p>
-            <p className='text-xs text-gray-500'>{address.address}</p>
+            <div className='bg-rose-50/50 border border-rose-100/60 p-5 rounded-2xl'>
+              <p className='text-sm text-rose-900/60 font-medium mb-3'>You are about to delete:</p>
+              <div className='bg-white p-4 rounded-xl shadow-sm border border-rose-100 flex flex-col gap-1'>
+                <p className='font-bold text-slate-800'>{address.name}</p>
+                <p className='text-xs text-slate-500 font-medium line-clamp-2'>
+                  {address.address}
+                </p>
+              </div>
+            </div>
           </Modal.Body>
           <Modal.Footer>
             <div className='flex justify-end gap-3'>
@@ -137,8 +146,9 @@ const DetailCustomerAddress: React.FC<DetailCustomerAddressProps> = ({
                   await removeAddress({ id: address.id });
                   closeModal("delete-address-confirm");
                 }}
+                className="bg-rose-600 hover:bg-rose-700 text-white shadow-md border border-rose-700 outline outline-2 outline-offset-2 outline-rose-500/20"
               >
-                Delete
+                Yes, Delete Address
               </Button>
             </div>
           </Modal.Footer>

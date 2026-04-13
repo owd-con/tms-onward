@@ -88,19 +88,26 @@ const TripDetailPage = () => {
         <Modal.Wrapper
           open
           onClose={() => closeModal("delete-trip-confirm")}
-          className='max-w-md'
+          className='!max-w-md !w-11/12 mx-4'
         >
-          <Modal.Header>
-            <div className='text-lg font-bold'>Delete Trip</div>
+          <Modal.Header className='mb-4'>
+            <div className='text-rose-600 font-bold leading-7 text-lg'>
+              Delete Trip Record
+            </div>
+            <div className='text-sm text-slate-500 leading-5 font-normal'>
+              This action is permanent and cannot be undone. Are you sure?
+            </div>
           </Modal.Header>
           <Modal.Body>
-            <p className='text-sm text-base-content/70'>
-              Are you sure you want to delete this trip?
-            </p>
-            <p className='mt-2 text-sm font-medium'>{trip?.trip_number}</p>
-            <p className='text-xs text-base-content/60 mt-1'>
-              This action cannot be undone.
-            </p>
+            <div className='bg-rose-50/50 border border-rose-100/60 p-5 rounded-2xl'>
+              <p className='text-sm text-rose-900/60 font-medium mb-3'>You are about to delete:</p>
+              <div className='bg-white p-4 rounded-xl shadow-sm border border-rose-100 flex flex-col gap-1'>
+                <p className='font-bold text-slate-800'>{trip?.trip_number}</p>
+                <p className='text-sm text-slate-500 font-medium'>
+                  All associated waypoints and timeline events will be removed.
+                </p>
+              </div>
+            </div>
           </Modal.Body>
           <Modal.Footer>
             <div className='flex justify-end gap-3'>
@@ -109,15 +116,16 @@ const TripDetailPage = () => {
                 onClick={() => closeModal("delete-trip-confirm")}
                 disabled={removeTripResult?.isLoading}
               >
-                Keep Trip
+                Cancel
               </Button>
               <Button
                 variant='error'
                 onClick={handleDelete}
                 isLoading={removeTripResult?.isLoading}
                 disabled={removeTripResult?.isLoading}
+                className="bg-rose-600 hover:bg-rose-700 text-white shadow-md border border-rose-700 outline outline-2 outline-offset-2 outline-rose-500/20"
               >
-                Delete Trip
+                Yes, Delete Trip
               </Button>
             </div>
           </Modal.Footer>

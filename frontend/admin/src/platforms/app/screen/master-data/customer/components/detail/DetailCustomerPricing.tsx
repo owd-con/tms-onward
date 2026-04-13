@@ -103,22 +103,29 @@ const DetailCustomerPricing: React.FC<DetailCustomerPricingProps> = ({
           open
           onClose={() => closeModal("delete-pricing-confirm")}
           closeOnOutsideClick={false}
-          className='max-w-md'
+          className='!max-w-md !w-11/12 mx-4'
         >
-          <Modal.Header>
-            <div className='text-lg font-bold'>Delete Pricing</div>
+          <Modal.Header className='mb-4'>
+            <div className='text-rose-600 font-bold leading-7 text-lg'>
+              Delete Pricing Route
+            </div>
+            <div className='text-sm text-slate-500 leading-5 font-normal'>
+              This action is permanent and cannot be undone. Are you sure?
+            </div>
           </Modal.Header>
           <Modal.Body>
-            <p className='text-sm text-gray-600'>
-              Are you sure you want to delete this pricing?
-            </p>
-            <p className='mt-2 text-sm text-gray-700'>
-              <span className='font-medium'>{pricing.origin_region?.name || pricing.origin_city_id}</span> →{" "}
-              <span className='font-medium'>{pricing.destination_region?.name || pricing.destination_city_id}</span>
-            </p>
-            <p className='text-lg font-semibold mt-2'>
-              Rp {new Intl.NumberFormat("id-ID").format(pricing.price)}
-            </p>
+            <div className='bg-rose-50/50 border border-rose-100/60 p-5 rounded-2xl'>
+              <p className='text-sm text-rose-900/60 font-medium mb-3'>You are about to delete:</p>
+              <div className='bg-white p-4 rounded-xl shadow-sm border border-rose-100 flex flex-col gap-1'>
+                <p className='mt-1 text-sm text-slate-700'>
+                  <span className='font-bold'>{pricing.origin_region?.name || pricing.origin_city_id}</span> →{" "}
+                  <span className='font-bold'>{pricing.destination_region?.name || pricing.destination_city_id}</span>
+                </p>
+                <p className='text-lg font-bold mt-2 text-slate-900'>
+                  Rp {new Intl.NumberFormat("id-ID").format(pricing.price)}
+                </p>
+              </div>
+            </div>
           </Modal.Body>
           <Modal.Footer>
             <div className='flex justify-end gap-3'>
@@ -136,8 +143,9 @@ const DetailCustomerPricing: React.FC<DetailCustomerPricingProps> = ({
                   await removePricing({ id: pricing.id });
                   closeModal("delete-pricing-confirm");
                 }}
+                className="bg-rose-600 hover:bg-rose-700 text-white shadow-md border border-rose-700 outline outline-2 outline-offset-2 outline-rose-500/20"
               >
-                Delete
+                Yes, Delete Pricing
               </Button>
             </div>
           </Modal.Footer>
@@ -155,7 +163,7 @@ const DetailCustomerPricing: React.FC<DetailCustomerPricingProps> = ({
   return (
     <div className='space-y-4'>
       <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3'>
-        <h3 className='text-base lg:text-lg font-semibold'>Customer-Specific Pricing</h3>
+        <h3 className='text-base lg:text-lg font-semibold'>Customer - Specific Pricing</h3>
         <Button size='sm' variant='primary' onClick={handleCreatePricing}>
           + Add Pricing
         </Button>
@@ -163,7 +171,7 @@ const DetailCustomerPricing: React.FC<DetailCustomerPricingProps> = ({
 
       {pricings.length === 0 ? (
         <div className='text-center py-8 lg:py-12 text-gray-500'>
-          <p className='text-sm'>No customer-specific pricing yet</p>
+          <p className='text-sm'>No customer - specific pricing yet</p>
           <p className='text-xs mt-1'>Click "+ Add Pricing" to create one</p>
         </div>
       ) : (

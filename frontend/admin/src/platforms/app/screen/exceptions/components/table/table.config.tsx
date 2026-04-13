@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
-import { Button } from "@/components";
 import config from "@/services/table/const";
 import { dateFormat } from "@/utils/common";
+import { FiEye, FiMoreVertical, FiCalendar } from "react-icons/fi";
 
 /**
  * Failed Waypoint Item Component (for display in table cell)
@@ -145,22 +145,60 @@ const createTableConfig = ({
       ),
     },
     actions: {
-      title: "Actions",
+      title: "",
       sortable: false,
-      headerClass: "text-xs capitalize",
-      class: "p-4",
+      headerClass: "w-[60px]",
+      class: "p-4 text-right w-[60px]",
       component: (row: any) => (
-        <div className='flex place-items-center gap-1'>
-          <Button
-            size='xs'
-            variant='secondary'
-            onClick={() => onViewDetails(row)}
-          >
-            View
-          </Button>
-          <Button size='xs' variant='primary' onClick={() => onReschedule(row)}>
-            Reschedule
-          </Button>
+        <div className="flex justify-end">
+          <div className="dropdown dropdown-end md:dropdown-click" onClick={(e) => e.stopPropagation()}>
+            <button
+              tabIndex={0}
+              className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all duration-200"
+            >
+              <FiMoreVertical className="w-5 h-5" />
+            </button>
+            <ul
+              tabIndex={0}
+              className="dropdown-content z-[100] menu p-2 shadow-2xl bg-white rounded-2xl w-56 border border-slate-100 mt-2"
+            >
+              <li>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewDetails(row);
+                  }}
+                  className="flex items-center gap-3 hover:bg-slate-50 hover:text-indigo-600 text-slate-700 py-3 rounded-xl transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
+                    <FiEye className="w-4 h-4" />
+                  </div>
+                  <div className="flex flex-col items-start leading-tight">
+                    <span className="font-bold text-[13px]">View Details</span>
+                    <span className="text-[11px] text-slate-400">Inspect failed routes</span>
+                  </div>
+                </button>
+              </li>
+              <div className="my-1 border-t border-slate-50"></div>
+              <li>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReschedule(row);
+                  }}
+                  className="flex items-center gap-3 hover:bg-emerald-50 hover:text-emerald-600 text-slate-700 py-3 rounded-xl transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-500">
+                    <FiCalendar className="w-4 h-4" />
+                  </div>
+                  <div className="flex flex-col items-start leading-tight">
+                    <span className="font-bold text-[13px]">Reschedule</span>
+                    <span className="text-[11px] text-slate-400">Re-dispatch failed items</span>
+                  </div>
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       ),
     },

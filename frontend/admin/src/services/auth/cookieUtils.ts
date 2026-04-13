@@ -73,3 +73,26 @@ export const getTMSTokenFromSSO = (): string | null => {
 export const hasValidTMSSSO = (): boolean => {
   return getTMSTokenFromSSO() !== null;
 };
+
+/**
+ * Clear all cookies on logout
+ */
+export const clearSSOCookies = (): void => {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  const domain = getCookieDomain();
+  const cookies = document.cookie.split(";");
+
+  for (const cookie of cookies) {
+    const [name] = cookie.split("=");
+    const trimmedName = name?.trim();
+    if (!trimmedName) continue;
+
+    // Clear cookie with domain
+    document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${domain};`;
+    // Clear cookie without domain
+    document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+  }
+};

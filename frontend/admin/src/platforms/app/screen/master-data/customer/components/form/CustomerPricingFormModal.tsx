@@ -154,63 +154,81 @@ const CustomerPricingFormModal = forwardRef<
       open
       onClose={handleClose}
       closeOnOutsideClick={false}
-      className='max-w-2xl'
+      className='!max-w-3xl !w-11/12 mx-4'
     >
-      <Modal.Header className='mb-2'>
-        <div className='text-xl font-bold'>
+      <Modal.Header className='mb-4'>
+        <div className='text-secondary font-bold leading-7 text-lg'>
           {mode === "create" ? "Add Customer Pricing" : "Edit Customer Pricing"}
         </div>
-        <div className='text-sm text-base-content/60'>
+        <div className='text-sm text-base-content/60 leading-5 font-normal'>
           {mode === "create"
-            ? "Fill in the pricing information for this customer"
-            : "Update pricing information"}
+            ? "Define dedicated route pricing for this customer"
+            : "Update existing route pricing rules"}
         </div>
       </Modal.Header>
 
       <form onSubmit={handleSubmit}>
-        <Modal.Body className='max-h-[60vh] overflow-y-auto'>
-          <div className='space-y-4'>
-            <div>
-              <h3 className='text-sm font-semibold text-gray-700 mb-3'>
-                Pricing Information
-              </h3>
+        <Modal.Body className='max-h-[75vh] overflow-y-auto px-2 pb-6'>
+          <div className='space-y-6 pt-2'>
 
-              <RegionSearchInput
-                label='Origin City/Region'
-                value={selectedOriginRegion}
-                onChange={(id, region) => {
-                  setOriginRegionId(id);
-                  setSelectedOriginRegion(region);
-                }}
-                placeholder="Search origin (e.g., 'Jakarta Selatan')"
-                filterType="regency"
-                required
-              />
+            {/* GROUP 1: Route Setup */}
+            <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+              <div className="mb-5 border-b border-slate-200/60 pb-3">
+                <h3 className="text-[15px] font-bold text-slate-800">Route Definition</h3>
+                <p className="text-xs text-slate-500 mt-1">Specify origin and destination coverage for this pricing logic</p>
+              </div>
 
-              <RegionSearchInput
-                label='Destination City/Region'
-                value={selectedDestinationRegion}
-                onChange={(id, region) => {
-                  setDestinationRegionId(id);
-                  setSelectedDestinationRegion(region);
-                }}
-                placeholder="Search destination (e.g., 'Surabaya')"
-                filterType="regency"
-                required
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <RegionSearchInput
+                  label='Origin City/Region'
+                  value={selectedOriginRegion}
+                  onChange={(id, region) => {
+                    setOriginRegionId(id);
+                    setSelectedOriginRegion(region);
+                  }}
+                  placeholder="Search origin (e.g., 'Jakarta')"
+                  filterType="regency"
+                  required
+                />
 
-              <Input
-                label='Price (IDR)'
-                placeholder='0'
-                type='number'
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                error={FormState?.errors?.price as string}
-                required
-                min={0}
-                step='1'
-              />
+                <RegionSearchInput
+                  label='Destination City/Region'
+                  value={selectedDestinationRegion}
+                  onChange={(id, region) => {
+                    setDestinationRegionId(id);
+                    setSelectedDestinationRegion(region);
+                  }}
+                  placeholder="Search destination (e.g., 'Surabaya')"
+                  filterType="regency"
+                  required
+                />
+              </div>
             </div>
+
+            {/* GROUP 2: Pricing Details */}
+            <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+              <div className="mb-5 border-b border-slate-200/60 pb-3">
+                <h3 className="text-[15px] font-bold text-slate-800">Pricing Matrix</h3>
+                <p className="text-xs text-slate-500 mt-1">Configure financial rates for the specified route</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="sm:col-span-1">
+                  <Input
+                    label='Price (IDR)'
+                    placeholder='0'
+                    type='number'
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    error={FormState?.errors?.price as string}
+                    required
+                    min={0}
+                    step='1'
+                  />
+                </div>
+              </div>
+            </div>
+
           </div>
         </Modal.Body>
 
@@ -229,7 +247,7 @@ const CustomerPricingFormModal = forwardRef<
               variant='primary'
               isLoading={isLoading}
             >
-              {mode === "create" ? "Create Pricing" : "Update Pricing"}
+              {mode === "create" ? "Create Pricing" : "Save Changes"}
             </Button>
           </div>
         </Modal.Footer>

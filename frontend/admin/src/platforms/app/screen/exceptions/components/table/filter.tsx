@@ -66,8 +66,8 @@ const TableFilter: React.FC<TableFilterProps> = ({ table }) => {
       <div className="w-40 md:w-48">
         <div>
           <label className="text-xs font-medium text-base-content/70 mb-1 block">
-            Date From
-          </label>
+          Date From
+        </label>
           <input
             type="date"
             className="input input-bordered input-sm w-full"
@@ -82,8 +82,8 @@ const TableFilter: React.FC<TableFilterProps> = ({ table }) => {
       <div className="w-40 md:w-48">
         <div>
           <label className="text-xs font-medium text-base-content/70 mb-1 block">
-            Date To
-          </label>
+          Date To
+        </label>
           <input
             type="date"
             className="input input-bordered input-sm w-full"

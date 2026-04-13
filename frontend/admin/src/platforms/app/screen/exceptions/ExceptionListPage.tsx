@@ -56,7 +56,7 @@ const ExceptionListPage = () => {
 
       <Page.Body className='flex-1 flex flex-col min-h-0'>
         <div className="flex flex-col">
-          <Table.Render 
+          <Table.Render
             emptyTitle="No Exceptions Found"
             emptyDescription="No failed shipments at the moment. Your operations are running smoothly."
           />

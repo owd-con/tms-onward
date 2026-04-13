@@ -73,7 +73,10 @@ export const tripStatusOptions = [
 /**
  * Company Type Options
  */
-export const companyTypeOptions: Array<{ label: string; value: "3PL" | "Carrier" }> = [
+export const companyTypeOptions: Array<{
+  label: string;
+  value: "3PL" | "Carrier";
+}> = [
   { value: "3PL", label: "3PL - Third Party Logistics" },
   { value: "Carrier", label: "Carrier - Transportation Company" },
 ];

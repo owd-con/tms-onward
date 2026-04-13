@@ -62,9 +62,10 @@ const DashboardScreen = () => {
 
   return (
     <Page className="h-full flex flex-col min-h-0 bg-slate-50">
-      <div className="flex-1 flex flex-col min-h-0 overflow-auto scrollbar-hide pb-10">
+      <div className="flex flex-col min-h-0 h-full">
         {/* Greeting Section */}
         <Page.Header
+          className="!mb-0"
           pillLabel="FLEET OPERATIONS"
           pillIcon={<Database size={12} strokeWidth={2.5} />}
           title="Command Center"
@@ -95,140 +96,126 @@ const DashboardScreen = () => {
           }
         />
 
-        <div className="flex-1 min-h-0 px-8 pb-8">
+        <div className="flex-1 min-h-0 overflow-auto scrollbar-hide pb-10">
           {getResult?.isLoading ? (
             <div className="flex justify-center items-center h-full">
               <span className="loading loading-spinner loading-lg text-indigo-600"></span>
             </div>
           ) : (
-            <div className="flex flex-col gap-8 h-full">
-              {/* Top Row: Premium Metrics Grid */}
-              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 shrink-0">
-                <StatCard
-                  label="Total Orders"
-                  value={stats?.total_orders ?? "0"}
-                  icon={<LayoutDashboard size={20} />}
-                  color="indigo"
-                />
-                <StatCard
-                  label="Active Trips"
-                  value={stats?.active_trips ?? "0"}
-                  icon={<Truck size={20} />}
-                  color="blue"
-                />
-                <StatCard
-                  label="Active Orders"
-                  value={stats?.active_orders ?? "0"}
-                  icon={<Package size={20} />}
-                  color="amber"
-                />
-                <StatCard
-                  label="Pending Orders"
-                  value={stats?.pending_orders ?? "0"}
-                  icon={<Clock size={20} />}
-                  color="orange"
-                />
-                <StatCard
-                  label="Completed"
-                  value={stats?.completed_orders ?? "0"}
-                  icon={<CheckCircle size={20} />}
-                  color="emerald"
-                />
+            <div className="flex flex-col h-full">
+              {/* MAP HERO: Raw full-bleed, no card, just the map */}
+              <div className="relative h-[300px] sm:h-[400px] lg:h-[520px] shrink-0">
+                <ShipmentMap shipmentsByArea={mapShipments} height="100%" />
+
+                {/* Floating label - top right */}
+                <div className="absolute top-4 right-16 z-20 pointer-events-none">
+                  <div className="flex items-center gap-2 text-[11px] font-bold text-white bg-slate-900/60 backdrop-blur-md px-3.5 py-2 rounded-full border border-white/10 shadow-xl">
+                    <div className="size-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                    LIVE FLEET MAP
+                  </div>
+                </div>
+
+                {/* Slim bottom gradient - desktop only */}
+                <div className="hidden lg:block absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#1e293b] via-[#1e293b]/50 to-transparent pointer-events-none" />
               </div>
 
-              {/* Middle Section: Operations & Pulse (40/40/20 Split) */}
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 pb-6">
-                {/* Column 1 (40%): Live Fleet Map & Top Customers */}
-                <div className="lg:col-span-2 flex flex-col gap-5">
-                  {/* Map Card */}
-                  <div className="flex flex-col min-h-100 h-187.5 xl:h-162.5 bg-white border border-gray-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.03)] rounded-3xl overflow-hidden p-6 relative">
-                    <div className="flex items-center justify-between mb-3 shrink-0">
-                      <div>
-                        <h3 className="text-base font-bold text-slate-900 tracking-tight">
-                          Live Fleet Map
-                        </h3>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100/50">
-                        <div className="size-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                        LIVE TRACKING
-                      </div>
-                    </div>
+              {/* 5-Grid Stat Cards - normal flow on mobile, overlapping on desktop */}
+              <div className="relative lg:-mt-10 z-20 px-8 lg:px-8 pt-8 lg:!pt-0 py-8">
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 lg:gap-6">
+                  <StatCard
+                    label="Total Orders"
+                    value={stats?.total_orders ?? "0"}
+                    icon={<LayoutDashboard size={20} />}
+                    color="indigo"
+                  />
+                  <StatCard
+                    label="Active Trips"
+                    value={stats?.active_trips ?? "0"}
+                    icon={<Truck size={20} />}
+                    color="blue"
+                  />
+                  <StatCard
+                    label="Active Orders"
+                    value={stats?.active_orders ?? "0"}
+                    icon={<Package size={20} />}
+                    color="amber"
+                  />
+                  <StatCard
+                    label="Pending Orders"
+                    value={stats?.pending_orders ?? "0"}
+                    icon={<Clock size={20} />}
+                    color="orange"
+                  />
+                  <StatCard
+                    label="Completed"
+                    value={stats?.completed_orders ?? "0"}
+                    icon={<CheckCircle size={20} />}
+                    color="emerald"
+                  />
+                </div>
+              </div>
 
-                    <div className="rounded-2xl overflow-hidden border border-gray-100 relative flex-1 min-h-70">
-                      {mapShipments.length > 0 ? (
-                        <ShipmentMap
-                          shipmentsByArea={mapShipments}
-                          height="100%"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-slate-50 rounded-2xl">
-                          <p className="text-slate-500 font-medium">
-                            No Active Shipments
-                          </p>
-                        </div>
-                      )}
-                    </div>
+              {/* DASHBOARD CONTENT */}
+              <div className="px-8 flex flex-col gap-8">
+                {/* ROW 3: 2-Column Operations Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
+                  {/* Left Column: Active Orders & Active Trips */}
+                  <div className="flex flex-col gap-6">
+                    <ActiveOrdersCard orders={activeOrders} />
+                    <ActiveTripsCard trips={activeTrips} />
                   </div>
 
-                  {/* Top Customers Card */}
-                  <div className="flex-1 min-h-60">
+                  {/* Right Column: Top Customers (full) + Analytics & Alerts (2-grid) */}
+                  <div className="flex flex-col gap-6">
+                    {/* Top Customers - Full Width */}
                     <TopCustomersCard customers={topCustomers} />
-                  </div>
-                </div>
 
-                {/* Column 2 (40%): Active Orders & Trips */}
-                <div className="lg:col-span-2 flex flex-col gap-5">
-                  <ActiveOrdersCard orders={activeOrders} />
-                  <ActiveTripsCard trips={activeTrips} />
-                </div>
+                    {/* Sub-grid: Shipments by Type + Attention Required */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Shipments By Type Donut */}
+                      <ShipmentsByTypeCard data={shipmentsByType} />
 
-                {/* Column 3 (20%): Stats Breakdown & Attention Required */}
-                <div className="lg:col-span-1 flex flex-col gap-5">
-                  {/* Shipments By Type Donut */}
-                  <div className="min-h-70">
-                    <ShipmentsByTypeCard data={shipmentsByType} />
-                  </div>
+                      {/* Attention Required */}
+                      <div className="bg-white border border-gray-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.03)] rounded-3xl flex flex-col min-h-60">
+                        <div className="flex items-center gap-2 p-6 border-b border-gray-50 shrink-0">
+                          <h3 className="text-base font-bold text-slate-900 tracking-tight">
+                            Attention Required
+                          </h3>
+                          <span className="bg-rose-100 text-rose-700 text-xs font-bold px-2 py-0.5 rounded-full ml-auto">
+                            {(failedOrders.length || 0) +
+                              (expiredVehicles.length || 0) +
+                              (expiredDrivers.length || 0)}
+                          </span>
+                        </div>
 
-                  {/* System Logs / Attention Required */}
-                  <div className="bg-white border border-gray-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.03)] rounded-3xl flex flex-col min-h-80 flex-1">
-                    <div className="flex items-center gap-2 p-6 border-b border-gray-50 shrink-0">
-                      <h3 className="text-base font-bold text-slate-900 tracking-tight">
-                        Attention Required
-                      </h3>
-                      <span className="bg-rose-100 text-rose-700 text-xs font-bold px-2 py-0.5 rounded-full ml-auto">
-                        {(failedOrders.length || 0) +
-                          (expiredVehicles.length || 0) +
-                          (expiredDrivers.length || 0)}
-                      </span>
-                    </div>
+                        <div className="flex flex-col gap-2.5 overflow-y-auto custom-scrollbar flex-1 p-6">
+                          {failedOrders.length > 0 && (
+                            <FailedOrdersAlert orders={failedOrders} />
+                          )}
+                          {expiredVehicles.length > 0 && (
+                            <ExpiredVehiclesAlert vehicles={expiredVehicles} />
+                          )}
+                          {expiredDrivers.length > 0 && (
+                            <ExpiredDriversAlert drivers={expiredDrivers} />
+                          )}
 
-                    <div className="flex flex-col gap-2.5 overflow-y-auto custom-scrollbar flex-1 p-6">
-                      {/* Render new standalone alert cards */}
-                      {failedOrders.length > 0 && (
-                        <FailedOrdersAlert orders={failedOrders} />
-                      )}
-                      {expiredVehicles.length > 0 && (
-                        <ExpiredVehiclesAlert vehicles={expiredVehicles} />
-                      )}
-                      {expiredDrivers.length > 0 && (
-                        <ExpiredDriversAlert drivers={expiredDrivers} />
-                      )}
-
-                      {failedOrders.length === 0 &&
-                        expiredVehicles.length === 0 &&
-                        expiredDrivers.length === 0 && (
-                          <div className="flex flex-col items-center justify-center p-8 text-slate-400 border border-dashed border-gray-200 rounded-2xl h-40">
-                            <div className="size-8 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mb-3">
-                              <CheckCircle size={16} />
-                            </div>
-                            <span className="text-[14px] font-bold text-slate-700 mb-1">
-                              All Systems Optimal
-                            </span>
-                            <span className="text-[12px] font-medium text-slate-500">
-                              No operational exceptions
-                            </span>
-                          </div>
-                        )}
+                          {failedOrders.length === 0 &&
+                            expiredVehicles.length === 0 &&
+                            expiredDrivers.length === 0 && (
+                              <div className="flex flex-col items-center justify-center p-8 text-slate-400 border border-dashed border-gray-200 rounded-2xl h-40">
+                                <div className="size-8 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mb-3">
+                                  <CheckCircle size={16} />
+                                </div>
+                                <span className="text-[14px] font-bold text-slate-700 mb-1">
+                                  All Systems Optimal
+                                </span>
+                                <span className="text-[12px] font-medium text-slate-500">
+                                  No operational exceptions
+                                </span>
+                              </div>
+                            )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

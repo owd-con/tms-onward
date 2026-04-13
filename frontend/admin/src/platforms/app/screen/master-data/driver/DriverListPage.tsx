@@ -100,25 +100,32 @@ const DriverListPage = () => {
           open={true}
           onClose={() => closeModal("delete-driver")}
           closeOnOutsideClick={true}
-          className='max-w-md'
+          className='!max-w-md !w-11/12 mx-4'
         >
           <Modal.Header className='mb-4'>
-            <div className='text-xl font-bold'>Delete Driver</div>
-            <div className='text-sm text-base-content/60'>
-              Are you sure you want to delete this driver?
+            <div className='text-rose-600 font-bold leading-7 text-lg'>
+              Delete Driver Record
+            </div>
+            <div className='text-sm text-slate-500 leading-5 font-normal'>
+              This action is permanent and cannot be undone. Are you sure?
             </div>
           </Modal.Header>
 
           <Modal.Body>
-            <div className='bg-base-200 p-4 rounded-lg'>
-              <p className='font-semibold'>{driver.name}</p>
-              <p className='text-sm text-base-content/60'>{driver.license_number}</p>
+            <div className='bg-rose-50/50 border border-rose-100/60 p-5 rounded-2xl'>
+              <p className='text-sm text-rose-900/60 font-medium mb-3'>You are about to delete:</p>
+              <div className='bg-white p-4 rounded-xl shadow-sm border border-rose-100 flex flex-col gap-1'>
+                <p className='font-bold text-slate-800'>{driver.name}</p>
+                <p className='text-sm text-slate-500 font-medium'>
+                  License: {driver.license_number || "No License Recorded"}
+                </p>
+              </div>
             </div>
           </Modal.Body>
 
           <Modal.Footer>
             {removeResult?.isError && (
-              <div className='mb-3 text-sm text-error'>
+              <div className='mb-3 text-sm font-semibold text-rose-500'>
                 Failed to delete driver. Please try again.
               </div>
             )}
@@ -136,8 +143,9 @@ const DriverListPage = () => {
                 variant='error'
                 isLoading={removeResult?.isLoading}
                 onClick={() => remove({ id: driver.id })}
+                className="bg-rose-600 hover:bg-rose-700 text-white shadow-md border border-rose-700 outline outline-2 outline-offset-2 outline-rose-500/20"
               >
-                Delete
+                Yes, Delete Driver
               </Button>
             </div>
           </Modal.Footer>

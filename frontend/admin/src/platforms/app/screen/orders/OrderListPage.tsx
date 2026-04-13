@@ -76,29 +76,39 @@ const OrderListPage = () => {
         <Modal.Wrapper
           open={!!orderToCancel}
           onClose={() => setOrderToCancel(null)}
-          className="max-w-md"
+          className='!max-w-md !w-11/12 mx-4'
         >
-          <Modal.Header>
-            <div className="text-lg font-bold">Cancel Order</div>
+          <Modal.Header className='mb-4'>
+            <div className='text-orange-600 font-bold leading-7 text-lg'>
+              Cancel Active Order
+            </div>
+            <div className='text-sm text-slate-500 leading-5 font-normal'>
+              This will halt all workflow operations immediately. Are you sure?
+            </div>
           </Modal.Header>
-          <Modal.Body className="py-2">
-            <div className="text-base-content/70">
-              Are you sure you want to cancel order{" "}
-              <strong>{orderToCancel?.order_number}</strong>?
+          <Modal.Body>
+            <div className='bg-orange-50/50 border border-orange-100/60 p-5 rounded-2xl'>
+              <p className='text-sm text-orange-900/60 font-medium mb-3'>You are about to cancel:</p>
+              <div className='bg-white p-4 rounded-xl shadow-sm border border-orange-100 flex flex-col gap-1'>
+                <p className='font-bold text-slate-800'>{orderToCancel?.order_number}</p>
+                <p className='text-sm text-slate-500 font-medium'>
+                  Drivers and dispatchers will be notified. This cannot be undone.
+                </p>
+              </div>
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <div className="flex gap-2 justify-end mt-4">
+            <div className='flex justify-end gap-3'>
               <Button
-                variant="default"
-                styleType="ghost"
+                variant='secondary'
                 onClick={() => setOrderToCancel(null)}
                 disabled={cancelResult?.isLoading}
               >
-                Kembali
+                Cancel
               </Button>
               <Button
-                variant="error"
+                variant='error'
+                type='button'
                 isLoading={cancelResult?.isLoading}
                 disabled={cancelResult?.isLoading}
                 onClick={() => {
@@ -106,8 +116,9 @@ const OrderListPage = () => {
                     cancelOrder({ id: orderToCancel.id });
                   }
                 }}
+                className="bg-orange-600 hover:bg-orange-700 text-white shadow-md border border-orange-700 outline outline-2 outline-offset-2 outline-orange-500/20"
               >
-                Cancel Order
+                Yes, Cancel Order
               </Button>
             </div>
           </Modal.Footer>

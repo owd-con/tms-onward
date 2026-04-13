@@ -73,81 +73,115 @@ const CompanyEditModal = ({
       open
       onClose={onClose}
       closeOnOutsideClick={false}
-      className='w-xl max-w-xl'
+      className="!w-11/12 !max-w-3xl mx-4"
     >
       <Modal.Header>
-        <div className='text-secondary font-bold leading-7'>
-          Edit Company Information
+        <div className="text-secondary font-bold leading-7 text-lg">
+          Edit Company Profile
         </div>
-        <div className='text-sm text-base-content/60 leading-5 font-normal'>
-          Update your company details, preferences, and settings.
+        <div className="text-sm text-base-content/60 leading-5 font-normal">
+          Update your company identity, contact details, and localization
+          settings.
         </div>
       </Modal.Header>
 
-      <Modal.Body className='space-y-4'>
-        {/* Company Type */}
-        <RemoteSelect
-          label='Company Type'
-          required
-          value={type}
-          onChange={(value) => setType(value)}
-          data={companyTypeOptions}
-          getLabel={(item) => item.label}
-          getValue={(item) => item.value}
-        />
+      <Modal.Body className="max-h-[75vh] overflow-y-auto px-2 pb-6">
+        <div className="space-y-6 pt-2">
+          {/* GROUP 1: Brand Identity */}
+          <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+            <div className="mb-5 border-b border-slate-200/60 pb-3">
+              <h3 className="text-[15px] font-bold text-slate-800">
+                Brand Identity
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Core company naming and visual assets
+              </p>
+            </div>
 
-        {/* Company Name */}
-        <Input
-          label='Company Name'
-          required
-          value={company_name}
-          onChange={(e) => setCompanyName(e.target.value)}
-          placeholder='Enter your company name'
-        />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="sm:col-span-2 mb-2">
+                <PhotoUpload
+                  photos={logoPhotos}
+                  onPhotosChange={setLogoPhotos}
+                  maxPhotos={1}
+                  label="Company Logo"
+                  optionalLabel="(Optional)"
+                />
+              </div>
+              <Input
+                label="Company Name"
+                required
+                value={company_name}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="Enter company name"
+              />
+              <Input
+                label="Brand Name"
+                value={brand_name}
+                onChange={(e) => setBrandName(e.target.value)}
+                placeholder="Enter brand name"
+              />
+              <div className="sm:col-span-2">
+                <RemoteSelect
+                  label="Company Type"
+                  required
+                  value={type}
+                  onChange={(value) => setType(value)}
+                  data={companyTypeOptions}
+                  getLabel={(item) => item.label}
+                  getValue={(item) => item.value}
+                />
+              </div>
+            </div>
+          </div>
 
-        <Input
-          label='Brand Name'
-          value={brand_name}
-          onChange={(e) => setBrandName(e.target.value)}
-          placeholder='Enter your brand name'
-        />
+          {/* GROUP 2: Contact & Location */}
+          <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+            <div className="mb-5 border-b border-slate-200/60 pb-3">
+              <h3 className="text-[15px] font-bold text-slate-800">
+                Contact & Location
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Primary communication channels and registered address
+              </p>
+            </div>
 
-        <Input
-          label='Phone'
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
-
-        <Input
-          label='Address'
-          type='textarea'
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-        />
-
-        {/* Logo Upload */}
-        <PhotoUpload
-          photos={logoPhotos}
-          onPhotosChange={setLogoPhotos}
-          maxPhotos={1}
-          label='Company Logo'
-          optionalLabel='(Optional)'
-        />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="sm:col-span-1">
+                <Input
+                  label="Phone Number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Enter phone number"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <Input
+                  label="Registered Address"
+                  type="textarea"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Enter complete company address"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </Modal.Body>
 
       <Modal.Footer>
         <Button
-          className='flex-1 rounded-xl'
-          styleType='outline'
-          variant='secondary'
+          className="flex-1 rounded-xl"
+          styleType="outline"
+          variant="secondary"
           onClick={onClose}
           disabled={updateCompanyResult.isLoading}
         >
           Cancel
         </Button>
         <Button
-          className='flex-1 rounded-xl'
-          variant='secondary'
+          className="flex-1 rounded-xl"
+          variant="secondary"
           onClick={handleSubmit}
           isLoading={updateCompanyResult.isLoading}
         >

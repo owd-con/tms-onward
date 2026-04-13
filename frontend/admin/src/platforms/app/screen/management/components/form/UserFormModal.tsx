@@ -181,111 +181,130 @@ const UserFormModal = forwardRef<UserFormModalRef, UserFormModalProps>(
         open={open}
         onClose={handleClose}
         closeOnOutsideClick={false}
-        className='max-w-2xl w-full mx-4'
+        className='!w-11/12 !max-w-3xl mx-4'
       >
         <Modal.Header className='mb-4'>
-          <div className='text-xl font-bold'>
+          <div className='text-secondary font-bold leading-7 text-lg'>
             {mode === "create" ? "Add Team Member" : "Edit Team Member"}
           </div>
-          <div className='text-sm text-base-content/60'>
+          <div className='text-sm text-base-content/60 leading-5 font-normal'>
             {mode === "create"
-              ? "Create a new account for a team member"
-              : "Update user information"}
+              ? "Create a new account and set permissions"
+              : "Update user information and access"}
           </div>
         </Modal.Header>
 
         <form onSubmit={handleSubmit}>
-          <Modal.Body className='min-h-[300px]'>
-            <div className='space-y-4'>
-              {/* Personal Information */}
-              <div>
-                <h3 className='text-base font-semibold mb-3'>
-                  User Information
-                </h3>
+          <Modal.Body className='max-h-[75vh] overflow-y-auto px-2 pb-6'>
+            <div className='space-y-6 pt-2'>
 
-                <Input
-                  label='Full Name'
-                  placeholder='User full name'
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  error={FormState?.errors?.name as string}
-                  required
-                />
+              {/* GROUP 1: User Details */}
+              <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+                <div className="mb-5 border-b border-slate-200/60 pb-3">
+                  <h3 className="text-[15px] font-bold text-slate-800">User Identity</h3>
+                  <p className="text-xs text-slate-500 mt-1">Core identity and system role</p>
+                </div>
 
-                <Input
-                  label='Username'
-                  placeholder='Enter your username'
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  error={FormState?.errors?.username as string}
-                  required
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <Input
+                    label='Full Name'
+                    placeholder='User full name'
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    error={FormState?.errors?.name as string}
+                    required
+                  />
 
-                <Input
-                  label='Email'
-                  placeholder='user@example.com'
-                  type='email'
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  error={FormState?.errors?.email as string}
-                />
+                  <Input
+                    label='Username'
+                    placeholder='Enter username'
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    error={FormState?.errors?.username as string}
+                    required
+                  />
 
-                <Input
-                  label='Phone'
-                  placeholder='08xxxxxxxxxx (optional)'
-                  type='phone'
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  error={FormState?.errors?.phone as string}
-                />
-
-                <div>
-                  <label className='text-sm font-medium'>Role</label>
-                  <div className='w-full px-3 py-2 bg-base-200 border border-base-300 rounded-lg text-base-content capitalize'>
-                    {role}
+                  <div className="sm:col-span-2">
+                    <label className='text-sm font-medium mb-1.5 block text-slate-700'>System Role</label>
+                    <div className='w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-600 capitalize cursor-not-allowed select-none'>
+                      {role}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Password Section - Conditional */}
-              {(mode === "create" || mode === "update") && (
-                <div className='mt-6'>
-                  <h3 className='text-base font-semibold mb-3'>
-                    {mode === "create"
-                      ? "Password"
-                      : "Change Password (Optional)"}
-                  </h3>
+              {/* GROUP 2: Contact Methods */}
+              <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+                <div className="mb-5 border-b border-slate-200/60 pb-3">
+                  <h3 className="text-[15px] font-bold text-slate-800">Contact Methods</h3>
+                  <p className="text-xs text-slate-500 mt-1">Primary communication channels</p>
+                </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <Input
-                    label={mode === "create" ? "Password" : "New Password"}
-                    placeholder={
-                      mode === "create"
-                        ? "Enter password (min 8 characters)"
-                        : "Leave blank to keep current password"
-                    }
-                    type='password'
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    error={FormState?.errors?.password as string}
-                    required={mode === "create"}
+                    label='Email'
+                    placeholder='user@example.com'
+                    type='email'
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    error={FormState?.errors?.email as string}
                   />
 
                   <Input
-                    label='Confirm Password'
-                    placeholder='Re-enter password'
-                    type='password'
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    error={
-                      confirmPassword && password !== confirmPassword
-                        ? "Passwords do not match"
-                        : undefined
-                    }
-                    required={mode === "create" || password.trim() !== ""}
-                    className='mt-3'
+                    label='Phone'
+                    placeholder='08xxxxxxxxxx (optional)'
+                    type='phone'
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    error={FormState?.errors?.phone as string}
                   />
                 </div>
+              </div>
+
+              {/* GROUP 3: Authentication */}
+              {(mode === "create" || mode === "update") && (
+                <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+                  <div className="mb-5 border-b border-slate-200/60 pb-3">
+                    <h3 className="text-[15px] font-bold text-slate-800">Authentication</h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {mode === "create"
+                        ? "Set initial login credentials"
+                        : "Update user password (leave blank to keep current)"}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <Input
+                      label={mode === "create" ? "Password" : "New Password"}
+                      placeholder={
+                        mode === "create"
+                          ? "Enter password (min 8 characters)"
+                          : "Enter new password"
+                      }
+                      type='password'
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      error={FormState?.errors?.password as string}
+                      required={mode === "create"}
+                    />
+
+                    <Input
+                      label='Confirm Password'
+                      placeholder='Re-enter password'
+                      type='password'
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      error={
+                        confirmPassword && password !== confirmPassword
+                          ? "Passwords do not match"
+                          : undefined
+                      }
+                      required={mode === "create" || password.trim() !== ""}
+                    />
+                  </div>
+                </div>
               )}
+
             </div>
           </Modal.Body>
 

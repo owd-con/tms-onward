@@ -218,78 +218,79 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
 
     const isLoading = createResult?.isLoading || updateResult?.isLoading;
 
-    // 14. Render
     return (
       <Modal.Wrapper
         open={open}
         onClose={handleClose}
         closeOnOutsideClick={false}
-        className='max-w-2xl'
+        className='!max-w-3xl !w-11/12 mx-4'
       >
-        <Modal.Header className='mb-2'>
-          <div className='text-xl font-bold'>
+        <Modal.Header className='mb-4'>
+          <div className='text-secondary font-bold leading-7 text-lg'>
             {mode === "create" ? "Add New Driver" : "Edit Driver"}
           </div>
-          <div className='text-sm text-base-content/60'>
+          <div className='text-sm text-base-content/60 leading-5 font-normal'>
             {mode === "create"
-              ? "Fill in the driver information below"
-              : "Update driver information"}
+              ? "Register a new driver into the system"
+              : "Update driver profile and access credentials"}
           </div>
         </Modal.Header>
 
         <form onSubmit={handleSubmit}>
-          <Modal.Body className='max-h-[60vh] overflow-y-auto'>
-            <div className='space-y-4'>
-              {/* Personal Information */}
-              <div>
-                <h3 className='text-sm font-semibold text-gray-700 mb-3'>
-                  Personal Information
-                </h3>
+          <Modal.Body className='max-h-[75vh] overflow-y-auto px-2 pb-6'>
+            <div className='space-y-6 pt-2'>
+              
+               {/* GROUP 1: Personal Information */}
+              <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+                <div className="mb-5 border-b border-slate-200/60 pb-3">
+                  <h3 className="text-[15px] font-bold text-slate-800">Personal Information</h3>
+                  <p className="text-xs text-slate-500 mt-1">Core identity and primary communication methods</p>
+                </div>
 
-                <Input
-                  label='Full Name'
-                  placeholder='Driver full name'
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  error={FormState?.errors?.name as string}
-                  required
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <Input
+                    label='Full Name'
+                    placeholder='Driver full name'
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    error={FormState?.errors?.name as string}
+                    required
+                  />
 
-                <Input
-                  label='Phone'
-                  placeholder='08xxxxxxxxxx'
-                  type='phone'
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  error={FormState?.errors?.phone as string}
-                  required
-                />
+                  <Input
+                    label='Phone Number'
+                    placeholder='08xxxxxxxxxx'
+                    type='phone'
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    error={FormState?.errors?.phone as string}
+                    required
+                  />
 
-                {/* Has Login Account Checkbox - Only show for create or drivers without login */}
-                {mode === "create" ||
-                (mode === "update" &&
-                  data &&
-                  (!data.user_id ||
-                    data.user_id ===
-                      "00000000-0000-0000-0000-000000000000")) ? (
-                  <div className='mt-4'>
-                    <Checkbox
-                      label='This driver has login account'
-                      checked={hasLogin}
-                      onChange={(e) => setHasLogin(e.target.checked)}
-                      variant='primary'
-                      size='sm'
-                    />
-                    <p className='text-xs text-gray-500 mt-1 ml-7'>
-                      Enable this to create a login account for the driver to
-                      access the system
-                    </p>
-                  </div>
-                ) : null}
+                  {/* Has Login Account Checkbox - Only show for create or drivers without login */}
+                  {mode === "create" ||
+                  (mode === "update" &&
+                    data &&
+                    (!data.user_id ||
+                      data.user_id ===
+                        "00000000-0000-0000-0000-000000000000")) ? (
+                    <div className='sm:col-span-2 mt-2 bg-white border border-slate-200 rounded-xl p-4'>
+                      <Checkbox
+                        label='This driver requires a system login account'
+                        checked={hasLogin}
+                        onChange={(e) => setHasLogin(e.target.checked)}
+                        variant='primary'
+                        size='sm'
+                      />
+                      <p className='text-xs text-slate-500 mt-1.5 ml-7'>
+                        Enable this to generate secure application credentials for the driver
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
               </div>
 
-              {/* Login Account Information - Conditional */}
-              {/* Only show when creating new login (create mode or add login to existing driver without login) */}
+              {/* GROUP 2: Login Account Information - Conditional */}
               {hasLogin &&
                 (mode === "create" ||
                   (mode === "update" &&
@@ -297,88 +298,99 @@ const DriverFormModal = forwardRef<DriverFormModalRef, DriverFormModalProps>(
                     (!data.user_id ||
                       data.user_id ===
                         "00000000-0000-0000-0000-000000000000"))) && (
-                  <div className='mt-6'>
-                    <h3 className='text-sm font-semibold text-gray-700 mb-3'>
-                      Login Account Information
-                    </h3>
+                  <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+                    <div className="mb-5 border-b border-slate-200/60 pb-3">
+                      <h3 className="text-[15px] font-bold text-slate-800">System Credentials</h3>
+                      <p className="text-xs text-slate-500 mt-1">Application access configuration</p>
+                    </div>
 
-                    <Input
-                      label='Username'
-                      placeholder='Enter your username'
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      error={FormState?.errors?.username as string}
-                      required
-                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div className="sm:col-span-2">
+                        <Input
+                          label='System Username'
+                          placeholder='Enter unique username'
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          error={FormState?.errors?.username as string}
+                          required
+                        />
+                      </div>
 
-                    <Input
-                      label='Password'
-                      placeholder='Enter password (min 8 characters)'
-                      type='password'
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      error={FormState?.errors?.password as string}
-                      required
-                    />
+                      <Input
+                        label='Password'
+                        placeholder='Min. 8 characters'
+                        type='password'
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        error={FormState?.errors?.password as string}
+                        required
+                      />
 
-                    <Input
-                      label='Confirm Password'
-                      placeholder='Re-enter password'
-                      type='password'
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      error={
-                        confirmPassword && password !== confirmPassword
-                          ? "Passwords do not match"
-                          : undefined
-                      }
-                      required
-                    />
+                      <Input
+                        label='Confirm Password'
+                        placeholder='Re-enter password'
+                        type='password'
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        error={
+                          confirmPassword && password !== confirmPassword
+                            ? "Passwords do not match"
+                            : undefined
+                        }
+                        required
+                      />
+                    </div>
                   </div>
                 )}
 
-              {/* License Information */}
-              <div className='mt-6'>
-                <h3 className='text-sm font-semibold text-gray-700 mb-3'>
-                  License Information
-                </h3>
+              {/* GROUP 3: License Information */}
+              <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+                 <div className="mb-5 border-b border-slate-200/60 pb-3">
+                  <h3 className="text-[15px] font-bold text-slate-800">License Information</h3>
+                  <p className="text-xs text-slate-500 mt-1">Driving certification and validation details</p>
+                </div>
 
-                <Input
-                  label='License Number'
-                  placeholder='e.g., B 1234 XYZ'
-                  value={licenseNumber}
-                  onChange={(e) =>
-                    setLicenseNumber(e.target.value.toUpperCase())
-                  }
-                  error={FormState?.errors?.license_number as string}
-                  required
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="sm:col-span-2">
+                    <Input
+                      label='License Number'
+                      placeholder='e.g., SIM B1 Umum'
+                      value={licenseNumber}
+                      onChange={(e) =>
+                        setLicenseNumber(e.target.value.toUpperCase())
+                      }
+                      error={FormState?.errors?.license_number as string}
+                      required
+                    />
+                  </div>
 
-                <RemoteSelect<SelectOptionValue>
-                  label='License Type'
-                  data={licenseTypeOptions}
-                  value={licenseType}
-                  onChange={setLicenseType}
-                  onClear={() => setLicenseType(null)}
-                  getLabel={(item) => item?.label ?? ""}
-                  renderItem={(item) => item?.label}
-                  error={FormState?.errors?.license_type as string}
-                  required
-                />
+                  <RemoteSelect<SelectOptionValue>
+                    label='License Classification'
+                    data={licenseTypeOptions}
+                    value={licenseType}
+                    onChange={setLicenseType}
+                    onClear={() => setLicenseType(null)}
+                    getLabel={(item) => item?.label ?? ""}
+                    renderItem={(item) => item?.label}
+                    error={FormState?.errors?.license_type as string}
+                    required
+                  />
 
-                <DatePicker
-                  label='License Expiry Year'
-                  placeholder='Select year'
-                  pickerMode='year'
-                  format='YYYY'
-                  value={licenseExpiryYear}
-                  onChange={(date) =>
-                    setLicenseExpiryYear(date as dayjs.Dayjs | undefined)
-                  }
-                  error={FormState?.errors?.license_expiry as string}
-                  required
-                />
+                  <DatePicker
+                    label='Expiration Year'
+                    placeholder='Select year'
+                    pickerMode='year'
+                    format='YYYY'
+                    value={licenseExpiryYear}
+                    onChange={(date) =>
+                      setLicenseExpiryYear(date as dayjs.Dayjs | undefined)
+                    }
+                    error={FormState?.errors?.license_expiry as string}
+                    required
+                  />
+                </div>
               </div>
+
             </div>
           </Modal.Body>
 

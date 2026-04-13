@@ -57,16 +57,26 @@ const CustomerDetailPage = () => {
           open
           onClose={() => closeModal("delete-customer-confirm")}
           closeOnOutsideClick={false}
-          className='max-w-md'
+          className='!max-w-md !w-11/12 mx-4'
         >
-          <Modal.Header>
-            <div className='text-lg font-bold'>Delete Customer</div>
+          <Modal.Header className='mb-4'>
+            <div className='text-rose-600 font-bold leading-7 text-lg'>
+              Delete Customer Profile
+            </div>
+            <div className='text-sm text-slate-500 leading-5 font-normal'>
+              This action is permanent and cannot be undone. Are you sure?
+            </div>
           </Modal.Header>
           <Modal.Body>
-            <p className='text-sm text-gray-600'>
-              Are you sure you want to delete this customer?
-            </p>
-            <p className='mt-2 text-sm font-medium'>{customer?.name}</p>
+            <div className='bg-rose-50/50 border border-rose-100/60 p-5 rounded-2xl'>
+              <p className='text-sm text-rose-900/60 font-medium mb-3'>You are about to delete:</p>
+              <div className='bg-white p-4 rounded-xl shadow-sm border border-rose-100 flex flex-col gap-1'>
+                <p className='font-bold text-slate-800'>{customer?.name}</p>
+                <p className='text-sm text-slate-500 font-medium'>
+                  Entire profile and access config will be wiped.
+                </p>
+              </div>
+            </div>
           </Modal.Body>
           <Modal.Footer>
             <div className='flex justify-end gap-3'>
@@ -85,8 +95,9 @@ const CustomerDetailPage = () => {
                     await removeCustomer({ id: customerId });
                   }
                 }}
+                className="bg-rose-600 hover:bg-rose-700 text-white shadow-md border border-rose-700 outline outline-2 outline-offset-2 outline-rose-500/20"
               >
-                Delete
+                Yes, Delete Customer
               </Button>
             </div>
           </Modal.Footer>
@@ -128,10 +139,10 @@ const CustomerDetailPage = () => {
   if (!customer) {
     return (
       <Page>
-        <Page.Header 
+        <Page.Header
           pillLabel="MASTER DATA"
           pillIcon={<Database size={12} strokeWidth={2.5} />}
-          title='Customer Profile' 
+          title='Customer Profile'
           titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
         />
         <Page.Body>
@@ -158,78 +169,81 @@ const CustomerDetailPage = () => {
 
   return (
     <Page className='h-full flex flex-col min-h-0'>
-      <Page.Header
-        pillLabel="MASTER DATA"
+        <Page.Header
+          pillLabel="MASTER DATA"
         pillIcon={<Database size={12} strokeWidth={2.5} />}
-        backTo={() => navigate(-1)}
-        title='Customer Profile'
+          backTo={() => navigate(-1)}
+          title='Customer Profile'
         titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
-        subtitle={`${customer.name}`}
+          subtitle={`${customer.name}`}
         subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
-        action={
+          action={
           <div className='gap-4 flex'>
             <Button className='btn-neutral' onClick={handleEditCustomer}>
               <FaEdit className='h-4 w-4' />
-            </Button>
+              </Button>
             <Button variant='error' onClick={handleDeleteCustomer}>
               <FaTrash className='h-4 w-4' />
-            </Button>
-          </div>
-        }
-      />
+              </Button>
+            </div>
+          }
+        />
 
-      <Page.Body className='flex-1 flex flex-col space-y-3 lg:space-y-4 min-h-0 overflow-y-auto'>
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6'>
-          {/* Customer Pricing */}
-          <div className='lg:col-span-2 bg-white rounded-xl p-4 lg:p-6 shadow-sm'>
+      <Page.Body className='flex-1 flex flex-col space-y-4 min-h-0 overflow-y-auto px-4 lg:px-8 z-10 relative pb-10'>
+        <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
+
+          {/* Customer Pricing - Floating Canvas */}
+          <div className='lg:col-span-2 bg-white/95 backdrop-blur-xl rounded-[2rem] p-6 lg:p-8 shadow-2xl shadow-slate-200/50 border border-white/50'>
             <DetailCustomerPricing
               customerId={customerId as string}
               onRefresh={() => {}}
             />
           </div>
 
-          {/* Customer Information */}
-          <div className='lg:col-span-1 bg-white rounded-xl p-4 lg:p-6 shadow-sm'>
-            <h3 className='text-base lg:text-lg font-semibold mb-4'>Customer Information</h3>
+          {/* Customer Information - Floating Canvas */}
+          <div className='lg:col-span-1 bg-white/95 backdrop-blur-xl rounded-[2rem] p-6 lg:p-8 shadow-2xl shadow-slate-200/50 border border-white/50'>
+            <h3 className='text-base lg:text-lg font-bold text-slate-800 mb-6'>Customer Information</h3>
 
-            <div className='grid grid-cols-1 gap-2'>
-              <div className='flex items-baseline justify-between'>
-                <span className='text-xs lg:text-sm text-gray-500'>Customer</span>
-                <span className='font-medium text-xs lg:text-sm text-right'>
+            <div className='space-y-4'>
+              <div className='flex flex-col gap-1 pb-3 border-b border-slate-100'>
+                <span className='text-xs font-semibold text-slate-400 uppercase tracking-wider'>Customer</span>
+                <span className='font-semibold text-slate-700'>
                   {customer.name}
                 </span>
               </div>
-              <div className='flex items-baseline justify-between'>
-                <span className='text-xs lg:text-sm text-gray-500'>Email</span>
-                <span className='font-medium text-xs lg:text-sm text-right'>
+              <div className='flex flex-col gap-1 pb-3 border-b border-slate-100'>
+                <span className='text-xs font-semibold text-slate-400 uppercase tracking-wider'>Email</span>
+                <span className='font-semibold text-slate-700'>
                   {customer.email || "-"}
                 </span>
               </div>
-              <div className='flex items-baseline justify-between'>
-                <span className='text-xs lg:text-sm text-gray-500'>Phone</span>
-                <span className='font-medium text-xs lg:text-sm text-right'>
+              <div className='flex flex-col gap-1 pb-3 border-b border-slate-100'>
+                <span className='text-xs font-semibold text-slate-400 uppercase tracking-wider'>Phone</span>
+                <span className='font-semibold text-slate-700'>
                   {customer.phone || "-"}
                 </span>
               </div>
-              <div className='flex items-center justify-between'>
-                <span className='text-xs lg:text-sm text-gray-500'>Status</span>
-                <span
-                  className={`badge badge-sm ${customer.is_deleted ? "badge-error" : "badge-success"}`}
-                >
-                  {customer.is_deleted ? "Inactive" : "Active"}
-                </span>
+              <div className='flex flex-col gap-1 pb-3 border-b border-slate-100'>
+                <span className='text-xs font-semibold text-slate-400 uppercase tracking-wider'>Status</span>
+                <div className="pt-1">
+                  <span
+                    className={`badge badge-sm ${customer.is_deleted ? "badge-error" : "bg-emerald-100 text-emerald-700 border-emerald-200 font-bold px-3 py-2.5"}`}
+                  >
+                    {customer.is_deleted ? "Inactive" : "Active"}
+                  </span>
+                </div>
               </div>
               <div className='flex flex-col gap-1'>
-                <span className='text-xs lg:text-sm text-gray-500'>Address</span>
-                <span className='font-medium text-xs lg:text-sm'>
-                  {customer.address || ""}
+                <span className='text-xs font-semibold text-slate-400 uppercase tracking-wider'>Address</span>
+                <span className='font-medium text-slate-600 text-sm leading-relaxed'>
+                  {customer.address || "No address on record"}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Saved Addresses */}
-          <div className='lg:col-span-3 bg-white rounded-xl p-4 lg:p-6 shadow-sm'>
+          {/* Saved Addresses - Floating Canvas */}
+          <div className='lg:col-span-3 bg-white/95 backdrop-blur-xl rounded-[2rem] p-6 lg:p-8 shadow-2xl shadow-slate-200/50 border border-white/50 mb-8'>
             <DetailCustomerAddress
               customerId={customerId as string}
               onRefresh={() => {}}

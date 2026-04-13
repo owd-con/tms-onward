@@ -169,35 +169,36 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
 
     const isLoading = createResult?.isLoading || updateResult?.isLoading;
 
-    // 14. Render
     return (
       <Modal.Wrapper
         open={open}
         onClose={handleClose}
         closeOnOutsideClick={false}
-        className='max-w-3xl'
+        className='!max-w-3xl !w-11/12 mx-4'
       >
-        <Modal.Header className='mb-2'>
-          <div className='text-xl font-bold'>
+        <Modal.Header className='mb-4'>
+          <div className='text-secondary font-bold leading-7 text-lg'>
             {mode === "create" ? "Add New Vehicle" : "Edit Vehicle"}
           </div>
-          <div className='text-sm text-base-content/60'>
+          <div className='text-sm text-base-content/60 leading-5 font-normal'>
             {mode === "create"
-              ? "Fill in the vehicle information below"
-              : "Update vehicle information"}
+              ? "Register a new vehicle into the fleet database"
+              : "Update vehicle identity and specifications"}
           </div>
         </Modal.Header>
 
         <form onSubmit={handleSubmit}>
-          <Modal.Body className='max-h-[60vh] overflow-y-auto'>
-            <div className='space-y-4'>
-              {/* Basic Information */}
-              <div>
-                <h3 className='text-sm font-semibold text-gray-700 mb-3'>
-                  Basic Information
-                </h3>
+          <Modal.Body className='max-h-[75vh] overflow-y-auto px-2 pb-6'>
+            <div className='space-y-6 pt-2'>
+              
+              {/* GROUP 1: Vehicle Identity */}
+              <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+                <div className="mb-5 border-b border-slate-200/60 pb-3">
+                  <h3 className="text-[15px] font-bold text-slate-800">Vehicle Identity</h3>
+                  <p className="text-xs text-slate-500 mt-1">Primary registration and classification details</p>
+                </div>
 
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <Input
                     label='Plate Number'
                     placeholder='B 1234 XYZ'
@@ -221,19 +222,8 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
                     required
                   />
 
-                  <DatePicker
-                    label='Year'
-                    placeholder='Select year'
-                    pickerMode='year'
-                    format='YYYY'
-                    value={year}
-                    onChange={(date) => setYear(date as dayjs.Dayjs | undefined)}
-                    error={FormState?.errors?.year as string}
-                    required
-                  />
-
                   <Input
-                    label='Make'
+                    label='Manufacturer Make'
                     placeholder='e.g., Isuzu, Hino'
                     value={make}
                     onChange={(e) => setMake(e.target.value)}
@@ -242,23 +232,37 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
                   />
 
                   <Input
-                    label='Model'
+                    label='Vehicle Model'
                     placeholder='e.g., Elf, Dutro'
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
                     error={FormState?.errors?.model as string}
                     required
                   />
+
+                  <div className="sm:col-span-2">
+                    <DatePicker
+                      label='Production Year'
+                      placeholder='Select year'
+                      pickerMode='year'
+                      format='YYYY'
+                      value={year}
+                      onChange={(date) => setYear(date as dayjs.Dayjs | undefined)}
+                      error={FormState?.errors?.year as string}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Capacity Information */}
-              <div className='mt-6'>
-                <h3 className='text-sm font-semibold text-gray-700 mb-3'>
-                  Capacity Information
-                </h3>
+              {/* GROUP 2: Capacity Information */}
+              <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+                <div className="mb-5 border-b border-slate-200/60 pb-3">
+                  <h3 className="text-[15px] font-bold text-slate-800">Capacity & Constraints</h3>
+                  <p className="text-xs text-slate-500 mt-1">Physical limitations for load planning and routing</p>
+                </div>
 
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <Input
                     label='Capacity Weight (kg)'
                     placeholder='Maximum weight in kg'
@@ -282,6 +286,7 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
                   />
                 </div>
               </div>
+
             </div>
           </Modal.Body>
 
@@ -300,7 +305,7 @@ const VehicleFormModal = forwardRef<VehicleFormModalRef, VehicleFormModalProps>(
                 variant='primary'
                 isLoading={isLoading}
               >
-                {mode === "create" ? "Create Vehicle" : "Update Vehicle"}
+                {mode === "create" ? "Create Vehicle" : "Save Changes"}
               </Button>
             </div>
           </Modal.Footer>

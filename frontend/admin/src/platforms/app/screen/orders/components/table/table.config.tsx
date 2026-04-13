@@ -185,94 +185,106 @@ const createTableConfig = ({
         const canCancel = row.status === "pending";
 
         return (
-          <div className="flex justify-center">
-            <div
-              className="dropdown dropdown-end md:dropdown-click"
-              onClick={(e) => e.stopPropagation()}
+        <div className="flex justify-end">
+          <div className="dropdown dropdown-end md:dropdown-click" onClick={(e) => e.stopPropagation()}>
+            <button
+              tabIndex={0}
+              className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all duration-200"
             >
-              <button
-                tabIndex={0}
-                className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Tindakan Lanjut"
-              >
-                <FiMoreVertical className="w-5 h-5" />
-              </button>
-              <ul
-                tabIndex={0}
-                className="dropdown-content z-50 menu p-2 shadow-lg bg-white rounded-xl w-48 border border-gray-100 mt-1"
-              >
+              <FiMoreVertical className="w-5 h-5" />
+            </button>
+            <ul
+              tabIndex={0}
+              className="dropdown-content z-[100] menu p-2 shadow-2xl bg-white rounded-2xl w-56 border border-slate-100 mt-2"
+            >
+              <li>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClick(row);
+                  }}
+                  className="flex items-center gap-3 hover:bg-slate-50 hover:text-indigo-600 text-slate-700 py-3 rounded-xl transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
+                    <FiEye className="w-4 h-4" />
+                  </div>
+                  <div className="flex flex-col items-start leading-tight">
+                    <span className="font-bold text-[13px]">View Detail</span>
+                    <span className="text-[11px] text-slate-400">Manage orders & docs</span>
+                  </div>
+                </button>
+              </li>
+
+              {/* Print Context Actions */}
+              {type === "FTL" && navigate && (
                 <li>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onClick(row);
+                      window.open(
+                        `/a/print/delivery-order/order/${row.id}`,
+                        "_blank",
+                      );
                     }}
-                    className="flex items-center gap-2 hover:bg-gray-50 hover:text-gray-900 text-gray-700 py-2"
+                    className="flex items-center gap-3 hover:bg-slate-50 hover:text-indigo-600 text-slate-700 py-3 rounded-xl transition-colors"
                   >
-                    <FiEye className="w-4 h-4 text-gray-400" />
-                    <span className="font-medium text-[13px]">View Detail</span>
+                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                      <FiPrinter className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col items-start leading-tight">
+                      <span className="font-bold text-[13px]">Print DO</span>
+                      <span className="text-[11px] text-slate-400">Export delivery order</span>
+                    </div>
                   </button>
                 </li>
+              )}
 
-                {/* Print Context Actions */}
-                {type === "FTL" && navigate && (
+              {type === "LTL" && navigate && row.shipments?.length > 0 && (
+                <li>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(`/a/print/resi/order/${row.id}`, "_blank");
+                    }}
+                    className="flex items-center gap-3 hover:bg-slate-50 hover:text-indigo-600 text-slate-700 py-3 rounded-xl transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                      <FiPrinter className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col items-start leading-tight">
+                      <span className="font-bold text-[13px]">Print Resi</span>
+                      <span className="text-[11px] text-slate-400">Export receipt documents</span>
+                    </div>
+                  </button>
+                </li>
+              )}
+
+              {/* Cancel Action */}
+              {canCancel && onCancel && (
+                <>
+                  <div className="my-1 border-t border-slate-50"></div>
                   <li>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        window.open(
-                          `/a/print/delivery-order/order/${row.id}`,
-                          "_blank",
-                        );
+                        onCancel(row);
                       }}
-                      className="flex items-center gap-2 hover:bg-gray-50 hover:text-indigo-600 text-gray-700 py-2 w-full text-left"
+                      className="flex items-center gap-3 hover:bg-rose-50 hover:text-rose-600 text-rose-600 py-3 rounded-xl transition-colors"
                     >
-                      <FiPrinter className="w-4 h-4 text-gray-400" />
-                      <span className="font-medium text-[13px]">Print DO</span>
-                    </button>
-                  </li>
-                )}
-
-                {type === "LTL" && navigate && row.shipments?.length > 0 && (
-                  <li>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(`/a/print/resi/order/${row.id}`, "_blank");
-                      }}
-                      className="flex items-center gap-2 hover:bg-gray-50 hover:text-indigo-600 text-gray-700 py-2 w-full text-left"
-                    >
-                      <FiPrinter className="w-4 h-4 text-gray-400" />
-                      <span className="font-medium text-[13px]">
-                        Print Resi
-                      </span>
-                    </button>
-                  </li>
-                )}
-
-                {/* Cancel Action */}
-                {canCancel && onCancel && (
-                  <>
-                    <div className="my-1 border-t border-gray-100"></div>
-                    <li>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onCancel(row);
-                        }}
-                        className="flex items-center gap-2 hover:bg-rose-50 text-rose-600 py-2"
-                      >
+                      <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
                         <FiXCircle className="w-4 h-4" />
-                        <span className="font-medium text-[13px]">
-                          Cancel Order
-                        </span>
-                      </button>
-                    </li>
-                  </>
-                )}
-              </ul>
-            </div>
+                      </div>
+                      <div className="flex flex-col items-start leading-tight">
+                        <span className="font-bold text-[13px]">Cancel Order</span>
+                        <span className="text-[11px] text-rose-300">Stop processing</span>
+                      </div>
+                    </button>
+                  </li>
+                </>
+              )}
+            </ul>
           </div>
+        </div>
         );
       },
     },

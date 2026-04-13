@@ -172,51 +172,74 @@ const AddressFormModal = forwardRef<AddressFormModalRef, AddressFormModalProps>(
         open
         onClose={handleClose}
         closeOnOutsideClick={false}
-        className='max-w-2xl'
+        className='!max-w-3xl !w-11/12 mx-4'
       >
-        <Modal.Header className='mb-2'>
-          <div className='text-xl font-bold'>
+        <Modal.Header className='mb-4'>
+          <div className='text-secondary font-bold leading-7 text-lg'>
             {mode === "create" ? "Add New Address" : "Edit Address"}
           </div>
-          <div className='text-sm text-base-content/60'>
+          <div className='text-sm text-base-content/60 leading-5 font-normal'>
             {mode === "create"
-              ? "Fill in the address information below"
-              : "Update address information"}
+              ? "Define a new warehouse, branch office, or delivery location"
+              : "Update address specifics and contact personnel"}
           </div>
         </Modal.Header>
 
         <form onSubmit={handleSubmit}>
-          <Modal.Body className='max-h-[60vh] overflow-y-auto'>
-            <div className='space-y-4'>
-              {/* Address Name & Contact */}
-              <div>
-                <h3 className='text-sm font-semibold text-gray-700 mb-3'>
-                  Address Information
-                </h3>
+          <Modal.Body className='max-h-[75vh] overflow-y-auto px-2 pb-6'>
+            <div className='space-y-6 pt-2'>
 
-                <Input
-                  label='Address Label'
-                  placeholder='e.g., Warehouse, Branch Office, Home'
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  error={FormState?.errors?.name as string}
-                  required
-                />
+              {/* GROUP 1: Address Details */}
+              <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+                <div className="mb-5 border-b border-slate-200/60 pb-3">
+                  <h3 className="text-[15px] font-bold text-slate-800">Address Location</h3>
+                  <p className="text-xs text-slate-500 mt-1">Naming and precise physical location definitions</p>
+                </div>
 
-                <Input
-                  label='Street Address'
-                  placeholder='Street name, building, floor, etc.'
-                  type='textarea'
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  error={FormState?.errors?.address as string}
-                  required
-                />
+                <div className="grid grid-cols-1 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <Input
+                      label='Address Label'
+                      placeholder='e.g., Warehouse, Branch'
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      error={FormState?.errors?.name as string}
+                      required
+                    />
 
-                <div className='grid grid-cols-2 gap-3 mt-3'>
+                    <RegionSearchInput
+                      label='Administrative Location'
+                      value={selectedRegion}
+                      onChange={handleRegionChange}
+                      placeholder='Search region (e.g., "Jakarta Selatan")'
+                      error={FormState?.errors?.region_id as string}
+                      required
+                    />
+                  </div>
+
                   <Input
-                    label='Contact Name'
-                    placeholder='Person to contact'
+                    label='Street Address'
+                    placeholder='Complete street name, building number, block, etc.'
+                    type='textarea'
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    error={FormState?.errors?.address as string}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* GROUP 2: On-Site Contact */}
+              <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+                <div className="mb-5 border-b border-slate-200/60 pb-3">
+                  <h3 className="text-[15px] font-bold text-slate-800">On-Site Contact</h3>
+                  <p className="text-xs text-slate-500 mt-1">Primary personnel stationed at this location</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <Input
+                    label='PIC Name'
+                    placeholder='Person in charge'
                     value={contactName}
                     onChange={(e) => setContactName(e.target.value)}
                     error={FormState?.errors?.contact_name as string}
@@ -234,17 +257,6 @@ const AddressFormModal = forwardRef<AddressFormModalRef, AddressFormModalProps>(
                 </div>
               </div>
 
-              {/* Location Selection */}
-              <div className='mt-3'>
-                <RegionSearchInput
-                  label='Location'
-                  value={selectedRegion}
-                  onChange={handleRegionChange}
-                  placeholder='Search location (e.g., "Jakarta Selatan", "Tebet")'
-                  error={FormState?.errors?.region_id as string}
-                  required
-                />
-              </div>
             </div>
           </Modal.Body>
 
@@ -263,7 +275,7 @@ const AddressFormModal = forwardRef<AddressFormModalRef, AddressFormModalProps>(
                 variant='primary'
                 isLoading={isLoading}
               >
-                {mode === "create" ? "Create Address" : "Update Address"}
+                {mode === "create" ? "Create Address" : "Save Changes"}
               </Button>
             </div>
           </Modal.Footer>

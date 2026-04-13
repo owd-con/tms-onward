@@ -101,3 +101,11 @@
    Compensates for Windows display scaling (125%, 150%, etc.)
    Adjusts root font-size to scale all rem-based spacing.
    ============================================ */
+.mapboxgl-popup-content {
+    background: unset !important;
+    border-radius: unset !important;
+    box-shadow: unset !important;
+    padding: unset !important;
+    pointer-events: auto;
+    position: relative;
+}

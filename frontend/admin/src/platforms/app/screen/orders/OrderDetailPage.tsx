@@ -74,19 +74,26 @@ const OrderDetailPage = () => {
         <Modal.Wrapper
           open
           onClose={() => closeModal("cancel-order-confirm")}
-          className='max-w-md'
+          className='!max-w-md !w-11/12 mx-4'
         >
-          <Modal.Header>
-            <div className='text-lg font-bold'>Cancel Order</div>
+          <Modal.Header className='mb-4'>
+            <div className='text-orange-600 font-bold leading-7 text-lg'>
+              Cancel Active Order
+            </div>
+            <div className='text-sm text-slate-500 leading-5 font-normal'>
+              This will halt all workflow operations immediately. Are you sure?
+            </div>
           </Modal.Header>
           <Modal.Body>
-            <p className='text-sm text-base-content/70'>
-              Are you sure you want to cancel this order?
-            </p>
-            <p className='mt-2 text-sm font-medium'>{order?.order_number}</p>
-            <p className='text-xs text-base-content/60 mt-1'>
-              This action cannot be undone.
-            </p>
+            <div className='bg-orange-50/50 border border-orange-100/60 p-5 rounded-2xl'>
+              <p className='text-sm text-orange-900/60 font-medium mb-3'>You are about to cancel:</p>
+              <div className='bg-white p-4 rounded-xl shadow-sm border border-orange-100 flex flex-col gap-1'>
+                <p className='font-bold text-slate-800'>{order?.order_number}</p>
+                <p className='text-sm text-slate-500 font-medium'>
+                  Drivers and dispatchers will be notified. This cannot be undone.
+                </p>
+              </div>
+            </div>
           </Modal.Body>
           <Modal.Footer>
             <div className='flex justify-end gap-3'>
@@ -103,8 +110,9 @@ const OrderDetailPage = () => {
                 isLoading={cancelOrderResult?.isLoading}
                 disabled={cancelOrderResult?.isLoading}
                 onClick={handleCancel}
+                className="bg-orange-600 hover:bg-orange-700 text-white shadow-md border border-orange-700 outline outline-2 outline-offset-2 outline-orange-500/20"
               >
-                Cancel Order
+                Yes, Cancel Order
               </Button>
             </div>
           </Modal.Footer>
@@ -120,19 +128,26 @@ const OrderDetailPage = () => {
         <Modal.Wrapper
           open
           onClose={() => closeModal("delete-order-confirm")}
-          className='max-w-md'
+          className='!max-w-md !w-11/12 mx-4'
         >
-          <Modal.Header>
-            <div className='text-lg font-bold'>Delete Order</div>
+          <Modal.Header className='mb-4'>
+            <div className='text-rose-600 font-bold leading-7 text-lg'>
+              Delete Order Record
+            </div>
+            <div className='text-sm text-slate-500 leading-5 font-normal'>
+              This action is permanent and cannot be undone. Are you sure?
+            </div>
           </Modal.Header>
           <Modal.Body>
-            <p className='text-sm text-base-content/70'>
-              Are you sure you want to delete this order?
-            </p>
-            <p className='mt-2 text-sm font-medium'>{order?.order_number}</p>
-            <p className='text-xs text-base-content/60 mt-1'>
-              This action cannot be undone.
-            </p>
+            <div className='bg-rose-50/50 border border-rose-100/60 p-5 rounded-2xl'>
+              <p className='text-sm text-rose-900/60 font-medium mb-3'>You are about to delete:</p>
+              <div className='bg-white p-4 rounded-xl shadow-sm border border-rose-100 flex flex-col gap-1'>
+                <p className='font-bold text-slate-800'>{order?.order_number}</p>
+                <p className='text-sm text-slate-500 font-medium'>
+                  All associated pricing and route configurations will be wiped.
+                </p>
+              </div>
+            </div>
           </Modal.Body>
           <Modal.Footer>
             <div className='flex justify-end gap-3'>
@@ -141,7 +156,7 @@ const OrderDetailPage = () => {
                 onClick={() => closeModal("delete-order-confirm")}
                 disabled={removeOrderResult?.isLoading}
               >
-                Keep Order
+                Cancel
               </Button>
               <Button
                 variant='error'
@@ -149,8 +164,9 @@ const OrderDetailPage = () => {
                 isLoading={removeOrderResult?.isLoading}
                 disabled={removeOrderResult?.isLoading}
                 onClick={handleDelete}
+                className="bg-rose-600 hover:bg-rose-700 text-white shadow-md border border-rose-700 outline outline-2 outline-offset-2 outline-rose-500/20"
               >
-                Delete Order
+                Yes, Delete Order
               </Button>
             </div>
           </Modal.Footer>
