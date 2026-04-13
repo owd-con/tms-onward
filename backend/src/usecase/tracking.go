@@ -4,6 +4,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/logistics-id/engine/ds/postgres"
@@ -119,7 +120,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 		Status:        order.Status,
 		OrderType:     order.OrderType,
 		CustomerName:  order.Customer.Name,
-		CreatedAt:     order.CreatedAt.Local().Format("2006-01-02 15:04:05"),
+		CreatedAt:     order.CreatedAt.UTC().Format(time.RFC3339),
 	}
 
 	// Get shipments for this order
