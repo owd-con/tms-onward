@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/logistics-id/onward-tms/entity"
-	"github.com/logistics-id/onward-tms/src/usecase"
 	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/engine/transport/rest"
+	"github.com/logistics-id/onward-tms/entity"
+	"github.com/logistics-id/onward-tms/src/usecase"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -60,7 +60,7 @@ func (r *getDriverPerformanceRequest) getDownload(data any, c *rest.Context) err
 
 	// Create header style (bold + center align)
 	headerStyle, _ := f.NewStyle(&excelize.Style{
-		Font: &excelize.Font{Bold: true},
+		Font:      &excelize.Font{Bold: true},
 		Alignment: &excelize.Alignment{Horizontal: "center"},
 	})
 
@@ -84,7 +84,7 @@ func (r *getDriverPerformanceRequest) getDownload(data any, c *rest.Context) err
 
 	// Set headers for download
 	c.Response.Header().Set("Content-Type", "application/octet-stream")
-	c.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=Driver-Performance-Report-%s.xlsx", time.Now().Format("20060102150405")))
+	c.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=Driver-Performance-Report-%s.xlsx", time.Now().Local().Format("20060102150405")))
 	c.Response.Header().Set("Content-Transfer-Encoding", "binary")
 	c.Response.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
 

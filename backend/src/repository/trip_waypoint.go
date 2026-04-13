@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/engine/ds/postgres"
@@ -72,7 +73,7 @@ func (r *TripWaypointRepository) UpdateStatus(waypointID string, status string, 
 		query = query.Set("failed_reason = ?", *failedReason)
 	}
 	if status == "completed" {
-		query = query.Set("actual_completion_time = current_timestamp")
+		query = query.Set("actual_completion_time = ? ", time.Now())
 	}
 
 	_, err = query.Exec(r.Context)

@@ -61,7 +61,7 @@ func (r *getOrderTripWaypointRequest) getDownload(data any, c *rest.Context) err
 
 	// Create header style (bold + center align)
 	headerStyle, _ := f.NewStyle(&excelize.Style{
-		Font: &excelize.Font{Bold: true},
+		Font:      &excelize.Font{Bold: true},
 		Alignment: &excelize.Alignment{Horizontal: "center"},
 	})
 
@@ -95,14 +95,14 @@ func (r *getOrderTripWaypointRequest) getDownload(data any, c *rest.Context) err
 		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), item.DriverName)
 		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), item.VehiclePlateNumber)
 		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), item.ShipmentNumber)
-		
+
 		// Combine location_name and address for waypoint location
 		waypointLocation := fmt.Sprintf("%s, %s", item.LocationName, item.Address)
 		f.SetCellValue(sheet, fmt.Sprintf("G%d", row), waypointLocation)
-		
+
 		f.SetCellValue(sheet, fmt.Sprintf("H%d", row), item.WaypointType)
 		f.SetCellValue(sheet, fmt.Sprintf("I%d", row), item.ShipmentStatus)
-		
+
 		if item.ReceivedBy != nil {
 			f.SetCellValue(sheet, fmt.Sprintf("J%d", row), *item.ReceivedBy)
 		} else {
@@ -122,7 +122,7 @@ func (r *getOrderTripWaypointRequest) getDownload(data any, c *rest.Context) err
 
 	// Set headers for download
 	c.Response.Header().Set("Content-Type", "application/octet-stream")
-	c.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=Trip-Waypoint-Report-%s.xlsx", time.Now().Format("20060102150405")))
+	c.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=Trip-Waypoint-Report-%s.xlsx", time.Now().Local().Format("20060102150405")))
 	c.Response.Header().Set("Content-Transfer-Encoding", "binary")
 	c.Response.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
 
