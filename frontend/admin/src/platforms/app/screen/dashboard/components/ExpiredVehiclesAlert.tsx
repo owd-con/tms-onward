@@ -8,7 +8,7 @@ export default function ExpiredVehiclesAlert({ vehicles }: { vehicles: any[] }) 
 
   return (
     <AlertCard
-      icon={<ShieldAlert size={20} />}
+      icon={<ShieldAlert size={18} />}
       title="Expired Permits"
       description="Vehicles with expired permits requiring immediate renewal."
       color="orange"

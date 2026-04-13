@@ -8,7 +8,7 @@ export default function ExpiredDriversAlert({ drivers }: { drivers: any[] }) {
 
   return (
     <AlertCard
-      icon={<UserCheck size={20} />}
+      icon={<UserCheck size={18} />}
       title="License Renewals"
       description="Drivers with expired licenses pending review and updates."
       color="amber"

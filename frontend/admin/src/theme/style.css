@@ -95,3 +95,9 @@
   --depth: 1;
   --noise: 1;
 }
+
+/* ============================================
+   Display Scale Compensation
+   Compensates for Windows display scaling (125%, 150%, etc.)
+   Adjusts root font-size to scale all rem-based spacing.
+   ============================================ */

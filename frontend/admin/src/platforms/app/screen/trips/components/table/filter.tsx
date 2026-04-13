@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 
 import { RemoteSelect } from "@/components";
-import TableFilters from "@/components/ui/table/filter";
+import { FiChevronDown } from "react-icons/fi";
 import type { SelectOptionValue } from "@/shared/types";
 import { tripStatusOptions } from "@/shared/options";
 import { useDriver } from "@/services/driver/hooks";
@@ -76,84 +76,82 @@ const TableFilter: React.FC<TableFilterProps> = ({ table }) => {
     }
   }, [current.vehicle_id, getVehicleResult?.data?.data]);
 
-  const handleClear = () => {
-    setStatus(null);
-    setDriver(null);
-    setVehicle(null);
-    table.filter({ status: "", driver_id: "", vehicle_id: "" });
-  };
-
-  const handleFilter = () => {
+  const handleFilterChange = (key: string, val: any) => {
     table.filter({
-      status: status?.value ? String(status.value) : "",
-      driver_id: driver?.id ? String(driver.id) : "",
-      vehicle_id: vehicle?.id ? String(vehicle.id) : "",
+      status: key === "status" ? (val?.value ? String(val.value) : "") : (status?.value ? String(status.value) : ""),
+      driver_id: key === "driver" ? (val?.id ? String(val.id) : "") : (driver?.id ? String(driver.id) : ""),
+      vehicle_id: key === "vehicle" ? (val?.id ? String(val.id) : "") : (vehicle?.id ? String(vehicle.id) : ""),
     });
   };
 
-  const isDirty = useMemo(() => {
-    const currentStatus = current.status ?? "";
-    const newStatus = status?.value ? String(status.value) : "";
-    const currentDriver = current.driver_id ?? "";
-    const newDriver = driver?.id ? String(driver.id) : "";
-    const currentVehicle = current.vehicle_id ?? "";
-    const newVehicle = vehicle?.id ? String(vehicle.id) : "";
-
-    return newStatus !== currentStatus || newDriver !== currentDriver || newVehicle !== currentVehicle;
-  }, [status, driver, vehicle, current.status, current.driver_id, current.vehicle_id]);
-
-  const anyActive = !!current.status || !!current.driver_id || !!current.vehicle_id;
-
   return (
-    <TableFilters
-      isActive={anyActive}
-      isDirty={isDirty}
-      handleClear={handleClear}
-      handleFilter={handleFilter}
-    >
-      <div className="space-y-3">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <RemoteSelect
-            label="Vehicle"
-            placeholder="All Vehicles"
-            value={vehicle}
-            onChange={setVehicle}
-            onClear={() => setVehicle(null)}
-            fetchData={(page, search) =>
-              getVehicles({ page: page || 1, limit: 20, search, status: "active" })
-            }
-            hook={getVehicleResult as any}
-            getLabel={(item: any) => item.plate_number}
-            getValue={(item: any) => item.id}
-          />
-          <RemoteSelect
-            label="Driver"
-            placeholder="All Drivers"
-            value={driver}
-            onChange={setDriver}
-            onClear={() => setDriver(null)}
-            fetchData={(page, search) =>
-              getDrivers({ page: page || 1, limit: 20, search, status: "active" })
-            }
-            hook={getDriverResult as any}
-            getLabel={(item: any) => item.name}
-            getValue={(item: any) => item.id}
-          />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <RemoteSelect<SelectOptionValue>
-            label="Status"
-            placeholder="All Status"
-            data={tripStatusOptions}
-            value={status}
-            onChange={setStatus}
-            onClear={() => setStatus(null)}
-            getLabel={(item) => item?.label ?? ""}
-            renderItem={(item) => item?.label}
-          />
-        </div>
+    <div className="flex flex-row items-center gap-3 w-full shrink-0">
+      <div className="w-40 md:w-52">
+        <RemoteSelect<SelectOptionValue>
+          placeholder="Status: All"
+          inputClassName="!bg-white !border-gray-200 !h-9 !min-h-0 !py-0 !shadow-sm hover:!bg-gray-50 !text-gray-700 cursor-pointer !rounded-lg text-sm font-medium"
+          suffix={<FiChevronDown className="text-gray-400 w-4 h-4" />}
+          data={tripStatusOptions}
+          value={status}
+          onChange={(val) => {
+            setStatus(val);
+            handleFilterChange("status", val);
+          }}
+          onClear={() => {
+            setStatus(null);
+            handleFilterChange("status", null);
+          }}
+          getLabel={(item) => item ? `Status: ${item.label}` : ""}
+          renderItem={(item) => item?.label}
+        />
       </div>
-    </TableFilters>
+      <div className="w-40 md:w-56">
+        <RemoteSelect
+          placeholder="Driver: All"
+          inputClassName="!bg-white !border-gray-200 !h-9 !min-h-0 !py-0 !shadow-sm hover:!bg-gray-50 !text-gray-700 cursor-pointer !rounded-lg text-sm font-medium"
+          suffix={<FiChevronDown className="text-gray-400 w-4 h-4" />}
+          value={driver}
+          onChange={(val) => {
+            setDriver(val);
+            handleFilterChange("driver", val);
+          }}
+          onClear={() => {
+            setDriver(null);
+            handleFilterChange("driver", null);
+          }}
+          fetchData={(page, search) =>
+            getDrivers({ page: page || 1, limit: 20, search, status: "active" })
+          }
+          hook={getDriverResult as any}
+          getLabel={(item: any) => item ? `Driver: ${item.name}` : ""}
+          renderItem={(item: any) => item?.name}
+          getValue={(item: any) => item.id}
+        />
+      </div>
+      <div className="w-40 md:w-56">
+        <RemoteSelect
+          placeholder="Vehicle: All"
+          inputClassName="!bg-white !border-gray-200 !h-9 !min-h-0 !py-0 !shadow-sm hover:!bg-gray-50 !text-gray-700 cursor-pointer !rounded-lg text-sm font-medium"
+          suffix={<FiChevronDown className="text-gray-400 w-4 h-4" />}
+          value={vehicle}
+          onChange={(val) => {
+            setVehicle(val);
+            handleFilterChange("vehicle", val);
+          }}
+          onClear={() => {
+            setVehicle(null);
+            handleFilterChange("vehicle", null);
+          }}
+          fetchData={(page, search) =>
+            getVehicles({ page: page || 1, limit: 20, search, status: "active" })
+          }
+          hook={getVehicleResult as any}
+          getLabel={(item: any) => item ? `Vehicle: ${item.plate_number}` : ""}
+          renderItem={(item: any) => item?.plate_number}
+          getValue={(item: any) => item.id}
+        />
+      </div>
+    </div>
   );
 };
 

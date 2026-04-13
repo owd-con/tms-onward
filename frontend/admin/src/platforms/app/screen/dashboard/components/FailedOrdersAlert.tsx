@@ -8,7 +8,7 @@ export default function FailedOrdersAlert({ orders }: { orders: any[] }) {
 
   return (
     <AlertCard
-      icon={<AlertCircle size={20} />}
+      icon={<AlertCircle size={18} />}
       title="Order Failures"
       description="Recent orders that encountered delivery issues or system errors."
       color="rose"

@@ -39,8 +39,11 @@ export type UserRole = "admin" | "dispatcher" | "driver";
 
 export interface Company {
   id: string;
-  name: string;
+  company_name: string;
+  brand_name?: string;
   type: CompanyType;
+  phone?: string;
+  address?: string;
   timezone?: string;
   currency?: string;
   language?: string;

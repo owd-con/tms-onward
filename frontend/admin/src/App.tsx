@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { FullPageLoading } from "@/components";
 import { withGuard } from "./utils/guard";
+import { useDisplayScale } from "@/hooks/useDisplayScale";
 
 // Lazy load routers
 const AuthRouter = lazy(() => import("@/platforms/auth/router"));
@@ -17,6 +18,9 @@ const GuardedAppRouter = withGuard(
 );
 
 function App() {
+  // Apply display scaling compensation
+  useDisplayScale();
+
   return (
     <Routes>
       <Route

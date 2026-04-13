@@ -24,19 +24,19 @@ export default function ShipmentsByTypeCard({ data }: ShipmentsByTypeCardProps) 
 
   return (
     <div className="bg-white border border-gray-200/60 rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col overflow-hidden">
-      <div className="flex items-center gap-2 p-6 border-b border-gray-50 shrink-0">
-        <h3 className="text-lg font-bold text-slate-900 tracking-tight">Shipments by Type</h3>
+      <div className="flex items-center gap-2 p-5 border-b border-gray-50 shrink-0">
+        <h3 className="text-base font-bold text-slate-900 tracking-tight">Shipments by Type</h3>
       </div>
-      
-      <div className="p-6 flex flex-col items-center justify-center flex-1">
+
+      <div className="p-5 flex flex-col items-center justify-center flex-1">
         {data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-            <Package size={32} className="mb-3 opacity-50" />
-            <span className="text-sm font-medium">No shipment data available</span>
+          <div className="flex flex-col items-center justify-center py-6 text-slate-400">
+            <Package size={28} className="mb-2 opacity-50" />
+            <span className="text-xs font-medium">No shipment data available</span>
           </div>
         ) : (
           <>
-            <div className="h-[200px] w-full relative flex items-center justify-center">
+            <div className="h-[160px] w-full relative flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <PipelinesChartTooltip />
@@ -44,8 +44,8 @@ export default function ShipmentsByTypeCard({ data }: ShipmentsByTypeCardProps) 
                     data={chartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={85}
+                    innerRadius={50}
+                    outerRadius={70}
                     paddingAngle={5}
                     dataKey="value"
                     stroke="none"
@@ -56,22 +56,22 @@ export default function ShipmentsByTypeCard({ data }: ShipmentsByTypeCardProps) 
                   </Pie>
                 </PieChart>
               </ResponsiveContainer>
-              
+
               {/* Center Content */}
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-3xl font-black text-slate-900 leading-none tracking-tighter shadow-sm">{total}</span>
-                <span className="text-[11px] font-bold text-slate-400 tracking-widest uppercase mt-1">Total</span>
+                <span className="text-2xl font-black text-slate-900 leading-none tracking-tighter shadow-sm">{total}</span>
+                <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mt-0.5">Total</span>
               </div>
             </div>
-            
+
             {/* Legend */}
-            <div className="flex flex-wrap items-center justify-center gap-5 mt-6 w-full">
+            <div className="flex flex-wrap items-center justify-center gap-4 mt-4 w-full">
               {chartData.map((entry, index) => (
-                 <div key={index} className="flex items-center gap-2">
-                   <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: entry.color }} />
+                 <div key={index} className="flex items-center gap-1.5">
+                   <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: entry.color }} />
                    <div className="flex flex-col">
-                      <span className="text-[13px] font-bold text-slate-700 leading-tight">{entry.name}</span>
-                      <span className="text-[11px] font-medium text-slate-500 leading-tight">{entry.value} ({Math.round(entry.percentage)}%)</span>
+                      <span className="text-[11px] font-bold text-slate-700 leading-tight">{entry.name}</span>
+                      <span className="text-[10px] font-medium text-slate-500 leading-tight">{entry.value} ({Math.round(entry.percentage)}%)</span>
                    </div>
                  </div>
               ))}

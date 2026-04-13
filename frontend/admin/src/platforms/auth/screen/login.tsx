@@ -7,20 +7,46 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Truck, Package } from "lucide-react";
 import logoDark from "@/assets/logo_dark.svg";
 import heroicImage from "@/assets/heroic.png";
+import { getConnectSSOCookie, getTMSTokenFromSSO } from "@/services/auth/cookieUtils";
+import { useDispatch } from "react-redux";
+import { signin } from "@/services/auth/slice";
+import { extractUserFromToken } from "@/services/auth/jwtUtils";
 
 /**
  * TMS Onward - Login Page
+ * Supports SSO login via auth_session cookie from Onward Connect
  */
 const LoginPage = () => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const dispatch = useDispatch();
 
   const FormState = useSelector((state: RootState) => state.form);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [checkingSSO, setCheckingSSO] = useState(true);
   const { login, loginResult } = useAuth();
 
   const redirectTo = params.get("fallback") || "/a/dashboard";
+
+  // Check for SSO cookie on mount - auto-login if TMS token exists
+  // Extract user from JWT token (user is embedded in token, not in cookie)
+  useEffect(() => {
+    const ssoToken = getTMSTokenFromSSO();
+    if (ssoToken) {
+      const user = extractUserFromToken(ssoToken);
+      if (user) {
+        // Direct signin with SSO token and extracted user - no API call needed
+        dispatch(signin({
+          access_token: ssoToken,
+          user: user,
+        }));
+        navigate(redirectTo, { replace: true });
+        return;
+      }
+    }
+    setCheckingSSO(false);
+  }, [dispatch, navigate, redirectTo]);
 
   const doLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,14 +82,22 @@ const LoginPage = () => {
 
         {/* Main Content */}
         <div className="w-full max-w-sm mx-auto mt-28">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome Back
-          </h1>
-          <p className="text-gray-500 mb-8 text-sm">
-            Please enter your details to access your dashboard
-          </p>
+          {/* Show loading while checking SSO */}
+          {checkingSSO ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-10 w-10 border-4 border-emerald-200 border-t-emerald-600 mb-4"></div>
+              <p className="text-gray-500 text-sm">Checking your session...</p>
+            </div>
+          ) : (
+            <>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Welcome Back
+              </h1>
+              <p className="text-gray-500 mb-8 text-sm">
+                Please enter your details to access your dashboard
+              </p>
 
-          <form className="space-y-5" onSubmit={doLogin}>
+              <form className="space-y-5" onSubmit={doLogin}>
             <div className="space-y-1.5">
               <label
                 htmlFor="email"
@@ -109,8 +143,9 @@ const LoginPage = () => {
             >
               Login
             </Button>
+          </form>
 
-            <div className="relative my-8">
+          <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-gray-200" />
               </div>
@@ -127,7 +162,8 @@ const LoginPage = () => {
             >
               Create Free Account
             </Button>
-          </form>
+            </>
+          )}
         </div>
       </div>
 

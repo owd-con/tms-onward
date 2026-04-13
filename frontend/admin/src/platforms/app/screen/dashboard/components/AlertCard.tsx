@@ -22,23 +22,23 @@ export default function AlertCard({ icon, title, description, count, color = "ro
   const selectedColor = colorConfig[color] || colorConfig.rose;
 
   return (
-    <div 
+    <div
       onClick={onClick}
       className={clsx(
-        "flex items-start gap-4 p-5 rounded-2xl border bg-white shadow-sm transition-shadow", 
+        "flex items-start gap-3 p-4 rounded-xl border bg-white shadow-sm transition-shadow",
         selectedColor.border,
         onClick ? "cursor-pointer hover:shadow-md hover:border-slate-300" : "cursor-default hover:shadow"
       )}
     >
-      <div className={clsx("mt-0.5 shrink-0", selectedColor.text)}>
+      <div className={clsx("shrink-0", selectedColor.text)}>
         {icon}
       </div>
       <div className="flex flex-col min-w-0 flex-1">
-        <h4 className={clsx("text-[15px] font-bold tracking-tight", selectedColor.textDark)}>{title}</h4>
-        <p className="text-[13px] font-medium text-slate-500 mt-1.5 leading-relaxed">{description}</p>
+        <h4 className={clsx("text-[13px] font-bold tracking-tight", selectedColor.textDark)}>{title}</h4>
+        <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">{description}</p>
       </div>
       {count !== undefined && count > 0 && (
-        <div className="shrink-0 flex items-center justify-center text-[13px] font-bold text-slate-500 ml-3 mt-0.5">
+        <div className="shrink-0 flex items-center justify-center text-[11px] font-bold text-slate-500">
           ({count})
         </div>
       )}

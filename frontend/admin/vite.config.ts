@@ -14,6 +14,6 @@ export default defineConfig({
   },
   server: {
     host: true, // atau '0.0.0.0' biar bisa diakses dari semua IP
-    port: 5173, // opsional
+    port: 5175, // opsional
   },
 });

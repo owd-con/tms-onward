@@ -54,7 +54,7 @@ const OrderListPage = () => {
         subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
         action={
           <Button
-            className="rounded-full shadow-lg text-[15px] font-bold tracking-wide bg-emerald-600 text-white border border-emerald-700 outline outline-2 outline-offset-2 outline-emerald-500/20 hover:bg-emerald-500 transition-colors h-13 px-10"
+            className="rounded-full shadow-lg text-[15px] font-bold tracking-wide bg-emerald-600 text-white border border-emerald-700 outline-2 outline-offset-2 outline-emerald-500/20 hover:bg-emerald-500 transition-colors h-13 px-10"
             onClick={() => navigate("/a/orders/create")}
           >
             + Create Order
@@ -66,8 +66,8 @@ const OrderListPage = () => {
         <Table.Tools>
           <TableFilter table={Table} />
         </Table.Tools>
-        
-        <Table.Render 
+
+        <Table.Render
           emptyTitle="No Orders Found"
           emptyDescription="Get started by creating your first order using the button above."
         />
@@ -83,7 +83,8 @@ const OrderListPage = () => {
           </Modal.Header>
           <Modal.Body className="py-2">
             <div className="text-base-content/70">
-              Are you sure you want to cancel order <strong>{orderToCancel?.order_number}</strong>?
+              Are you sure you want to cancel order{" "}
+              <strong>{orderToCancel?.order_number}</strong>?
             </div>
           </Modal.Body>
           <Modal.Footer>
