@@ -76,15 +76,13 @@ const LoginPage = () => {
             }}
           >
             <Input
-              label='Email'
-              placeholder='your@email.com'
-              type='email'
-              autoComplete='email'
+              label='Username'
+              placeholder='Enter your username'
               value={username}
               onChange={(e: any) => setUsername(e?.target?.value || "")}
               error={
-                typeof FormState?.errors?.email === "string"
-                  ? FormState.errors?.email
+                typeof FormState?.errors?.identifier === "string"
+                  ? FormState.errors?.identifier
                   : undefined
               }
             />

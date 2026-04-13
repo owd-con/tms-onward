@@ -34,11 +34,8 @@ func createTestUserCompany(t *testing.T) (*entity.User, *entity.Company) {
 
 	// Create test company with unique name
 	company := &entity.Company{
-		Name:                "Test Company " + uniqueSuffix,
+		CompanyName:         "Test Company " + uniqueSuffix,
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: false,
 		IsDeleted:           false,
@@ -55,13 +52,13 @@ func createTestUserCompany(t *testing.T) (*entity.User, *entity.Company) {
 
 	// Create test user with unique email
 	user := &entity.User{
-		CompanyID:    company.ID,
-		Name:         "Test User",
-		Email:        "test" + uuid.New().String() + "@example.com",
-		PasswordHash: "hashedpassword",
-		Role:         "admin",
-		IsActive:     true,
-		IsDeleted:    false,
+		CompanyID: company.ID,
+		Name:      "Test User",
+		Email:     "test" + uuid.New().String() + "@example.com",
+		Password:  "hashedpassword",
+		Role:      "admin",
+		IsActive:  true,
+		IsDeleted: false,
 	}
 
 	userRepo := repository.NewUserRepository()
@@ -189,7 +186,7 @@ func TestAddressHandler_Create_Success(t *testing.T) {
 		"customer_id":   customer.ID.String(),
 		"name":          testAddressName,
 		"address":       "Jl. Test No. 123",
-		"region_id":    village.ID.String(),
+		"region_id":     village.ID.String(),
 		"contact_name":  "John Doe",
 		"contact_phone": "08123456789",
 		"is_active":     true,
@@ -244,8 +241,8 @@ func TestAddressHandler_Create_InvalidVillageID(t *testing.T) {
 	h := &handler{uc: uc}
 
 	createReq := map[string]interface{}{
-		"name":       generateTestAddressName(),
-		"address":    "Jl. Test No. 123",
+		"name":      generateTestAddressName(),
+		"address":   "Jl. Test No. 123",
 		"region_id": uuid.New().String(), // Non-existent village
 	}
 
@@ -270,7 +267,7 @@ func TestAddressHandler_Create_InvalidPhone(t *testing.T) {
 	createReq := map[string]interface{}{
 		"name":          generateTestAddressName(),
 		"address":       "Jl. Test No. 123",
-		"region_id":    village.ID.String(),
+		"region_id":     village.ID.String(),
 		"contact_phone": "invalid-phone",
 	}
 
@@ -298,7 +295,7 @@ func TestAddressHandler_Create_DuplicateName(t *testing.T) {
 		"customer_id":   customer.ID.String(),
 		"name":          duplicateName,
 		"address":       "Jl. Test No. 123",
-		"region_id":    village.ID.String(),
+		"region_id":     village.ID.String(),
 		"contact_name":  "John Doe",
 		"contact_phone": "08123456789",
 	}
@@ -333,7 +330,7 @@ func TestAddressHandler_Update_Success(t *testing.T) {
 		CustomerID:   customer.ID,
 		Name:         originalName,
 		Address:      "Jl. Original No. 123",
-		RegionID:    village.ID,
+		RegionID:     village.ID,
 		ContactName:  "Original Contact",
 		ContactPhone: "08123456789",
 		IsActive:     true,
@@ -356,7 +353,7 @@ func TestAddressHandler_Update_Success(t *testing.T) {
 		"customer_id":   customer.ID.String(),
 		"name":          updatedName,
 		"address":       "Jl. Updated No. 456",
-		"region_id":    village.ID.String(),
+		"region_id":     village.ID.String(),
 		"contact_name":  "Updated Contact",
 		"contact_phone": "08987654321",
 	}
@@ -418,7 +415,7 @@ func TestAddressHandler_Update_InvalidVillageID(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       "Test Address",
 		Address:    "Jl. Test No. 123",
-		RegionID:  village.ID,
+		RegionID:   village.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -459,7 +456,7 @@ func TestAddressHandler_Update_DuplicateName(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       name1,
 		Address:    "Jl. Test No. 1",
-		RegionID:  village.ID,
+		RegionID:   village.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -468,7 +465,7 @@ func TestAddressHandler_Update_DuplicateName(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       name2,
 		Address:    "Jl. Test No. 2",
-		RegionID:  village.ID,
+		RegionID:   village.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -510,7 +507,7 @@ func TestAddressHandler_Delete_Success(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       testName,
 		Address:    "Jl. Test No. 123",
-		RegionID:  village.ID,
+		RegionID:   village.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -572,7 +569,7 @@ func TestAddressHandler_GetDetail_Success(t *testing.T) {
 		CustomerID:   customer.ID,
 		Name:         testName,
 		Address:      "Jl. Test No. 123",
-		RegionID:    village.ID,
+		RegionID:     village.ID,
 		ContactName:  "John Doe",
 		ContactPhone: "08123456789",
 		IsActive:     true,
@@ -638,7 +635,7 @@ func TestAddressHandler_GetList_Success(t *testing.T) {
 			CustomerID: customer.ID,
 			Name:       generateTestAddressName(),
 			Address:    fmt.Sprintf("Jl. Test No. %d", i),
-			RegionID:  village.ID,
+			RegionID:   village.ID,
 			IsActive:   true,
 			IsDeleted:  false,
 			CreatedAt:  time.Now(),
@@ -688,7 +685,7 @@ func TestAddressHandler_GetList_WithNameFilter(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       warehouse1Name,
 		Address:    "Jl. Test No. 1",
-		RegionID:  village.ID,
+		RegionID:   village.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -697,7 +694,7 @@ func TestAddressHandler_GetList_WithNameFilter(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       warehouse2Name,
 		Address:    "Jl. Test No. 2",
-		RegionID:  village.ID,
+		RegionID:   village.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -706,7 +703,7 @@ func TestAddressHandler_GetList_WithNameFilter(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       officeName,
 		Address:    "Jl. Test No. 3",
-		RegionID:  village.ID,
+		RegionID:   village.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -809,7 +806,7 @@ func TestAddressHandler_GetList_WithIsActiveFilter(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       "Active " + uuid.New().String()[:4],
 		Address:    "Jl. Test No. 1",
-		RegionID:  village.ID,
+		RegionID:   village.ID,
 		IsActive:   true,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),
@@ -818,7 +815,7 @@ func TestAddressHandler_GetList_WithIsActiveFilter(t *testing.T) {
 		CustomerID: customer.ID,
 		Name:       "Inactive " + uuid.New().String()[:4],
 		Address:    "Jl. Test No. 2",
-		RegionID:  village.ID,
+		RegionID:   village.ID,
 		IsActive:   false,
 		IsDeleted:  false,
 		CreatedAt:  time.Now(),

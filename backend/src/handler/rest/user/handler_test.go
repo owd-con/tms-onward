@@ -66,12 +66,9 @@ func createTestCompany(t *testing.T) *entity.Company {
 	repoCompany := repository.NewCompanyRepository().WithContext(ctx)
 
 	company := &entity.Company{
-		Name:     "Test Company",
-		Type:     "3PL",
-		Timezone: "Asia/Jakarta",
-		Currency: "IDR",
-		Language: "id",
-		IsActive: true,
+		CompanyName: "Test Company",
+		Type:        "3PL",
+		IsActive:    true,
 	}
 	err := repoCompany.Insert(company)
 	if err != nil {
@@ -100,9 +97,6 @@ func TestHandler_CreateUser_Success(t *testing.T) {
 		"confirm_password": "password123",
 		"role":             "admin",
 		"company_id":       companyID,
-		"language":         "id",
-		"timezone":         "Asia/Jakarta",
-		"currency":         "IDR",
 	}
 
 	bodyJSON, _ := json.Marshal(body)
@@ -216,12 +210,12 @@ func TestHandler_GetUser_Success(t *testing.T) {
 	// Create test user with unique email
 	uniqueEmail := "getuser_" + uuid.New().String() + "@example.com"
 	user := &entity.User{
-		CompanyID:    company.ID,
-		Name:         "Test User",
-		Email:        uniqueEmail,
-		PasswordHash: "hashedpassword",
-		Role:         "admin",
-		IsActive:     true,
+		CompanyID: company.ID,
+		Name:      "Test User",
+		Email:     uniqueEmail,
+		Password:  "hashedpassword",
+		Role:      "admin",
+		IsActive:  true,
 	}
 	ctx := context.Background()
 	err := uc.Repo.WithContext(ctx).Insert(user)
@@ -276,12 +270,12 @@ func TestHandler_UpdateUser_Success(t *testing.T) {
 	// Create test user with unique email
 	uniqueEmail := "updateuser_" + uuid.New().String() + "@example.com"
 	user := &entity.User{
-		CompanyID:    company.ID,
-		Name:         "Test User",
-		Email:        uniqueEmail,
-		PasswordHash: "hashedpassword",
-		Role:         "admin",
-		IsActive:     true,
+		CompanyID: company.ID,
+		Name:      "Test User",
+		Email:     uniqueEmail,
+		Password:  "hashedpassword",
+		Role:      "admin",
+		IsActive:  true,
 	}
 	ctx := context.Background()
 	err := uc.Repo.WithContext(ctx).Insert(user)
@@ -347,12 +341,12 @@ func TestHandler_DeleteUser_Success(t *testing.T) {
 	// Create test user with unique email
 	uniqueEmail := "deleteuser_" + uuid.New().String() + "@example.com"
 	user := &entity.User{
-		CompanyID:    company.ID,
-		Name:         "Test User",
-		Email:        uniqueEmail,
-		PasswordHash: "hashedpassword",
-		Role:         "admin",
-		IsActive:     true,
+		CompanyID: company.ID,
+		Name:      "Test User",
+		Email:     uniqueEmail,
+		Password:  "hashedpassword",
+		Role:      "admin",
+		IsActive:  true,
 	}
 	ctx := context.Background()
 	err := uc.Repo.WithContext(ctx).Insert(user)
@@ -407,12 +401,12 @@ func TestHandler_ActivateUser_Success(t *testing.T) {
 	// Create test user (inactive) with unique email
 	uniqueEmail := "activateuser_" + uuid.New().String() + "@example.com"
 	user := &entity.User{
-		CompanyID:    company.ID,
-		Name:         "Test User",
-		Email:        uniqueEmail,
-		PasswordHash: "hashedpassword",
-		Role:         "admin",
-		IsActive:     false,
+		CompanyID: company.ID,
+		Name:      "Test User",
+		Email:     uniqueEmail,
+		Password:  "hashedpassword",
+		Role:      "admin",
+		IsActive:  false,
 	}
 	ctx := context.Background()
 	err := uc.Repo.WithContext(ctx).Insert(user)
@@ -469,12 +463,12 @@ func TestHandler_DeactivateUser_Success(t *testing.T) {
 	// Create admin user (who will perform deactivation)
 	adminEmail := "deactivateadmin_" + uuid.New().String() + "@example.com"
 	adminUser := &entity.User{
-		CompanyID:    company.ID,
-		Name:         "Admin User",
-		Email:        adminEmail,
-		PasswordHash: "hashedpassword",
-		Role:         "admin",
-		IsActive:     true,
+		CompanyID: company.ID,
+		Name:      "Admin User",
+		Email:     adminEmail,
+		Password:  "hashedpassword",
+		Role:      "admin",
+		IsActive:  true,
 	}
 	err := uc.Repo.WithContext(ctx).Insert(adminUser)
 	if err != nil {
@@ -484,12 +478,12 @@ func TestHandler_DeactivateUser_Success(t *testing.T) {
 	// Create target user (who will be deactivated)
 	targetEmail := "deactivatetarget_" + uuid.New().String() + "@example.com"
 	targetUser := &entity.User{
-		CompanyID:    company.ID,
-		Name:         "Test User",
-		Email:        targetEmail,
-		PasswordHash: "hashedpassword",
-		Role:         "admin",
-		IsActive:     true,
+		CompanyID: company.ID,
+		Name:      "Test User",
+		Email:     targetEmail,
+		Password:  "hashedpassword",
+		Role:      "admin",
+		IsActive:  true,
 	}
 	err = uc.Repo.WithContext(ctx).Insert(targetUser)
 	if err != nil {
@@ -524,20 +518,19 @@ func TestHandler_ListUsers_Success(t *testing.T) {
 	// Create test users with unique emails
 	users := []*entity.User{
 		{
-			CompanyID:    company.ID,
-			Name:         "Admin User",
-			Email:        "listadmin_" + uuid.New().String() + "@example.com",
-			PasswordHash: "hashedpassword",
-			Role:         "admin",
-			IsActive:     true,
+			CompanyID: company.ID,
+			Name:      "Admin User",
+			Email:     "listadmin_" + uuid.New().String() + "@example.com",
+			Password:  "hashedpassword",
+			Role:      "admin",
+			IsActive:  true,
 		},
 		{
-			CompanyID:    company.ID,
-			Name:         "Dispatcher User",
-			Email:        "listdispatcher_" + uuid.New().String() + "@example.com",
-			PasswordHash: "hashedpassword",
-			Role:         "dispatcher",
-			IsActive:     true,
+			CompanyID: company.ID,
+			Email:     "listdispatcher_" + uuid.New().String() + "@example.com",
+			Password:  "hashedpassword",
+			Role:      "dispatcher",
+			IsActive:  true,
 		},
 	}
 

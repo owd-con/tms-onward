@@ -70,12 +70,12 @@ const CompanyDetailPage = () => {
     return (
       <Page className='h-full flex flex-col min-h-0'>
         <Page.Header
-          pillLabel="MANAGEMENT"
+          pillLabel='MANAGEMENT'
           pillIcon={<Database size={12} strokeWidth={2.5} />}
           title='Company Configuration'
           titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
           subtitle='Manage your core business entity details and branding.'
-          subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
+          subtitleClassName='text-sm text-slate-500 font-medium tracking-wide mt-1'
         />
         <Page.Body className='flex-1 flex items-center justify-center'>
           <div className='loading loading-spinner loading-lg'></div>
@@ -87,12 +87,12 @@ const CompanyDetailPage = () => {
   return (
     <Page className='h-full flex flex-col min-h-0'>
       <Page.Header
-        pillLabel="MANAGEMENT"
+        pillLabel='MANAGEMENT'
         pillIcon={<Database size={12} strokeWidth={2.5} />}
         title='Company Configuration'
         titleClassName='text-3xl font-black text-slate-900 tracking-tight leading-none mb-1'
         subtitle='Manage your core business entity details and branding.'
-        subtitleClassName="text-sm text-slate-500 font-medium tracking-wide mt-1"
+        subtitleClassName='text-sm text-slate-500 font-medium tracking-wide mt-1'
         action={
           <Button
             size='sm'
@@ -119,7 +119,7 @@ const CompanyDetailPage = () => {
                 ) : (
                   <div className='w-24 h-24 rounded-lg bg-base-300 border border-base-300 flex items-center justify-center'>
                     <span className='text-3xl text-base-content/40'>
-                      {company?.name?.charAt(0)?.toUpperCase() || "C"}
+                      {company?.company_name?.charAt(0)?.toUpperCase() || "C"}
                     </span>
                   </div>
                 )}
@@ -129,12 +129,30 @@ const CompanyDetailPage = () => {
               <div className='flex-1 space-y-4'>
                 <div>
                   <h2 className='text-xl font-bold text-base-content'>
-                    {company?.name || "-"}
+                    {company?.company_name || "-"}
                   </h2>
+                  <p className='text-sm text-base-content/60 mt-1'>
+                    Brand:{" "}
+                    <span className='font-semibold'>
+                      {company?.brand_name || "-"}
+                    </span>
+                  </p>
                   <p className='text-sm text-base-content/60 mt-1'>
                     Company Type:{" "}
                     <span className='font-semibold'>
                       {company?.type || "-"}
+                    </span>
+                  </p>
+                  <p className='text-sm text-base-content/60 mt-1'>
+                    Phone:{" "}
+                    <span className='font-semibold'>
+                      {company?.phone || "-"}
+                    </span>
+                  </p>
+                  <p className='text-sm text-base-content/60 mt-1'>
+                    Address:{" "}
+                    <span className='font-semibold'>
+                      {company?.address || "-"}
                     </span>
                   </p>
                 </div>

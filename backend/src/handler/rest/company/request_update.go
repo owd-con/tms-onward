@@ -16,12 +16,12 @@ type updateRequest struct {
 	ctx     context.Context
 	session *entity.TMSSessionClaims
 
-	Name     string `json:"name"`
-	Type     string `json:"type" valid:"in:3PL,Carrier"`
-	Timezone string `json:"timezone"`
-	Currency string `json:"currency"`
-	Language string `json:"language"`
-	LogoURL  string `json:"logo_url"`
+	CompanyName string `json:"company_name" valid:"required"`
+	BrandName   string `json:"brand_name"`
+	Type        string `json:"type" valid:"required|in:3PL,Carrier"`
+	Phone       string `json:"phone"`
+	Address     string `json:"address"`
+	LogoURL     string `json:"logo_url"`
 
 	existing *entity.Company
 }
@@ -52,6 +52,10 @@ func (r *updateRequest) Validate() *validate.Response {
 		}
 	}
 
+	if !r.uc.ValidateCompanyUnique("company_name", r.CompanyName, companyID) {
+		v.SetError("company_name.unique", "company name already exists.")
+	}
+
 	return v
 }
 
@@ -61,14 +65,14 @@ func (r *updateRequest) Messages() map[string]string {
 
 func (r *updateRequest) toEntity() *entity.Company {
 	return &entity.Company{
-		ID:        r.existing.ID,
-		Name:      r.Name,
-		Type:      r.Type,
-		Timezone:  r.Timezone,
-		Currency:  r.Currency,
-		Language:  r.Language,
-		LogoURL:   r.LogoURL,
-		UpdatedAt: time.Now(),
+		ID:          r.existing.ID,
+		CompanyName: r.CompanyName,
+		BrandName:   r.BrandName,
+		Type:        r.Type,
+		Phone:       r.Phone,
+		Address:     r.Address,
+		LogoURL:     r.LogoURL,
+		UpdatedAt:   time.Now(),
 	}
 }
 
@@ -76,7 +80,7 @@ func (r *updateRequest) execute() (*rest.ResponseBody, error) {
 	r.existing = r.toEntity()
 
 	// Update only provided fields
-	fields := []string{"name", "type", "timezone", "currency", "language", "logo_url", "updated_at"}
+	fields := []string{"company_name", "brand_name", "type", "phone", "address", "logo_url", "updated_at"}
 	err := r.uc.Update(r.existing, fields...)
 	if err != nil {
 		return nil, err

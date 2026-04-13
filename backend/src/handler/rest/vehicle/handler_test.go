@@ -67,11 +67,8 @@ func createTestCompany(t *testing.T) *entity.Company {
 	repoCompany := repository.NewCompanyRepository().WithContext(ctx)
 
 	company := &entity.Company{
-		Name:                "Test Company",
+		CompanyName:"Test Company",
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}

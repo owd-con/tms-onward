@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/engine/ds/postgres"
@@ -16,7 +17,7 @@ func NewTripRepository() *TripRepository {
 	base := postgres.NewBaseRepository[entity.Trip](postgres.GetDB(),
 		"trips",
 		[]string{"trip_number"},
-		[]string{"Company", "Driver", "Vehicle", "Order.Customer"},
+		[]string{"Company", "Driver", "Vehicle", "Orders.Customer"},
 		true,
 	)
 
@@ -51,10 +52,10 @@ func (r *TripRepository) FindWithWaypoints(id string) (*entity.Trip, error) {
 	err := r.DB.NewSelect().
 		Model(&trip).
 		Relation("Company").
-		Relation("Order.Customer").
+		Relation("Orders.Customer").
 		Relation("Driver").
 		Relation("Vehicle").
-		Relation("TripWaypoints.AddressRel").
+		Relation("TripWaypoints.AddressRel.Region").
 		Where("trips.id = ?", id).
 		Where("trips.is_deleted = false").
 		Scan(r.Context)
@@ -62,4 +63,16 @@ func (r *TripRepository) FindWithWaypoints(id string) (*entity.Trip, error) {
 		return nil, err
 	}
 	return &trip, nil
+}
+
+// IncrementTotalCompleted increments the total_completed counter for a trip
+func (r *TripRepository) IncrementTotalCompleted(tripID string) error {
+	_, err := r.DB.NewUpdate().
+		Model(&entity.Trip{}).
+		Set("total_completed = total_completed + 1").
+		Set("updated_at = ?", time.Now()).
+		Where("id = ?", tripID).
+		Where("is_deleted = false").
+		Exec(r.Context)
+	return err
 }

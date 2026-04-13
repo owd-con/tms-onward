@@ -15,6 +15,8 @@ type handler struct {
 func RegisterHandler(s *rest.RestServer) {
 	h := &handler{uc: usecase.NewReportUsecase()}
 
+	s.GET("/reports/counter", h.getTripsCounter, middleware.WithActiveCheck(s))
+
 	// Order Trip Waypoint report (NEW - Phase 8)
 	s.GET("/reports/order-trip-waypoint", h.getOrderTripWaypointReport, middleware.WithActiveCheck(s))
 
@@ -23,6 +25,29 @@ func RegisterHandler(s *rest.RestServer) {
 
 	// Customer report (NEW - Phase 8)
 	s.GET("/reports/customer", h.getCustomerReport, middleware.WithActiveCheck(s))
+}
+
+// getTripsCounter handles GET /reports/counter
+// @Summary Get trips counter
+// @Description Get order statistics counter (pending, on progress, history, exceptions)
+// @Tags report
+// @Accept json
+// @Produce json
+// @Param authorization header string true "Bearer jwt-token..."
+// @Success 200 {object} rest.ResponseBody
+// @Failure 400 {object} rest.HTTPError
+// @Failure 401 {object} rest.HTTPError
+// @Failure 404 {object} rest.HTTPError
+// @Failure 500 {object} rest.HTTPError
+// @Router /reports/counter [get]
+func (h *handler) getTripsCounter(ctx *rest.Context) (err error) {
+	var req getTripsCounterRequest
+	var res *rest.ResponseBody
+
+	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
+		res, err = req.get()
+	}
+	return ctx.Respond(res, err)
 }
 
 // getOrderTripWaypointReport handles GET /reports/order-trip-waypoint

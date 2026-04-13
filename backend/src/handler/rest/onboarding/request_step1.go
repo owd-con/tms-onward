@@ -13,11 +13,14 @@ import (
 type step1Request struct {
 	CompanyName string `json:"company_name" validate:"required"`
 	CompanyType string `json:"company_type" validate:"required,in:3pl,carrier"`
+	BrandName   string `json:"brand_name"`
+	Phone       string `json:"phone"`
+	Address     string `json:"address"`
 
-	ctx      context.Context
-	uc       *usecase.Factory
-	session  *entity.TMSSessionClaims
-	company  *entity.Company
+	ctx     context.Context
+	uc      *usecase.Factory
+	session *entity.TMSSessionClaims
+	company *entity.Company
 }
 
 func (r *step1Request) with(ctx context.Context, uc *usecase.Factory) *step1Request {
@@ -56,8 +59,11 @@ func (r *step1Request) Messages() map[string]string {
 
 func (r *step1Request) execute() (*rest.ResponseBody, error) {
 	// Update entity with request data
-	r.company.Name = r.CompanyName
+	r.company.CompanyName = r.CompanyName
 	r.company.Type = r.CompanyType
+	r.company.BrandName = r.BrandName
+	r.company.Phone = r.Phone
+	r.company.Address = r.Address
 
 	if err := r.uc.Onboarding.Step1UpdateProfile(r.ctx, r.company); err != nil {
 		return nil, err

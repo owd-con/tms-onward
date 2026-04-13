@@ -13,6 +13,7 @@ export interface User {
   id: string;
   company_id: string;
   name: string;
+  username: string;
   email: string;
   phone?: string;
   avatar_url?: string;

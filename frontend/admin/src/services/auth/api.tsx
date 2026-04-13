@@ -10,10 +10,10 @@ export const authApi = createApi({
   endpoints: (builder) => ({
     /**
      * POST /auth/login
-     * User login with email and password
+     * User login with identifier and password
      */
     login: builder.mutation({
-      query: (credentials: { email: string; password: string }) => ({
+      query: (credentials: { identifier: string; password: string }) => ({
         url: "/auth/login",
         method: "POST",
         body: credentials,
@@ -28,7 +28,8 @@ export const authApi = createApi({
     register: builder.mutation({
       query: (data: {
         company_name: string;
-        company_type: '3PL' | 'Carrier';
+        company_type: "3PL" | "Carrier";
+        username: string;
         name: string;
         email: string;
         password: string;

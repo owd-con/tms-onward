@@ -12,8 +12,9 @@ import (
 )
 
 type createRequest struct {
+	Username        string `json:"username" valid:"required|gte:3|lte:32|alpha_num"`
 	Name            string `json:"name" valid:"gte:2|lte:64"`
-	Email           string `json:"email" valid:"required|email"`
+	Email           string `json:"email" valid:"email"`
 	Phone           string `json:"phone"`
 	Password        string `json:"password" valid:"required|gte:8|lte:64"`
 	ConfirmPassword string `json:"confirm_password" valid:"required"`
@@ -47,6 +48,13 @@ func (r *createRequest) Validate() *validate.Response {
 			v.SetError("company_id.invalid", "company not found or invalid.")
 		} else {
 			r.company = company
+		}
+	}
+
+	// username should be unique
+	if r.Username != "" {
+		if !r.uc.ValidateUserUnique("username", r.Username, "", "") {
+			v.SetError("username.unique", "username already exists.")
 		}
 	}
 
@@ -87,12 +95,13 @@ func (r *createRequest) Messages() map[string]string {
 
 func (r *createRequest) toEntity() *entity.User {
 	mx := &entity.User{
-		Name:         r.Name,
-		Email:        r.Email,
-		Phone:        r.Phone,
-		PasswordHash: r.PasswordHash,
-		Role:         r.Role,
-		IsActive:     true,
+		Username: r.Username,
+		Name:     r.Name,
+		Email:    r.Email,
+		Phone:    r.Phone,
+		Password: r.PasswordHash,
+		Role:     r.Role,
+		IsActive: true,
 	}
 
 	if r.company != nil {

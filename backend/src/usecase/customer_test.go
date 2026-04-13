@@ -20,11 +20,8 @@ func TestCustomerUsecase_ValidateUnique_Success(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -46,11 +43,8 @@ func TestCustomerUsecase_ValidateUnique_NotUnique(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -60,7 +54,7 @@ func TestCustomerUsecase_ValidateUnique_NotUnique(t *testing.T) {
 	// Create existing customer
 	existingCustomer := &entity.Customer{
 		CompanyID: company.ID,
-		Name:      "Test Customer",
+		Name:"Test Customer",
 		IsActive:  true,
 	}
 	err = uc.Repo.Insert(existingCustomer)
@@ -81,11 +75,8 @@ func TestCustomerUsecase_ValidateUnique_ExcludeID(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -95,7 +86,7 @@ func TestCustomerUsecase_ValidateUnique_ExcludeID(t *testing.T) {
 	// Create existing customer
 	existingCustomer := &entity.Customer{
 		CompanyID: company.ID,
-		Name:      "Test Customer",
+		Name:"Test Customer",
 		IsActive:  true,
 	}
 	err = uc.Repo.Insert(existingCustomer)
@@ -117,11 +108,8 @@ func TestCustomerUsecase_Get_WithTenantIsolation(t *testing.T) {
 
 	// Create two companies
 	company1 := &entity.Company{
-		Name:                fmt.Sprintf("Company 1 %s", uuid.New().String()),
+		CompanyName:fmt.Sprintf("Company 1 %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -129,11 +117,8 @@ func TestCustomerUsecase_Get_WithTenantIsolation(t *testing.T) {
 	require.NoError(t, err)
 
 	company2 := &entity.Company{
-		Name:                fmt.Sprintf("Company 2 %s", uuid.New().String()),
+		CompanyName:fmt.Sprintf("Company 2 %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -143,7 +128,7 @@ func TestCustomerUsecase_Get_WithTenantIsolation(t *testing.T) {
 	// Create customer for company1
 	customer1 := &entity.Customer{
 		CompanyID: company1.ID,
-		Name:      "Customer 1",
+		Name:"Customer 1",
 		IsActive:  true,
 	}
 	err = uc.Repo.Insert(customer1)
@@ -152,7 +137,7 @@ func TestCustomerUsecase_Get_WithTenantIsolation(t *testing.T) {
 	// Create customer for company2
 	customer2 := &entity.Customer{
 		CompanyID: company2.ID,
-		Name:      "Customer 2",
+		Name:"Customer 2",
 		IsActive:  true,
 	}
 	err = uc.Repo.Insert(customer2)
@@ -183,11 +168,8 @@ func TestCustomerUsecase_Get_WithActiveFilter(t *testing.T) {
 
 	// Create a company
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -198,7 +180,7 @@ func TestCustomerUsecase_Get_WithActiveFilter(t *testing.T) {
 	customer1UUID := uuid.New().String()
 	customer1 := &entity.Customer{
 		CompanyID: company.ID,
-		Name:      fmt.Sprintf("Active Customer %s", customer1UUID),
+		Name:fmt.Sprintf("Active Customer %s", customer1UUID),
 		IsActive:  true,
 	}
 	err = uc.Repo.Insert(customer1)
@@ -208,7 +190,7 @@ func TestCustomerUsecase_Get_WithActiveFilter(t *testing.T) {
 	customer2UUID := uuid.New().String()
 	customer2 := &entity.Customer{
 		CompanyID: company.ID,
-		Name:      fmt.Sprintf("Another Customer %s", customer2UUID),
+		Name:fmt.Sprintf("Another Customer %s", customer2UUID),
 		IsActive:  true,
 	}
 	err = uc.Repo.Insert(customer2)
@@ -238,11 +220,8 @@ func TestCustomerUsecase_GetByID_Success(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -252,7 +231,7 @@ func TestCustomerUsecase_GetByID_Success(t *testing.T) {
 	// Create customer
 	customer := &entity.Customer{
 		CompanyID: company.ID,
-		Name:      "Test Customer",
+		Name:"Test Customer",
 		IsActive:  true,
 	}
 	err = uc.Repo.Insert(customer)
@@ -275,11 +254,8 @@ func TestCustomerUsecase_Delete_Success(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -289,7 +265,7 @@ func TestCustomerUsecase_Delete_Success(t *testing.T) {
 	// Create customer
 	customer := &entity.Customer{
 		CompanyID: company.ID,
-		Name:      "Test Customer",
+		Name:"Test Customer",
 		IsActive:  true,
 	}
 	err = uc.Repo.Insert(customer)

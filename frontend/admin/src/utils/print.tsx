@@ -319,14 +319,14 @@ const Print = ({
 
     render();
 
-    // setTimeout(function () {
-    //   window.focus();
-    //   window.print();
+    setTimeout(function () {
+      window.focus();
+      window.print();
 
-    //   setTimeout(function () {
-    //     window.close();
-    //   }, 100);
-    // }, 500);
+      setTimeout(function () {
+        window.close();
+      }, 100);
+    }, 500);
   }, []);
 
   return null;

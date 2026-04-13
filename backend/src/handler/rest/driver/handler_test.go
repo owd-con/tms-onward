@@ -67,11 +67,8 @@ func createTestCompany(t *testing.T) *entity.Company {
 	repoCompany := repository.NewCompanyRepository().WithContext(ctx)
 
 	company := &entity.Company{
-		Name:                "Test Company",
+		CompanyName:         "Test Company",
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -90,11 +87,11 @@ func createTestUser(t *testing.T, companyID uuid.UUID) *entity.User {
 	uniqueEmail := fmt.Sprintf("driver-%s@test.com", uuid.New().String())
 
 	user := &entity.User{
-		CompanyID:    companyID,
-		Name:         "Test Driver",
-		Email:        uniqueEmail,
-		PasswordHash: "$2a$10$X8zKq2vWq", // bcrypt hash for "password123"
-		IsActive:     true,
+		CompanyID: companyID,
+		Name:      "Test Driver",
+		Email:     uniqueEmail,
+		Password:  "$2a$10$X8zKq2vWq", // bcrypt hash for "password123"
+		IsActive:  true,
 	}
 	err := repoUser.Insert(user)
 	if err != nil {
@@ -113,7 +110,6 @@ func createTestDriver(t *testing.T, companyID uuid.UUID, driverUserID uuid.UUID)
 	testDriver := &entity.Driver{
 		CompanyID:     companyID,
 		UserID:        driverUserID,
-		Name:          "Test Driver",
 		LicenseNumber: licenseNumber,
 		LicenseType:   "SIM_A",
 		Phone:         "081234567890",

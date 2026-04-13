@@ -33,11 +33,8 @@ func TestOrderUsecase_ValidateUnique_NotUnique(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                "Test Company",
+		CompanyName:"Test Company",
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -49,7 +46,7 @@ func TestOrderUsecase_ValidateUnique_NotUnique(t *testing.T) {
 	// Create a customer
 	customer := &entity.Customer{
 		CompanyID: company.ID,
-		Name:      "Test Customer",
+		Name:"Test Customer",
 		IsActive:  true,
 	}
 	err = repository.NewCustomerRepository().WithContext(ctx).Insert(customer)
@@ -87,11 +84,8 @@ func TestOrderUsecase_ValidateUnique_ExcludeID(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                "Test Company",
+		CompanyName:"Test Company",
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -103,7 +97,7 @@ func TestOrderUsecase_ValidateUnique_ExcludeID(t *testing.T) {
 	// Create a customer
 	customer := &entity.Customer{
 		CompanyID: company.ID,
-		Name:      "Test Customer",
+		Name:"Test Customer",
 		IsActive:  true,
 	}
 	err = repository.NewCustomerRepository().WithContext(ctx).Insert(customer)
@@ -148,11 +142,8 @@ func TestOrderUsecase_UpdateStatus_Success(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                "Test Company",
+		CompanyName:"Test Company",
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -164,7 +155,7 @@ func TestOrderUsecase_UpdateStatus_Success(t *testing.T) {
 	// Create a customer
 	customer := &entity.Customer{
 		CompanyID: company.ID,
-		Name:      "Test Customer",
+		Name:"Test Customer",
 		IsActive:  true,
 	}
 	err = repository.NewCustomerRepository().WithContext(ctx).Insert(customer)
@@ -215,11 +206,8 @@ func TestOrderUsecase_UpdateStatus_InvalidTransition(t *testing.T) {
 
 	// Create a company first
 	company := &entity.Company{
-		Name:                "Test Company",
+		CompanyName:"Test Company",
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -231,7 +219,7 @@ func TestOrderUsecase_UpdateStatus_InvalidTransition(t *testing.T) {
 	// Create a customer
 	customer := &entity.Customer{
 		CompanyID: company.ID,
-		Name:      "Test Customer",
+		Name:"Test Customer",
 		IsActive:  true,
 	}
 	err = repository.NewCustomerRepository().WithContext(ctx).Insert(customer)

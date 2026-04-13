@@ -87,6 +87,10 @@ func (u *ExceptionUsecase) GetFailedOrders(req *ExceptionQueryOptions) ([]*Excep
 		return nil, 0, errors.New("user is not a tenant")
 	}
 
+	if req.Page == 0 {
+		req.Page = 1
+	}
+
 	// Build base query for counting
 	countQuery := `
 		SELECT COUNT(DISTINCT o.id) as total

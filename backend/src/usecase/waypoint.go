@@ -223,6 +223,11 @@ func (u *WaypointUsecase) CompleteWaypoint(
 
 	tripWaypoint.Status = "completed"
 
+	// Increment trip.total_completed counter
+	if err := u.TripUsecase.Repo.IncrementTotalCompleted(tripWaypoint.TripID.String()); err != nil {
+		return fmt.Errorf("failed to increment trip counter: %w", err)
+	}
+
 	// Update order status based on all shipments (outside transaction, uses its own transaction)
 	if err := u.ShipmentUsecase.UpdateOrderStatusBasedOnShipments(tripWaypoint.Trip.OrderID.String()); err != nil {
 		return fmt.Errorf("failed to update order status: %w", err)
@@ -480,20 +485,18 @@ func (u *WaypointUsecase) CompleteLoading(
 					if removed {
 						// If all shipments cancelled, cancel the waypoint
 						if len(newShipmentIDs) == 0 {
-							if _, err := shipmentRepo.DB.NewUpdate().
+							if _, err := tripWaypointRepo.DB.NewUpdate().
 								Model(&entity.TripWaypoint{}).
 								Set("status = ?", "cancelled").
-								Set("updated_at = ?", now).
 								Where("id = ?", tw.ID.String()).
 								Exec(ctx); err != nil {
 								return fmt.Errorf("failed to cancel delivery waypoint: %w", err)
 							}
 						} else {
 							// Some shipments still valid, remove failed ones
-							if _, err := shipmentRepo.DB.NewUpdate().
+							if _, err := tripWaypointRepo.DB.NewUpdate().
 								Model(&entity.TripWaypoint{}).
 								Set("shipment_ids = ?", pgdialect.Array(newShipmentIDs)).
-								Set("updated_at = ?", now).
 								Where("id = ?", tw.ID.String()).
 								Exec(ctx); err != nil {
 								return fmt.Errorf("failed to update delivery waypoint: %w", err)
@@ -511,6 +514,11 @@ func (u *WaypointUsecase) CompleteLoading(
 	}
 
 	tripWaypoint.Status = "completed"
+
+	// Increment trip.total_completed counter
+	if err := u.TripUsecase.Repo.IncrementTotalCompleted(tripWaypoint.TripID.String()); err != nil {
+		return fmt.Errorf("failed to increment trip counter: %w", err)
+	}
 
 	// Update order status based on all shipments (outside transaction, uses its own transaction)
 	if err := u.ShipmentUsecase.UpdateOrderStatusBasedOnShipments(tripWaypoint.Trip.OrderID.String()); err != nil {
@@ -544,7 +552,8 @@ func (u *WaypointUsecase) FailWaypoint(
 
 // FailPickup marks a pickup waypoint as failed (total failure)
 // All shipments → "cancelled" (cannot retry)
-// Related delivery waypoints → "cancelled" (driver doesn't go there)
+// Related delivery waypoints → remove failed shipments from shipment_ids
+// If all shipments in delivery waypoint are cancelled, cancel the waypoint
 func (u *WaypointUsecase) FailPickup(
 	tripWaypoint *entity.TripWaypoint,
 	failedReason string,
@@ -621,7 +630,8 @@ func (u *WaypointUsecase) FailPickup(
 			return fmt.Errorf("failed to create waypoint log: %w", err)
 		}
 
-		// 5. Mark related delivery waypoints as cancelled
+		// 5. Remove failed shipments from delivery waypoints
+		// If all shipments in a delivery waypoint are cancelled, cancel the waypoint
 		if len(failedShipmentIDs) > 0 {
 			allWaypoints, err := tripWaypointRepo.GetByTripID(tripWaypoint.TripID.String())
 			if err != nil {
@@ -630,24 +640,38 @@ func (u *WaypointUsecase) FailPickup(
 
 			for _, tw := range allWaypoints {
 				if tw.Type == "delivery" && len(tw.ShipmentIDs) > 0 {
-					// Check if delivery waypoint contains cancelled shipments
-					hasCancelledShipments := false
+					// Filter out failed shipments from delivery waypoint
+					newShipmentIDs := make([]string, 0, len(tw.ShipmentIDs))
+					hasRemoved := false
 					for _, sid := range tw.ShipmentIDs {
+						isFailed := false
 						for _, failedID := range failedShipmentIDs {
 							if sid == failedID {
-								hasCancelledShipments = true
+								isFailed = true
+								hasRemoved = true
 								break
 							}
 						}
-						if hasCancelledShipments {
-							break
+						if !isFailed {
+							newShipmentIDs = append(newShipmentIDs, sid)
 						}
 					}
 
-					// Mark delivery waypoint as cancelled if it has cancelled shipments
-					if hasCancelledShipments {
-						if err := tripWaypointRepo.UpdateStatus(tw.ID.String(), "cancelled", nil, nil); err != nil {
-							return fmt.Errorf("failed to cancel delivery waypoint: %w", err)
+					if hasRemoved {
+						if len(newShipmentIDs) == 0 {
+							// All shipments cancelled, cancel the waypoint
+							if err := tripWaypointRepo.UpdateStatus(tw.ID.String(), "cancelled", nil, nil); err != nil {
+								return fmt.Errorf("failed to cancel delivery waypoint: %w", err)
+							}
+						} else {
+							// Some shipments still valid, remove failed ones from shipment_ids
+							if _, err := tripWaypointRepo.DB.NewUpdate().
+								Model(&entity.TripWaypoint{}).
+								Set("shipment_ids = ?", pgdialect.Array(newShipmentIDs)).
+								Where("id = ?", tw.ID.String()).
+								Exec(ctx); err != nil {
+								return fmt.Errorf("failed to update delivery waypoint: %w", err)
+							}
 						}
 					}
 				}
@@ -661,6 +685,11 @@ func (u *WaypointUsecase) FailPickup(
 	}
 
 	tripWaypoint.Status = "completed"
+
+	// Increment trip.total_completed counter
+	if err := u.TripUsecase.Repo.IncrementTotalCompleted(tripWaypoint.TripID.String()); err != nil {
+		return fmt.Errorf("failed to increment trip counter: %w", err)
+	}
 
 	// Update order status based on all shipments
 	if err := u.ShipmentUsecase.UpdateOrderStatusBasedOnShipments(tripWaypoint.Trip.OrderID.String()); err != nil {
@@ -763,6 +792,11 @@ func (u *WaypointUsecase) FailDelivery(
 	}
 
 	tripWaypoint.Status = "completed"
+
+	// Increment trip.total_completed counter
+	if err := u.TripUsecase.Repo.IncrementTotalCompleted(tripWaypoint.TripID.String()); err != nil {
+		return fmt.Errorf("failed to increment trip counter: %w", err)
+	}
 
 	// Update order status based on all shipments
 	if err := u.ShipmentUsecase.UpdateOrderStatusBasedOnShipments(tripWaypoint.Trip.OrderID.String()); err != nil {

@@ -118,11 +118,8 @@ func createTestCompany(t *testing.T) *entity.Company {
 	ctx := context.Background()
 
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -136,13 +133,13 @@ func createTestUser(t *testing.T, companyID uuid.UUID) *entity.User {
 	ctx := context.Background()
 
 	user := &entity.User{
-		CompanyID:    companyID,
-		Name:         fmt.Sprintf("Test User %s", uuid.New().String()),
-		Email:        fmt.Sprintf("test%s@example.com", uuid.New().String()),
-		PasswordHash: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy", // "password" hashed
-		Role:         "Driver",
-		Phone:        fmt.Sprintf("081%d56789", uuid.New().ID()%1000000000),
-		IsActive:     true,
+		CompanyID: companyID,
+		Name:      fmt.Sprintf("Test User %s", uuid.New().String()),
+		Email:     fmt.Sprintf("test%s@example.com", uuid.New().String()),
+		Password:  "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy", // "password" hashed
+		Role:      "Driver",
+		Phone:     fmt.Sprintf("081%d56789", uuid.New().ID()%1000000000),
+		IsActive:  true,
 	}
 	err := repository.NewUserRepository().WithContext(ctx).Insert(user)
 	require.NoError(t, err)
@@ -155,7 +152,6 @@ func createTestDriver(t *testing.T, companyID uuid.UUID) *entity.Driver {
 
 	driver := &entity.Driver{
 		CompanyID:     companyID,
-		Name:          "Test Driver",
 		Phone:         fmt.Sprintf("081%d56789", uuid.New().ID()%1000000000),
 		LicenseNumber: fmt.Sprintf("B%d%s", uuid.New().ID()%1000000, uuid.New().String()[:6]),
 		IsActive:      true,

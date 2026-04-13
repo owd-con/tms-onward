@@ -15,7 +15,10 @@ import OnboardingCompletePage from "./OnboardingCompletePage";
 
 export type OnboardingData = {
   step1: {
-    name: string;
+    company_name: string;
+    brand_name: string;
+    address: string;
+    phone: string;
     type: "3PL" | "Carrier";
   };
   step2: {
@@ -41,7 +44,10 @@ const OnboardingWizard = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
     step1: {
-      name: "",
+      company_name: "",
+      brand_name: "",
+      address: "",
+      phone: "",
       type: "3PL",
     },
     step2: { usersCreated: 0 },
@@ -60,7 +66,10 @@ const OnboardingWizard = () => {
       setOnboardingData((prev) => ({
         ...prev,
         step1: {
-          name: company.company_name || company.name || "",
+          company_name: company.company_name || company.name || "",
+          brand_name: company.brand_name || "",
+          address: company.address || "",
+          phone: company.phone || "",
           type: company.type || "3PL",
         },
       }));

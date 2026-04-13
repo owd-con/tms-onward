@@ -14,6 +14,7 @@ import (
 
 type updateRequest struct {
 	ID              string `json:"id" param:"id" valid:"required|uuid"`
+	Username        string `json:"username" valid:"required|gte:3|lte:32|alpha_num"`
 	Email           string `json:"email" valid:"email"`
 	Name            string `json:"name" valid:"gte:2|lte:64"`
 	Phone           string `json:"phone"`
@@ -66,6 +67,13 @@ func (r *updateRequest) Validate() *validate.Response {
 		}
 	}
 
+	// username should be unique
+	if r.Username != "" {
+		if !r.uc.ValidateUserUnique("username", r.Username, "", r.ID) {
+			v.SetError("username.unique", "username already exists.")
+		}
+	}
+
 	// email should be unique
 	if r.Email != "" {
 		if !r.uc.ValidateUserUnique("email", r.Email, r.CompanyID, r.ID) {
@@ -107,13 +115,17 @@ func (r *updateRequest) Messages() map[string]string {
 
 func (r *updateRequest) toEntity() *entity.User {
 	mx := &entity.User{
-		ID:           r.user.ID,
-		Email:        r.Email,
-		Name:         r.Name,
-		Phone:        r.Phone,
-		PasswordHash: r.PasswordHash,
-		Role:         r.Role,
-		UpdatedAt:    time.Now(),
+		ID:        r.user.ID,
+		Username:  r.Username,
+		Email:     r.Email,
+		Name:      r.Name,
+		Phone:     r.Phone,
+		Role:      r.Role,
+		UpdatedAt: time.Now(),
+	}
+
+	if r.PasswordHash != "" {
+		mx.Password = r.PasswordHash
 	}
 
 	if r.company != nil {
@@ -127,14 +139,14 @@ func (r *updateRequest) execute() (*rest.ResponseBody, error) {
 	mx := r.toEntity()
 
 	// Build fields to update - ini adalah yang langsung di parse ke entity
-	fields := []string{"email", "name", "phone", "role", "updated_at"}
-
-	if r.Password != "" {
-		fields = append(fields, "password_hash")
-	}
+	fields := []string{"username", "email", "name", "phone", "role", "updated_at"}
 
 	if r.company != nil {
 		fields = append(fields, "company_id")
+	}
+
+	if r.PasswordHash != "" {
+		fields = append(fields, "password")
 	}
 
 	err := r.uc.Update(mx, fields...)

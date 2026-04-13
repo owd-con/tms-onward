@@ -117,11 +117,8 @@ func createTestCompany(t *testing.T) *entity.Company {
 	ctx := context.Background()
 
 	company := &entity.Company{
-		Name:                fmt.Sprintf("Test Company %s", uuid.New().String()),
+		CompanyName:         fmt.Sprintf("Test Company %s", uuid.New().String()),
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -136,12 +133,12 @@ func createTestUser(t *testing.T, companyID uuid.UUID) *entity.User {
 	ctx := context.Background()
 
 	user := &entity.User{
-		CompanyID:    companyID,
-		Name:         "Test User",
-		Email:        fmt.Sprintf("test%s@example.com", uuid.New().String()),
-		PasswordHash: "$2a$10$abcdefghijklmnopqrstuvwxyz", // dummy hash
-		Role:         "admin",
-		IsActive:     true,
+		CompanyID: companyID,
+		Name:      "Test User",
+		Email:     fmt.Sprintf("test%s@example.com", uuid.New().String()),
+		Password:  "$2a$10$abcdefghijklmnopqrstuvwxyz", // dummy hash
+		Role:      "admin",
+		IsActive:  true,
 	}
 	if err := repository.NewUserRepository().WithContext(ctx).Insert(user); err != nil {
 		t.Skip("Cannot create test user")

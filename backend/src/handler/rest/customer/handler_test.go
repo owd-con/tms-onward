@@ -66,11 +66,8 @@ func createTestCompany(t *testing.T) *entity.Company {
 	repoCompany := repository.NewCompanyRepository().WithContext(ctx)
 
 	company := &entity.Company{
-		Name:                "Test Company",
+		CompanyName:"Test Company",
 		Type:                "3PL",
-		Timezone:            "Asia/Jakarta",
-		Currency:            "IDR",
-		Language:            "id",
 		IsActive:            true,
 		OnboardingCompleted: true,
 	}
@@ -86,7 +83,7 @@ func createTestCustomer(t *testing.T, companyID uuid.UUID) *entity.Customer {
 
 	customer := &entity.Customer{
 		CompanyID: companyID,
-		Name:      "Test Customer " + uuid.New().String(),
+		Name:"Test Customer " + uuid.New().String(),
 		Email:     "test" + uuid.New().String() + "@example.com",
 		Phone:     "08123456789",
 		Address:   "Test Address",

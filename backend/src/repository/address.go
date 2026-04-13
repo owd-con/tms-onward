@@ -15,7 +15,7 @@ type AddressRepository struct {
 func NewAddressRepository() *AddressRepository {
 	base := postgres.NewBaseRepository[entity.Address](postgres.GetDB(),
 		"addresses",
-		[]string{"name"},
+		[]string{"addresses.name"},
 		[]string{"Customer", "Region"},
 		true,
 	)

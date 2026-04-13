@@ -23,7 +23,7 @@ type createRequest struct {
 	IsActive      bool       `json:"is_active"`
 	// User creation fields (for has_login)
 	HasLogin        bool   `json:"has_login"`
-	Email           string `json:"email" valid:"email"`
+	Username        string `json:"username"`
 	Password        string `json:"password"`
 	ConfirmPassword string `json:"confirm_password"`
 
@@ -55,8 +55,8 @@ func (r *createRequest) Validate() *validate.Response {
 	// Validate user fields if has_login is true
 	if r.HasLogin {
 		// check if kosong
-		if r.Email == "" {
-			v.SetError("email.invalid", "this email is required.")
+		if r.Username == "" {
+			v.SetError("username.invalid", "this username is required.")
 		}
 
 		if r.Password == "" {
@@ -64,14 +64,14 @@ func (r *createRequest) Validate() *validate.Response {
 		}
 
 		// Validate email is unique
-		if r.Email != "" {
-			if !r.uc.User.ValidateUserUnique("email", r.Email, r.session.CompanyID, "") {
-				v.SetError("email.unique", "Email already used.")
+		if r.Username != "" {
+			if !r.uc.User.ValidateUserUnique("username", r.Username, r.session.CompanyID, "") {
+				v.SetError("username.unique", "Username already used.")
 			}
 		}
 
 		// Validate password match
-		if r.Password != "" && r.ConfirmPassword != "" {
+		if r.Password != "" {
 			if r.Password != r.ConfirmPassword {
 				v.SetError("confirm_password.invalid", "Password confirmation does not match.")
 			}
@@ -115,13 +115,13 @@ func (r *createRequest) toEntity() *entity.Driver {
 func (r *createRequest) toUserEntity() *entity.User {
 	companyID, _ := uuid.Parse(r.session.CompanyID)
 	return &entity.User{
-		Name:         r.Name,
-		Email:        r.Email,
-		PasswordHash: r.PasswordHash,
-		Role:         "driver",
-		Phone:        r.Phone,
-		CompanyID:    companyID,
-		IsActive:     true,
+		Name:      r.Name,
+		Username:  r.Username,
+		Password:  r.PasswordHash,
+		Role:      "driver",
+		Phone:     r.Phone,
+		CompanyID: companyID,
+		IsActive:  true,
 	}
 }
 

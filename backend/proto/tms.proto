@@ -6,6 +6,76 @@ option go_package = "github.com/logistics-id/onward-tms/proto;proto";
 import "google/protobuf/timestamp.proto";
 
 // ============================================
+// Auth Messages
+// ============================================
+
+// SignupRequest - Request for user registration
+message SignupRequest {
+  // Company data
+  string company_name = 1;
+  string address = 2;
+
+  // User data
+  string username = 3;
+  string name = 4;
+  string email = 5;
+  string password = 6;
+  string confirm_password = 7;
+  string phone = 8;
+}
+
+// SignupResponse - Response after successful signup
+message SignupResponse {
+  string message = 1;
+}
+
+// FindCompanyByNameRequest - Request to find company by name
+message FindCompanyByNameRequest {
+  string name = 1;
+}
+
+// FindCompanyByNameResponse - Response with company exists status
+message FindCompanyByNameResponse {
+  bool exists = 1;
+}
+
+// FindUserByEmailRequest - Request to find user by email
+message FindUserByEmailRequest {
+  string email = 1;
+}
+
+// FindUserByEmailResponse - Response with user exists status
+message FindUserByEmailResponse {
+  bool exists = 1;
+}
+
+// FindUserByUsernameRequest - Request to find user by email
+message FindUserByUsernameRequest {
+  string username = 1;
+}
+
+// FindUserByUsernameResponse - Response with user exists status
+message FindUserByUsernameResponse {
+  bool exists = 1;
+}
+
+// ============================================
+// Login Messages
+// ============================================
+
+// LoginRequest - Request for user login
+message LoginRequest {
+  // Identifier can be email or username
+  string identifier = 1;
+  string password = 2;
+}
+
+// LoginResponse - Response after successful login
+message LoginResponse {
+  string access_token = 1;
+}
+
+// ============================================
 // Dashboard Messages
 // ============================================
 
@@ -40,6 +110,13 @@ message DashboardResponse {
 // ============================================
 
 service TMSService {
+  // Auth operations
+  rpc Signup(SignupRequest) returns (SignupResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc FindCompanyByName(FindCompanyByNameRequest) returns (FindCompanyByNameResponse);
+  rpc FindUserByEmail(FindUserByEmailRequest) returns (FindUserByEmailResponse);
+  rpc FindUserByUsername(FindUserByUsernameRequest) returns (FindUserByUsernameResponse);
+
   // Dashboard operations
   rpc GetDashboard(DashboardRequest) returns (DashboardResponse);
 }

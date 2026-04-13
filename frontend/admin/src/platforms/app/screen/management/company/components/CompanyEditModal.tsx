@@ -19,26 +19,27 @@ const CompanyEditModal = ({
   const { updateCompany, updateCompanyResult } = useCompany();
 
   // Form state
-  const [name, setName] = useState(data?.name || "");
+  const [company_name, setCompanyName] = useState(data?.company_name || "");
+  const [brand_name, setBrandName] = useState(data?.brand_name || "");
+  const [address, setAddress] = useState(data?.address || "");
+  const [phone, setPhone] = useState(data?.phone || "");
   const [type, setType] = useState<{ label: string; value: "3PL" | "Carrier" }>(
-    companyTypeOptions.find(opt => opt.value === (data?.type || "3PL")) || companyTypeOptions[0]
+    companyTypeOptions.find((opt) => opt.value === (data?.type || "3PL")) ||
+      companyTypeOptions[0],
   );
-  const [timezone, setTimezone] = useState(data?.timezone || "Asia/Jakarta");
-  const [currency, setCurrency] = useState(data?.currency || "IDR");
-  const [language, setLanguage] = useState(data?.language || "id");
   const [logoPhotos, setLogoPhotos] = useState<string[]>(
-    data?.logo_url ? [data.logo_url] : []
+    data?.logo_url ? [data.logo_url] : [],
   );
 
   const handleSubmit = async () => {
     await updateCompany({
       id: data?.id || "",
       payload: {
-        name: name.trim(),
+        company_name,
         type: type.value,
-        timezone,
-        currency,
-        language,
+        brand_name,
+        address,
+        phone,
         logo_url: logoPhotos[0] || undefined,
       },
     });
@@ -55,11 +56,14 @@ const CompanyEditModal = ({
   // Reset form when data changes
   useEffect(() => {
     if (data) {
-      setName(data.name || "");
-      setType(companyTypeOptions.find(opt => opt.value === data.type) || companyTypeOptions[0]);
-      setTimezone(data.timezone || "Asia/Jakarta");
-      setCurrency(data.currency || "IDR");
-      setLanguage(data.language || "id");
+      setCompanyName(data.company_name || "");
+      setBrandName(data.brand_name || "");
+      setPhone(data.phone || "");
+      setAddress(data.address || "");
+      setType(
+        companyTypeOptions.find((opt) => opt.value === data.type) ||
+          companyTypeOptions[0],
+      );
       setLogoPhotos(data.logo_url ? [data.logo_url] : []);
     }
   }, [data]);
@@ -81,15 +85,6 @@ const CompanyEditModal = ({
       </Modal.Header>
 
       <Modal.Body className='space-y-4'>
-        {/* Company Name */}
-        <Input
-          label='Company Name'
-          required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder='Enter your company name'
-        />
-
         {/* Company Type */}
         <RemoteSelect
           label='Company Type'
@@ -99,6 +94,35 @@ const CompanyEditModal = ({
           data={companyTypeOptions}
           getLabel={(item) => item.label}
           getValue={(item) => item.value}
+        />
+
+        {/* Company Name */}
+        <Input
+          label='Company Name'
+          required
+          value={company_name}
+          onChange={(e) => setCompanyName(e.target.value)}
+          placeholder='Enter your company name'
+        />
+
+        <Input
+          label='Brand Name'
+          value={brand_name}
+          onChange={(e) => setBrandName(e.target.value)}
+          placeholder='Enter your brand name'
+        />
+
+        <Input
+          label='Phone'
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+
+        <Input
+          label='Address'
+          type='textarea'
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
         />
 
         {/* Logo Upload */}

@@ -12,14 +12,17 @@ import (
 )
 
 type updateRequest struct {
-	Name      string `json:"name" valid:"required|gte:2|lte:100"`
-	Phone     string `json:"phone" valid:"required|phone"`
-	AvatarURL string `json:"avatar_url"`
+	Name            string `json:"name" valid:"required|gte:2|lte:100"`
+	Phone           string `json:"phone" valid:"required|phone"`
+	AvatarURL       string `json:"avatar_url"`
+	Password        string `json:"password"`
+	ConfirmPassword string `json:"confirm_password"`
 
-	user    *entity.User
-	session *entity.TMSSessionClaims
-	uc      *usecase.Factory
-	ctx     context.Context
+	user         *entity.User
+	session      *entity.TMSSessionClaims
+	uc           *usecase.Factory
+	ctx          context.Context
+	PasswordHash string
 }
 
 func (r *updateRequest) Validate() *validate.Response {
@@ -47,6 +50,20 @@ func (r *updateRequest) Validate() *validate.Response {
 		}
 	}
 
+	if r.Password != "" {
+		if !validate.IsGreaterThan(r.Password, 9) || !validate.IsLowerThan(r.Password, 65) {
+			v.SetError("password.invalid", "The password should be greater than 8 or The password may not be greater than 64.")
+		}
+
+		if r.Password != r.ConfirmPassword {
+			v.SetError("confirm_password.invalid", "password confirmation does not match.")
+		}
+
+		if r.PasswordHash, err = common.HashPassword(r.Password); err != nil {
+			v.SetError("password.invalid", "kata sandi tidak valid.")
+		}
+	}
+
 	return v
 }
 
@@ -61,6 +78,12 @@ func (r *updateRequest) execute() (*rest.ResponseBody, error) {
 
 	// Profile updates: name, phone, avatar_url only
 	fields := []string{"name", "phone", "avatar_url"}
+
+	if r.PasswordHash != "" {
+		r.user.Password = r.PasswordHash
+		fields = append(fields, "password")
+	}
+
 	if err := r.uc.User.Update(r.user, fields...); err != nil {
 		return nil, err
 	}

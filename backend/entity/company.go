@@ -11,11 +11,11 @@ type Company struct {
 	bun.BaseModel `bun:"table:companies,alias:companies"`
 
 	ID                  uuid.UUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id"`
-	Name                string    `bun:"name,notnull" json:"name"`
+	CompanyName         string    `bun:"company_name,notnull" json:"company_name"`
+	BrandName           string    `bun:"brand_name" json:"brand_name"`
 	Type                string    `bun:"type,notnull" json:"type"`
-	Timezone            string    `bun:"timezone,default:'Asia/Jakarta'" json:"timezone"`
-	Currency            string    `bun:"currency,default:'IDR'" json:"currency"`
-	Language            string    `bun:"language,default:'id'" json:"language"`
+	Phone               string    `bun:"phone" json:"phone"`
+	Address             string    `bun:"address" json:"address"`
 	LogoURL             string    `bun:"logo_url" json:"logo_url"`
 	IsActive            bool      `bun:"is_active,default:true" json:"is_active"`
 	OnboardingCompleted bool      `bun:"onboarding_completed,default:false" json:"onboarding_completed"`

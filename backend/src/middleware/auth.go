@@ -41,7 +41,6 @@ func CheckUserActive() func(http.Handler) http.Handler {
 			// Get TMSSessionClaims from context (set by JWT middleware)
 			session := common.GetContextSessionGeneric[entity.TMSSessionClaims](ctx.Context)
 
-			fmt.Println("===========CheckUserActive===============", session)
 			if session == nil || session.GetBase() == nil {
 				ctx.Error(http.StatusUnauthorized, rest.MsgUnauthorized, "User or company has been deactivated")
 				return

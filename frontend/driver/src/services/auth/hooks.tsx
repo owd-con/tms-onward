@@ -24,11 +24,11 @@ export const useAuth = () => {
   const [getProfile, profileResult] = useLazyGetProfileQuery();
 
   /**
-   * Login with email and password
+   * Login with identifier and password
    */
-  const login = async (email: string, password: string) => {
+  const login = async (identifier: string, password: string) => {
     try {
-      const res = await loginMutation({ email, password }).unwrap();
+      const res = await loginMutation({ identifier, password }).unwrap();
       if (res?.data?.access_token) {
         dispatch(signin(res.data));
       }

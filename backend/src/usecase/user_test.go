@@ -17,12 +17,9 @@ func TestUserUsecase_Get(t *testing.T) {
 
 	// Create test company
 	company := &entity.Company{
-		Name:     "Test Company",
-		Type:     "3PL",
-		Timezone: "Asia/Jakarta",
-		Currency: "IDR",
-		Language: "id",
-		IsActive: true,
+		CompanyName: "Test Company",
+		Type:        "3PL",
+		IsActive:    true,
 	}
 	err := uc.repoCompany.Insert(company)
 	require.NoError(t, err)
@@ -36,36 +33,36 @@ func TestUserUsecase_Get(t *testing.T) {
 	// Create test users with unique emails
 	users := []*entity.User{
 		{
-			CompanyID:    company.ID,
-			Name:         "admin User",
-			Email:        adminEmail,
-			PasswordHash: "hashedpassword",
-			Role:         "admin",
-			IsActive:     true,
+			CompanyID: company.ID,
+			Name:      "admin User",
+			Email:     adminEmail,
+			Password:  "hashedpassword",
+			Role:      "admin",
+			IsActive:  true,
 		},
 		{
-			CompanyID:    company.ID,
-			Name:         "Dispatcher User",
-			Email:        dispatcherEmail,
-			PasswordHash: "hashedpassword",
-			Role:         "dispatcher",
-			IsActive:     true,
+			CompanyID: company.ID,
+			Name:      "Dispatcher User",
+			Email:     dispatcherEmail,
+			Password:  "hashedpassword",
+			Role:      "dispatcher",
+			IsActive:  true,
 		},
 		{
-			CompanyID:    company.ID,
-			Name:         "Driver User",
-			Email:        driverEmail,
-			PasswordHash: "hashedpassword",
-			Role:         "driver",
-			IsActive:     true,
+			CompanyID: company.ID,
+			Name:      "Driver User",
+			Email:     driverEmail,
+			Password:  "hashedpassword",
+			Role:      "driver",
+			IsActive:  true,
 		},
 		{
-			CompanyID:    company.ID,
-			Name:         "Driver User 2",
-			Email:        driver2Email,
-			PasswordHash: "hashedpassword",
-			Role:         "driver",
-			IsActive:     false,
+			CompanyID: company.ID,
+			Name:      "Driver User 2",
+			Email:     driver2Email,
+			Password:  "hashedpassword",
+			Role:      "driver",
+			IsActive:  false,
 		},
 	}
 
@@ -184,12 +181,9 @@ func TestUserUsecase_ValidateUserUnique(t *testing.T) {
 
 	// Create test company
 	company := &entity.Company{
-		Name:     "Test Company",
-		Type:     "3PL",
-		Timezone: "Asia/Jakarta",
-		Currency: "IDR",
-		Language: "id",
-		IsActive: true,
+		CompanyName: "Test Company",
+		Type:        "3PL",
+		IsActive:    true,
 	}
 	err := uc.repoCompany.Insert(company)
 	require.NoError(t, err)
@@ -199,12 +193,12 @@ func TestUserUsecase_ValidateUserUnique(t *testing.T) {
 
 	// Create test user
 	user := &entity.User{
-		CompanyID:    company.ID,
-		Name:         "Test User",
-		Email:        email,
-		PasswordHash: "hashedpassword",
-		Role:         "admin",
-		IsActive:     true,
+		CompanyID: company.ID,
+		Name:      "Test User",
+		Email:     email,
+		Password:  "hashedpassword",
+		Role:      "admin",
+		IsActive:  true,
 	}
 	err = uc.Repo.Insert(user)
 	require.NoError(t, err)
@@ -217,12 +211,9 @@ func TestUserUsecase_ValidateUserUnique(t *testing.T) {
 	t.Run("Email should be unique for different company", func(t *testing.T) {
 		// Create another company
 		company2 := &entity.Company{
-			Name:     "Test Company 2",
-			Type:     "3PL",
-			Timezone: "Asia/Jakarta",
-			Currency: "IDR",
-			Language: "id",
-			IsActive: true,
+			CompanyName: "Test Company 2",
+			Type:        "3PL",
+			IsActive:    true,
 		}
 		err := uc.repoCompany.Insert(company2)
 		require.NoError(t, err)
@@ -249,12 +240,9 @@ func TestUserUsecase_GetCompany(t *testing.T) {
 
 	// Create test company
 	company := &entity.Company{
-		Name:     "Test Company",
-		Type:     "3PL",
-		Timezone: "Asia/Jakarta",
-		Currency: "IDR",
-		Language: "id",
-		IsActive: true,
+		CompanyName: "Test Company",
+		Type:        "3PL",
+		IsActive:    true,
 	}
 	err := uc.repoCompany.Insert(company)
 	require.NoError(t, err)
@@ -263,7 +251,7 @@ func TestUserUsecase_GetCompany(t *testing.T) {
 		result, err := uc.GetCompany(company.ID.String())
 		require.NoError(t, err)
 		assert.Equal(t, company.ID, result.ID)
-		assert.Equal(t, company.Name, result.Name)
+		assert.Equal(t, company.CompanyName, result.CompanyName)
 		assert.Equal(t, company.Type, result.Type)
 	})
 

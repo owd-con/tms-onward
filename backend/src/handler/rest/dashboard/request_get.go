@@ -19,10 +19,22 @@ type getRequest struct {
 }
 
 func (r *getRequest) get() (*rest.ResponseBody, error) {
-	// Set session
-	r.Session = r.session
+	opts := r.BuildQueryOption()
+	opts.Session = r.session
 
-	summary, err := r.uc.Dashboard.Get(&r.DashboardQueryOptions)
+	summary, err := r.uc.Dashboard.Get(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return rest.NewResponseBody(summary), nil
+}
+
+func (r *getRequest) getDriver() (*rest.ResponseBody, error) {
+	opts := r.BuildQueryOption()
+	opts.Session = r.session
+
+	summary, err := r.uc.Dashboard.GetDriverDashboard(opts)
 	if err != nil {
 		return nil, err
 	}
