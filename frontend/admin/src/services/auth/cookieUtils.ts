@@ -1,4 +1,4 @@
-import type { SessionData } from "./types";
+// SessionData type removed - not used
 
 /**
  * TMS Onward - SSO Cookie Utilities

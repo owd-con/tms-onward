@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 
 import { FiChevronDown } from "react-icons/fi";
 import { RemoteSelect } from "@/components";
-import type { SelectOptionValue } from "@/shared/types";
+// SelectOptionValue type not used
 import { useCustomer } from "@/services/customer/hooks";
 
 // TableFilter props: accept any filter shape

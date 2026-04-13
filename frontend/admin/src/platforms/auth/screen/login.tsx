@@ -7,7 +7,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Truck, Package } from "lucide-react";
 import logoDark from "@/assets/logo_dark.svg";
 import heroicImage from "@/assets/heroic.png";
-import { getConnectSSOCookie, getTMSTokenFromSSO } from "@/services/auth/cookieUtils";
+import { getTMSTokenFromSSO } from "@/services/auth/cookieUtils";
 import { useDispatch } from "react-redux";
 import { signin } from "@/services/auth/slice";
 import { extractUserFromToken } from "@/services/auth/jwtUtils";

@@ -86,7 +86,7 @@ export function useDisplayScale() {
  */
 function generateScalingCSS(scale: number): string {
   // Helper to scale pixel values
-  const sp = (px: number) => (px * scale).toFixed(2);
+  // const sp = (px: number) => (px * scale).toFixed(2);
   const s = (px: number) => `${px * scale}px`;
 
   return `

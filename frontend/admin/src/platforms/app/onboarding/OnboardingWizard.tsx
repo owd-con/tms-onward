@@ -66,7 +66,7 @@ const OnboardingWizard = () => {
       setOnboardingData((prev) => ({
         ...prev,
         step1: {
-          company_name: company.company_name || company.name || "",
+          company_name: company.company_name || "",
           brand_name: company.brand_name || "",
           address: company.address || "",
           phone: company.phone || "",
