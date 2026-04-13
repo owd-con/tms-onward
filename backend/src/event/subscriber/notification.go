@@ -167,7 +167,7 @@ func processFailedDeliveryEmail(ctx context.Context, uc *usecase.Factory, req *p
 		TripNumber:   req.Data["trip_number"].(string),
 		LocationName: waypoint.LocationName,
 		Address:      waypoint.Address,
-		Timestamp:    req.PublishedAt.Local().Format("2006-01-02 15:04:05"),
+		Timestamp:    req.PublishedAt.Add(7 * time.Hour).Format("2006-01-02 15:04:05"),
 		Notes:        req.Body,
 		DashboardURL: "https://tms-onward.com/dashboard",
 		Year:         req.PublishedAt.Year(),
@@ -217,11 +217,10 @@ func processDeliveryCompletedEmail(ctx context.Context, uc *usecase.Factory, req
 		LocationName:  waypoint.LocationName,
 		Address:       waypoint.Address,
 		RecipientName: recipientName,
-		Timestamp:     req.PublishedAt.Local().Format("2006-01-02 15:04:05"),
+		Timestamp:     req.PublishedAt.Add(7 * time.Hour).Format("2006-01-02 15:04:05"),
 		DashboardURL:  "https://tms-onward.com/dashboard",
 		Year:          req.PublishedAt.Year(),
 	}
 
 	return emailService.SendDeliverySuccessToUser(ctx, customer.Email, "id", emailData)
 }
-

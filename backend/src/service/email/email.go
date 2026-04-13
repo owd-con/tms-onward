@@ -160,7 +160,7 @@ func getLanguageSuffix(language string) string {
 // SendDeliverySuccess sends delivery success notification email
 func (s *EmailService) SendDeliverySuccess(ctx context.Context, data *DeliverySuccessData) error {
 	if data.Timestamp == "" {
-		data.Timestamp = time.Now().Local().Format("2006-01-02 15:04:05")
+		data.Timestamp = time.Now().Add(7 * time.Hour).Format("2006-01-02 15:04:05")
 	}
 	if data.Year == 0 {
 		data.Year = time.Now().Year()
@@ -177,7 +177,7 @@ func (s *EmailService) SendDeliverySuccess(ctx context.Context, data *DeliverySu
 // SendDeliverySuccessToUser sends delivery success email to specific user
 func (s *EmailService) SendDeliverySuccessToUser(ctx context.Context, to string, language string, data *DeliverySuccessData) error {
 	if data.Timestamp == "" {
-		data.Timestamp = time.Now().Local().Format("2006-01-02 15:04:05")
+		data.Timestamp = time.Now().Add(7 * time.Hour).Format("2006-01-02 15:04:05")
 	}
 	if data.Year == 0 {
 		data.Year = time.Now().Year()
@@ -238,7 +238,7 @@ func (s *EmailService) generateDeliverySuccessTextPlain(data *DeliverySuccessDat
 // SendFailedDelivery sends failed delivery notification email
 func (s *EmailService) SendFailedDelivery(ctx context.Context, data *FailedDeliveryData) error {
 	if data.Timestamp == "" {
-		data.Timestamp = time.Now().Local().Format("2006-01-02 15:04:05")
+		data.Timestamp = time.Now().Add(7 * time.Hour).Format("2006-01-02 15:04:05")
 	}
 	if data.Year == 0 {
 		data.Year = time.Now().Year()
@@ -255,7 +255,7 @@ func (s *EmailService) SendFailedDelivery(ctx context.Context, data *FailedDeliv
 // SendFailedDeliveryToUser sends failed delivery email to specific user
 func (s *EmailService) SendFailedDeliveryToUser(ctx context.Context, to string, language string, data *FailedDeliveryData) error {
 	if data.Timestamp == "" {
-		data.Timestamp = time.Now().Local().Format("2006-01-02 15:04:05")
+		data.Timestamp = time.Now().Add(7 * time.Hour).Format("2006-01-02 15:04:05")
 	}
 	if data.Year == 0 {
 		data.Year = time.Now().Year()

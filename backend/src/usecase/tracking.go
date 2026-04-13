@@ -145,21 +145,21 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 			OriginAddress:       s.OriginAddress,
 			DestLocationName:    s.DestLocationName,
 			DestAddress:         s.DestAddress,
-			ScheduledPickupDate: s.ScheduledPickupDate.Format("2006-01-02"),
+			ScheduledPickupDate: s.ScheduledPickupDate.UTC().Format(time.RFC3339),
 			ScheduledPickupTime: s.ScheduledPickupTime,
 		}
 		if s.ActualPickupTime != nil {
-			formatted := s.ActualPickupTime.Local().Format("2006-01-02 15:04:05")
+			formatted := s.ActualPickupTime.UTC().Format(time.RFC3339)
 			si.ActualPickupTime = &formatted
 		}
 		if s.ActualDeliveryTime != nil {
-			formatted := s.ActualDeliveryTime.Local().Format("2006-01-02 15:04:05")
+			formatted := s.ActualDeliveryTime.UTC().Format(time.RFC3339)
 			si.ActualDeliveryTime = &formatted
 		}
 		si.ReceivedBy = s.ReceivedBy
 		si.FailedReason = s.FailedReason
 		if s.FailedAt != nil {
-			formatted := s.FailedAt.Local().Format("2006-01-02 15:04:05")
+			formatted := s.FailedAt.UTC().Format(time.RFC3339)
 			si.FailedAt = &formatted
 		}
 		shipmentInfos = append(shipmentInfos, si)
@@ -196,7 +196,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 			Status:    log.NewStatus,
 			OldStatus: log.OldStatus,
 			Notes:     log.Message,
-			ChangedAt: log.CreatedAt.Local().Format("2006-01-02 15:04:05"),
+			ChangedAt: log.CreatedAt.UTC().Format(time.RFC3339),
 		}
 
 		if log.TripWaypoint != nil {
@@ -233,7 +233,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 				NewStatus:      log.NewStatus,
 				OldStatus:      log.OldStatus,
 				Notes:          log.Notes,
-				ChangedAt:      log.CreatedAt.Local().Format("2006-01-02 15:04:05"),
+				ChangedAt:      log.CreatedAt.UTC().Format(time.RFC3339),
 			}
 
 			shipmentHistory = append(shipmentHistory, sh)
@@ -280,7 +280,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 					WaypointImageID: wi.ID.String(),
 					Type:            wi.Type,
 					Photos:          wi.Images, // Already []string from TEXT[]
-					SubmittedAt:     wi.CreatedAt.Local().Format("2006-01-02 15:04:05"),
+					SubmittedAt:     wi.CreatedAt.UTC().Format(time.RFC3339),
 				}
 				if wi.SignatureURL != nil {
 					imageInfo.SignatureURL = *wi.SignatureURL

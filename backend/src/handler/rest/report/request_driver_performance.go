@@ -84,7 +84,7 @@ func (r *getDriverPerformanceRequest) getDownload(data any, c *rest.Context) err
 
 	// Set headers for download
 	c.Response.Header().Set("Content-Type", "application/octet-stream")
-	c.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=Driver-Performance-Report-%s.xlsx", time.Now().Local().Format("20060102150405")))
+	c.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=Driver-Performance-Report-%s.xlsx", time.Now().Add(7*time.Hour).Format("20060102150405")))
 	c.Response.Header().Set("Content-Transfer-Encoding", "binary")
 	c.Response.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
 

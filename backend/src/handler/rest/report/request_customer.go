@@ -85,7 +85,9 @@ func (r *getCustomerReportRequest) getDownload(data any, c *rest.Context) error 
 
 	// Set headers for download
 	c.Response.Header().Set("Content-Type", "application/octet-stream")
-	c.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=Customer-Report-%s.xlsx", time.Now().Local().Format("20060102150405")))
+
+	// convert jadi +7
+	c.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=Customer-Report-%s.xlsx", time.Now().Add(7*time.Hour).Format("20060102150405")))
 	c.Response.Header().Set("Content-Transfer-Encoding", "binary")
 	c.Response.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
 

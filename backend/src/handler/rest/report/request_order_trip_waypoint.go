@@ -114,7 +114,7 @@ func (r *getOrderTripWaypointRequest) getDownload(data any, c *rest.Context) err
 			f.SetCellValue(sheet, fmt.Sprintf("K%d", row), "")
 		}
 		if item.CompletedAt != nil {
-			f.SetCellValue(sheet, fmt.Sprintf("L%d", row), item.CompletedAt.Format("2006-01-02 15:04:05"))
+			f.SetCellValue(sheet, fmt.Sprintf("L%d", row), item.CompletedAt.Add(7*time.Hour).Format("2006-01-02 15:04:05"))
 		} else {
 			f.SetCellValue(sheet, fmt.Sprintf("L%d", row), "")
 		}
@@ -122,7 +122,7 @@ func (r *getOrderTripWaypointRequest) getDownload(data any, c *rest.Context) err
 
 	// Set headers for download
 	c.Response.Header().Set("Content-Type", "application/octet-stream")
-	c.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=Trip-Waypoint-Report-%s.xlsx", time.Now().Format("20060102150405")))
+	c.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=Trip-Waypoint-Report-%s.xlsx", time.Now().Add(7*time.Hour).Format("20060102150405")))
 	c.Response.Header().Set("Content-Transfer-Encoding", "binary")
 	c.Response.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
 

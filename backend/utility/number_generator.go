@@ -23,7 +23,7 @@ const (
 // Used for: Order, Shipment, Trip (non-sequential)
 func GenerateNumberWithRandom(prefix NumberType) string {
 	now := time.Now()
-	dateStr := now.Format("20060102")
+	dateStr := now.Add(7 * time.Hour).Format("20060102")
 	randomNum := fmt.Sprintf("%04d", now.Nanosecond()%10000)
 	return fmt.Sprintf("%s-%s-%s", prefix, dateStr, randomNum)
 }
@@ -33,7 +33,7 @@ func GenerateNumberWithRandom(prefix NumberType) string {
 // Used for: Trip (sequential for better tracking)
 func GenerateNumberWithSequence(ctx context.Context, db bun.IDB, prefix NumberType, tableName string) (string, error) {
 	now := time.Now()
-	dateStr := now.Format("20060102")
+	dateStr := now.Add(7 * time.Hour).Format("20060102")
 	prefixStr := string(prefix)
 
 	// Get last number for today
@@ -44,11 +44,10 @@ func GenerateNumberWithSequence(ctx context.Context, db bun.IDB, prefix NumberTy
 		TableExpr(tableName).
 		ColumnExpr(columnName).
 		Where(columnName+" LIKE ?", prefixStr+"-"+dateStr+"-%").
-		OrderExpr(columnName + " DESC").
+		OrderExpr(columnName+" DESC").
 		Limit(1).
 		Scan(ctx, &lastNumber)
-
-	// If error but no result found, continue with default sequence
+		// If error but no result found, continue with default sequence
 	if err != nil {
 		// Check if it's "no rows in result set" error - that's OK, start from 1
 		if err == sql.ErrNoRows {
