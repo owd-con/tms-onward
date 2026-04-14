@@ -74,7 +74,7 @@ export const OrderLoadCard: React.FC<OrderLoadCardProps> = ({ order, isSelected,
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Origin</p>
         </div>
         <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 border border-slate-100 text-slate-400 shrink-0 mx-1">
-          <ArrowRight size={14} strokeWidth={3} />
+          <ArrowRight className="size-[14px]" strokeWidth={3} />
         </div>
         <div className="flex-1 text-right min-w-0">
           <p className="text-[13px] font-bold text-slate-900 truncate">
@@ -91,19 +91,19 @@ export const OrderLoadCard: React.FC<OrderLoadCardProps> = ({ order, isSelected,
         <div className="flex-1 border-r border-slate-200/60 pl-1">
           <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-0.5">Pickups</p>
           <p className="text-sm font-black text-slate-800 flex items-center justify-center gap-1">
-             <Package size={14} className="text-slate-400"/> {uniqueOrigins}
+             <Package className="size-[14px] text-slate-400"/> {uniqueOrigins}
           </p>
         </div>
         <div className="flex-1 border-r border-slate-200/60 pl-1">
           <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-0.5">Drops</p>
           <p className="text-sm font-black text-slate-800 flex items-center justify-center gap-1">
-             <Combine size={14} className="text-slate-400"/> {uniqueDestinations}
+             <Combine className="size-[14px] text-slate-400"/> {uniqueDestinations}
           </p>
         </div>
         <div className="flex-1 pl-1">
           <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-0.5">Weight</p>
           <p className="text-sm font-black text-slate-800 flex items-center justify-center gap-1">
-             <Weight size={14} className="text-slate-400"/> {totalWeight} <span className="text-[10px] text-slate-400">kg</span>
+             <Weight className="size-[14px] text-slate-400"/> {totalWeight} <span className="text-[10px] text-slate-400">kg</span>
           </p>
         </div>
       </div>
@@ -129,7 +129,7 @@ export const OrderLoadCard: React.FC<OrderLoadCardProps> = ({ order, isSelected,
             onAssign?.();
           }} 
           className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 rounded-lg text-xs font-bold transition-all shadow-sm">
-          <UserPlus size={14} strokeWidth={2.5}/> Assign
+          <UserPlus className="size-[14px]" strokeWidth={2.5}/> Assign
         </button>
       </div>
     </div>

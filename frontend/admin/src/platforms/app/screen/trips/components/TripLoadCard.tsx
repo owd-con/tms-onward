@@ -112,7 +112,7 @@ export const TripLoadCard: React.FC<TripLoadCardProps> = ({ trip, status, isSele
         
         {isCompleted && trip.completed_at && (
            <div className="flex items-center gap-1.5 text-emerald-600">
-              <CheckCircle2 size={14} strokeWidth={2.5}/>
+              <CheckCircle2 className="size-4" strokeWidth={2.5}/>
               <span className="text-[11px] font-bold tracking-wide">{dayjs(trip.completed_at).format('DD MMM, HH:mm')}</span>
            </div>
         )}

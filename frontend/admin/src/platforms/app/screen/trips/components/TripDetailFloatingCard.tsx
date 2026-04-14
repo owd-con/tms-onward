@@ -20,11 +20,11 @@ export const TripDetailFloatingCard: React.FC<TripDetailFloatingCardProps> = ({ 
     : 'bg-violet-100/80 text-violet-700 border-violet-200/50';
 
   const waypoints = load?.trip_waypoints || [];
-  const completedCount = waypoints.filter((wp: any) => wp.status === 'completed').length;
+  // const completedCount = waypoints.filter((wp: any) => wp.status === 'completed').length;
   // Progress height roughly estimated based on completed nodes:
-  const progressPercent = waypoints.length > 1 ? (completedCount / (waypoints.length - 1)) * 100 : 0;
+  // const progressPercent = waypoints.length > 1 ? (completedCount / (waypoints.length - 1)) * 100 : 0;
   // Ensure it doesn't overflow if 100% completed
-  const finalProgress = progressPercent > 100 ? 100 : progressPercent;
+  // const finalProgress = progressPercent > 100 ? 100 : progressPercent;
 
   const specialInstructions = load?.order?.special_instructions || load?.notes;
   const isActive = status === 'on_delivery' || status === 'in_transit' || status === 'dispatched';
@@ -53,10 +53,10 @@ export const TripDetailFloatingCard: React.FC<TripDetailFloatingCardProps> = ({ 
         </div>
       </div>
 
-      {/* Content Area (Scrollable) */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 pb-8 space-y-4 scrollbar-hide">
-        {/* Top Info Stack */}
-        <div className="space-y-3">
+      {/* Content Area */}
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Top Info Stack (Fixed) */}
+        <div className="px-6 pt-4 pb-4 space-y-3 shrink-0">
           {/* Customer & Progress */}
           <div className="p-4 bg-transparent rounded-2xl border border-slate-200 flex gap-4">
             <div className="flex-1 min-w-0">
@@ -97,21 +97,18 @@ export const TripDetailFloatingCard: React.FC<TripDetailFloatingCardProps> = ({ 
           )}
         </div>
 
-        {/* Divider */}
-        <div className="flex items-center gap-2 px-1 pt-1">
+        {/* Divider (Fixed) */}
+        <div className="flex items-center gap-2 px-6 pb-2 shrink-0">
           <div className="h-px bg-slate-200 flex-1"></div>
           <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Trip Timeline</span>
           <div className="h-px bg-slate-200 flex-1"></div>
         </div>
 
-        {/* Timeline */}
-        <div className="relative pt-2">
+        {/* Timeline (Scrollable) */}
+        <div className="flex-1 overflow-y-auto px-6 pt-2 pb-8 scrollbar-hide">
+          <div className="relative">
           {waypoints.length > 0 ? (
             <>
-              <div className="absolute left-2.5 top-3 bottom-0 w-[2px] bg-slate-300">
-                <div className="absolute top-0 left-0 w-full bg-slate-200 transition-all duration-500" style={{ height: `${finalProgress}%` }}></div>
-              </div>
-
               {waypoints.map((wp: any, idx: number) => {
                 const isCompleted = wp.status === 'completed';
                 const isLast = idx === waypoints.length - 1;
@@ -121,6 +118,15 @@ export const TripDetailFloatingCard: React.FC<TripDetailFloatingCardProps> = ({ 
 
                 return (
                   <div className={`relative pl-12 ${isLast ? '' : 'pb-6'}`} key={wp.id || idx}>
+                    {!isLast && (() => {
+                      const nextIsCompleted = waypoints[idx + 1]?.status === 'completed';
+                      const fillClass = nextIsCompleted ? 'h-full' : (isCompleted ? 'h-1/2' : 'h-0');
+                      return (
+                        <div className="absolute left-[10px] top-[18px] -bottom-[18px] w-0.5 -translate-x-1/2 bg-slate-200 z-0 overflow-hidden">
+                          <div className={`absolute top-0 left-0 w-full bg-emerald-500 transition-all duration-500 ${fillClass}`}></div>
+                        </div>
+                      );
+                    })()}
                     <div className={`absolute -left-2 top-0 w-9 h-9 rounded-xl flex items-center justify-center z-10 bg-${color}-50`}>
                       <MapPin size={18} className={`text-${color}-500 ${isCompleted || isFailed ? 'opacity-100' : 'opacity-40'}`} strokeWidth={2.5} />
                     </div>
@@ -143,7 +149,7 @@ export const TripDetailFloatingCard: React.FC<TripDetailFloatingCardProps> = ({ 
                           }`}>
                           {isFailed ? 'FAILED' : wp.status}
                         </span>
-                        
+
                         {wp.actual_completion_time ? (
                           <p className="text-[10px] font-semibold text-slate-400 leading-none">{dayjs(wp.actual_completion_time).format('DD MMM • HH:mm')}</p>
                         ) : (
@@ -158,6 +164,7 @@ export const TripDetailFloatingCard: React.FC<TripDetailFloatingCardProps> = ({ 
           ) : (
             <div className="text-center py-8 text-slate-500 text-sm italic">No waypoints defined for this trip.</div>
           )}
+          </div>
         </div>
       </div>
 

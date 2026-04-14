@@ -7,9 +7,10 @@ interface ExceptionLoadCardProps {
   isSelected: boolean;
   onClick: () => void;
   onAssign?: () => void;
+  onReturn?: (shipment: any) => void;
 }
 
-export const ExceptionLoadCard: React.FC<ExceptionLoadCardProps> = ({ order, isSelected, onClick, onAssign }) => {
+export const ExceptionLoadCard: React.FC<ExceptionLoadCardProps> = ({ order, isSelected, onClick, onAssign, onReturn }) => {
   const customerName = order.customer?.name || (order as any).customer_name || 'Unknown Customer';
 
   return (
@@ -38,7 +39,7 @@ export const ExceptionLoadCard: React.FC<ExceptionLoadCardProps> = ({ order, isS
         {order.failed_shipments?.map((shipment, idx) => (
           <div key={shipment.id || idx} className="flex items-start justify-between bg-red-50/40 border border-red-100 p-3 rounded-xl gap-3">
             <div className="w-8 h-8 rounded-lg bg-red-100/80 text-red-600 flex items-center justify-center shrink-0 mt-0.5 shadow-sm border border-red-200/50">
-               <MapPin size={16} strokeWidth={2.5} />
+               <MapPin className="size-4" strokeWidth={2.5} />
             </div>
             
             <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -51,10 +52,13 @@ export const ExceptionLoadCard: React.FC<ExceptionLoadCardProps> = ({ order, isS
             </div>
             
             <button 
-              onClick={(e) => { e.stopPropagation(); /* TODO handle return */ }} 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                onReturn?.(shipment);
+              }} 
               className="flex items-center justify-center h-8 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg transition-all shadow-sm text-[11px] font-bold whitespace-nowrap mt-0.5"
             >
-              <RotateCcw size={13} strokeWidth={2.5} className="mr-1.5 text-slate-400"/> Return
+              <RotateCcw className="size-[13px] mr-1.5 text-slate-400" strokeWidth={2.5} /> Return
             </button>
           </div>
         ))}
@@ -82,7 +86,7 @@ export const ExceptionLoadCard: React.FC<ExceptionLoadCardProps> = ({ order, isS
               onAssign?.();
             }} 
             className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition-all shadow-sm">
-            <Truck size={14} strokeWidth={2.5}/> Redeliver
+            <Truck className="size-4" strokeWidth={2.5}/> Redeliver
           </button>
         </div>
       </div>

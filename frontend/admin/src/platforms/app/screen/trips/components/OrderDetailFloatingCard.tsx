@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Package, MapPin, RotateCcw, Truck } from 'lucide-react';
+import { X,  MapPin, RotateCcw, Truck } from 'lucide-react';
 import type { Order } from '@/services/types';
 import { orderApi } from "@/services/order/api";
 import dayjs from 'dayjs';
@@ -7,9 +7,11 @@ import dayjs from 'dayjs';
 interface OrderDetailFloatingCardProps {
   order: Order;
   onClose: () => void;
+  onAssign?: () => void;
+  onReturn?: (shipment: any) => void;
 }
 
-export const OrderDetailFloatingCard: React.FC<OrderDetailFloatingCardProps> = ({ order, onClose }) => {
+export const OrderDetailFloatingCard: React.FC<OrderDetailFloatingCardProps> = ({ order, onClose, onAssign, onReturn }) => {
   const isException = !!order.failed_shipments && order.failed_shipments.length > 0;
 
   const { data: previewData, isLoading: isLoadingPreview } = orderApi.endpoints.getWaypointPreview.useQuery(
@@ -72,7 +74,7 @@ export const OrderDetailFloatingCard: React.FC<OrderDetailFloatingCardProps> = (
 
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto px-6 py-4 pb-8 space-y-4">
-        
+
         {/* Basic Info Split Card */}
         <div className="p-4 bg-transparent rounded-2xl border border-slate-200 flex gap-4">
           <div className="flex-1 min-w-0">
@@ -116,8 +118,6 @@ export const OrderDetailFloatingCard: React.FC<OrderDetailFloatingCardProps> = (
             </div>
           ) : displayWaypoints.length > 0 ? (
             <>
-               <div className="absolute left-2.5 top-3 bottom-0 w-[2px] bg-slate-300"></div>
-
                {displayWaypoints.map((wp: any, idx: number) => {
                   const isLast = idx === displayWaypoints.length - 1;
                   const isPickup = wp.type?.toLowerCase().includes('pickup');
@@ -126,6 +126,9 @@ export const OrderDetailFloatingCard: React.FC<OrderDetailFloatingCardProps> = (
 
                   return (
                     <div className={`relative pl-12 ${isLast ? '' : 'pb-6'}`} key={idx}>
+                       {!isLast && (
+                         <div className="absolute left-[10px] top-[18px] -bottom-[18px] w-0.5 -translate-x-1/2 bg-slate-200 z-0"></div>
+                       )}
                        <div className={`absolute -left-2 top-0 w-9 h-9 rounded-xl flex items-center justify-center z-10 bg-${color}-50`}>
                          <MapPin size={18} className={`text-${color}-500`} strokeWidth={2.5} />
                        </div>
@@ -160,11 +163,11 @@ export const OrderDetailFloatingCard: React.FC<OrderDetailFloatingCardProps> = (
       {isException && (
         <div className="bg-white border-t border-red-100 px-6 py-4 mt-auto">
           <div className="flex gap-3">
-             <button className="flex-1 py-2.5 px-4 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm tracking-wide flex items-center justify-center gap-2 hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm">
+             <button onClick={() => onReturn?.(order.failed_shipments?.[0])} className="flex-1 py-2.5 px-4 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm tracking-wide flex items-center justify-center gap-2 hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm">
                <RotateCcw size={16} strokeWidth={2.5} />
                Return
              </button>
-             <button className="flex-[1.5] py-2.5 px-4 rounded-xl relative overflow-hidden group border border-red-600 text-white font-bold text-sm tracking-wide shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
+             <button onClick={onAssign} className="flex-[1.5] py-2.5 px-4 rounded-xl relative overflow-hidden group border border-red-600 text-white font-bold text-sm tracking-wide shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
                <div className="absolute inset-0 bg-red-500 group-hover:bg-red-600 transition-colors"></div>
                <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-400 group-hover:from-red-600 group-hover:to-red-500 transition-colors opacity-90 block"></div>
                <span className="relative z-10 flex flex-row items-center gap-2">

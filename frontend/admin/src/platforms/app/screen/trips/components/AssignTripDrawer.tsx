@@ -16,6 +16,7 @@ interface AssignTripDrawerProps {
   onClose: () => void;
   orderId: string | null;
   onSuccess?: () => void;
+  actionType?: 'assign' | 'return';
 }
 
 export const AssignTripDrawer: React.FC<AssignTripDrawerProps> = ({
@@ -23,6 +24,7 @@ export const AssignTripDrawer: React.FC<AssignTripDrawerProps> = ({
   onClose,
   orderId,
   onSuccess,
+  actionType = 'assign',
 }) => {
   const FormState = useSelector((state: RootState) => state.form);
   const { showToast } = useEnigmaUI();
@@ -50,7 +52,7 @@ export const AssignTripDrawer: React.FC<AssignTripDrawerProps> = ({
       successHandledRef.current = false;
       showOrder({ id: orderId });
     }
-  }, [isOpen, orderId, showOrder]);
+  }, [isOpen, orderId, showOrder, actionType]);
 
   // Handle fetched order detail
   useEffect(() => {
@@ -73,7 +75,7 @@ export const AssignTripDrawer: React.FC<AssignTripDrawerProps> = ({
       vehicle_id: vehicle?.id,
       notes: notes || undefined,
       waypoints: waypoints.map((wp) => ({
-        type: wp.type,
+        type: actionType === 'return' ? 'return' : wp.type,
         address_id: wp.address_id,
         shipment_ids: wp.shipment_ids,
         sequence_number: wp.sequence_number,
@@ -88,13 +90,13 @@ export const AssignTripDrawer: React.FC<AssignTripDrawerProps> = ({
     if (createResult?.isSuccess && !successHandledRef.current) {
       successHandledRef.current = true;
       showToast({
-        message: "Trip created successfully",
+        message: actionType === 'return' ? "Return trip created successfully" : "Trip created successfully",
         type: "success",
       });
       onClose(); // Close drawer on success
       onSuccess?.(); // Trigger refresh in parent
     }
-  }, [createResult?.isSuccess, onClose, onSuccess, showToast]);
+  }, [createResult?.isSuccess, onClose, onSuccess, showToast, actionType]);
 
   const handleDriverVehicleChange = (selection: {
     driver?: Driver | null;
@@ -105,7 +107,11 @@ export const AssignTripDrawer: React.FC<AssignTripDrawerProps> = ({
   };
 
   const isException = !!orderDetail?.failed_shipments && orderDetail.failed_shipments.length > 0;
-  const headerColors = isException ? 'bg-red-50 text-red-700' : 'bg-primary/10 text-primary';
+  const isReturn = actionType === 'return';
+  
+  const headerColors = isReturn 
+    ? 'bg-slate-100 text-slate-700' 
+    : (isException ? 'bg-red-50 text-red-700' : 'bg-primary/10 text-primary');
 
   return (
     <Drawer
@@ -124,7 +130,7 @@ export const AssignTripDrawer: React.FC<AssignTripDrawerProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-900 leading-tight">
-                {isException ? 'Redeliver Order' : 'Assign Trip'}
+                {isReturn ? 'Return Shipment' : (isException ? 'Redeliver Order' : 'Assign Trip')}
               </h2>
               <p className="text-xs text-slate-500 font-medium">
                 {orderDetail ? orderDetail.order_number : 'Loading order...'}

@@ -70,9 +70,9 @@ const TripEditScreen = lazy(() => import("./trips/TripEditPage"));
 const TripDetailScreen = lazy(() => import("./trips/TripDetailPage"));
 
 // Exception Management (Phase 16)
-const ExceptionListScreen = lazy(
-  () => import("./exceptions/ExceptionListPage"),
-);
+// const ExceptionListScreen = lazy(
+//   () => import("./exceptions/ExceptionListPage"),
+// );
 
 // Reports (Phase 17)
 const OrderTripReportPage = lazy(() => import("./reports/OrderTripReportPage"));
@@ -139,9 +139,6 @@ const routes = [
   { path: "trips/history/:id", element: TripListScreen },
   { path: "trips/:id/edit", element: TripEditScreen },
   { path: "trips/:id", element: TripDetailScreen },
-
-  // Exceptions
-  { path: "exceptions", element: ExceptionListScreen },
 
   // Reports
   { path: "reports/order-trip", element: OrderTripReportPage },

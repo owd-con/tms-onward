@@ -8,9 +8,11 @@ import { TripMapViewer } from './TripMapViewer';
 
 interface LoadDetailRendererProps {
   loads: any[];
+  onAssign?: (id: string) => void;
+  onReturn?: (shipment: any) => void;
 }
 
-export const LoadDetailRenderer: React.FC<LoadDetailRendererProps> = ({ loads }) => {
+export const LoadDetailRenderer: React.FC<LoadDetailRendererProps> = ({ loads, onAssign, onReturn }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,8 +45,6 @@ export const LoadDetailRenderer: React.FC<LoadDetailRendererProps> = ({ loads })
     navigate(`/a/trips/${filter}`);
   };
 
-  console.log(loadData);
-
   if (!loadData && (isLoadingOrder || isLoadingTrip)) {
     const fallbackLoad = loads.find(l => l.id === id);
     return <TripMapViewer loads={loads} selectedLoad={fallbackLoad} />;
@@ -57,12 +57,15 @@ export const LoadDetailRenderer: React.FC<LoadDetailRendererProps> = ({ loads })
   return (
     <>
       <TripMapViewer loads={loads} selectedLoad={loadData} />
-      {filter !== 'exception' && (
-        isOrder ? (
-          <OrderDetailFloatingCard order={loadData} onClose={handleClose} />
-        ) : (
-          <TripDetailFloatingCard load={loadData} onClose={handleClose} />
-        )
+      {isOrder ? (
+        <OrderDetailFloatingCard 
+          order={loadData} 
+          onClose={handleClose} 
+          onAssign={onAssign ? () => onAssign(loadData.id) : undefined}
+          onReturn={onReturn ? (shipment) => onReturn(shipment) : undefined}
+        />
+      ) : (
+        <TripDetailFloatingCard load={loadData} onClose={handleClose} />
       )}
     </>
   );

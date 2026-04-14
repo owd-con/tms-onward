@@ -27,7 +27,7 @@ interface TableFilterProps {
 const TableFilter: React.FC<TableFilterProps> = ({ table }) => {
   const current = useMemo(
     () => table.State?.filter ?? {},
-    [table.State?.filter]
+    [table.State?.filter],
   );
 
   // Fetch drivers & vehicles for filter
@@ -43,7 +43,7 @@ const TableFilter: React.FC<TableFilterProps> = ({ table }) => {
   const [status, setStatus] = useState<SelectOptionValue | null>(() => {
     const value = current.status;
     return value
-      ? tripStatusOptions.find((opt) => opt.value === value) ?? null
+      ? (tripStatusOptions.find((opt) => opt.value === value) ?? null)
       : null;
   });
 
@@ -99,10 +99,22 @@ const TableFilter: React.FC<TableFilterProps> = ({ table }) => {
     const currentVehicle = current.vehicle_id ?? "";
     const newVehicle = vehicle?.id ? String(vehicle.id) : "";
 
-    return newStatus !== currentStatus || newDriver !== currentDriver || newVehicle !== currentVehicle;
-  }, [status, driver, vehicle, current.status, current.driver_id, current.vehicle_id]);
+    return (
+      newStatus !== currentStatus ||
+      newDriver !== currentDriver ||
+      newVehicle !== currentVehicle
+    );
+  }, [
+    status,
+    driver,
+    vehicle,
+    current.status,
+    current.driver_id,
+    current.vehicle_id,
+  ]);
 
-  const anyActive = !!current.status || !!current.driver_id || !!current.vehicle_id;
+  const anyActive =
+    !!current.status || !!current.driver_id || !!current.vehicle_id;
 
   return (
     <TableFilters
@@ -120,7 +132,12 @@ const TableFilter: React.FC<TableFilterProps> = ({ table }) => {
             onChange={setVehicle}
             onClear={() => setVehicle(null)}
             fetchData={(page, search) =>
-              getVehicles({ page: page || 1, limit: 20, search, status: "active" })
+              getVehicles({
+                page: page || 1,
+                limit: 20,
+                search,
+                status: "active",
+              })
             }
             hook={getVehicleResult as any}
             getLabel={(item: any) => item.plate_number}
@@ -133,7 +150,12 @@ const TableFilter: React.FC<TableFilterProps> = ({ table }) => {
             onChange={setDriver}
             onClear={() => setDriver(null)}
             fetchData={(page, search) =>
-              getDrivers({ page: page || 1, limit: 20, search, status: "active" })
+              getDrivers({
+                page: page || 1,
+                limit: 20,
+                search,
+                status: "active",
+              })
             }
             hook={getDriverResult as any}
             getLabel={(item: any) => item.name}
