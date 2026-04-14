@@ -29,6 +29,14 @@ func (r *deleteRequest) Validate() *validate.Response {
 		r.driver, err = r.uc.Driver.GetByID(r.ID)
 		if err != nil {
 			v.SetError("id.invalid", "data is not valid.")
+		} else {
+			// Check if driver has active trips
+			hasActiveTrip, err := r.uc.Driver.HasActiveTrip(r.ID)
+			if err != nil {
+				v.SetError("id.invalid", "data is not valid.")
+			} else if hasActiveTrip {
+				v.SetError("id.invalid", "Cannot delete driver with active trips.")
+			}
 		}
 	}
 

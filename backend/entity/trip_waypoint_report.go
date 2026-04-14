@@ -13,6 +13,7 @@ type TripWaypointReport struct {
 	// Order info
 	OrderNumber  string `bson:"order_number" json:"order_number"`
 	CustomerName string `bson:"customer_name" json:"customer_name"`
+	CustomerID   string `bson:"customer_id" json:"customer_id"`
 
 	// Trip info
 	TripCode           string `bson:"trip_code" json:"trip_code"`

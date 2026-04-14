@@ -7,6 +7,7 @@ import (
 	"github.com/logistics-id/engine/common"
 	"github.com/logistics-id/engine/ds/postgres"
 	"github.com/logistics-id/onward-tms/entity"
+	"github.com/uptrace/bun"
 )
 
 type TripRepository struct {
@@ -75,4 +76,19 @@ func (r *TripRepository) IncrementTotalCompleted(tripID string) error {
 		Where("is_deleted = false").
 		Exec(r.Context)
 	return err
+}
+
+// FindByDriverIDAndStatuses finds trips by driver ID with specific statuses
+func (r *TripRepository) FindByDriverIDAndStatuses(driverID string, statuses []string) ([]*entity.Trip, error) {
+	var trips []*entity.Trip
+	err := r.DB.NewSelect().
+		Model(&trips).
+		Where("trips.driver_id = ?", driverID).
+		Where("trips.is_deleted = false").
+		Where("trips.status IN (?)", bun.In(statuses)).
+		Scan(r.Context)
+	if err != nil {
+		return nil, err
+	}
+	return trips, nil
 }

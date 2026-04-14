@@ -309,6 +309,7 @@ func (u *WaypointUsecase) saveTripWaypointReport(waypoint *entity.TripWaypoint, 
 		doc := &entity.TripWaypointReport{
 			OrderNumber:        shipment.Order.OrderNumber,
 			CustomerName:       shipment.Order.Customer.Name,
+			CustomerID:         shipment.Order.Customer.ID.String(),
 			TripCode:           trip.TripNumber,
 			TripID:             trip.ID.String(),
 			DriverName:         trip.Driver.Name,

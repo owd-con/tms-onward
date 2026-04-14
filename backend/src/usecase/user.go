@@ -19,9 +19,9 @@ import (
 )
 
 type UserUsecase struct {
-	Repo         *repository.UserRepository
-	repoCompany  *repository.CompanyRepository
-	repoDriver   *repository.DriverRepository
+	Repo          *repository.UserRepository
+	repoCompany   *repository.CompanyRepository
+	repoDriver    *repository.DriverRepository
 	DriverUsecase *DriverUsecase
 
 	ctx context.Context
@@ -44,13 +44,13 @@ func (o *UserQueryOptions) BuildQueryOption() *UserQueryOptions {
 
 func (u *UserUsecase) WithContext(ctx context.Context) *UserUsecase {
 	return &UserUsecase{
-		Repo:         u.Repo.WithContext(ctx).(*repository.UserRepository),
-		repoCompany:  u.repoCompany.WithContext(ctx).(*repository.CompanyRepository),
-		repoDriver:   u.repoDriver.WithContext(ctx).(*repository.DriverRepository),
+		Repo:        u.Repo.WithContext(ctx).(*repository.UserRepository),
+		repoCompany: u.repoCompany.WithContext(ctx).(*repository.CompanyRepository),
+		repoDriver:  u.repoDriver.WithContext(ctx).(*repository.DriverRepository),
 		// NOTE: Don't call WithContext() on DriverUsecase to avoid circular dependency infinite loop
 		// DriverUsecase will be set by Factory.WithContext()
 		DriverUsecase: u.DriverUsecase,
-		ctx:          ctx,
+		ctx:           ctx,
 	}
 }
 
@@ -198,7 +198,6 @@ func (u *UserUsecase) Update(user *entity.User, fields ...string) error {
 
 				return nil
 			})
-
 			if err != nil {
 				return err
 			}
@@ -246,7 +245,6 @@ func (u *UserUsecase) Delete(user *entity.User) error {
 
 				return nil
 			})
-
 			if err != nil {
 				return err
 			}
@@ -305,9 +303,9 @@ func (u *UserUsecase) Deactivate(user *entity.User) error {
 
 func NewUserUsecase() *UserUsecase {
 	return &UserUsecase{
-		Repo:         repository.NewUserRepository(),
-		repoCompany:  repository.NewCompanyRepository(),
-		repoDriver:   repository.NewDriverRepository(),
+		Repo:          repository.NewUserRepository(),
+		repoCompany:   repository.NewCompanyRepository(),
+		repoDriver:    repository.NewDriverRepository(),
 		DriverUsecase: nil, // Will be set in factory
 	}
 }

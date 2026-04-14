@@ -27,9 +27,9 @@ type DriverUsecase struct {
 type DriverQueryOptions struct {
 	common.QueryOption
 
-	Session      *entity.TMSSessionClaims
-	Status       string `query:"status"`
-	LicenseType  string `query:"license_type"`
+	Session     *entity.TMSSessionClaims
+	Status      string `query:"status"`
+	LicenseType string `query:"license_type"`
 }
 
 func (o *DriverQueryOptions) BuildQueryOption() *DriverQueryOptions {
@@ -225,6 +225,18 @@ func (u *DriverUsecase) Deactivate(driver *entity.Driver) error {
 	return u.Repo.Update(driver, "is_active")
 }
 
+// HasActiveTrip checks if driver has any active trips with given statuses
+func (u *DriverUsecase) HasActiveTrip(driverID string) (bool, error) {
+	tripRepo := repository.NewTripRepository().WithContext(u.ctx).(*repository.TripRepository)
+	statuses := []string{"planned", "dispatched", "in_transit"}
+	trips, err := tripRepo.FindByDriverIDAndStatuses(driverID, statuses)
+	if err != nil {
+		return false, err
+	}
+
+	return len(trips) > 0, nil
+}
+
 // Delete soft deletes a driver and cascades to associated user (if user_id is not null)
 // Driver entity is fetched in request layer to avoid duplicate query
 func (u *DriverUsecase) Delete(driver *entity.Driver) error {
@@ -253,7 +265,6 @@ func (u *DriverUsecase) Delete(driver *entity.Driver) error {
 
 			return nil
 		})
-
 		if err != nil {
 			return err
 		}
