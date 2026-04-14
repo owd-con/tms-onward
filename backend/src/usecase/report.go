@@ -3,7 +3,6 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/logistics-id/engine/common"
@@ -243,10 +242,10 @@ func (u *ReportUsecase) GetCustomerReport(opts *ReportQueryOptions) ([]*Customer
 
 	if opts.StartDate != "" && opts.EndDate != "" {
 		sst, _ := time.Parse("2006-01-02", opts.StartDate)
-		sst = sst.Add(time.Duration(-1 * (sst.Local().Hour() * int(time.Hour))))
+		sst = sst.Add(time.Duration(-7 * time.Hour))
 		est, _ := time.Parse("2006-01-02", opts.EndDate)
 		est = est.AddDate(0, 0, 1)
-		est = est.Add(time.Duration(-1 * (est.Local().Hour() * int(time.Hour))))
+		est = est.Add(time.Duration(-7 * time.Hour))
 
 		query = query.Where("o.created_at >= ? AND o.created_at < ?", sst, est)
 	}
@@ -278,10 +277,10 @@ func (u *ReportUsecase) GetCustomerReport(opts *ReportQueryOptions) ([]*Customer
 
 	if opts.StartDate != "" && opts.EndDate != "" {
 		sst, _ := time.Parse("2006-01-02", opts.StartDate)
-		sst = sst.Add(time.Duration(-1 * (sst.Local().Hour() * int(time.Hour))))
+		sst = sst.Add(time.Duration(-7 * time.Hour))
 		est, _ := time.Parse("2006-01-02", opts.EndDate)
 		est = est.AddDate(0, 0, 1)
-		est = est.Add(time.Duration(-1 * (est.Local().Hour() * int(time.Hour))))
+		est = est.Add(time.Duration(-7 * time.Hour))
 
 		query = query.Where("o.created_at >= ? AND o.created_at < ?", sst, est)
 	}
@@ -345,10 +344,10 @@ func (u *ReportUsecase) GetDriverPerformance(opts *ReportQueryOptions) ([]*Drive
 
 	if opts.StartDate != "" && opts.EndDate != "" {
 		sst, _ := time.Parse("2006-01-02", opts.StartDate)
-		sst = sst.Add(time.Duration(-1 * (sst.Local().Hour() * int(time.Hour))))
+		sst = sst.Add(time.Duration(-7 * time.Hour))
 		est, _ := time.Parse("2006-01-02", opts.EndDate)
 		est = est.AddDate(0, 0, 1)
-		est = est.Add(time.Duration(-1 * (est.Local().Hour() * int(time.Hour))))
+		est = est.Add(time.Duration(-7 * time.Hour))
 
 		query = query.Where("t.created_at >= ? AND t.created_at < ?", sst, est)
 	}
@@ -378,10 +377,10 @@ func (u *ReportUsecase) GetDriverPerformance(opts *ReportQueryOptions) ([]*Drive
 	// Apply same filters to count query
 	if opts.StartDate != "" && opts.EndDate != "" {
 		sst, _ := time.Parse("2006-01-02", opts.StartDate)
-		sst = sst.Add(time.Duration(-1 * (sst.Local().Hour() * int(time.Hour))))
+		sst = sst.Add(time.Duration(-7 * time.Hour))
 		est, _ := time.Parse("2006-01-02", opts.EndDate)
 		est = est.AddDate(0, 0, 1)
-		est = est.Add(time.Duration(-1 * (est.Local().Hour() * int(time.Hour))))
+		est = est.Add(time.Duration(-7 * time.Hour))
 
 		query = query.Where("t.created_at >= ? AND t.created_at < ?", sst, est)
 	}
@@ -441,15 +440,10 @@ func (u *ReportUsecase) GetOrderTripWaypointReport(opts *ReportQueryOptions) ([]
 
 		if opts.StartDate != "" && opts.EndDate != "" {
 			sst, _ := time.Parse("2006-01-02", opts.StartDate)
-			fmt.Println("=========1============", sst.Local().Hour())
-			fmt.Println("=========2============", time.Duration(-1*(sst.Local().Hour()*int(time.Hour))))
-
 			sst = sst.Add(time.Duration(-7 * time.Hour))
-			fmt.Println("=========result 1============", sst)
-
 			est, _ := time.Parse("2006-01-02", opts.EndDate)
 			est = est.AddDate(0, 0, 1)
-			est = est.Add(time.Duration(-1 * (est.Local().Hour() * int(time.Hour))))
+			est = est.Add(time.Duration(-7 * time.Hour))
 
 			f["updated_at"] = bson.M{"$gte": sst, "$lt": est}
 		}
