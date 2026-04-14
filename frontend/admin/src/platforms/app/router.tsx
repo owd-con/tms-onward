@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   Users as UsersIcon,
   FileText,
-  AlertTriangle,
   BarChart3,
   Power,
   MapIcon,
@@ -20,7 +19,6 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   Route,
   Routes,
-  useMatch,
   useNavigate,
   useLocation,
 } from "react-router-dom";
@@ -74,21 +72,6 @@ const AppRouter = () => {
   };
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
 
-  // Call ALL hooks at the top level - Rules of Hooks
-  const matchDashboard = useMatch("/a/dashboard");
-  const matchCustomers = useMatch("/a/master-data/customers");
-  const matchVehicles = useMatch("/a/master-data/vehicles");
-  const matchDrivers = useMatch("/a/master-data/drivers");
-  const matchOrders = useMatch("/a/orders");
-  const matchTrips = useMatch("/a/trips");
-  const matchExceptions = useMatch("/a/exceptions");
-  const matchReportOrderTrip = useMatch("/a/reports/order-trip");
-  const matchReportDriverPerformance = useMatch(
-    "/a/reports/driver-performance",
-  );
-  const matchReportCustomer = useMatch("/a/reports/customer");
-  const matchCompany = useMatch("/a/management/company");
-  const matchTeam = useMatch("/a/management/team");
   const mainRef = useRef<HTMLElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -138,7 +121,7 @@ const AppRouter = () => {
     {
       label: "Dashboard",
       onClick: () => navigate("/a/dashboard"),
-      active: !!matchDashboard,
+      active: location.pathname === "/a/dashboard",
       icon: <LayoutDashboard size={18} />,
     },
     {
@@ -148,20 +131,14 @@ const AppRouter = () => {
     {
       label: "Orders",
       onClick: () => navigate("/a/orders"),
-      active: !!matchOrders,
+      active: location.pathname.startsWith("/a/orders"),
       icon: <FileText size={18} />,
     },
     {
       label: "Trips",
       onClick: () => navigate("/a/trips"),
-      active: !!matchTrips,
+      active: location.pathname.startsWith("/a/trips"),
       icon: <MapIcon size={18} />,
-    },
-    {
-      label: "Exceptions",
-      onClick: () => navigate("/a/exceptions"),
-      active: !!matchExceptions,
-      icon: <AlertTriangle size={18} />,
     },
     {
       isSection: true,
@@ -170,19 +147,19 @@ const AppRouter = () => {
     {
       label: "Order Trip",
       onClick: () => navigate("/a/reports/order-trip"),
-      active: !!matchReportOrderTrip,
+      active: location.pathname.startsWith("/a/reports/order-trip"),
       icon: <LineChart size={18} />,
     },
     {
       label: "Driver Performance",
       onClick: () => navigate("/a/reports/driver-performance"),
-      active: !!matchReportDriverPerformance,
+      active: location.pathname.startsWith("/a/reports/driver-performance"),
       icon: <PieChart size={18} />,
     },
     {
       label: "Customer",
       onClick: () => navigate("/a/reports/customer"),
-      active: !!matchReportCustomer,
+      active: location.pathname.startsWith("/a/reports/customer"),
       icon: <BarChart3 size={18} />,
     },
     {
@@ -192,19 +169,19 @@ const AppRouter = () => {
     {
       label: "Customers",
       onClick: () => navigate("/a/master-data/customers"),
-      active: !!matchCustomers,
+      active: location.pathname.startsWith("/a/master-data/customers"),
       icon: <Users2 size={18} />,
     },
     {
       label: "Vehicles",
       onClick: () => navigate("/a/master-data/vehicles"),
-      active: !!matchVehicles,
+      active: location.pathname.startsWith("/a/master-data/vehicles"),
       icon: <CarFront size={18} />,
     },
     {
       label: "Drivers",
       onClick: () => navigate("/a/master-data/drivers"),
-      active: !!matchDrivers,
+      active: location.pathname.startsWith("/a/master-data/drivers"),
       icon: <UserCircle size={18} />,
     },
     {
@@ -214,13 +191,13 @@ const AppRouter = () => {
     {
       label: "Company",
       onClick: () => navigate("/a/management/company"),
-      active: !!matchCompany,
+      active: location.pathname.startsWith("/a/management/company"),
       icon: <Building2 size={18} />,
     },
     {
       label: "Team",
       onClick: () => navigate("/a/management/team"),
-      active: !!matchTeam,
+      active: location.pathname.startsWith("/a/management/team"),
       icon: <UsersIcon size={18} />,
     },
   ];

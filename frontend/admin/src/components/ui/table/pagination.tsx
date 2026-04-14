@@ -18,13 +18,13 @@ const TablePagination: React.FC<PaginationProps> = ({
   pageLimit = [8, 10, 25, 50, 100],
 }) => {
   const StateLimit = useSelector(
-    (state: RootState) => state?.table?.data[name]?.limit
+    (state: RootState) => state?.table?.data[name]?.limit,
   );
   const StateTotal = useSelector(
-    (state: RootState) => state?.table?.data[name]?.total
+    (state: RootState) => state?.table?.data[name]?.total,
   );
   const StateCurrentPage = useSelector(
-    (state: RootState) => state?.table?.data[name]?.page
+    (state: RootState) => state?.table?.data[name]?.page,
   );
 
   // Calculate number of pages using useMemo instead of useState + useEffect
@@ -40,7 +40,7 @@ const TablePagination: React.FC<PaginationProps> = ({
       if (StateCurrentPage === i) return;
       onChangePage(i);
     },
-    [StateCurrentPage, onChangePage]
+    [StateCurrentPage, onChangePage],
   );
 
   const changedLimit = React.useCallback(
@@ -48,7 +48,7 @@ const TablePagination: React.FC<PaginationProps> = ({
       if (StateLimit === i) return;
       onChangeLimit(i);
     },
-    [StateLimit, onChangeLimit]
+    [StateLimit, onChangeLimit],
   );
 
   const showingCount = React.useMemo(() => {
@@ -58,12 +58,13 @@ const TablePagination: React.FC<PaginationProps> = ({
   }, [StateTotal, StateLimit, StateCurrentPage]);
 
   return (
-    <div className="border border-gray-200 border-t-0 bg-white min-h-[60px] w-full grid grid-cols-1 xl:grid-cols-3 items-center px-6 py-4 rounded-b-xl gap-4 xl:gap-0">
-      
+    <div className="border border-gray-200 border-t-0 bg-white min-h-[60px] w-full grid grid-cols-1 lg:grid-cols-3 items-center px-6 py-4 rounded-b-xl gap-4 lg:gap-0">
       {/* Left: Showing Count & Limit */}
-      <div className="flex items-center gap-4 justify-center xl:justify-start">
+      <div className="flex items-center gap-4 justify-center lg:justify-start">
         <div className="text-[13px] text-gray-500 font-medium">
-          Showing&nbsp;<span className="font-semibold text-[#59A7CE]">{showingCount}</span>&nbsp;of {StateTotal} {name}
+          Showing&nbsp;
+          <span className="font-semibold text-[#59A7CE]">{showingCount}</span>
+          &nbsp;of {StateTotal} {name.replaceAll("-", " ")}
         </div>
       </div>
 
@@ -77,23 +78,23 @@ const TablePagination: React.FC<PaginationProps> = ({
       </div>
 
       {/* Right: Limit Dropdown */}
-      <div className="flex items-center justify-center xl:justify-end gap-2 text-[13px] text-gray-500 font-medium">
+      <div className="flex items-center justify-center lg:justify-end gap-2 text-[13px] text-gray-500 font-medium">
         <div className="dropdown dropdown-top dropdown-end">
-          <div 
-            tabIndex={0} 
-            role="button" 
+          <div
+            tabIndex={0}
+            role="button"
             className="flex items-center justify-between gap-3 border border-gray-200 bg-white text-[13px] font-medium text-gray-600 rounded-md py-1.5 px-3 hover:bg-gray-50 transition-colors"
           >
             Show {StateLimit} Row
             <FiChevronDown className="text-gray-400 w-3.5 h-3.5" />
           </div>
-          <ul 
-            tabIndex={0} 
+          <ul
+            tabIndex={0}
             className="dropdown-content z-50 menu p-1.5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] bg-white rounded-lg w-36 border border-gray-100 mb-2"
           >
-            {pageLimit.map(limit => (
+            {pageLimit.map((limit) => (
               <li key={limit}>
-                <a 
+                <a
                   className={`text-[13px] py-1.5 px-3 rounded-md mb-0.5 last:mb-0 ${StateLimit === limit ? "bg-[#59A7CE]/10 text-[#59A7CE] font-semibold" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
                   onClick={() => {
                     changedLimit(limit);
@@ -109,7 +110,6 @@ const TablePagination: React.FC<PaginationProps> = ({
           </ul>
         </div>
       </div>
-
     </div>
   );
 };
