@@ -49,7 +49,7 @@ export const OrderDetailFloatingCard: React.FC<OrderDetailFloatingCardProps> = (
   const isLoading = !isException && isLoadingPreview;
 
   return (
-    <div className="absolute top-6 left-6 w-[400px] bg-white/95 backdrop-blur-md rounded-[24px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white/60 overflow-hidden z-20 flex flex-col max-h-[calc(100vh-48px)]">
+    <div className="lg:absolute lg:top-6 lg:left-6 w-full lg:w-[400px] bg-white/95 backdrop-blur-md lg:rounded-[24px] rounded-t-[24px] lg:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] shadow-none border-x border-t lg:border-white/60 border-slate-100 overflow-hidden z-20 flex flex-col h-full lg:h-auto lg:max-h-[calc(100vh-48px)]">
       {/* Header Actions */}
       <div className="px-6 pt-5 pb-4 flex justify-between items-center bg-white/50 border-b border-slate-100">
         <div className="flex items-center gap-3">

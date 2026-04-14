@@ -97,23 +97,23 @@ export const AddressSelector = ({
   };
 
   return (
-    <div className='space-y-2'>
-      <div className='flex items-center justify-between'>
-        <label className='text-sm font-semibold text-base-content uppercase tracking-wide'>
-          {label} {required && <span className='text-error'>*</span>}
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-semibold text-base-content uppercase tracking-wide">
+          {label} {required && <span className="text-error">*</span>}
         </label>
         <button
-          type='button'
+          type="button"
           onClick={handleCreateNewAddress}
-          className='text-xs text-primary hover:text-primary-focus font-medium'
+          className="text-xs text-primary hover:text-primary-focus font-medium"
           disabled={disabled}
         >
           + Create New Address
         </button>
       </div>
 
-      <div className='flex gap-2'>
-        <div className='flex-1'>
+      <div className="flex gap-2">
+        <div className="flex-1">
           <RemoteSelect
             placeholder={placeholder}
             value={selectedAddress}
@@ -141,20 +141,20 @@ export const AddressSelector = ({
 
       {/* Display selected address details */}
       {selectedAddress && (
-        <div className='bg-base-200 rounded-lg p-3 text-sm space-y-1'>
-          <div className='font-medium text-base-content'>
+        <div className="bg-base-200 rounded-lg p-3 text-sm space-y-1">
+          <div className="font-medium text-base-content">
             {selectedAddress.name}
           </div>
-          <div className='text-base-content/70'>{selectedAddress.address}</div>
+          <div className="text-base-content/70">{selectedAddress.address}</div>
           {selectedAddress.region && (
-            <div className='text-base-content/70'>
+            <div className="text-base-content/70">
               {selectedAddress.region.administrative_area
                 ? getDisplayPath(selectedAddress.region.administrative_area)
                 : selectedAddress.region.name}
             </div>
           )}
           {(selectedAddress.contact_name || selectedAddress.contact_phone) && (
-            <div className='text-base-content/70 text-xs'>
+            <div className="text-base-content/70 text-xs">
               Contact: {selectedAddress.contact_name}
               {selectedAddress.contact_name &&
                 selectedAddress.contact_phone &&
@@ -206,15 +206,8 @@ const CreateAddressModal = ({
 
   const { create, createResult } = useAddress();
 
-  const validate = () => {
-    return name.trim() !== "" && address.trim() !== "" && regionId !== "";
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validate()) return;
-
     await create({
       customer_id: customerId,
       name,
@@ -240,8 +233,6 @@ const CreateAddressModal = ({
     }
   }, [createResult]);
 
-  const isFormValid = name.trim() && address.trim() && regionId;
-
   // Handle region change
   const handleRegionChange = (id: string, region: RegionSearchResult) => {
     setRegionId(id);
@@ -249,89 +240,123 @@ const CreateAddressModal = ({
   };
 
   return (
-    <Modal.Wrapper open onClose={onClose} closeOnOutsideClick={false}>
-      <Modal.Header>
-        <div className='text-secondary font-bold text-lg'>
-          Create New Address
+    <Modal.Wrapper
+      open
+      onClose={onClose}
+      closeOnOutsideClick={false}
+      className="!max-w-3xl !w-11/12 mx-4"
+    >
+      <Modal.Header className="mb-4">
+        <div className="text-secondary font-bold leading-7 text-lg">
+          Add New Address
+        </div>
+        <div className="text-sm text-base-content/60 leading-5 font-normal">
+          Create a new location and contact record
         </div>
       </Modal.Header>
 
-      <Modal.Body className='text-sm'>
-        <form onSubmit={handleSubmit} className='space-y-4'>
-          {/* Address Name */}
-          <Input
-            label='Address Name'
-            placeholder='e.g., Main Office, Warehouse A'
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            error={FormState?.errors?.name as string}
-            required
-          />
+      <form onSubmit={handleSubmit}>
+        <Modal.Body className="max-h-[75vh] overflow-y-auto px-2 pb-6">
+          <div className="space-y-6 pt-2">
+            {/* GROUP 1: Address Information */}
+            <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+              <div className="mb-5 border-b border-slate-200/60 pb-3">
+                <h3 className="text-[15px] font-bold text-slate-800">
+                  Address Information
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Primary location identifier and physical address
+                </p>
+              </div>
 
-          {/* Street Address */}
-          <Input
-            label='Street Address'
-            placeholder='Street name, building, floor, etc.'
-            type='textarea'
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            error={FormState?.errors?.address as string}
-            required
-          />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="sm:col-span-2">
+                  <Input
+                    label="Address Name"
+                    placeholder="e.g., Main Office, Warehouse A"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    error={FormState?.errors?.name as string}
+                    required
+                  />
+                </div>
 
-          {/* Contact Information */}
-          <div className='grid grid-cols-2 gap-4'>
-            <Input
-              label='Contact Name'
-              placeholder='Person to contact'
-              value={contactName}
-              onChange={(e) => setContactName(e.target.value)}
-              error={FormState?.errors?.contact_name as string}
-              required
-            />
-            <Input
-              label='Contact Phone'
-              placeholder='Phone number'
-              type='phone'
-              value={contactPhone}
-              onChange={(e) => setContactPhone(e.target.value)}
-              error={FormState?.errors?.contact_phone as string}
-              required
-            />
+                <div className="sm:col-span-2">
+                  <Input
+                    label="Street Address"
+                    placeholder="Street name, building, floor, etc."
+                    type="textarea"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    error={FormState?.errors?.address as string}
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <RegionSearchInput
+                    label="Location"
+                    value={selectedRegion}
+                    onChange={handleRegionChange}
+                    placeholder='Search location (e.g., "Jakarta Selatan", "Tebet")'
+                    error={FormState?.errors?.region_id as string}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* GROUP 2: Contact Information */}
+            <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+              <div className="mb-5 border-b border-slate-200/60 pb-3">
+                <h3 className="text-[15px] font-bold text-slate-800">
+                  Contact Information
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Primary contact person for this location
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <Input
+                  label="Contact Name"
+                  placeholder="Person to contact"
+                  value={contactName}
+                  onChange={(e) => setContactName(e.target.value)}
+                  error={FormState?.errors?.contact_name as string}
+                />
+                <Input
+                  label="Contact Phone"
+                  placeholder="Phone number"
+                  type="phone"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  error={FormState?.errors?.contact_phone as string}
+                />
+              </div>
+            </div>
           </div>
+        </Modal.Body>
 
-          {/* Location Selector - Using RegionSearchInput */}
-          <RegionSearchInput
-            label='Location'
-            value={selectedRegion}
-            onChange={handleRegionChange}
-            placeholder='Search location (e.g., "Jakarta Selatan", "Tebet")'
-            error={FormState?.errors?.region_id as string}
-            required
-          />
-        </form>
-      </Modal.Body>
-
-      <Modal.Footer>
-        <Button
-          className='flex-1 rounded-xl'
-          styleType='outline'
-          variant='secondary'
-          onClick={onClose}
-          disabled={createResult?.isLoading}
-        >
-          Cancel
-        </Button>
-        <Button
-          className='flex-1 rounded-xl'
-          variant='primary'
-          onClick={handleSubmit}
-          isLoading={createResult?.isLoading}
-          disabled={!isFormValid}
-        >
-          Create Address
-        </Button>
-      </Modal.Footer>
+        <Modal.Footer>
+          <div className="flex justify-end gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+              disabled={createResult?.isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              isLoading={createResult?.isLoading}
+              disabled={createResult?.isLoading}
+            >
+              Create Address
+            </Button>
+          </div>
+        </Modal.Footer>
+      </form>
     </Modal.Wrapper>
   );
 };

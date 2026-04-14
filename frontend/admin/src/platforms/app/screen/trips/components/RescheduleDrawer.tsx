@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { X, Truck, MapPin } from "lucide-react";
 
-import { Button, Drawer, useEnigmaUI } from "@/components";
+import { Button, Drawer, Modal, useEnigmaUI } from "@/components";
 import { useException } from "@/services/exception/hooks";
 import type { Driver, Vehicle } from "@/services/types";
 import type { RootState } from "@/services/store";
@@ -14,6 +14,7 @@ interface RescheduleDrawerProps {
   onClose: () => void;
   order: any | null;
   onSuccess?: () => void;
+  isMobile?: boolean;
 }
 
 export const RescheduleDrawer: React.FC<RescheduleDrawerProps> = ({
@@ -21,6 +22,7 @@ export const RescheduleDrawer: React.FC<RescheduleDrawerProps> = ({
   onClose,
   order,
   onSuccess,
+  isMobile = false,
 }) => {
   const FormState = useSelector((state: RootState) => state.form);
   const { showToast } = useEnigmaUI();
@@ -68,15 +70,20 @@ export const RescheduleDrawer: React.FC<RescheduleDrawerProps> = ({
 
   const failedShipments = order?.failed_shipments || [];
 
+  const DrawerWrapper = isMobile ? Modal.Wrapper : Drawer;
+
   return (
-    <Drawer
+    <DrawerWrapper
       open={isOpen}
       onClose={onClose}
-      position="right"
-      className="!w-[500px] flex flex-col"
+      {...(isMobile ? {} : { position: "right" })}
+      className={isMobile ? "!w-full !max-w-full !p-0 h-[85vh] fixed bottom-0 rounded-t-[32px] overflow-hidden" : "!w-[500px] flex flex-col"}
       closeButton={false}
     >
       <div className="flex flex-col h-full bg-slate-50">
+        {isMobile && (
+           <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto my-3 shrink-0" />
+        )}
         {/* Header */}
         <div className="px-6 py-5 bg-white border-b border-slate-200 flex justify-between items-start shrink-0">
           <div className="flex gap-3 items-center">
@@ -162,6 +169,6 @@ export const RescheduleDrawer: React.FC<RescheduleDrawerProps> = ({
           </Button>
         </div>
       </div>
-    </Drawer>
+    </DrawerWrapper>
   );
 };

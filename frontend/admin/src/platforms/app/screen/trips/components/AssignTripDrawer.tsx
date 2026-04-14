@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { X, Truck } from "lucide-react";
 
-import { Button, Input, useEnigmaUI, Drawer } from "@/components";
+import { Button, Input, useEnigmaUI, Drawer, Modal } from "@/components";
 import { useTrip } from "@/services/trip/hooks";
 import { useOrder } from "@/services/order/hooks";
 import type { RootState } from "@/services/store";
@@ -17,6 +17,7 @@ interface AssignTripDrawerProps {
   orderId: string | null;
   onSuccess?: () => void;
   actionType?: 'assign' | 'return';
+  isMobile?: boolean;
 }
 
 export const AssignTripDrawer: React.FC<AssignTripDrawerProps> = ({
@@ -25,6 +26,7 @@ export const AssignTripDrawer: React.FC<AssignTripDrawerProps> = ({
   orderId,
   onSuccess,
   actionType = 'assign',
+  isMobile = false,
 }) => {
   const FormState = useSelector((state: RootState) => state.form);
   const { showToast } = useEnigmaUI();
@@ -113,15 +115,20 @@ export const AssignTripDrawer: React.FC<AssignTripDrawerProps> = ({
     ? 'bg-slate-100 text-slate-700' 
     : (isException ? 'bg-red-50 text-red-700' : 'bg-primary/10 text-primary');
 
+  const DrawerWrapper = isMobile ? Modal.Wrapper : Drawer;
+
   return (
-    <Drawer
+    <DrawerWrapper
       open={isOpen}
       onClose={onClose}
-      position="right"
-      className="!w-[500px] flex flex-col" // Override 22rem width to 500px for more comfortable editing
+      {...(isMobile ? {} : { position: "right" })}
+      className={isMobile ? "!w-full !max-w-full !p-0 h-[90vh] fixed bottom-0 rounded-t-[32px] overflow-hidden" : "!w-[500px] flex flex-col"}
       closeButton={false}
     >
       <div className="flex flex-col h-full bg-slate-50">
+        {isMobile && (
+           <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto my-3 shrink-0" />
+        )}
         {/* Header */}
         <div className="px-6 py-5 bg-white border-b border-slate-200 flex justify-between items-start shrink-0">
           <div className="flex gap-3 items-center">
@@ -213,6 +220,6 @@ export const AssignTripDrawer: React.FC<AssignTripDrawerProps> = ({
           </Button>
         </div>
       </div>
-    </Drawer>
+    </DrawerWrapper>
   );
 };

@@ -5,6 +5,8 @@ import { LoadDetailRenderer } from './components/LoadDetailRenderer';
 import { AssignTripDrawer } from './components/AssignTripDrawer';
 import { ReturnShipmentDrawer } from './components/ReturnShipmentDrawer';
 import { RescheduleDrawer } from './components/RescheduleDrawer';
+import { Modal } from "@/components";
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { orderApi } from "@/services/order/api";
 import { exceptionApi } from "@/services/exception/api";
 import { tripApi } from "@/services/trip/api";
@@ -73,9 +75,13 @@ const TripListPage = () => {
     refetchException();
   };
 
+  const isMobile = useIsMobile();
+
+  const showMobileDetail = isMobile && !!selectedLoadId;
+
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-slate-50">
-      <div className="relative z-10">
+    <div className="flex h-screen w-full overflow-hidden bg-slate-50 relative">
+      <div className={`${isMobile ? 'w-full' : 'relative z-10'}`}>
         <TripSidebar
           loads={loads}
           selectedLoadId={selectedLoadId}
@@ -104,45 +110,75 @@ const TripListPage = () => {
         )}
       </div>
 
-      <div className="flex-1 relative h-full">
-        <LoadDetailRenderer
-          loads={loads}
-          onAssign={(loadId) => {
-            // Redeliver = Reschedule all failed shipments for this order
-            const order = loads.find((l: any) => l.id === loadId);
-            setRescheduleOrder(order || null);
-            setIsRescheduleDrawerOpen(true);
-          }}
-          onReturn={(shipment) => {
-            // Return = mark the passed shipment as returned to origin
-            setReturnShipment(shipment);
-            setIsReturnDrawerOpen(true);
-          }}
-        />
-      </div>
+      {!isMobile && (
+        <div className="flex-1 relative h-full">
+          <LoadDetailRenderer
+            loads={loads}
+            onAssign={(loadId) => {
+              const order = loads.find((l: any) => l.id === loadId);
+              setRescheduleOrder(order || null);
+              setIsRescheduleDrawerOpen(true);
+            }}
+            onReturn={(shipment) => {
+              setReturnShipment(shipment);
+              setIsReturnDrawerOpen(true);
+            }}
+          />
+        </div>
+      )}
 
-      {/* Assign Trip Drawer — for pending orders */}
+      {/* Mobile Detail Modal */}
+      {showMobileDetail && (
+        <Modal.Wrapper
+          open={true}
+          onClose={() => navigate(`/a/trips/${filter}`)}
+          className="!p-0 !max-w-full h-[85vh] fixed bottom-0 rounded-t-[32px] overflow-hidden"
+        >
+          <div className="h-full pt-2">
+            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-4 shrink-0" />
+            <div className="h-full overflow-y-auto">
+              <LoadDetailRenderer
+                loads={loads}
+                onAssign={(loadId) => {
+                  const order = loads.find((l: any) => l.id === loadId);
+                  setRescheduleOrder(order || null);
+                  setIsRescheduleDrawerOpen(true);
+                }}
+                onReturn={(shipment) => {
+                  setReturnShipment(shipment);
+                  setIsReturnDrawerOpen(true);
+                }}
+              />
+            </div>
+          </div>
+        </Modal.Wrapper>
+      )}
+
+      {/* Assign Trip Drawer/Modal */}
       <AssignTripDrawer
         isOpen={isAssignDrawerOpen}
         onClose={() => setIsAssignDrawerOpen(false)}
         orderId={assignOrderId}
         onSuccess={handleRefreshException}
+        isMobile={isMobile}
       />
 
-      {/* Return Shipment Drawer — mark individual failed shipment as returned */}
+      {/* Return Shipment Drawer/Modal */}
       <ReturnShipmentDrawer
         isOpen={isReturnDrawerOpen}
         onClose={() => setIsReturnDrawerOpen(false)}
         shipment={returnShipment}
         onSuccess={handleRefreshException}
+        isMobile={isMobile}
       />
 
-      {/* Reschedule Drawer — batch reschedule all failed shipments (Redeliver) */}
+      {/* Reschedule Drawer/Modal */}
       <RescheduleDrawer
         isOpen={isRescheduleDrawerOpen}
         onClose={() => setIsRescheduleDrawerOpen(false)}
         order={rescheduleOrder}
         onSuccess={handleRefreshException}
+        isMobile={isMobile}
       />
     </div>
   );

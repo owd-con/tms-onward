@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { X, RotateCcw, MapPin } from "lucide-react";
 
-import { Button, Input, Drawer, useEnigmaUI } from "@/components";
+import { Button, Input, Drawer, Modal, useEnigmaUI } from "@/components";
 import { useException } from "@/services/exception/hooks";
 import type { RootState } from "@/services/store";
 
@@ -11,6 +11,7 @@ interface ReturnShipmentDrawerProps {
   onClose: () => void;
   shipment: any | null;
   onSuccess?: () => void;
+  isMobile?: boolean;
 }
 
 export const ReturnShipmentDrawer: React.FC<ReturnShipmentDrawerProps> = ({
@@ -18,6 +19,7 @@ export const ReturnShipmentDrawer: React.FC<ReturnShipmentDrawerProps> = ({
   onClose,
   shipment,
   onSuccess,
+  isMobile = false,
 }) => {
   const FormState = useSelector((state: RootState) => state.form);
   const { showToast } = useEnigmaUI();
@@ -57,15 +59,20 @@ export const ReturnShipmentDrawer: React.FC<ReturnShipmentDrawerProps> = ({
   const originName = shipment?.origin_location_name || shipment?.origin_location || shipment?.origin_address || 'Unknown';
   const destName = shipment?.dest_location_name || shipment?.dest_location || shipment?.dest_address || 'Unknown';
 
+  const DrawerWrapper = isMobile ? Modal.Wrapper : Drawer;
+
   return (
-    <Drawer
+    <DrawerWrapper
       open={isOpen}
       onClose={onClose}
-      position="right"
-      className="!w-[400px] flex flex-col"
+      {...(isMobile ? {} : { position: "right" })}
+      className={isMobile ? "!w-full !max-w-full !p-0 h-[80vh] fixed bottom-0 rounded-t-[32px] overflow-hidden" : "!w-[400px] flex flex-col"}
       closeButton={false}
     >
       <div className="flex flex-col h-full bg-slate-50">
+        {isMobile && (
+           <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto my-3 shrink-0" />
+        )}
         {/* Header */}
         <div className="px-6 py-5 bg-white border-b border-slate-200 flex justify-between items-start shrink-0">
           <div className="flex gap-3 items-center">
@@ -152,6 +159,6 @@ export const ReturnShipmentDrawer: React.FC<ReturnShipmentDrawerProps> = ({
           </Button>
         </div>
       </div>
-    </Drawer>
+    </DrawerWrapper>
   );
 };

@@ -5,6 +5,7 @@ import { tripApi } from "@/services/trip/api";
 import { OrderDetailFloatingCard } from './OrderDetailFloatingCard';
 import { TripDetailFloatingCard } from './TripDetailFloatingCard';
 import { TripMapViewer } from './TripMapViewer';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface LoadDetailRendererProps {
   loads: any[];
@@ -35,7 +36,10 @@ export const LoadDetailRenderer: React.FC<LoadDetailRendererProps> = ({ loads, o
     { skip: !isTrip || !id }
   );
 
+  const isMobile = useIsMobile();
+
   if (!id) {
+    if (isMobile) return null;
     return <TripMapViewer loads={loads} />;
   }
 
@@ -46,27 +50,31 @@ export const LoadDetailRenderer: React.FC<LoadDetailRendererProps> = ({ loads, o
   };
 
   if (!loadData && (isLoadingOrder || isLoadingTrip)) {
+    if (isMobile) return null; // Or a loader? But list usually stays visible
     const fallbackLoad = loads.find(l => l.id === id);
     return <TripMapViewer loads={loads} selectedLoad={fallbackLoad} />;
   }
 
   if (!loadData) {
+    if (isMobile) return null;
     return <TripMapViewer loads={loads} />;
   }
 
+  const content = isOrder ? (
+    <OrderDetailFloatingCard 
+      order={loadData} 
+      onClose={handleClose} 
+      onAssign={onAssign ? () => onAssign(loadData.id) : undefined}
+      onReturn={onReturn ? (shipment) => onReturn(shipment) : undefined}
+    />
+  ) : (
+    <TripDetailFloatingCard load={loadData} onClose={handleClose} />
+  );
+
   return (
     <>
-      <TripMapViewer loads={loads} selectedLoad={loadData} />
-      {isOrder ? (
-        <OrderDetailFloatingCard 
-          order={loadData} 
-          onClose={handleClose} 
-          onAssign={onAssign ? () => onAssign(loadData.id) : undefined}
-          onReturn={onReturn ? (shipment) => onReturn(shipment) : undefined}
-        />
-      ) : (
-        <TripDetailFloatingCard load={loadData} onClose={handleClose} />
-      )}
+      {!isMobile && <TripMapViewer loads={loads} selectedLoad={loadData} />}
+      {content}
     </>
   );
 };

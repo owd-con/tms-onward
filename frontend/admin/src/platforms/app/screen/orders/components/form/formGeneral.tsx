@@ -1,8 +1,8 @@
 import { Button, Input, RemoteSelect } from "@/components";
-import { useCustomer } from "@/services/customer/hooks";
 import type { RootState } from "@/services/store";
 import { useEffect, useState, useImperativeHandle, forwardRef } from "react";
 import { useSelector } from "react-redux";
+import { CustomerSelector } from "./CustomerSelector";
 
 export interface OrderFormValues {
   selectedCustomer: any;
@@ -56,13 +56,6 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
     ref,
   ) => {
     const FormState = useSelector((state: RootState) => state.form);
-
-    // Fetch customers for dropdown
-    const { get: getCustomers, getResult } = useCustomer();
-
-    useEffect(() => {
-      getCustomers({ page: 1, limit: 20, status: "active" });
-    }, []);
 
     // Order form state (managed internally)
     const [selectedCustomer, setSelectedCustomer] = useState<any>(
@@ -178,23 +171,16 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
             )}
 
             {/* Customer Selection */}
-            <RemoteSelect
-              label='Customer'
-              placeholder='Select Customer'
-              value={selectedCustomer}
-              onChange={handleCustomerChange}
+            <CustomerSelector
+              value={selectedCustomer?.id}
+              onChange={(customer) => handleCustomerChange(customer)}
               onClear={() => {
                 setSelectedCustomer(null);
                 onClearWaypoints?.();
               }}
-              fetchData={(page, search) =>
-                getCustomers({ page, limit: 20, search, status: "active" })
-              }
-              hook={getResult as any}
-              getLabel={(item: any) => item.name}
-              getValue={(item: any) => item.id}
               error={FormState?.errors?.customer_id as string}
               required
+              customer={selectedCustomer}
             />
 
             {/* Order Type - only show in create mode */}

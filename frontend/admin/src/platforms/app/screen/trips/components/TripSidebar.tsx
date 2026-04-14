@@ -100,7 +100,7 @@ export const TripSidebar: React.FC<TripSidebarProps> = ({
   }, [loads, searchQuery]);
 
   return (
-    <div className="w-[420px] h-full bg-slate-50 border-r border-slate-200 flex flex-col shrink-0 flex-none z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+    <div className="w-full lg:w-[420px] h-full bg-slate-50 border-r border-slate-200 flex flex-col shrink-0 flex-none z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
       {/* Header */}
       <div className="p-6 pb-4 bg-white/50 backdrop-blur-sm sticky top-0 z-20">
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-4">Trips Monitoring</h1>
