@@ -1,8 +1,9 @@
-import { Button, Input, RemoteSelect } from "@/components";
+import { Button, Input, RemoteSelect, useEnigmaUI } from "@/components";
 import { useCustomer } from "@/services/customer/hooks";
 import type { RootState } from "@/services/store";
 import { useEffect, useState, useImperativeHandle, forwardRef } from "react";
 import { useSelector } from "react-redux";
+import CustomerFormModal from "../../../master-data/customer/components/form/CustomerFormModal";
 
 export interface OrderFormValues {
   selectedCustomer: any;
@@ -56,6 +57,7 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
     ref,
   ) => {
     const FormState = useSelector((state: RootState) => state.form);
+    const { openModal, closeModal } = useEnigmaUI();
 
     // Fetch customers for dropdown
     const { get: getCustomers, getResult } = useCustomer();
@@ -74,12 +76,18 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
       { label: "LTL (Less Than Truck Load)", value: "LTL" },
     ];
 
-    const [orderType, setOrderType] = useState<{ label: string; value: "FTL" | "LTL" }>(() => {
+    const [orderType, setOrderType] = useState<{
+      label: string;
+      value: "FTL" | "LTL";
+    }>(() => {
       if (initialValues?.orderType) {
         // initialValues.orderType is already an object
         return initialValues.orderType;
       }
-      return orderTypeOptions.find(opt => opt.value === "FTL") || orderTypeOptions[0];
+      return (
+        orderTypeOptions.find((opt) => opt.value === "FTL") ||
+        orderTypeOptions[0]
+      );
     });
     const [referenceCode, setReferenceCode] = useState(
       initialValues?.referenceCode || "",
@@ -139,6 +147,27 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
       onClearWaypoints?.();
     };
 
+    // Function to open create customer modal
+    const handleCreateCustomer = () => {
+      openModal({
+        id: "create-customer-from-order",
+        content: (
+          <CustomerFormModal
+            onClose={() => closeModal("create-customer-from-order")}
+            onSuccess={(customer) => {
+              // Set the newly created customer to selectedCustomer
+              if (customer) {
+                setSelectedCustomer(customer);
+                // Clear address selections when customer changes
+                onClearWaypoints?.();
+              }
+            }}
+            mode='create'
+          />
+        ),
+      });
+    };
+
     return (
       <div className='lg:col-span-1'>
         <div className='bg-white rounded-xl p-6 shadow-sm sticky top-0'>
@@ -172,30 +201,49 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
                   <span className='text-xs text-base-content/60 block'>
                     Order Type
                   </span>
-                  <span className='font-semibold text-sm'>{orderType.value}</span>
+                  <span className='font-semibold text-sm'>
+                    {orderType.value}
+                  </span>
                 </div>
               </div>
             )}
 
             {/* Customer Selection */}
-            <RemoteSelect
-              label='Customer'
-              placeholder='Select Customer'
-              value={selectedCustomer}
-              onChange={handleCustomerChange}
-              onClear={() => {
-                setSelectedCustomer(null);
-                onClearWaypoints?.();
-              }}
-              fetchData={(page, search) =>
-                getCustomers({ page, limit: 20, search, status: "active" })
-              }
-              hook={getResult as any}
-              getLabel={(item: any) => item.name}
-              getValue={(item: any) => item.id}
-              error={FormState?.errors?.customer_id as string}
-              required
-            />
+            <div className='space-y-2'>
+              <div className='flex items-center justify-between'>
+                <label className='text-base-content text-[10px] leading-[1.2] uppercase font-semibold tracking-[.6px]'>
+                  Customer <span className='text-error'>*</span>
+                </label>
+                <button
+                  type='button'
+                  onClick={handleCreateCustomer}
+                  className='text-xs text-primary hover:text-primary-focus font-medium'
+                >
+                  + Create New Customer
+                </button>
+              </div>
+              <RemoteSelect
+                placeholder='Select Customer'
+                value={selectedCustomer}
+                onChange={handleCustomerChange}
+                onClear={() => {
+                  setSelectedCustomer(null);
+                  onClearWaypoints?.();
+                }}
+                fetchData={(page, search) =>
+                  getCustomers({
+                    page,
+                    limit: 20,
+                    search,
+                    status: "active",
+                  })
+                }
+                hook={getResult as any}
+                getLabel={(item: any) => item.name}
+                getValue={(item: any) => item.id}
+                error={FormState?.errors?.customer_id as string}
+              />
+            </div>
 
             {/* Order Type - only show in create mode */}
             {!isEditMode && (

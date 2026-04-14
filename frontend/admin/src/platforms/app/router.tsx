@@ -217,13 +217,17 @@ const AppRouter = () => {
       active: !!matchCompany,
       icon: <Building2 size={18} />,
     },
-    {
+  ];
+
+  // Only show Team menu for admin, not for dispatcher
+  if (Profile?.user?.role === "admin") {
+    menuOverview.push({
       label: "Team",
       onClick: () => navigate("/a/management/team"),
       active: !!matchTeam,
       icon: <UsersIcon size={18} />,
-    },
-  ];
+    });
+  }
 
   // Jika onboarding, render tanpa sidebar
   if (needsOnboarding && isOnboardingPage) {

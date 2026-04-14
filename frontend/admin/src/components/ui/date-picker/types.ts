@@ -7,7 +7,7 @@ export type DatePickerPickerMode = "date" | "year";
 export type DatePickerProps = {
   mode?: DatePickerMode;
   pickerMode?: DatePickerPickerMode;
-  value?: Dayjs | [Dayjs | null, Dayjs | null];
+  value?: Dayjs | [Dayjs | null, Dayjs | null] | null;
   onChange?: (date: Dayjs | [Dayjs | null, Dayjs | null] | null) => void;
   placeholder?: string;
   format?: string;

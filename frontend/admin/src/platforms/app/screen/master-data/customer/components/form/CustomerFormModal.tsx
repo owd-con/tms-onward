@@ -27,7 +27,7 @@ export interface CustomerFormModalRef {
 
 interface CustomerFormModalProps {
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (customer: Customer) => void;
   mode: "create" | "update";
   data?: Customer;
 }
@@ -114,13 +114,18 @@ const CustomerFormModal = forwardRef<
           message: "Customer created successfully",
           type: "success",
         });
+        // Pass the newly created customer to onSuccess
+        const newCustomer = (createResult.data as any)?.data as Customer;
+        onSuccess?.(newCustomer);
       } else if (updateResult?.isSuccess) {
         showToast({
           message: "Customer updated successfully",
           type: "success",
         });
+        // Pass the updated customer to onSuccess
+        const updatedCustomer = (updateResult.data as any)?.data as Customer;
+        onSuccess?.(updatedCustomer);
       }
-      onSuccess?.();
       onClose();
     }
   }, [createResult, updateResult]);
