@@ -514,6 +514,8 @@ export interface Trip {
   order?: Order;
   dispatch?: Dispatch;
   trip_waypoints?: TripWaypoint[];
+  total_waypoints?: number;
+  total_completed?: number;
 }
 
 export type TripStatus =

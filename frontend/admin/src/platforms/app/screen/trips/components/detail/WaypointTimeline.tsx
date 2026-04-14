@@ -60,7 +60,7 @@ const WaypointTimeline = ({ waypoints }: WaypointTimelineProps) => {
   return (
     <div className='relative'>
       {/* Vertical line */}
-      <div className='absolute left-[19px] top-0 bottom-0 w-0.5 bg-base-300' />
+      <div className='absolute left-5 top-5 bottom-5 w-0.5 -translate-x-1/2 bg-base-300 z-0' />
 
       <div className='space-y-4'>
         {sortedWaypoints.map((waypoint) => {

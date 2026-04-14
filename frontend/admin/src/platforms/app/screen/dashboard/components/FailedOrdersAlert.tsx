@@ -13,7 +13,7 @@ export default function FailedOrdersAlert({ orders }: { orders: any[] }) {
       description="Recent orders that encountered delivery issues or system errors."
       color="rose"
       count={orders.length}
-      onClick={() => navigate('/a/exceptions')}
+      onClick={() => navigate('/a/trips/exception')}
     />
   );
 }

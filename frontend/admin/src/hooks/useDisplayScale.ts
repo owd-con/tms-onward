@@ -136,9 +136,11 @@ function generateScalingCSS(scale: number): string {
     .size-20 { width: ${s(80)} !important; height: ${s(80)} !important; }
 
     /* Arbitrary size values */
+    .size-\\[13px\\] { width: ${s(13)} !important; height: ${s(13)} !important; }
     .size-\\[14px\\] { width: ${s(14)} !important; height: ${s(14)} !important; }
     .size-\\[16px\\] { width: ${s(16)} !important; height: ${s(16)} !important; }
     .size-\\[18px\\] { width: ${s(18)} !important; height: ${s(18)} !important; }
+    .size-\\[20px\\] { width: ${s(20)} !important; height: ${s(20)} !important; }
     .size-\\[24px\\] { width: ${s(24)} !important; height: ${s(24)} !important; }
     .size-\\[28px\\] { width: ${s(28)} !important; height: ${s(28)} !important; }
 
@@ -164,6 +166,8 @@ function generateScalingCSS(scale: number): string {
     .h-40 { height: ${s(160)} !important; }
     .h-44 { height: ${s(176)} !important; }
     .h-48 { height: ${s(192)} !important; }
+    .h-4 { height: ${s(16)} !important; }
+    .h-12 { height: ${s(48)} !important; }
     .h-\\[100px\\] { height: ${s(100)} !important; }
     .h-\\[130px\\] { height: ${s(130)} !important; }
     .h-\\[150px\\] { height: ${s(150)} !important; }
@@ -171,11 +175,17 @@ function generateScalingCSS(scale: number): string {
     .h-\\[187\\.5px\\] { height: ${s(187.5)} !important; }
     .h-\\[162\\.5px\\] { height: ${s(162.5)} !important; }
 
-    /* Width values */
+    .w-4 { width: ${s(16)} !important; }
+    .w-9 { width: ${s(36)} !important; }
+    .w-12 { width: ${s(48)} !important; }
     .w-\\[110px\\] { width: ${s(110)} !important; }
     .w-\\[120px\\] { width: ${s(120)} !important; }
     .w-\\[180px\\] { width: ${s(180)} !important; }
     .w-\\[200px\\] { width: ${s(200)} !important; }
+    .w-\\[280px\\] { width: ${s(280)} !important; }
+    .w-\\[400px\\] { width: ${s(400)} !important; }
+    .w-\\[420px\\] { width: ${s(420)} !important; }
+    .w-\\[500px\\] { width: ${s(500)} !important; }
 
     /* Gap values */
     .gap-1 { gap: ${s(4)} !important; }
@@ -254,6 +264,9 @@ function generateScalingCSS(scale: number): string {
     .rounded-sm { border-radius: ${s(2)} !important; }
 
     /* Arbitrary px values */
+    .pl-10 { padding-left: ${s(40)} !important; }
+    .pl-11 { padding-left: ${s(44)} !important; }
+    .pl-12 { padding-left: ${s(48)} !important; }
     .px-\\[1px\\] { padding-left: ${s(1)} !important; padding-right: ${s(1)} !important; }
     .px-\\[2px\\] { padding-left: ${s(2)} !important; padding-right: ${s(2)} !important; }
     .px-\\[3px\\] { padding-left: ${s(3)} !important; padding-right: ${s(3)} !important; }

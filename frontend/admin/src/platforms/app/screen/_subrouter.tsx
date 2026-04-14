@@ -66,14 +66,13 @@ const PrintTripScreen = lazy(() => import("./print/PrintTripScreen"));
 
 // Trip Management (Phase 12)
 const TripListScreen = lazy(() => import("./trips/TripListPage"));
-const TripCreateScreen = lazy(() => import("./trips/TripCreatePage"));
 const TripEditScreen = lazy(() => import("./trips/TripEditPage"));
 const TripDetailScreen = lazy(() => import("./trips/TripDetailPage"));
 
 // Exception Management (Phase 16)
-const ExceptionListScreen = lazy(
-  () => import("./exceptions/ExceptionListPage"),
-);
+// const ExceptionListScreen = lazy(
+//   () => import("./exceptions/ExceptionListPage"),
+// );
 
 // Reports (Phase 17)
 const OrderTripReportPage = lazy(() => import("./reports/OrderTripReportPage"));
@@ -130,12 +129,16 @@ const routes = [
 
   // Trips
   { path: "trips", element: TripListScreen },
-  { path: "trips/create", element: TripCreateScreen },
+  { path: "trips/pending", element: TripListScreen },
+  { path: "trips/pending/:id", element: TripListScreen },
+  { path: "trips/exception", element: TripListScreen },
+  { path: "trips/exception/:id", element: TripListScreen },
+  { path: "trips/on-delivery", element: TripListScreen },
+  { path: "trips/on-delivery/:id", element: TripListScreen },
+  { path: "trips/history", element: TripListScreen },
+  { path: "trips/history/:id", element: TripListScreen },
   { path: "trips/:id/edit", element: TripEditScreen },
   { path: "trips/:id", element: TripDetailScreen },
-
-  // Exceptions
-  { path: "exceptions", element: ExceptionListScreen },
 
   // Reports
   { path: "reports/order-trip", element: OrderTripReportPage },
