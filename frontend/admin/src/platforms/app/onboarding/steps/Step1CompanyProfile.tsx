@@ -4,14 +4,17 @@ import { Input } from "@/components/ui/input";
 import { useCompany } from "@/services/company/hooks";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/services/store";
+import { companyTypeOptions } from "@/shared/options";
+import type { SelectOptionValue } from "@/shared/types";
+import { RemoteSelect } from "@/components";
 
 interface Step1CompanyProfileProps {
   data: {
     company_name: string;
+    type: string;
     brand_name: string;
     address: string;
     phone: string;
-    type: "3PL" | "Carrier";
   };
   onNext: () => void;
   onUpdate: (data: any) => void;
@@ -28,15 +31,18 @@ const Step1CompanyProfile = ({
   const [brand_name, setBrandName] = useState(data.brand_name || "");
   const [address, setAddress] = useState(data.address || "");
   const [phone, setPhone] = useState(data.phone || "");
-  const [type, setType] = useState<"3PL" | "Carrier">(data.type || "3PL");
-
+  const [companyType, setCompanyType] = useState<SelectOptionValue | null>(
+    null,
+  );
   // Sync state with data prop (for auto-fill)
   useEffect(() => {
     setCompanyName(data.company_name || "");
     setBrandName(data.brand_name || "");
     setAddress(data.address || "");
     setPhone(data.phone || "");
-    setType(data.type || "3PL");
+    setCompanyType(
+      companyTypeOptions.find((opt) => opt.value === data.type) ?? null,
+    );
   }, [data]);
 
   const { updateCompany, updateCompanyResult } = useCompany();
@@ -44,31 +50,27 @@ const Step1CompanyProfile = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      await updateCompany({
-        id: "",
-        payload: {
-          company_name,
-          brand_name,
-          address,
-          phone,
-          type,
-        },
-      });
-
-      onUpdate({
+    await updateCompany({
+      id: "",
+      payload: {
         company_name,
+        type: companyType?.value || "",
         brand_name,
         address,
         phone,
-        type,
-      });
-
-      onNext();
-    } catch (error) {
-      console.error("Failed to update company profile:", error);
-    }
+      },
+    });
   };
+
+  // Handle success
+  useEffect(() => {
+    if (updateCompanyResult.isSuccess) {
+      const data = (updateCompanyResult?.data as any)?.data;
+
+      onUpdate(data);
+      onNext();
+    }
+  }, [updateCompanyResult.isSuccess]);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -93,42 +95,16 @@ const Step1CompanyProfile = ({
               </span>
             </label>
             <div className='grid grid-cols-2 gap-3'>
-              <button
-                type='button'
-                onClick={() => setType("3PL")}
-                className={`
-                  p-4 rounded-xl border-2 text-left transition-all
-                  ${
-                    type === "3PL"
-                      ? "border-primary bg-primary/10"
-                      : "border-base-300 hover:border-base-content/30"
-                  }
-                `}
-              >
-                <div className='font-semibold text-base-content mb-1'>3PL</div>
-                <div className='text-xs text-base-content/60'>
-                  Third-party logistics provider
-                </div>
-              </button>
-              <button
-                type='button'
-                onClick={() => setType("Carrier")}
-                className={`
-                  p-4 rounded-xl border-2 text-left transition-all
-                  ${
-                    type === "Carrier"
-                      ? "border-primary bg-primary/10"
-                      : "border-base-300 hover:border-base-content/30"
-                  }
-                `}
-              >
-                <div className='font-semibold text-base-content mb-1'>
-                  Carrier
-                </div>
-                <div className='text-xs text-base-content/60'>
-                  Transportation company
-                </div>
-              </button>
+              <RemoteSelect<SelectOptionValue>
+                value={companyType}
+                onChange={(value) => setCompanyType(value)}
+                data={companyTypeOptions}
+                getLabel={(item) => item?.label ?? ""}
+                renderItem={(item) => item?.label}
+                error={FormState?.errors?.company_type as string}
+                required
+                className='h-11 rounded-lg border-gray-200 bg-white'
+              />
             </div>
           </div>
 

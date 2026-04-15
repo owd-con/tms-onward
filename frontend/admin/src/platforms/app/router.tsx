@@ -7,6 +7,7 @@ import {
   BarChart3,
   Power,
   MapIcon,
+  MapPin,
   PieChart,
   LineChart,
   Users2,
@@ -156,22 +157,39 @@ const AppRouter = () => {
       active: location.pathname.startsWith("/a/reports/driver-performance"),
       icon: <PieChart size={18} />,
     },
-    {
-      label: "Customer",
-      onClick: () => navigate("/a/reports/customer"),
-      active: location.pathname.startsWith("/a/reports/customer"),
-      icon: <BarChart3 size={18} />,
-    },
+    // Hide Customer report for inhouse company type
+    ...(Profile?.user?.company?.type !== "inhouse"
+      ? [
+          {
+            label: "Customer",
+            onClick: () => navigate("/a/reports/customer"),
+            active: location.pathname.startsWith("/a/reports/customer"),
+            icon: <BarChart3 size={18} />,
+          },
+        ]
+      : []),
     {
       isSection: true,
       label: "Master Data",
     },
-    {
-      label: "Customers",
-      onClick: () => navigate("/a/master-data/customers"),
-      active: location.pathname.startsWith("/a/master-data/customers"),
-      icon: <Users2 size={18} />,
-    },
+    // Hide Customers menu for inhouse company type
+    ...(Profile?.user?.company?.type !== "inhouse"
+      ? [
+          {
+            label: "Customers",
+            onClick: () => navigate("/a/master-data/customers"),
+            active: location.pathname.startsWith("/a/master-data/customers"),
+            icon: <Users2 size={18} />,
+          },
+        ]
+      : [
+          {
+            label: "Lokasi",
+            onClick: () => navigate("/a/master-data/addresses"),
+            active: location.pathname.startsWith("/a/master-data/addresses"),
+            icon: <MapPin size={18} />,
+          },
+        ]),
     {
       label: "Vehicles",
       onClick: () => navigate("/a/master-data/vehicles"),

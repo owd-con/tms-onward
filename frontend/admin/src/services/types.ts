@@ -56,7 +56,7 @@ export interface Company {
   is_deleted: boolean;
 }
 
-export type CompanyType = "3PL" | "Carrier";
+export type CompanyType = "3pl" | "carrier" | "inhouse";
 
 export interface SessionClaims {
   user_id: string;
@@ -136,12 +136,14 @@ export interface Driver {
 
 export interface Address {
   id: string;
-  company_id: string;
+  company_id?: string;      // For inhouse company
+  customer_id?: string;    // For 3pl/carrier company
   name: string;
   address: string;
   region_id: string; // Reference to region-id library's Region entity
   contact_name?: string;
   contact_phone?: string;
+  type?: "pickup_point" | "drop_point";  // For inhouse company
   is_active: boolean;
   created_at: string;
   updated_at: string;

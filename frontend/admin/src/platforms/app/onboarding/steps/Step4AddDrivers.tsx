@@ -16,6 +16,8 @@ interface Step4AddDriversProps {
   onBack: () => void;
   onSkip: () => void;
   onUpdate: (data: { driversCreated: number }) => void;
+  isLastStep?: boolean; // For inhouse, step 4 is the last step
+  isLoading?: boolean; // Loading state for button
 }
 
 interface DriverFormData {
@@ -32,6 +34,8 @@ const Step4AddDrivers = ({
   onBack,
   onSkip,
   onUpdate,
+  isLastStep,
+  isLoading,
 }: Step4AddDriversProps) => {
   const FormState = useSelector((state: RootState) => state.form);
 
@@ -323,8 +327,8 @@ const Step4AddDrivers = ({
           >
             Skip
           </Button>
-          <Button type='submit' variant='primary' isLoading={isSubmitting}>
-            Continue
+          <Button type='submit' variant='primary' isLoading={isSubmitting || isLoading}>
+            {isLastStep ? "Complete Setup" : "Continue"}
           </Button>
         </div>
       </div>

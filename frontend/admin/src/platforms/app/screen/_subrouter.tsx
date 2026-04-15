@@ -50,7 +50,10 @@ const DriverListScreen = lazy(
 // const PricingMatrixDetailScreen = lazy(
 //   () => import("./master-data/pricing-matrix/PricingMatrixDetailPage"),
 // );
-// AddressListScreen removed - addresses now managed via Customer Addresses (Phase 9.5)
+// AddressListScreen (for inhouse company type)
+const AddressListScreen = lazy(
+  () => import("./master-data/address/AddressListPage"),
+);
 
 // Order Management (Phase 11)
 const OrderListScreen = lazy(() => import("./orders/OrderListPage"));
@@ -107,6 +110,9 @@ const routes = [
   { path: "master-data/customers/:id", element: CustomerDetailScreen },
   // Customer addresses now integrated into CustomerDetailPage
   // { path: "master-data/customers/:customerId/addresses", element: CustomerAddressesScreen },
+  // Address list for inhouse company
+  { path: "master-data/addresses", element: AddressListScreen },
+  { path: "master-data/addresses/:id", element: AddressListScreen },
   { path: "master-data/vehicles", element: VehicleListScreen },
   { path: "master-data/drivers", element: DriverListScreen },
   // Pricing Matrix removed - managed via Customer detail page (Customer-Specific Pricing)

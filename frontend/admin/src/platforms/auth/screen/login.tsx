@@ -37,10 +37,12 @@ const LoginPage = () => {
       const user = extractUserFromToken(ssoToken);
       if (user) {
         // Direct signin with SSO token and extracted user - no API call needed
-        dispatch(signin({
-          access_token: ssoToken,
-          user: user,
-        }));
+        dispatch(
+          signin({
+            access_token: ssoToken,
+            user: user,
+          }),
+        );
         navigate(redirectTo, { replace: true });
         return;
       }
@@ -50,7 +52,7 @@ const LoginPage = () => {
 
   const doLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(username, password);
+    await login({ identifier: username, password });
   };
 
   useEffect(() => {
@@ -81,87 +83,87 @@ const LoginPage = () => {
         </div>
 
         {/* Main Content */}
-        <div className="w-full max-w-sm mx-auto mt-28">
+        <div className='w-full max-w-sm mx-auto mt-28'>
           {/* Show loading while checking SSO */}
           {checkingSSO ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-10 w-10 border-4 border-emerald-200 border-t-emerald-600 mb-4"></div>
-              <p className="text-gray-500 text-sm">Checking your session...</p>
+            <div className='flex flex-col items-center justify-center py-12'>
+              <div className='animate-spin rounded-full h-10 w-10 border-4 border-emerald-200 border-t-emerald-600 mb-4'></div>
+              <p className='text-gray-500 text-sm'>Checking your session...</p>
             </div>
           ) : (
             <>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className='text-3xl font-bold text-gray-900 mb-2'>
                 Welcome Back
               </h1>
-              <p className="text-gray-500 mb-8 text-sm">
+              <p className='text-gray-500 mb-8 text-sm'>
                 Please enter your details to access your dashboard
               </p>
 
-              <form className="space-y-5" onSubmit={doLogin}>
-            <div className="space-y-1.5">
-              <label
-                htmlFor='username'
-                className='block text-sm font-medium text-gray-700'
-              >
-                Username
-              </label>
-              <Input
-                id='identifier'
-                placeholder='Enter your username'
-                type='text'
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                error={FormState?.errors?.identifier as string}
-                required
-                className='h-11 rounded-lg border-gray-200 bg-white px-4 text-sm'
-              />
-            </div>
+              <form className='space-y-5' onSubmit={doLogin}>
+                <div className='space-y-1.5'>
+                  <label
+                    htmlFor='username'
+                    className='block text-sm font-medium text-gray-700'
+                  >
+                    Username
+                  </label>
+                  <Input
+                    id='identifier'
+                    placeholder='Enter your username'
+                    type='text'
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    error={FormState?.errors?.identifier as string}
+                    required
+                    className='h-11 rounded-lg border-gray-200 bg-white px-4 text-sm'
+                  />
+                </div>
 
-            <div className='space-y-1.5'>
-              <label
-                htmlFor='password'
-                className='block text-sm font-medium text-gray-700'
-              >
-                Password
-              </label>
-              <Input
-                id='password'
-                placeholder='••••••••'
-                type='password'
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                error={FormState?.errors?.password as string}
-                required
-                className='h-11 rounded-lg border-gray-200 bg-white px-4 text-sm'
-              />
-            </div>
+                <div className='space-y-1.5'>
+                  <label
+                    htmlFor='password'
+                    className='block text-sm font-medium text-gray-700'
+                  >
+                    Password
+                  </label>
+                  <Input
+                    id='password'
+                    placeholder='••••••••'
+                    type='password'
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    error={FormState?.errors?.password as string}
+                    required
+                    className='h-11 rounded-lg border-gray-200 bg-white px-4 text-sm'
+                  />
+                </div>
 
-            <Button
-              type='submit'
-              isLoading={loginResult.isLoading}
-              className='w-full h-11 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium shadow-lg shadow-emerald-900/10'
-            >
-              Login
-            </Button>
-          </form>
+                <Button
+                  type='submit'
+                  isLoading={loginResult.isLoading}
+                  className='w-full h-11 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium shadow-lg shadow-emerald-900/10'
+                >
+                  Login
+                </Button>
+              </form>
 
-          <div className="relative my-8">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-200" />
+              <div className='relative my-8'>
+                <div className='absolute inset-0 flex items-center'>
+                  <span className='w-full border-t border-gray-200' />
+                </div>
+                <div className='relative flex justify-center text-xs uppercase'>
+                  <span className='bg-white px-2 text-gray-500'>
+                    Don't have an account?
+                  </span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">
-                  Don't have an account?
-                </span>
-              </div>
-            </div>
-            <Button
-              type="button"
-              className="w-full h-11 border-gray-100 bg-gray-50 hover:bg-gray-100 text-gray-900 rounded-lg text-sm font-semibold"
-              onClick={() => navigate("/auth/register")}
-            >
-              Create Free Account
-            </Button>
+              <Button
+                type='button'
+                className='w-full h-11 border-gray-100 bg-gray-50 hover:bg-gray-100 text-gray-900 rounded-lg text-sm font-semibold'
+                onClick={() => navigate("/auth/register")}
+              >
+                Create Free Account
+              </Button>
             </>
           )}
         </div>

@@ -69,6 +69,10 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
     ref,
   ) => {
     const FormState = useSelector((state: RootState) => state.form);
+    const Profile = useSelector((state: RootState) => state.userProfile);
+
+    // Check if company is inhouse type
+    const isInhouseCompany = Profile?.user?.company?.type === "inhouse";
 
     // Pricing hook
     const { get: getPricingMatrices } = usePricingMatrix();
@@ -414,6 +418,7 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
                       })
                     }
                     customerId={selectedCustomerId}
+                    type={isInhouseCompany ? "pickup_point" : undefined}
                     error={
                       (FormState?.errors as any)?.[
                         `shipments.${index}.origin_address_id`
@@ -434,6 +439,7 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
                       })
                     }
                     customerId={selectedCustomerId}
+                    type={isInhouseCompany ? "drop_point" : undefined}
                     error={
                       (FormState?.errors as any)?.[
                         `shipments.${index}.destination_address_id`

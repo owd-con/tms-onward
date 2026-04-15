@@ -5,6 +5,8 @@ import {
   useCreateAddressMutation,
   useUpdateAddressMutation,
   useRemoveAddressMutation,
+  useActivateAddressMutation,
+  useDeactivateAddressMutation,
 } from "./api";
 
 export const useAddress = createCrudHook({
@@ -14,4 +16,12 @@ export const useAddress = createCrudHook({
   useUpdateMutation: useUpdateAddressMutation,
   useRemoveMutation: useRemoveAddressMutation,
   entityName: "address",
+  customOperations: {
+    activate: {
+      hook: useActivateAddressMutation,
+    },
+    deactivate: {
+      hook: useDeactivateAddressMutation,
+    },
+  },
 });

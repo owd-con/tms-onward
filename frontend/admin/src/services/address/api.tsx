@@ -69,6 +69,30 @@ export const addressApi = createApi({
         body: payload,
       }),
     }),
+
+    /**
+     * PUT /addresses/:id/activate
+     * Activate address
+     */
+    activateAddress: builder.mutation({
+      query: ({ id, ...payload }) => ({
+        url: `/addresses/${id}/activate`,
+        method: "PUT",
+        body: payload,
+      }),
+    }),
+
+    /**
+     * PUT /addresses/:id/deactivate
+     * Deactivate address
+     */
+    deactivateAddress: builder.mutation({
+      query: ({ id, ...payload }) => ({
+        url: `/addresses/${id}/deactivate`,
+        method: "PUT",
+        body: payload,
+      }),
+    }),
   }),
 });
 
@@ -79,4 +103,6 @@ export const {
   useCreateAddressMutation,
   useUpdateAddressMutation,
   useRemoveAddressMutation,
+  useActivateAddressMutation,
+  useDeactivateAddressMutation,
 } = addressApi;

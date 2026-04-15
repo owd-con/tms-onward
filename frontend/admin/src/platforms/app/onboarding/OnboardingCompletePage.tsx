@@ -5,12 +5,16 @@ import type { OnboardingData } from "./OnboardingWizard";
 interface OnboardingCompletePageProps {
   data: OnboardingData;
   onGoToDashboard: () => void;
+  companyType?: "3pl" | "carrier" | "inhouse";
 }
 
 const OnboardingCompletePage = ({
   data,
   onGoToDashboard,
+  companyType,
 }: OnboardingCompletePageProps) => {
+  const isInhouse = companyType === "inhouse";
+
   const stats = [
     {
       label: "Company Profile",
@@ -41,23 +45,27 @@ const OnboardingCompletePage = ({
       color:
         data.step4.driversCreated > 0 ? "text-success" : "text-base-content/40",
     },
-    {
-      label: "Customers",
-      value: `${data.step5.customersCreated} added`,
-      icon:
-        data.step5.customersCreated > 0 ? <HiCheckCircle size={20} /> : null,
-      color:
-        data.step5.customersCreated > 0
-          ? "text-success"
-          : "text-base-content/40",
-    },
+    ...(isInhouse
+      ? []
+      : [
+          {
+            label: "Customers",
+            value: `${data.step5.customersCreated} added`,
+            icon:
+              data.step5.customersCreated > 0 ? <HiCheckCircle size={20} /> : null,
+            color:
+              data.step5.customersCreated > 0
+                ? "text-success"
+                : "text-base-content/40",
+          },
+        ]),
   ];
 
   const totalItemsAdded =
     data.step2.usersCreated +
     data.step3.vehiclesCreated +
     data.step4.driversCreated +
-    data.step5.customersCreated;
+    (isInhouse ? 0 : data.step5.customersCreated);
 
   return (
     <div className='min-h-screen bg-base-200 flex items-center justify-center py-8 px-4'>
@@ -130,7 +138,7 @@ const OnboardingCompletePage = ({
                     </div>
                     <div className='text-info/80 text-xs'>
                       You skipped the optional setup steps. Don't worry, you can
-                      add team members, vehicles, drivers, and customers anytime
+                      add team members, vehicles, drivers, and {isInhouse ? "locations" : "customers"} anytime
                       from the respective management pages.
                     </div>
                   </div>
@@ -177,9 +185,13 @@ const OnboardingCompletePage = ({
                     1
                   </div>
                   <div className='flex-1'>
-                    <span className='text-base-content'>Add customers</span>
+                    <span className='text-base-content'>
+                      {isInhouse ? "Add locations" : "Add customers"}
+                    </span>
                     <span className='text-base-content/60 block text-xs'>
-                      Create customer profiles to start managing orders
+                      {isInhouse
+                        ? "Create pickup and drop points for your operations"
+                        : "Create customer profiles to start managing orders"}
                     </span>
                   </div>
                 </div>
@@ -188,9 +200,7 @@ const OnboardingCompletePage = ({
                     2
                   </div>
                   <div className='flex-1'>
-                    <span className='text-base-content'>
-                      Create your first order
-                    </span>
+                    <span className='text-base-content'>Create your first order</span>
                     <span className='text-base-content/60 block text-xs'>
                       Add orders and assign them to trips
                     </span>
@@ -201,9 +211,7 @@ const OnboardingCompletePage = ({
                     3
                   </div>
                   <div className='flex-1'>
-                    <span className='text-base-content'>
-                      Dispatch and track
-                    </span>
+                    <span className='text-base-content'>Dispatch and track</span>
                     <span className='text-base-content/60 block text-xs'>
                       Monitor your deliveries in real-time
                     </span>

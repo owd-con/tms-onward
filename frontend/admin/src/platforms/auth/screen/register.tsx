@@ -1,12 +1,14 @@
 import { Button, Divider, Input, RemoteSelect } from "@/components";
 import { useAuth } from "@/services/auth/hooks";
 import type { RootState } from "@/services/store";
+import { companyTypeOptions } from "@/shared/options";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Zap, TrendingUp } from "lucide-react";
 import logoDark from "@/assets/logo_dark.svg";
 import heroicImage from "@/assets/heroic.png";
+import type { SelectOptionValue } from "@/shared/types";
 
 /**
  * TMS Onward - Register Page
@@ -20,10 +22,9 @@ const RegisterPage = () => {
 
   // Company fields
   const [companyName, setCompanyName] = useState("");
-  const [companyType, setCompanyType] = useState<{
-    label: string;
-    value: "3PL" | "Carrier";
-  }>({ label: "3PL (Third Party Logistics)", value: "3PL" });
+  const [companyType, setCompanyType] = useState<SelectOptionValue | null>(
+    companyTypeOptions[0],
+  );
 
   // Admin user fields
   const [name, setName] = useState("");
@@ -33,12 +34,6 @@ const RegisterPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
 
-  const companyTypeOptions: Array<{ label: string; value: "3PL" | "Carrier" }> =
-    [
-      { label: "3PL (Third Party Logistics)", value: "3PL" },
-      { label: "Carrier", value: "Carrier" },
-    ];
-
   const doRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -47,15 +42,16 @@ const RegisterPage = () => {
       return;
     }
 
-    await register(
-      companyName,
-      companyType.value,
+    await register({
+      company_name: companyName,
+      company_type: companyType?.value || "",
       username,
       name,
       email,
       password,
+      confirm_password: confirmPassword,
       phone,
-    );
+    });
   };
 
   useEffect(() => {
@@ -177,12 +173,12 @@ const RegisterPage = () => {
                   >
                     Company Type
                   </label>
-                  <RemoteSelect
+                  <RemoteSelect<SelectOptionValue>
                     value={companyType}
                     onChange={(value) => setCompanyType(value)}
                     data={companyTypeOptions}
-                    getLabel={(item) => item.label}
-                    getValue={(item) => item.value}
+                    getLabel={(item) => item?.label ?? ""}
+                    renderItem={(item) => item?.label}
                     error={FormState?.errors?.company_type as string}
                     required
                     className='h-11 rounded-lg border-gray-200 bg-white'

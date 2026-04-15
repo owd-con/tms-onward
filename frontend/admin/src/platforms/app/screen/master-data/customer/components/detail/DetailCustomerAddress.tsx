@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Button, Modal, useEnigmaUI } from "@/components";
+import { StatusToggle } from "@/components/ui";
 import { useAddress } from "@/services/address/hooks";
 import type { Address } from "@/services/types";
 import { getDisplayPath } from "@/utils/common";
 import { FaEdit } from "react-icons/fa";
 import { FaTrash } from "react-icons/fa";
 
-import AddressFormModal from "../form/AddressFormModal";
+import AddressFormModal from "../../../../../components/address/AddressFormModal";
 
 interface DetailCustomerAddressProps {
   customerId: string;
@@ -22,7 +23,7 @@ const DetailCustomerAddress: React.FC<DetailCustomerAddressProps> = ({
 }) => {
   const { openModal, closeModal, showToast } = useEnigmaUI();
 
-  const { get, remove: removeAddress, removeResult } = useAddress();
+  const { get, remove: removeAddress, removeResult, activate, deactivate } = useAddress();
 
   const [addresses, setAddresses] = useState<Address[]>([]);
 
@@ -67,6 +68,7 @@ const DetailCustomerAddress: React.FC<DetailCustomerAddressProps> = ({
       id: "create-address",
       content: (
         <AddressFormModal
+          open={true}
           onClose={() => closeModal("create-address")}
           onSuccess={() => refreshData()}
           mode='create'
@@ -82,6 +84,7 @@ const DetailCustomerAddress: React.FC<DetailCustomerAddressProps> = ({
       id: "update-address",
       content: (
         <AddressFormModal
+          open={true}
           onClose={() => closeModal("update-address")}
           onSuccess={() => refreshData()}
           mode='update'
@@ -96,6 +99,22 @@ const DetailCustomerAddress: React.FC<DetailCustomerAddressProps> = ({
   const refreshData = () => {
     loadAddresses();
     onRefresh();
+  };
+
+  // Handle toggle status
+  const handleToggleStatus = async (address: Address, newStatus: boolean) => {
+    try {
+      if (newStatus) {
+        await activate({ id: address.id });
+        showToast({ message: "Address activated successfully", type: "success" });
+      } else {
+        await deactivate({ id: address.id });
+        showToast({ message: "Address deactivated successfully", type: "success" });
+      }
+      refreshData();
+    } catch (error) {
+      refreshData();
+    }
   };
 
   const handleDelete = (address: Address) => {
@@ -121,7 +140,9 @@ const DetailCustomerAddress: React.FC<DetailCustomerAddressProps> = ({
           </Modal.Header>
           <Modal.Body>
             <div className='bg-rose-50/50 border border-rose-100/60 p-5 rounded-2xl'>
-              <p className='text-sm text-rose-900/60 font-medium mb-3'>You are about to delete:</p>
+              <p className='text-sm text-rose-900/60 font-medium mb-3'>
+                You are about to delete:
+              </p>
               <div className='bg-white p-4 rounded-xl shadow-sm border border-rose-100 flex flex-col gap-1'>
                 <p className='font-bold text-slate-800'>{address.name}</p>
                 <p className='text-xs text-slate-500 font-medium line-clamp-2'>
@@ -146,7 +167,7 @@ const DetailCustomerAddress: React.FC<DetailCustomerAddressProps> = ({
                   await removeAddress({ id: address.id });
                   closeModal("delete-address-confirm");
                 }}
-                className="bg-rose-600 hover:bg-rose-700 text-white shadow-md border border-rose-700 outline outline-2 outline-offset-2 outline-rose-500/20"
+                className='bg-rose-600 hover:bg-rose-700 text-white shadow-md border border-rose-700 outline outline-2 outline-offset-2 outline-rose-500/20'
               >
                 Yes, Delete Address
               </Button>
@@ -188,6 +209,9 @@ const DetailCustomerAddress: React.FC<DetailCustomerAddressProps> = ({
                 <th className='px-3 lg:px-4 py-3 text-left font-semibold text-xs lg:text-sm hidden md:table-cell'>
                   Contact
                 </th>
+                <th className='px-3 lg:px-4 py-3 text-center font-semibold text-xs lg:text-sm'>
+                  Status
+                </th>
                 <th className='px-3 lg:px-4 py-3 text-right font-semibold text-xs lg:text-sm'>
                   Actions
                 </th>
@@ -228,6 +252,12 @@ const DetailCustomerAddress: React.FC<DetailCustomerAddressProps> = ({
                         )}
                       </div>
                     )}
+                  </td>
+                  <td className='px-3 lg:px-4 py-3 text-center'>
+                    <StatusToggle
+                      checked={address.is_active ?? false}
+                      onChange={(checked) => handleToggleStatus(address, checked)}
+                    />
                   </td>
                   <td className='px-3 lg:px-4 py-3 text-right'>
                     <div className='flex justify-end gap-2'>

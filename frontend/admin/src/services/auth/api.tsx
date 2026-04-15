@@ -13,10 +13,10 @@ export const authApi = createApi({
      * User login with identifier and password
      */
     login: builder.mutation({
-      query: (credentials: { identifier: string; password: string }) => ({
+      query: (payload) => ({
         url: "/auth/login",
         method: "POST",
-        body: credentials,
+        body: payload,
       }),
     }),
 
@@ -26,21 +26,10 @@ export const authApi = createApi({
      * Body: { company_name, company_type, name, email, password, confirm_password, phone?, currency, language }
      */
     register: builder.mutation({
-      query: (data: {
-        company_name: string;
-        company_type: "3PL" | "Carrier";
-        username: string;
-        name: string;
-        email: string;
-        password: string;
-        confirm_password: string;
-        phone?: string;
-        currency: string;
-        language: string;
-      }) => ({
+      query: (payload) => ({
         url: "/auth/register",
         method: "POST",
-        body: data,
+        body: payload,
       }),
     }),
 
@@ -72,14 +61,10 @@ export const authApi = createApi({
      * Body: { old_password, new_password, confirm_new_password }
      */
     changePassword: builder.mutation({
-      query: (data: {
-        old_password: string;
-        new_password: string;
-        confirm_new_password: string;
-      }) => ({
+      query: (payload) => ({
         url: "/auth/password",
         method: "PUT",
-        body: data,
+        body: payload,
       }),
     }),
   }),

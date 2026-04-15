@@ -26,8 +26,8 @@ const formatDate = (dateString?: string) => {
 
 // Helper to get company type label
 const getCompanyTypeLabel = (type?: string) => {
-  if (type === "3PL") return "3PL Provider";
-  if (type === "Carrier") return "Carrier";
+  if (type === "3pl") return "3PL Provider";
+  if (type === "carrier") return "Carrier";
   return type || "-";
 };
 

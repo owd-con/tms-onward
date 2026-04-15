@@ -75,8 +75,20 @@ export const tripStatusOptions = [
  */
 export const companyTypeOptions: Array<{
   label: string;
-  value: "3PL" | "Carrier";
+  value: "3pl" | "carrier" | "inhouse";
 }> = [
-  { value: "3PL", label: "3PL - Third Party Logistics" },
-  { value: "Carrier", label: "Carrier - Transportation Company" },
+  { value: "3pl", label: "3PL - Third Party Logistics" },
+  { value: "carrier", label: "Carrier - Transportation Company" },
+  { value: "inhouse", label: "Inhouse - Internal Operations" },
+];
+
+/**
+ * Address Type Options (for Inhouse Company)
+ */
+export const addressTypeOptions: Array<{
+  label: string;
+  value: "pickup_point" | "drop_point";
+}> = [
+  { value: "pickup_point", label: "Pickup Point" },
+  { value: "drop_point", label: "Drop Point" },
 ];

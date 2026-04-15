@@ -16,10 +16,10 @@ import OnboardingCompletePage from "./OnboardingCompletePage";
 export type OnboardingData = {
   step1: {
     company_name: string;
+    type: "3pl" | "carrier" | "inhouse";
     brand_name: string;
     address: string;
     phone: string;
-    type: "3PL" | "Carrier";
   };
   step2: {
     usersCreated: number;
@@ -44,11 +44,11 @@ const OnboardingWizard = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
     step1: {
+      type: "3pl",
       company_name: "",
       brand_name: "",
       address: "",
       phone: "",
-      type: "3PL",
     },
     step2: { usersCreated: 0 },
     step3: { vehiclesCreated: 0 },
@@ -57,7 +57,9 @@ const OnboardingWizard = () => {
   });
   const [isCompleted, setIsCompleted] = useState(false);
 
-  const totalSteps = 5;
+  // Determine total steps based on company type
+  const isInhouse = onboardingData.step1.type === "inhouse";
+  const totalSteps = isInhouse ? 4 : 5; // Skip customer step for inhouse
 
   // Auto-fill step 1 if company data already exists
   useEffect(() => {
@@ -67,10 +69,10 @@ const OnboardingWizard = () => {
         ...prev,
         step1: {
           company_name: company.company_name || "",
+          type: company.type || "3pl",
           brand_name: company.brand_name || "",
           address: company.address || "",
           phone: company.phone || "",
-          type: company.type || "3PL",
         },
       }));
     }
@@ -121,6 +123,52 @@ const OnboardingWizard = () => {
 
   // Render current step
   const renderStep = () => {
+    // For inhouse company, skip customer step (step 5)
+    if (isInhouse) {
+      switch (currentStep) {
+        case 1:
+          return (
+            <Step1CompanyProfile
+              data={onboardingData.step1}
+              onNext={handleNext}
+              onUpdate={(data) => updateOnboardingData("step1", data)}
+            />
+          );
+        case 2:
+          return (
+            <Step2AddUsers
+              onNext={handleNext}
+              onBack={handleBack}
+              onSkip={handleSkip}
+              onUpdate={(data) => updateOnboardingData("step2", data)}
+            />
+          );
+        case 3:
+          return (
+            <Step3AddVehicles
+              onNext={handleNext}
+              onBack={handleBack}
+              onSkip={handleSkip}
+              onUpdate={(data) => updateOnboardingData("step3", data)}
+            />
+          );
+        case 4:
+          return (
+            <Step4AddDrivers
+              onNext={handleCompleteOnboarding}
+              onBack={handleBack}
+              onSkip={handleCompleteOnboarding}
+              onUpdate={(data) => updateOnboardingData("step4", data)}
+              isLoading={completeOnboardingResult.isLoading}
+              isLastStep={isInhouse}
+            />
+          );
+        default:
+          return null;
+      }
+    }
+
+    // For 3PL/Carrier, show all steps including customer
     switch (currentStep) {
       case 1:
         return (
@@ -178,6 +226,7 @@ const OnboardingWizard = () => {
       <OnboardingCompletePage
         data={onboardingData}
         onGoToDashboard={handleGoToDashboard}
+        companyType={onboardingData.step1.type}
       />
     );
   }
@@ -237,7 +286,7 @@ const OnboardingWizard = () => {
                       {stepNumber === 2 && "Users"}
                       {stepNumber === 3 && "Vehicles"}
                       {stepNumber === 4 && "Drivers"}
-                      {stepNumber === 5 && "Customer"}
+                      {stepNumber === 5 && !isInhouse && "Customer"}
                     </span>
                   </div>
 

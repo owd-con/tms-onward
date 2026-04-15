@@ -55,7 +55,11 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
     },
     ref,
   ) => {
+    const Profile = useSelector((state: RootState) => state.userProfile);
     const FormState = useSelector((state: RootState) => state.form);
+
+    // Check if company is inhouse type
+    const isInhouseCompany = Profile?.user?.company?.type === "inhouse";
 
     // Order form state (managed internally)
     const [selectedCustomer, setSelectedCustomer] = useState<any>(
@@ -144,65 +148,32 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
           <h3 className='text-lg font-semibold mb-4'>Order Information</h3>
 
           <div className='space-y-4'>
-            {/* Read-only fields for edit mode */}
-            {isEditMode && readOnlyFields && (
-              <div className='space-y-3 pb-4 border-b border-base-200'>
-                {readOnlyFields.orderNumber && (
-                  <div>
-                    <span className='text-xs text-base-content/60 block'>
-                      Order Number
-                    </span>
-                    <span className='font-semibold text-sm'>
-                      {readOnlyFields.orderNumber}
-                    </span>
-                  </div>
-                )}
-                {readOnlyFields.status && (
-                  <div>
-                    <span className='text-xs text-base-content/60 block'>
-                      Status
-                    </span>
-                    <span className='badge badge-sm badge-neutral'>
-                      {readOnlyFields.status}
-                    </span>
-                  </div>
-                )}
-                <div>
-                  <span className='text-xs text-base-content/60 block'>
-                    Order Type
-                  </span>
-                  <span className='font-semibold text-sm'>
-                    {orderType.value}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Customer Selection */}
-            <CustomerSelector
-              value={selectedCustomer?.id}
-              onChange={(customer) => handleCustomerChange(customer)}
-              onClear={() => {
-                setSelectedCustomer(null);
-                onClearWaypoints?.();
-              }}
-              error={FormState?.errors?.customer_id as string}
-              required
-              customer={selectedCustomer}
-            />
-
-            {/* Order Type - only show in create mode */}
-            {!isEditMode && (
-              <RemoteSelect
-                label='Order Type'
-                value={orderType}
-                onChange={(value) => setOrderType(value)}
-                data={orderTypeOptions}
-                getLabel={(item) => item.label}
-                getValue={(item) => item.value}
+            {/* Customer Selection - hide for inhouse company */}
+            {!isInhouseCompany && (
+              <CustomerSelector
+                value={selectedCustomer?.id}
+                onChange={(customer) => handleCustomerChange(customer)}
+                onClear={() => {
+                  setSelectedCustomer(null);
+                  onClearWaypoints?.();
+                }}
+                error={FormState?.errors?.customer_id as string}
                 required
+                customer={selectedCustomer}
               />
             )}
+
+            {/* Order Type - readonly for update mode */}
+            <RemoteSelect
+              label='Order Type'
+              value={orderType}
+              onChange={(value) => setOrderType(value)}
+              data={orderTypeOptions}
+              getLabel={(item) => item.label}
+              getValue={(item) => item.value}
+              required
+              disabled={isEditMode}
+            />
 
             {/* Reference Code */}
             <Input
