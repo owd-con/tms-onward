@@ -1,5 +1,4 @@
 import { Button, Input, RemoteSelect } from "@/components";
-import { useCustomer } from "@/services/customer/hooks";
 import type { RootState } from "@/services/store";
 import { useEffect, useState, useImperativeHandle, forwardRef } from "react";
 import { useSelector } from "react-redux";
