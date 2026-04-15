@@ -20,6 +20,7 @@ import (
 type AddressUsecase struct {
 	Repo         *repository.AddressRepository
 	repoCustomer *repository.CustomerRepository
+	repoCompany  *repository.CompanyRepository
 
 	ctx context.Context
 }
@@ -34,6 +35,7 @@ type AddressQueryOptions struct {
 	RegionID   string `query:"region_id"` // Changed from VillageID to RegionID
 	CustomerID string `query:"customer_id"`
 	Status     string `query:"status"`
+	Type       string `query:"type"` // For inhouse: pickup_point, drop_point
 }
 
 func (o *AddressQueryOptions) BuildQueryOption() *AddressQueryOptions {
@@ -44,8 +46,14 @@ func (u *AddressUsecase) WithContext(ctx context.Context) *AddressUsecase {
 	return &AddressUsecase{
 		Repo:         u.Repo.WithContext(ctx).(*repository.AddressRepository),
 		repoCustomer: u.repoCustomer.WithContext(ctx).(*repository.CustomerRepository),
+		repoCompany:  u.repoCompany.WithContext(ctx).(*repository.CompanyRepository),
 		ctx:          ctx,
 	}
+}
+
+// GetCompanyByID retrieves a company by ID
+func (u *AddressUsecase) GetCompanyByID(id string) (*entity.Company, error) {
+	return u.repoCompany.FindByID(id)
 }
 
 // Get returns a list of addresses with optional filters
@@ -54,15 +62,35 @@ func (u *AddressUsecase) Get(req *AddressQueryOptions) (resp []*entity.Address, 
 		req.OrderBy = "-addresses:created_at"
 	}
 
+	// Get company type to determine filtering logic
+	companyType := ""
+	if req.Session != nil && req.Session.CompanyID != "" {
+		company, err := u.repoCompany.FindByID(req.Session.CompanyID)
+		if err == nil {
+			companyType = company.Type
+		}
+	}
+
 	return u.Repo.FindAll(req.BuildOption(), func(q *bun.SelectQuery) *bun.SelectQuery {
-		// Apply filters from session - Customer relation already joined by defaultRelations
+		// Apply filters based on company type
 		if req.Session != nil && req.Session.CompanyID != "" {
-			q.Where("customer.company_id = ?", req.Session.CompanyID)
+			if companyType == "inhouse" {
+				// For inhouse: filter by company_id
+				q.Where("addresses.company_id = ?", req.Session.CompanyID)
+			} else {
+				// For 3pl/carrier: filter by customer.company_id
+				q.Where("customer.company_id = ?", req.Session.CompanyID)
+			}
 		}
 
-		// Filter by customer_id if provided
+		// Filter by customer_id if provided (for 3pl/carrier)
 		if req.CustomerID != "" {
 			q.Where("addresses.customer_id = ?", req.CustomerID)
+		}
+
+		// Filter by type if provided (for inhouse)
+		if req.Type != "" {
+			q.Where("addresses.type = ?", req.Type)
 		}
 
 		if req.Name != "" {
@@ -118,6 +146,36 @@ func (u *AddressUsecase) ValidateAddressUnique(field string, value string, custo
 	return false
 }
 
+// ValidateCompanyAddressUnique checks if an address field value is unique within a company (for inhouse)
+func (u *AddressUsecase) ValidateCompanyAddressUnique(field string, value string, companyID string, excludeID string) bool {
+	query := func(q *bun.SelectQuery) *bun.SelectQuery {
+		q.Where("lower(addresses.?) = lower(?)", bun.Ident(field), strings.ToLower(value))
+		q.Where("addresses.is_deleted = false")
+
+		// Filter by company_id for inhouse addresses
+		if companyID != "" {
+			q.Where("addresses.company_id = ?", companyID)
+		}
+
+		if excludeID != "" {
+			q.Where("addresses.id != ?", excludeID)
+		}
+
+		return q
+	}
+
+	_, err := u.Repo.FindOne(query)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return true // value is unique
+		}
+		engine.Logger.Error("error checking company address unique "+field, zap.Error(err))
+		return false
+	}
+
+	return false
+}
+
 // ValidateRegionID validates if region ID exists
 // Note: Region validation now uses region-id library directly in handlers
 // This method is deprecated and should not be used
@@ -155,6 +213,7 @@ func NewAddressUsecase() *AddressUsecase {
 	return &AddressUsecase{
 		Repo:         repository.NewAddressRepository(),
 		repoCustomer: repository.NewCustomerRepository(),
+		repoCompany:  repository.NewCompanyRepository(),
 	}
 }
 

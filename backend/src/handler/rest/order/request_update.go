@@ -19,14 +19,16 @@ import (
 // Updates an existing order and its shipments
 type updateRequest struct {
 	ID                  string             `json:"id" param:"id"`
-	CustomerID          string             `json:"customer_id" valid:"required|uuid"`
+	CustomerID          string             `json:"customer_id"` // Optional - not required for inhouse
 	ReferenceCode       string             `json:"reference_code"`
 	SpecialInstructions string             `json:"special_instructions"`
 	ManualOverridePrice float64            `json:"manual_override_price"`
 	Shipments           []*ShipmentRequest `json:"shipments" valid:"required"`
 
-	customer *entity.Customer
-	order    *entity.Order
+	customer    *entity.Customer
+	order       *entity.Order
+	company     *entity.Company
+	companyType string
 
 	ctx     context.Context
 	uc      *usecase.Factory
@@ -38,15 +40,33 @@ func (r *updateRequest) Validate() *validate.Response {
 
 	var err error
 
+	// Get company to determine type
+	if r.session.CompanyID != "" {
+		r.company, err = r.uc.Company.GetByID(r.session.CompanyID)
+		if err == nil {
+			r.companyType = r.company.Type
+		}
+	}
+
 	if r.ID != "" {
 		if r.order, err = r.uc.Order.GetByID(r.ID); err != nil {
 			v.SetError("id.invalid", "data is not valid.")
 		}
 	}
 
-	// Validate customer
-	if r.CustomerID != "" {
-		if r.customer, err = r.uc.Customer.GetByID(r.CustomerID); err != nil {
+	// Validate customer based on company type
+	if r.companyType == "inhouse" {
+		// For inhouse: customer_id is optional
+		if r.CustomerID != "" {
+			if r.customer, err = r.uc.Customer.GetByID(r.CustomerID); err != nil {
+				v.SetError("customer_id.invalid", "customer not found")
+			}
+		}
+	} else {
+		// For 3pl/carrier: customer_id is required
+		if r.CustomerID == "" {
+			v.SetError("customer_id.required", "customer_id is required")
+		} else if r.customer, err = r.uc.Customer.GetByID(r.CustomerID); err != nil {
 			v.SetError("customer_id.invalid", "customer not found")
 		}
 	}
@@ -66,6 +86,7 @@ func (r *updateRequest) Validate() *validate.Response {
 	// Validate shipments
 	for i, sp := range r.Shipments {
 		sp.uc = r.uc
+		sp.companyType = r.companyType // Pass company type to shipment validation
 		sp.Validate(v, i)
 	}
 
@@ -92,10 +113,13 @@ func (r *updateRequest) toEntity() *entity.Order {
 		finalPrice = r.ManualOverridePrice
 	}
 
-	// Keep existing customer ID if not being updated
+	// Keep existing customer ID if not being updated, or set to zero for inhouse
 	customerID := r.order.CustomerID
 	if r.customer != nil {
 		customerID = r.customer.ID
+	} else if r.companyType == "inhouse" && r.CustomerID == "" {
+		// For inhouse with no customer, set to zero UUID
+		customerID = uuid.Nil
 	}
 
 	return &entity.Order{

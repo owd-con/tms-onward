@@ -37,11 +37,12 @@ type ShipmentRequest struct {
 	// Pricing (LTL only - FTL uses 0)
 	Price float64 `json:"price"`
 
-	shipment           *entity.Shipment
-	originAddress      *entity.Address
-	destAddress        *entity.Address
-	pickupScheduleAt   time.Time
-	deliveryScheduleAt time.Time
+	shipment            *entity.Shipment
+	originAddress       *entity.Address
+	destAddress         *entity.Address
+	pickupScheduleAt    time.Time
+	deliveryScheduleAt  time.Time
+	companyType         string // inhouse, 3pl, carrier
 
 	uc *usecase.Factory
 }
@@ -76,6 +77,8 @@ func (r *ShipmentRequest) Validate(v *validate.Response, key int) {
 	if r.OriginAddressID != "" {
 		if r.originAddress, err = r.uc.Address.GetByID(r.OriginAddressID); err != nil {
 			v.SetError(fmt.Sprintf("shipments.%d.origin_address_id.invalid", key), "origin address not found.")
+		} else if r.companyType == "inhouse" && r.originAddress.Type != "pickup_point" {
+			v.SetError(fmt.Sprintf("shipments.%d.origin_address_id.invalid", key), "origin address must be of type pickup_point for inhouse company.")
 		}
 	}
 
@@ -83,6 +86,8 @@ func (r *ShipmentRequest) Validate(v *validate.Response, key int) {
 	if r.DestinationAddressID != "" {
 		if r.destAddress, err = r.uc.Address.GetByID(r.DestinationAddressID); err != nil {
 			v.SetError(fmt.Sprintf("shipments.%d.destination_address_id.invalid", key), "destination address not found.")
+		} else if r.companyType == "inhouse" && r.destAddress.Type != "drop_point" {
+			v.SetError(fmt.Sprintf("shipments.%d.destination_address_id.invalid", key), "destination address must be of type drop_point for inhouse company.")
 		}
 	}
 

@@ -13,7 +13,7 @@ type Order struct {
 	ID                  uuid.UUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id"`
 	CompanyID           uuid.UUID `bun:"company_id,notnull" json:"company_id"`
 	OrderNumber         string    `bun:"order_number,notnull,unique" json:"order_number"`
-	CustomerID          uuid.UUID `bun:"customer_id,notnull" json:"customer_id"`
+	CustomerID          uuid.UUID `bun:"customer_id,nullzero" json:"customer_id"` // Nullable - untuk inhouse company
 	OrderType           string    `bun:"order_type,notnull" json:"order_type"`
 	ReferenceCode       string    `bun:"reference_code" json:"reference_code"`
 	SpecialInstructions string    `bun:"special_instructions" json:"special_instructions"`
@@ -28,7 +28,7 @@ type Order struct {
 	UpdatedAt           time.Time `bun:"updated_at" json:"updated_at"`
 	IsDeleted           bool      `bun:"is_deleted,default:false" json:"is_deleted,omitempty"`
 
-	Company        *Company         `bun:"rel:belongs-to,join:company_id=id" json:"company,omitempty"`
-	Customer       *Customer        `bun:"rel:belongs-to,join:customer_id=id" json:"customer,omitempty"`
-	Shipments      []*Shipment      `bun:"rel:has-many,join:id=order_id" json:"shipments,omitempty"`
+	Company   *Company    `bun:"rel:belongs-to,join:company_id=id" json:"company,omitempty"`
+	Customer  *Customer   `bun:"rel:belongs-to,join:customer_id=id" json:"customer,omitempty"`
+	Shipments []*Shipment `bun:"rel:has-many,join:id=order_id" json:"shipments,omitempty"`
 }

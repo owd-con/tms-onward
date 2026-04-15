@@ -18,14 +18,16 @@ import (
 // createRequest handles POST /orders
 // Creates a new order with shipments (FTL or LTL)
 type createRequest struct {
-	CustomerID          string             `json:"customer_id" valid:"required|uuid"`
+	CustomerID          string             `json:"customer_id"` // Optional - not required for inhouse
 	OrderType           string             `json:"order_type" valid:"required|in:FTL,LTL"`
 	ReferenceCode       string             `json:"reference_code"`
 	SpecialInstructions string             `json:"special_instructions"`
 	ManualOverridePrice float64            `json:"manual_override_price"`
 	Shipments           []*ShipmentRequest `json:"shipments" valid:"required"`
 
-	customer *entity.Customer
+	customer    *entity.Customer
+	company     *entity.Company
+	companyType string
 
 	ctx     context.Context
 	uc      *usecase.Factory
@@ -37,9 +39,27 @@ func (r *createRequest) Validate() *validate.Response {
 
 	var err error
 
-	// Validate customer
-	if r.CustomerID != "" {
-		if r.customer, err = r.uc.Customer.GetByID(r.CustomerID); err != nil {
+	// Get company to determine type
+	if r.session.CompanyID != "" {
+		r.company, err = r.uc.Company.GetByID(r.session.CompanyID)
+		if err == nil {
+			r.companyType = r.company.Type
+		}
+	}
+
+	// Validate based on company type
+	if r.companyType == "inhouse" {
+		// For inhouse: customer_id is optional, but if provided must be valid
+		if r.CustomerID != "" {
+			if r.customer, err = r.uc.Customer.GetByID(r.CustomerID); err != nil {
+				v.SetError("customer_id.invalid", "customer not found")
+			}
+		}
+	} else {
+		// For 3pl/carrier: customer_id is required
+		if r.CustomerID == "" {
+			v.SetError("customer_id.required", "customer_id is required")
+		} else if r.customer, err = r.uc.Customer.GetByID(r.CustomerID); err != nil {
 			v.SetError("customer_id.invalid", "customer not found")
 		}
 	}
@@ -60,6 +80,7 @@ func (r *createRequest) Validate() *validate.Response {
 	// Set uc field for each shipment and validate
 	for i, sp := range r.Shipments {
 		sp.uc = r.uc
+		sp.companyType = r.companyType // Pass company type to shipment validation
 		sp.Validate(v, i)
 	}
 
@@ -88,8 +109,14 @@ func (r *createRequest) toEntity() *entity.Order {
 		finalPrice = r.ManualOverridePrice
 	}
 
+	// Set customer ID - may be zero for inhouse
+	var customerID uuid.UUID
+	if r.customer != nil {
+		customerID = r.customer.ID
+	}
+
 	return &entity.Order{
-		CustomerID:          r.customer.ID,
+		CustomerID:          customerID,
 		OrderType:           r.OrderType,
 		ReferenceCode:       r.ReferenceCode,
 		SpecialInstructions: r.SpecialInstructions,
