@@ -15,7 +15,7 @@ import (
 type signupRequest struct {
 	// Company data
 	CompanyName string `json:"company_name" valid:"required"`
-	CompanyType string `json:"company_type" valid:"required|in:3PL,Carrier"`
+	CompanyType string `json:"company_type" valid:"required|in:3pl,carrier,inhouse"`
 	BrandName   string `json:"brand_name"`
 	Address     string `json:"address"`
 

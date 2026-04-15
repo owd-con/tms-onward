@@ -12,7 +12,7 @@ import (
 
 type step1Request struct {
 	CompanyName string `json:"company_name" validate:"required"`
-	CompanyType string `json:"company_type" validate:"required,in:3pl,carrier"`
+	Type        string `json:"type" validate:"required,in:3pl,carrier,inhouse"`
 	BrandName   string `json:"brand_name"`
 	Phone       string `json:"phone"`
 	Address     string `json:"address"`
@@ -60,7 +60,7 @@ func (r *step1Request) Messages() map[string]string {
 func (r *step1Request) execute() (*rest.ResponseBody, error) {
 	// Update entity with request data
 	r.company.CompanyName = r.CompanyName
-	r.company.Type = r.CompanyType
+	r.company.Type = r.Type
 	r.company.BrandName = r.BrandName
 	r.company.Phone = r.Phone
 	r.company.Address = r.Address

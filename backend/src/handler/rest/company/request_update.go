@@ -18,7 +18,7 @@ type updateRequest struct {
 
 	CompanyName string `json:"company_name" valid:"required"`
 	BrandName   string `json:"brand_name"`
-	Type        string `json:"type" valid:"required|in:3PL,Carrier"`
+	Type        string `json:"type" valid:"required|in:3pl,carrier,inhouse"`
 	Phone       string `json:"phone"`
 	Address     string `json:"address"`
 	LogoURL     string `json:"logo_url"`
