@@ -7,7 +7,7 @@ import type { Customer } from "@/services/types";
 
 interface CustomerSelectorProps {
   value?: string;
-  onChange: (customerId: string, customer: Customer) => void;
+  onChange: (customer: Customer) => void;
   onClear?: () => void;
   error?: string;
   required?: boolean;
@@ -74,7 +74,7 @@ export const CustomerSelector = ({
 
   const handleCustomerChange = (cust: Customer) => {
     setSelectedCustomer(cust);
-    onChange(cust.id, cust);
+    onChange(cust);
   };
 
   const handleCreateNewCustomer = () => {
@@ -88,7 +88,7 @@ export const CustomerSelector = ({
     // Select the newly created customer
     setTimeout(() => {
       setSelectedCustomer(newCustomer);
-      onChange(newCustomer.id, newCustomer);
+      onChange(newCustomer);
     }, 300);
   };
 
