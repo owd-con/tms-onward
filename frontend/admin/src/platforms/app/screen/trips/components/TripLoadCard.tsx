@@ -22,9 +22,6 @@ export const TripLoadCard: React.FC<TripLoadCardProps> = ({ trip, status, isSele
 
   const totalShipment = trip.order?.total_shipment || 0;
   const totalDelivered = trip.order?.total_delivered || 0;
-  
-  // Exception logic
-  const hasException = totalDelivered !== totalShipment && trip.order?.status === 'in_transit';
 
   const isFTL = orderType === 'FTL';
   const badgeColors = isFTL 
@@ -32,15 +29,22 @@ export const TripLoadCard: React.FC<TripLoadCardProps> = ({ trip, status, isSele
     : 'bg-violet-100/80 text-violet-700 border-violet-200/50';
 
   const isCompleted = trip.status === 'completed' || status === 'history';
-  
-  let statusBadgeClass = isCompleted 
-    ? 'bg-emerald-50 text-emerald-700 border-emerald-200/50 ring-1 ring-emerald-200' 
-    : 'bg-blue-50 text-blue-700 border-blue-200/50 ring-1 ring-blue-200';
-  let statusLabel = isCompleted ? 'Completed' : 'On Delivery';
 
-  if (hasException) {
-    statusBadgeClass = 'bg-rose-50 text-rose-700 border-rose-200/50 ring-1 ring-rose-200';
-    statusLabel = 'Exception';
+  let statusBadgeClass = 'bg-blue-50 text-blue-700 border-blue-200/50 ring-1 ring-blue-200';
+  let statusLabel = 'On Delivery';
+
+  if (trip.status === 'planned') {
+    statusBadgeClass = 'bg-amber-50 text-amber-700 border-amber-200/50 ring-1 ring-amber-200';
+    statusLabel = 'Planned';
+  } else if (trip.status === 'dispatched') {
+    statusBadgeClass = 'bg-violet-50 text-violet-700 border-violet-200/50 ring-1 ring-violet-200';
+    statusLabel = 'Dispatched';
+  } else if (trip.status === 'in_transit') {
+    statusBadgeClass = 'bg-blue-50 text-blue-700 border-blue-200/50 ring-1 ring-blue-200';
+    statusLabel = 'In Transit';
+  } else if (isCompleted) {
+    statusBadgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200/50 ring-1 ring-emerald-200';
+    statusLabel = 'Completed';
   }
 
   return (
@@ -63,7 +67,7 @@ export const TripLoadCard: React.FC<TripLoadCardProps> = ({ trip, status, isSele
           </div>
         </div>
         <div className={`px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase ${statusBadgeClass}`}>
-          {statusLabel}
+          {trip.status?.replace(/_/g, ' ')}
         </div>
       </div>
 
@@ -89,7 +93,7 @@ export const TripLoadCard: React.FC<TripLoadCardProps> = ({ trip, status, isSele
         </div>
         <div className="flex-1 px-1">
           <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-0.5">Dev'd</p>
-          <p className={`text-xs font-black ${hasException ? 'text-rose-600' : 'text-slate-800'}`}>
+          <p className="text-xs font-black text-slate-800">
              {totalDelivered}/{totalShipment}
           </p>
         </div>
