@@ -3,7 +3,7 @@ import { StatusToggle } from "@/components/ui";
 import config from "@/services/table/const";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { FiEdit2, FiMoreVertical, FiTrash2, FiPhone, FiSmartphone, FiClock } from "react-icons/fi";
+import { FiEdit2, FiMoreVertical, FiTrash2, FiPhone, FiSmartphone, FiClock, FiUser } from "react-icons/fi";
 
 dayjs.extend(relativeTime);
 
@@ -247,6 +247,26 @@ const createTableConfig = ({
                   </div>
                 </button>
               </li>
+              {/* Show Update User Account only if driver has user account */}
+              {row?.user_id && row?.user_id !== "00000000-0000-0000-0000-000000000000" && (
+                <li>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onClick(row, "update-user");
+                    }}
+                    className="flex items-center gap-3 hover:bg-slate-50 hover:text-indigo-600 text-slate-700 py-3 rounded-xl transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
+                      <FiUser className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col items-start leading-tight">
+                      <span className="font-bold text-[13px]">Update User Account</span>
+                      <span className="text-[11px] text-slate-400">Modify username & password</span>
+                    </div>
+                  </button>
+                </li>
+              )}
               <div className="my-1 border-t border-slate-50"></div>
               <li>
                 <button

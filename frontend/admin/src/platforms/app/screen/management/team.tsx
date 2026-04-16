@@ -23,6 +23,7 @@ const TeamScreen = () => {
   const tableConfig = useMemo(() => {
     return createTableConfig({
       canManage: canManage("user"),
+      filter: { not_role: "driver" },
       onReload: () => {
         Table.boot();
       },

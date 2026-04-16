@@ -5,32 +5,36 @@ import type { RootState } from "@/services/store";
 import { useEffect, useState } from "react";
 
 import { useSelector } from "react-redux";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-const LoginPage = () => {
+const SignupPage = () => {
   const navigate = useNavigate();
-  const [params] = useSearchParams();
 
   const FormState = useSelector((state: RootState) => state.form);
   const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const { login, loginResult } = useAuth();
-
-  const redirectTo = params.get("fallback") || "/";
-
-  const doLogin = async () => {
-    try {
-      await login(username, password);
-    } catch (err) {
-      // Error handled by hook
-    }
-  };
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const { signupDriver, signupDriverResult } = useAuth();
 
   useEffect(() => {
-    if (loginResult?.isSuccess) {
-      navigate(redirectTo, { replace: true });
+    if (signupDriverResult?.isSuccess) {
+      navigate("/login", { replace: true });
     }
-  }, [loginResult, navigate, redirectTo]);
+  }, [signupDriverResult]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    await signupDriver({
+      username,
+      name,
+      phone,
+      password,
+      confirm_password: confirmPassword,
+    });
+  };
 
   return (
     <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-4'>
@@ -59,39 +63,58 @@ const LoginPage = () => {
             </svg>
           </div>
           <h1 className='text-3xl font-bold text-slate-900 mb-2'>TMS Driver</h1>
-          <p className='text-slate-600 text-base'>
-            Sign in to access your deliveries
-          </p>
+          <p className='text-slate-600 text-base'>Create your driver account</p>
         </div>
 
-        {/* Login Card */}
+        {/* Signup Card */}
         <div className='bg-white rounded-2xl shadow-xl p-6 sm:p-8'>
           <Divider />
 
-          <form
-            className='space-y-3'
-            onSubmit={(e) => {
-              e.preventDefault();
-              doLogin();
-            }}
-          >
+          <form className='space-y-3' onSubmit={handleSubmit}>
             <Input
               label='Username'
               placeholder='Enter your username'
               value={username}
               onChange={(e: any) => setUsername(e?.target?.value || "")}
               error={
-                typeof FormState?.errors?.identifier === "string"
-                  ? FormState.errors?.identifier
+                typeof FormState?.errors?.username === "string"
+                  ? FormState.errors?.username
+                  : undefined
+              }
+              required
+            />
+
+            <Input
+              label='Full Name'
+              placeholder='Enter your full name'
+              value={name}
+              onChange={(e: any) => setName(e?.target?.value || "")}
+              error={
+                typeof FormState?.errors?.name === "string"
+                  ? FormState.errors?.name
+                  : undefined
+              }
+              required
+            />
+
+            <Input
+              label='Phone Number'
+              placeholder='Enter your phone number'
+              type='phone'
+              value={phone}
+              onChange={(e: any) => setPhone(e?.target?.value || "")}
+              error={
+                typeof FormState?.errors?.phone === "string"
+                  ? FormState.errors?.phone
                   : undefined
               }
             />
 
             <Input
               label='Password'
-              placeholder='Type your password'
+              placeholder='Create your password'
               type='password'
-              autoComplete='current-password'
+              autoComplete='new-password'
               value={password}
               onChange={(e: any) => setPassword(e?.target?.value || "")}
               error={
@@ -99,43 +122,57 @@ const LoginPage = () => {
                   ? FormState.errors?.password
                   : undefined
               }
+              required
+            />
+
+            <Input
+              label='Confirm Password'
+              placeholder='Confirm your password'
+              type='password'
+              autoComplete='new-password'
+              value={confirmPassword}
+              onChange={(e: any) => setConfirmPassword(e?.target?.value || "")}
+              error={
+                typeof FormState?.errors?.confirm_password === "string"
+                  ? FormState.errors?.confirm_password
+                  : undefined
+              }
+              required
             />
 
             <Button
               shape='block'
               size='md'
-              isLoading={loginResult?.isLoading}
+              isLoading={signupDriverResult?.isLoading}
               type='submit'
               className='mt-6'
               variant='primary'
             >
-              Sign In
+              Sign Up
             </Button>
           </form>
 
           {/* Error Alert */}
-          {loginResult?.isError && (
+          {signupDriverResult?.isError && (
             <div className='mt-4 p-3 bg-red-50 border border-red-200 rounded-lg'>
               <p className='text-sm text-red-600 text-center'>
-                Invalid email or password. Please try again.
+                Registration failed. Please try again.
               </p>
             </div>
           )}
         </div>
 
-        {/* Footer */}
+        {/* Footer - Link to Login */}
         <div className='mt-6 text-center'>
           <p className='text-sm text-slate-500'>
-            Need help? Contact your fleet administrator
-          </p>
-          <p className='text-sm text-slate-500 mt-2'>
-            New driver?{" "}
-            <Link
-              to='/auth/signup'
-              className='text-blue-600 font-semibold hover:underline'
+            Already have an account?{" "}
+            <button
+              type='button'
+              onClick={() => navigate("/login")}
+              className='text-blue-600 hover:text-blue-700 font-medium'
             >
-              Register here
-            </Link>
+              Sign In
+            </button>
           </p>
         </div>
       </div>
@@ -143,4 +180,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default SignupPage;

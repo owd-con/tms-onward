@@ -2,12 +2,21 @@ import { useDispatch, useSelector } from "react-redux";
 import { useFormActions } from "../form/hooks";
 import {
   useLoginMutation,
+  useSignupDriverMutation,
   useLogoutMutation,
   useLazyGetProfileQuery,
 } from "./api";
 import { signin, signout } from "./slice";
 import type { RootState } from "../store";
 import type { User } from "../types";
+
+interface SignupDriverData {
+  username: string;
+  name: string;
+  phone: string;
+  password: string;
+  confirm_password: string;
+}
 
 /**
  * TMS Driver - Authentication Hooks
@@ -20,6 +29,7 @@ export const useAuth = () => {
   const auth = useSelector((state: RootState) => state.auth);
 
   const [loginMutation, loginResult] = useLoginMutation();
+  const [signupDriverMutation, signupDriverResult] = useSignupDriverMutation();
   const [logoutMutation, logoutResult] = useLogoutMutation();
   const [getProfile, profileResult] = useLazyGetProfileQuery();
 
@@ -32,6 +42,19 @@ export const useAuth = () => {
       if (res?.data?.access_token) {
         dispatch(signin(res.data));
       }
+      return res?.data;
+    } catch (err) {
+      failureWithTimeout(err);
+      throw err;
+    }
+  };
+
+  /**
+   * Register new driver account
+   */
+  const signupDriver = async (data: SignupDriverData) => {
+    try {
+      const res = await signupDriverMutation(data).unwrap();
       return res?.data;
     } catch (err) {
       failureWithTimeout(err);
@@ -74,11 +97,13 @@ export const useAuth = () => {
 
     // Operations
     login,
+    signupDriver,
     logout,
     getMe,
 
     // Results
     loginResult,
+    signupDriverResult,
     logoutResult,
     profileResult,
   };

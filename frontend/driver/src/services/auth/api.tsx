@@ -21,6 +21,27 @@ export const authApi = createApi({
     }),
 
     /**
+     * POST /auth/register
+     * Register new driver account
+     */
+    signupDriver: builder.mutation({
+      query: (data: {
+        username: string;
+        name: string;
+        phone: string;
+        password: string;
+        confirm_password: string;
+      }) => ({
+        url: "/auth/register",
+        method: "POST",
+        body: {
+          ...data,
+          role: "driver",
+        },
+      }),
+    }),
+
+    /**
      * POST /auth/logout
      * Logout user and invalidate session
      */
@@ -47,6 +68,7 @@ export const authApi = createApi({
 // Export RTK Query hooks
 export const {
   useLoginMutation,
+  useSignupDriverMutation,
   useLogoutMutation,
   useGetProfileQuery,
   useLazyGetProfileQuery,

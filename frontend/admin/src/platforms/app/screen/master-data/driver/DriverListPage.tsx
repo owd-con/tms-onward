@@ -14,6 +14,7 @@ import { Page } from "../../../components/layout";
 import createTableConfig from "./components/table/table.config";
 import TableFilter from "./components/table/filter";
 import DriverFormModal from "./components/form/DriverFormModal";
+import DriverUserFormModal from "./components/form/DriverUserFormModal";
 
 /**
  * TMS Onward - Driver List Page
@@ -34,6 +35,8 @@ const DriverListPage = () => {
       onClick: (e: Driver, action: string) => {
         if (action === "update") {
           openUpdate(e);
+        } else if (action === "update-user") {
+          openUpdateUser(e);
         } else if (action === "delete") {
           openDeleteConfirm(e);
         }
@@ -83,6 +86,21 @@ const DriverListPage = () => {
           onSuccess={() => Table.boot()}
           mode="update"
           data={driver}
+        />
+      ),
+    });
+  };
+
+  // Open update user account modal
+  const openUpdateUser = (driver: Driver) => {
+    openModal({
+      id: "update-driver-user",
+      content: (
+        <DriverUserFormModal
+          open={true}
+          onClose={() => closeModal("update-driver-user")}
+          onSuccess={() => Table.boot()}
+          driver={driver}
         />
       ),
     });
