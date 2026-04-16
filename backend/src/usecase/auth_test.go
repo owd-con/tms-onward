@@ -218,16 +218,15 @@ func TestAuthUsecase_MakeSession_Success(t *testing.T) {
 	uc := NewAuthUsecase().WithContext(context.Background())
 
 	user := &entity.User{
-		ID:       uuid.New(),
-		Name:     "Test User",
-		Email:    "test@example.com",
-		Role:     "admin",
-		IsActive: true,
+		ID:        uuid.New(),
+		Name:      "Test User",
+		Email:     "test@example.com",
+		Role:      "admin",
+		CompanyID: uuid.New(),
+		IsActive:  true,
 	}
 
-	companyID := uuid.New()
-
-	session, err := uc.MakeSession(user, companyID)
+	session, err := uc.MakeSession(user)
 
 	require.NoError(t, err)
 	assert.NotNil(t, session)
@@ -242,17 +241,16 @@ func TestAuthUsecase_MakeSession_TokenGenerationError(t *testing.T) {
 	uc := NewAuthUsecase().WithContext(context.Background())
 
 	user := &entity.User{
-		ID:    uuid.New(),
-		Name:  "Test User",
-		Email: "test@example.com",
-		Role:  "admin",
+		ID:        uuid.New(),
+		Name:      "Test User",
+		Email:     "test@example.com",
+		Role:      "admin",
+		CompanyID: uuid.New(),
 	}
-
-	companyID := uuid.New()
 
 	// This test would fail if token generation fails
 	// For now, we're testing the structure
-	session, err := uc.MakeSession(user, companyID)
+	session, err := uc.MakeSession(user)
 	// In real scenario, if token generation fails:
 	if err != nil {
 		assert.Nil(t, session)

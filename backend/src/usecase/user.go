@@ -33,9 +33,10 @@ type UserQueryOptions struct {
 	Session *entity.TMSSessionClaims
 
 	// Custom filter fields
-	Email  string `query:"email"`
-	Role   string `query:"role"`
-	Status string `query:"status"` // active, inactive
+	Email    string `query:"email"`
+	Role     string `query:"role"`
+	NotRole string `query:"not_role"`
+	Status  string `query:"status"` // active, inactive
 }
 
 func (o *UserQueryOptions) BuildQueryOption() *UserQueryOptions {
@@ -72,6 +73,10 @@ func (u *UserUsecase) Get(req *UserQueryOptions) (resp []*entity.User, total int
 
 		if req.Role != "" {
 			q.Where("users.role = ?", req.Role)
+		}
+
+		if req.NotRole != "" {
+			q.Where("users.role != ?", req.NotRole)
 		}
 
 		if req.Status != "" {

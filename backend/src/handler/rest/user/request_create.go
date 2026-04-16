@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/usecase"
 
@@ -20,9 +21,7 @@ type createRequest struct {
 	Password        string `json:"password" valid:"required|gte:8|lte:64"`
 	ConfirmPassword string `json:"confirm_password" valid:"required"`
 	Role            string `json:"role" valid:"required|in:admin,dispatcher,driver"`
-	CompanyID       string `json:"company_id"`
 
-	company      *entity.Company
 	PasswordHash string `json:"-"`
 
 	ctx     context.Context
@@ -35,23 +34,6 @@ func (r *createRequest) Validate() *validate.Response {
 	v := validate.NewResponse()
 	var err error
 
-	if r.session != nil && r.session.CompanyID == "" && r.CompanyID == "" {
-		v.SetError("company_id.required", "company id is required.")
-	} else if r.session != nil && r.session.CompanyID != "" && r.CompanyID == "" {
-		r.CompanyID = r.session.CompanyID
-	}
-
-	// validate company id
-	if r.CompanyID != "" {
-		// Get company from repository
-		company, err := r.uc.GetCompany(r.CompanyID)
-		if err != nil {
-			v.SetError("company_id.invalid", "company not found or invalid.")
-		} else {
-			r.company = company
-		}
-	}
-
 	// username should be unique
 	if r.Username != "" {
 		if !r.uc.ValidateUserUnique("username", r.Username, "", "") {
@@ -61,7 +43,7 @@ func (r *createRequest) Validate() *validate.Response {
 
 	// email should be unique
 	if r.Email != "" {
-		if !r.uc.ValidateUserUnique("email", r.Email, r.CompanyID, "") {
+		if !r.uc.ValidateUserUnique("email", r.Email, r.session.CompanyID, "") {
 			v.SetError("email.unique", "email already exists.")
 		}
 	}
@@ -72,7 +54,7 @@ func (r *createRequest) Validate() *validate.Response {
 			v.SetError("phone.invalid", "phone number is invalid.")
 		}
 
-		if !r.uc.ValidateUserUnique("phone", r.Phone, r.CompanyID, "") {
+		if !r.uc.ValidateUserUnique("phone", r.Phone, r.session.CompanyID, "") {
 			v.SetError("phone.unique", "phone number already exists.")
 		}
 	}
@@ -95,7 +77,10 @@ func (r *createRequest) Messages() map[string]string {
 }
 
 func (r *createRequest) toEntity() *entity.User {
+	companyId, _ := uuid.Parse(r.session.CompanyID)
+
 	mx := &entity.User{
+		CompanyID: companyId,
 		Username:  r.Username,
 		Name:      r.Name,
 		Email:     r.Email,
@@ -104,10 +89,6 @@ func (r *createRequest) toEntity() *entity.User {
 		Role:      r.Role,
 		IsActive:  true,
 		CreatedAt: time.Now(),
-	}
-
-	if r.company != nil {
-		mx.CompanyID = r.company.ID
 	}
 
 	return mx

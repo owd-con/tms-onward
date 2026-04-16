@@ -14,8 +14,8 @@ import (
 
 type signupRequest struct {
 	// Company data
-	CompanyName string `json:"company_name" valid:"required"`
-	CompanyType string `json:"company_type" valid:"required|in:3pl,carrier,inhouse"`
+	CompanyName string `json:"company_name"`
+	CompanyType string `json:"company_type" valid:"in:3pl,carrier,inhouse"`
 	BrandName   string `json:"brand_name"`
 	Address     string `json:"address"`
 
@@ -26,20 +26,36 @@ type signupRequest struct {
 	Password        string `json:"password" valid:"required|gte:8"`
 	ConfirmPassword string `json:"confirm_password" valid:"required"`
 	Phone           string `json:"phone"`
+	Role            string `json:"role" valid:"in:admin,driver"`
 
 	PasswordHash string `json:"-"`
 
-	ctx context.Context
-	uc  *usecase.AuthUsecase
+	ctx     context.Context
+	uc      *usecase.AuthUsecase
+	company *entity.Company
 }
 
 func (r *signupRequest) Validate() *validate.Response {
 	v := validate.NewResponse()
 
-	// Validate company name uniqueness
-	if r.CompanyName != "" {
-		if !r.uc.ValidateCompanyUnique("company_name", r.CompanyName, "") {
-			v.SetError("company_name.unique", "company name already exists.")
+	var err error
+
+	// Determine role - default to admin
+	if r.Role == "" {
+		r.Role = "admin"
+	}
+
+	// Validate company for non-driver roles
+	if r.Role != "driver" {
+		if r.CompanyName == "" {
+			v.SetError("company_name.required", "company name is required.")
+		} else {
+			if !r.uc.ValidateCompanyUnique("company_name", r.CompanyName, "") {
+				v.SetError("company_name.unique", "company name already exists.")
+			}
+		}
+		if r.CompanyType == "" {
+			v.SetError("company_type.required", "company type is required.")
 		}
 	}
 
@@ -58,15 +74,12 @@ func (r *signupRequest) Validate() *validate.Response {
 	}
 
 	// Validate password confirmation
-	if r.Password != "" && r.ConfirmPassword != "" {
+	if r.Password != "" {
 		if r.Password != r.ConfirmPassword {
 			v.SetError("confirm_password.invalid", "password confirmation does not match.")
 		}
-	}
 
-	// Hash password
-	if r.Password != "" && r.Password == r.ConfirmPassword {
-		var err error
+		// Hash password
 		if r.PasswordHash, err = common.HashPassword(r.Password); err != nil {
 			v.SetError("password.invalid", "failed to hash password.")
 		}
@@ -85,20 +98,23 @@ func (r *signupRequest) toEntity() (user *entity.User, company *entity.Company) 
 		Username:  r.Username,
 		Email:     r.Email,
 		Password:  r.PasswordHash, // Already hashed in Validate()
-		Role:      "admin",
+		Role:      r.Role,
 		Phone:     r.Phone,
 		IsActive:  true,
 		CreatedAt: time.Now(),
 	}
 
-	company = &entity.Company{
-		CompanyName: r.CompanyName,
-		BrandName:   r.BrandName,
-		Phone:       r.Phone,
-		Type:        r.CompanyType,
-		Address:     r.Address,
-		IsActive:    true,
-		CreatedAt:   time.Now(),
+	// Only create company for non-driver roles
+	if r.Role != "driver" {
+		company = &entity.Company{
+			CompanyName: r.CompanyName,
+			BrandName:   r.BrandName,
+			Phone:       r.Phone,
+			Type:        r.CompanyType,
+			Address:     r.Address,
+			IsActive:    true,
+			CreatedAt:   time.Now(),
+		}
 	}
 
 	return

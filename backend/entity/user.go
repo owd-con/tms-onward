@@ -11,7 +11,7 @@ type User struct {
 	bun.BaseModel `bun:"table:users,alias:users"`
 
 	ID        uuid.UUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id"`
-	CompanyID uuid.UUID `bun:"company_id,notnull" json:"company_id"`
+	CompanyID uuid.UUID `bun:"company_id,nullzero" json:"company_id"` // Can be null for driver role
 	Username  string    `bun:"username,notnull,unique" json:"username"`
 	// Name is synced 2-way with Driver (when role=Driver and driver exists)
 	Name     string `bun:"name,notnull" json:"name"`

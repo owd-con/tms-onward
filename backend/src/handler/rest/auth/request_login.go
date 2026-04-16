@@ -39,7 +39,7 @@ func (r *loginRequest) Messages() map[string]string {
 }
 
 func (r *loginRequest) execute() (*rest.ResponseBody, error) {
-	result, err := r.uc.MakeSession(r.user, r.user.CompanyID)
+	result, err := r.uc.MakeSession(r.user)
 	if err != nil {
 		return nil, err
 	}

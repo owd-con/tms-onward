@@ -21,9 +21,7 @@ type updateRequest struct {
 	Password        string `json:"password"`
 	ConfirmPassword string `json:"confirm_password"`
 	Role            string `json:"role" valid:"in:admin,dispatcher,driver"`
-	CompanyID       string `json:"company_id"`
 
-	company      *entity.Company
 	user         *entity.User `json:"-"`
 	PasswordHash string       `json:"-"`
 
@@ -36,12 +34,6 @@ type updateRequest struct {
 func (r *updateRequest) Validate() *validate.Response {
 	v := validate.NewResponse()
 	var err error
-
-	if r.session != nil && r.session.CompanyID == "" && r.CompanyID == "" {
-		v.SetError("company_id.required", "company id is required.")
-	} else if r.session != nil && r.session.CompanyID != "" && r.CompanyID == "" {
-		r.CompanyID = r.session.CompanyID
-	}
 
 	if r.ID != "" {
 		if r.user, err = r.uc.GetByID(r.ID); err != nil {
@@ -56,17 +48,6 @@ func (r *updateRequest) Validate() *validate.Response {
 		}
 	}
 
-	// validate company id
-	if r.CompanyID != "" {
-		// Get company from repository
-		company, err := r.uc.GetCompany(r.CompanyID)
-		if err != nil {
-			v.SetError("company_id.invalid", "company not found or invalid.")
-		} else {
-			r.company = company
-		}
-	}
-
 	// username should be unique
 	if r.Username != "" {
 		if !r.uc.ValidateUserUnique("username", r.Username, "", r.ID) {
@@ -76,7 +57,7 @@ func (r *updateRequest) Validate() *validate.Response {
 
 	// email should be unique
 	if r.Email != "" {
-		if !r.uc.ValidateUserUnique("email", r.Email, r.CompanyID, r.ID) {
+		if !r.uc.ValidateUserUnique("email", r.Email, r.session.CompanyID, r.ID) {
 			v.SetError("email.unique", "email already exists.")
 		}
 	}
@@ -87,7 +68,7 @@ func (r *updateRequest) Validate() *validate.Response {
 			v.SetError("phone.invalid", "phone number is invalid.")
 		}
 
-		if !r.uc.ValidateUserUnique("phone", r.Phone, r.CompanyID, r.ID) {
+		if !r.uc.ValidateUserUnique("phone", r.Phone, r.session.CompanyID, r.ID) {
 			v.SetError("phone.unique", "phone number already exists.")
 		}
 	}
@@ -128,10 +109,6 @@ func (r *updateRequest) toEntity() *entity.User {
 		mx.Password = r.PasswordHash
 	}
 
-	if r.company != nil {
-		mx.CompanyID = r.company.ID
-	}
-
 	return mx
 }
 
@@ -140,10 +117,6 @@ func (r *updateRequest) execute() (*rest.ResponseBody, error) {
 
 	// Build fields to update - ini adalah yang langsung di parse ke entity
 	fields := []string{"username", "email", "name", "phone", "role", "updated_at"}
-
-	if r.company != nil {
-		fields = append(fields, "company_id")
-	}
 
 	if r.PasswordHash != "" {
 		fields = append(fields, "password")

@@ -62,10 +62,6 @@ func (u *TripUsecase) Get(req *TripQueryOptions) ([]*entity.Trip, int64, error) 
 		return nil, 0, errors.New("This session not found.")
 	}
 
-	if req.Session.CompanyID == "" {
-		return nil, 0, errors.New("This user is not a tenant.")
-	}
-
 	if req.OrderBy == "" {
 		req.OrderBy = "-trips:created_at"
 	}

@@ -126,9 +126,7 @@ func TestAuthUsecase_MakeSession_Success(t *testing.T) {
 		IsActive: true,
 	}
 
-	companyID := uuid.New()
-
-	session, err := uc.MakeSession(user, companyID)
+	session, err := uc.MakeSession(user)
 
 	require.NoError(t, err)
 	assert.NotNil(t, session)

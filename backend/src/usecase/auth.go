@@ -28,27 +28,23 @@ type AuthUsecase struct {
 	ctx context.Context
 }
 
-// Signup creates a new company and admin user
+// Signup creates a new company and admin user, or a driver user without company
 func (u *AuthUsecase) Signup(user *entity.User, company *entity.Company) (*entity.Session, error) {
-	var createdUser *entity.User
-	var createdCompany *entity.Company
-
 	// Execute in transaction
 	err := u.RepoUser.RunInTx(u.ctx, func(ctx context.Context, tx bun.Tx) error {
-		// Create company
-		repoCompanyTx := u.repoCompany.WithTx(ctx, tx)
-		if err := repoCompanyTx.Insert(company); err != nil {
-			return fmt.Errorf("failed to create company: %w", err)
+		// Create company if provided
+		if company != nil && company.CompanyName != "" {
+			repoCompanyTx := u.repoCompany.WithTx(ctx, tx)
+			if err := repoCompanyTx.Insert(company); err != nil {
+				return fmt.Errorf("failed to create company: %w", err)
+			}
+			user.CompanyID = company.ID
 		}
-		createdCompany = company
 
-		// Create user with company ID
-		user.CompanyID = company.ID
 		repoUserTx := u.RepoUser.WithTx(ctx, tx)
 		if err := repoUserTx.Insert(user); err != nil {
 			return fmt.Errorf("failed to create user: %w", err)
 		}
-		createdUser = user
 
 		return nil
 	})
@@ -56,7 +52,7 @@ func (u *AuthUsecase) Signup(user *entity.User, company *entity.Company) (*entit
 		return nil, err
 	}
 
-	return u.MakeSession(createdUser, createdCompany.ID)
+	return u.MakeSession(user)
 }
 
 // ValidLogin validates user credentials
@@ -83,16 +79,18 @@ func (u *AuthUsecase) ValidLogin(identifier string, password string) (*entity.Us
 		return nil, errors.New("user is not active")
 	}
 
-	// Check if company is active
-	company, err := u.repoCompany.FindByID(user.CompanyID.String())
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("company not found")
+	// Check company for non-driver users
+	if user.CompanyID != uuid.Nil {
+		company, err := u.repoCompany.FindByID(user.CompanyID.String())
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, errors.New("company not found")
+			}
+			return nil, err
 		}
-		return nil, err
-	}
-	if !company.IsActive {
-		return nil, errors.New("company is not active")
+		if !company.IsActive {
+			return nil, errors.New("company is not active")
+		}
 	}
 
 	// Verify password
@@ -110,7 +108,7 @@ func (u *AuthUsecase) ValidLogin(identifier string, password string) (*entity.Us
 }
 
 // MakeSession creates a session with tokens for a user
-func (u *AuthUsecase) MakeSession(user *entity.User, companyID uuid.UUID) (*entity.Session, error) {
+func (u *AuthUsecase) MakeSession(user *entity.User) (*entity.Session, error) {
 	// Generate JTI (JWT ID) for session tracking
 	jti := uuid.New().String()
 
@@ -124,9 +122,12 @@ func (u *AuthUsecase) MakeSession(user *entity.User, companyID uuid.UUID) (*enti
 				ID: jti,
 			},
 		},
-		CompanyID: companyID.String(),
-		UserID:    user.ID.String(),
-		Role:      user.Role,
+		UserID: user.ID.String(),
+		Role:   user.Role,
+	}
+
+	if user.CompanyID != uuid.Nil {
+		claims.CompanyID = user.CompanyID.String()
 	}
 
 	// // Set JTI to SessionClaims.ID (from RegisteredClaims via GetBase())

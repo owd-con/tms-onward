@@ -33,7 +33,7 @@ func (s *TMSServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto.
 	}
 
 	// Create session and generate access token
-	session, err := uc.MakeSession(user, user.CompanyID)
+	session, err := uc.MakeSession(user)
 	if err != nil {
 		return nil, err
 	}
