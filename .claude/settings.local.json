@@ -6,10 +6,10 @@
       "Bash(git add:*)",
       "Bash(git reset:*)",
       "Bash(git commit:*)",
+      "Bash(make migrate create:*)",
       "Bash(ls:*)",
       "Bash(grep:*)",
-      "Bash(dpkg:*)",
-      "Bash(make migrate create:*)"
+      "Bash(dpkg:*)"
     ]
   }
 }
