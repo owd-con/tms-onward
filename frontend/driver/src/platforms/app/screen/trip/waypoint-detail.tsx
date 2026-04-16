@@ -235,7 +235,8 @@ export const WaypointDetail = () => {
                       </p>
                       {waypoint.actual_completion_time && (
                         <p className='text-xs text-orange-700'>
-                          Refused at {formatDateTime(waypoint.actual_completion_time)}
+                          Refused at{" "}
+                          {formatDateTime(waypoint.actual_completion_time)}
                         </p>
                       )}
                     </div>
@@ -357,6 +358,7 @@ export const WaypointDetail = () => {
                   <HiMapPin size={18} />
                   <span>Start Waypoint</span>
                 </div>
+                "
               </Button>
             )}
 

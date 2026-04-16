@@ -5,10 +5,13 @@ import type { RootState } from "@/services/store";
 import { useEffect, useState } from "react";
 
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const SignupPage = () => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  // After signup, user needs to login first. Always redirect to login with fallback.
+  const redirectAfterSignup = `/auth/login?fallback=${encodeURIComponent(params.get("fallback") || "/")}`;
 
   const FormState = useSelector((state: RootState) => state.form);
   const [username, setUsername] = useState("");
@@ -20,9 +23,9 @@ const SignupPage = () => {
 
   useEffect(() => {
     if (signupDriverResult?.isSuccess) {
-      navigate("/login", { replace: true });
+      navigate(redirectAfterSignup, { replace: true });
     }
-  }, [signupDriverResult]);
+  }, [signupDriverResult, redirectAfterSignup]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

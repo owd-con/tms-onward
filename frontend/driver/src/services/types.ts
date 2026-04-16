@@ -78,6 +78,66 @@ export interface Order {
   status: string;
   customer_id: string;
   customer: any;
+  total_weight?: number;
+  total_koli?: number;
+  origin_address_id?: string;
+  origin_address?: Address;
+  destination_address_id?: string;
+  destination_address?: Address;
+  shipments?: Shipment[];
+}
+
+/**
+ * Shipment Entity for Order
+ */
+export interface Shipment {
+  id: string;
+  shipment_number: string;
+  sorting_id: number;
+  origin_address_id: string;
+  origin_address?: Address;
+  destination_address_id: string;
+  destination_address?: Address;
+  weight: number;
+  koli: number;
+  items: ShipmentItem[];
+  status: string;
+}
+
+/**
+ * Address Entity
+ */
+export interface Address {
+  id: string;
+  name: string;
+  address: string;
+  village?: string;
+  district?: string;
+  city?: string;
+  province?: string;
+  postal_code?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+/**
+ * Waypoint Preview (for scan page)
+ */
+export interface WaypointPreview {
+  id: string;
+  shipment_ids: string[];
+  shipment_number: string;
+  type: string; // "pickup" | "delivery"
+  sequence_number: number;
+  address_id: string;
+  location_name: string;
+  address: string;
+  contact_name?: string;
+  contact_phone?: string;
+  weight: number;
+  koli: number;
+  scheduled_date?: string;
+  scheduled_time?: string;
 }
 
 /**

@@ -1,5 +1,5 @@
 // Package trip provides HTTP handlers for trip management operations.
-// This includes trip CRUD and dispatch.
+// This includes trip CRUD.
 package trip
 
 import (
@@ -20,7 +20,7 @@ func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 	s.POST("/trips", h.create, middleware.WithActiveCheck(s))
 	s.PUT("/trips/{id}", h.update, middleware.WithActiveCheck(s))
 	s.DELETE("/trips/{id}", h.delete, middleware.WithActiveCheck(s))
-	s.PUT("/trips/{id}/dispatch", h.dispatch, middleware.WithActiveCheck(s))
+	s.PUT("/trips/{id}/reassign-driver", h.reassignDriver, middleware.WithActiveCheck(s))
 }
 
 // get handles GET /trips
@@ -133,19 +133,20 @@ func (h *handler) delete(ctx *rest.Context) (err error) {
 	return ctx.Respond(res, err)
 }
 
-// dispatch handles PUT /trips/{id}/dispatch
-// @Summary Dispatch trip
-// @Description Dispatch a planned trip (Planned → Dispatched). Signals the driver and updates order/waypoint status.
+// reassignDriver handles PUT /trips/{id}/reassign-driver
+// @Summary Reassign driver
+// @Description Reassign a driver to a planned trip
 // @Tags trip
 // @Accept json
 // @Produce json
 // @Param id path string true "Trip ID"
+// @Param request body trip.reassignDriverRequest true "Reassign driver request"
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Router /trips/{id}/dispatch [put]
-func (h *handler) dispatch(ctx *rest.Context) (err error) {
-	var req dispatchRequest
+// @Router /trips/{id}/reassign-driver [put]
+func (h *handler) reassignDriver(ctx *rest.Context) (err error) {
+	var req reassignDriverRequest
 	var res *rest.ResponseBody
 
 	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {

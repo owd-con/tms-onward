@@ -7,8 +7,8 @@ import {
   useRemoveTripMutation,
   useStartTripMutation,
   useCompleteTripMutation,
-  useDispatchTripMutation,
   useCancelTripMutation,
+  useReassignDriverMutation,
 } from "./api";
 
 export const useTrip = createCrudHook({
@@ -26,13 +26,13 @@ export const useTrip = createCrudHook({
       hook: useCompleteTripMutation,
       errorMessage: "Failed to complete trip",
     },
-    dispatch: {
-      hook: useDispatchTripMutation,
-      errorMessage: "Failed to dispatch trip",
-    },
     cancel: {
       hook: useCancelTripMutation,
       errorMessage: "Failed to cancel trip",
+    },
+    reassignDriver: {
+      hook: useReassignDriverMutation,
+      errorMessage: "Failed to reassign driver",
     },
   },
   entityName: "trip",

@@ -119,6 +119,15 @@ func (u *DriverUsecase) GetByID(id string) (*entity.Driver, error) {
 	return u.Repo.FindByID(id)
 }
 
+// GetByUserID retrieves a driver by user ID
+func (u *DriverUsecase) GetByUserID(userID string) (*entity.Driver, error) {
+	parsedUserID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID format: %w", err)
+	}
+	return u.Repo.FindByUserID(parsedUserID)
+}
+
 // Create creates a new driver (standalone)
 func (u *DriverUsecase) Create(driver *entity.Driver) error {
 	return u.Repo.Insert(driver)

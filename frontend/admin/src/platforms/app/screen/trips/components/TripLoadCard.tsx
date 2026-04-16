@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, RefreshCcw, Trash2 } from "lucide-react";
 import type { Trip } from "@/services/types";
 import dayjs from "dayjs";
 
@@ -8,6 +8,8 @@ interface TripLoadCardProps {
   status: string;
   isSelected: boolean;
   onClick: () => void;
+  onReassign?: (tripId: string) => void;
+  onDelete?: (tripId: string) => void;
 }
 
 export const TripLoadCard: React.FC<TripLoadCardProps> = ({
@@ -15,6 +17,8 @@ export const TripLoadCard: React.FC<TripLoadCardProps> = ({
   status,
   isSelected,
   onClick,
+  onReassign,
+  onDelete,
 }) => {
   // Use order data if available, fallback to trip data
   const orderNumber = trip.order?.order_number || trip.trip_number || "Unknown";
@@ -22,7 +26,7 @@ export const TripLoadCard: React.FC<TripLoadCardProps> = ({
   const customerName = trip.order?.customer?.name || "Unknown Customer";
 
   // Driver and Vehicle
-  const driverName = trip.driver?.name || "Unassigned";
+  const driverName = trip.driver?.name || trip.user?.name || "Unassigned";
   const vehiclePlate = trip.vehicle?.plate_number || "No Vehicle";
 
   const totalShipment = trip.order?.total_shipment || 0;
@@ -72,6 +76,9 @@ export const TripLoadCard: React.FC<TripLoadCardProps> = ({
           <div>
             <span className='font-bold text-slate-900 text-[16px] tracking-tight block'>
               {orderNumber}
+            </span>
+            <span className='text-[11px] text-slate-500 font-medium'>
+              {trip.trip_number}
             </span>
           </div>
         </div>
@@ -137,14 +144,44 @@ export const TripLoadCard: React.FC<TripLoadCardProps> = ({
           </div>
         </div>
 
-        {isCompleted && trip.completed_at && (
-          <div className='flex items-center gap-1.5 text-emerald-600'>
-            <CheckCircle2 className='size-4' strokeWidth={2.5} />
-            <span className='text-[11px] font-bold tracking-wide'>
-              {dayjs(trip.completed_at).format("DD MMM, HH:mm")}
-            </span>
-          </div>
-        )}
+        <div className='flex items-center gap-2'>
+          {!isCompleted && (
+            <>
+              {onReassign && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReassign(trip.id);
+                  }}
+                  className='p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors'
+                  title='Reassign Driver'
+                >
+                  <RefreshCcw className='size-4' />
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(trip.id);
+                  }}
+                  className='p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors'
+                  title='Delete Trip'
+                >
+                  <Trash2 className='size-4' />
+                </button>
+              )}
+            </>
+          )}
+          {isCompleted && trip.completed_at && (
+            <div className='flex items-center gap-1.5 text-emerald-600'>
+              <CheckCircle2 className='size-4' strokeWidth={2.5} />
+              <span className='text-[11px] font-bold tracking-wide'>
+                {dayjs(trip.completed_at).format("DD MMM, HH:mm")}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Fragment, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { HiSignal, HiTrash } from "react-icons/hi2";
+import { HiTrash, HiUserCircle } from "react-icons/hi2";
 import { FaEdit } from "react-icons/fa";
 import { Database } from "lucide-react";
 
@@ -12,12 +12,13 @@ import { Page } from "../../components/layout";
 import WaypointTimeline from "./components/detail/WaypointTimeline";
 import { TripInformation } from "./components/detail/TripInformation";
 import { TripOrderCard } from "./components/detail/TripOrderCard";
+import { ReassignDriverDrawer } from "./components/ReassignDriverDrawer";
 
 /**
  * TMS Onward - Trip Detail Page
  *
  * Displays trip information, driver & vehicle details, order info,
- * waypoint status tracking, and available actions (Dispatch, Cancel).
+ * waypoint status tracking, and available actions (Cancel).
  *
  * Note: Start Trip is now handled by Driver (via Driver Web)
  * Trip is auto-completed when all waypoints are finished
@@ -27,11 +28,12 @@ const TripDetailPage = () => {
   const { id: tripId } = useParams<{ id: string }>();
   const { openModal, closeModal, showToast } = useEnigmaUI();
 
+  // State for reassign driver drawer
+  const [isReassignDriverOpen, setIsReassignDriverOpen] = useState(false);
+
   const {
     show: showTrip,
     showResult: showTripResult,
-    dispatch: dispatchTrip,
-    dispatchResult: dispatchTripResult,
     remove: removeTrip,
     removeResult: removeTripResult,
   } = useTrip();
@@ -51,18 +53,6 @@ const TripDetailPage = () => {
       setTrip(data);
     }
   }, [showTripResult]);
-
-  // Reload trip data after successful dispatch
-  useEffect(() => {
-    if (dispatchTripResult?.isSuccess) {
-      closeModal("dispatch-trip-confirm");
-      showToast({
-        message: "Trip dispatched successfully",
-        type: "success",
-      });
-      if (tripId) showTrip({ id: tripId });
-    }
-  }, [dispatchTripResult?.isSuccess]);
 
   // Navigate back after successful delete
   useEffect(() => {
@@ -134,57 +124,6 @@ const TripDetailPage = () => {
     });
   };
 
-  const openDispatchTrip = () => {
-    openModal({
-      id: "dispatch-trip-confirm",
-      content: (
-        <Modal.Wrapper
-          open
-          onClose={() => closeModal("dispatch-trip-confirm")}
-          className='max-w-md'
-        >
-          <Modal.Header>
-            <div className='text-lg font-bold'>Dispatch Trip</div>
-          </Modal.Header>
-          <Modal.Body>
-            <p className='text-sm text-base-content/70'>
-              Are you sure you want to dispatch this trip?
-            </p>
-            <p className='mt-2 text-sm font-medium'>{trip?.trip_number}</p>
-            <p className='text-xs text-base-content/60 mt-1'>
-              The trip status will change to "Dispatched".
-            </p>
-          </Modal.Body>
-          <Modal.Footer>
-            <div className='flex justify-end gap-3'>
-              <Button
-                variant='secondary'
-                onClick={() => closeModal("dispatch-trip-confirm")}
-                disabled={dispatchTripResult?.isLoading}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant='primary'
-                onClick={handleDispatch}
-                isLoading={dispatchTripResult?.isLoading}
-                disabled={dispatchTripResult?.isLoading}
-              >
-                Dispatch Trip
-              </Button>
-            </div>
-          </Modal.Footer>
-        </Modal.Wrapper>
-      ),
-    });
-  };
-
-  const handleDispatch = () => {
-    if (tripId) {
-      dispatchTrip({ id: tripId });
-    }
-  };
-
   const handleDelete = () => {
     if (tripId) {
       removeTrip({ id: tripId });
@@ -239,7 +178,7 @@ const TripDetailPage = () => {
   }
 
   // Determine available actions based on trip status
-  const canModify = trip.status === "planned";
+  const canModify = trip.status === "dispatched";
 
   return (
     <Fragment>
@@ -262,15 +201,18 @@ const TripDetailPage = () => {
                   <FaEdit className='w-4 h-4' />
                 </Button>
               )}
-              {canModify && (
-                <Button variant='error' onClick={openDeleteTrip}>
-                  <HiTrash className='w-4 h-4' />
+              {canModify && trip.driver && (
+                <Button
+                  variant='secondary'
+                  onClick={() => setIsReassignDriverOpen(true)}
+                  title="Reassign Driver"
+                >
+                  <HiUserCircle className='w-4 h-4' />
                 </Button>
               )}
               {canModify && (
-                <Button variant='primary' onClick={openDispatchTrip}>
-                  <HiSignal className='w-4 h-4 mr-1' />
-                  Dispatch Trip
+                <Button variant='error' onClick={openDeleteTrip}>
+                  <HiTrash className='w-4 h-4' />
                 </Button>
               )}
             </div>
@@ -301,6 +243,16 @@ const TripDetailPage = () => {
           )}
         </Page.Body>
       </Page>
+
+      {/* Reassign Driver Drawer */}
+      <ReassignDriverDrawer
+        isOpen={isReassignDriverOpen}
+        onClose={() => setIsReassignDriverOpen(false)}
+        trip={trip}
+        onSuccess={() => {
+          if (tripId) showTrip({ id: tripId });
+        }}
+      />
     </Fragment>
   );
 };

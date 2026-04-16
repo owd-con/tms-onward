@@ -8,6 +8,7 @@ import { authReducer, signout } from "./auth/slice";
 import { formReducer } from "./form/slice";
 import { driverApi } from "./driver/api";
 import { uploadApi } from "./upload/api";
+import { orderApi } from "./order/api";
 
 // ==============================
 // API Reducers
@@ -16,6 +17,7 @@ const apiReducers = {
   [authApi.reducerPath]: authApi.reducer,
   [driverApi.reducerPath]: driverApi.reducer,
   [uploadApi.reducerPath]: uploadApi.reducer,
+  [orderApi.reducerPath]: orderApi.reducer,
 };
 
 // ==============================

@@ -40,9 +40,9 @@ func (r *updateRequest) Validate() *validate.Response {
 		}
 	}
 
-	// Validate: hanya bisa update waypoints jika trip.Status == "planned"
-	if r.trip != nil && r.trip.Status != "planned" {
-		v.SetError("id.invalid", "Waypoints can only be updated for trips in Planned status.")
+	// Validate: hanya bisa update waypoints jika trip.Status == "dispatched"
+	if r.trip != nil && r.trip.Status != "dispatched" {
+		v.SetError("id.invalid", "Waypoints can only be updated for trips in Dispatched status.")
 	}
 
 	// Validate driver exists

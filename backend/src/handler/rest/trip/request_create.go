@@ -16,11 +16,12 @@ import (
 
 // createRequest handles POST /trips
 // Creates a new trip with explicit waypoints (instead of deriving from shipments)
+// Automatically dispatches the trip after creation
 type createRequest struct {
-	OrderID   string            `json:"order_id" valid:"required|uuid"`
-	DriverID  string            `json:"driver_id" valid:"required|uuid"`
-	VehicleID string            `json:"vehicle_id" valid:"required|uuid"`
-	Notes     string            `json:"notes"`
+	OrderID   string             `json:"order_id" valid:"required|uuid"`
+	DriverID  string             `json:"driver_id" valid:"required|uuid"`
+	VehicleID string             `json:"vehicle_id" valid:"required|uuid"`
+	Notes     string             `json:"notes"`
 	Waypoints []*WaypointRequest `json:"waypoints" valid:"required"`
 
 	order   *entity.Order
@@ -103,7 +104,7 @@ func (r *createRequest) toEntity() *entity.Trip {
 		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   r.driver.ID,
 		VehicleID:  r.vehicle.ID,
-		Status:     "planned",
+		Status:     "dispatched",
 		Notes:      r.Notes,
 		CreatedBy:  r.session.DisplayName,
 		CreatedAt:  time.Now(),
@@ -135,8 +136,8 @@ func (r *createRequest) execute() (*rest.ResponseBody, error) {
 	trip := r.toEntity()
 	tripWaypoints := r.toTripWaypoints()
 
-	// Create trip with waypoints
-	err := r.uc.Trip.CreateWithWaypoints(trip, r.OrderID, tripWaypoints)
+	// Create trip with waypoints and auto-dispatch
+	err := r.uc.Trip.CreateWithWaypointsAutoDispatch(trip, r.OrderID, tripWaypoints)
 	if err != nil {
 		return nil, err
 	}

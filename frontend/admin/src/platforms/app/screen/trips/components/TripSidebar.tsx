@@ -14,6 +14,8 @@ interface TripSidebarProps {
   onAssignLoad?: (id: string) => void;
   onReturnLoad?: (payload: { orderId: string; shipment: any }) => void;
   onRescheduleLoad?: (id: string) => void;
+  onReassignLoad?: (id: string) => void;
+  onDeleteLoad?: (id: string) => void;
   filter: string;
   setFilter: (filter: string) => void;
   counts: {
@@ -76,6 +78,8 @@ export const TripSidebar: React.FC<TripSidebarProps> = ({
   onAssignLoad,
   onReturnLoad,
   onRescheduleLoad,
+  onReassignLoad,
+  onDeleteLoad,
   filter,
   setFilter,
   counts
@@ -174,6 +178,8 @@ export const TripSidebar: React.FC<TripSidebarProps> = ({
                 status={filter}
                 isSelected={selectedLoadId === load.id}
                 onClick={() => onSelectLoad(load.id)}
+                onReassign={onReassignLoad ? () => onReassignLoad(load.id) : undefined}
+                onDelete={onDeleteLoad ? () => onDeleteLoad(load.id) : undefined}
               />
             );
           })

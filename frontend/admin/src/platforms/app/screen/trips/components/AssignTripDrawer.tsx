@@ -30,7 +30,7 @@ export const AssignTripDrawer: React.FC<AssignTripDrawerProps> = ({
 }) => {
   const FormState = useSelector((state: RootState) => state.form);
   const { showToast } = useEnigmaUI();
-  const { create, createResult, dispatch } = useTrip();
+  const { create, createResult } = useTrip();
 
   const { show: showOrder, showResult: showOrderResult } = useOrder();
 
@@ -101,16 +101,8 @@ export const AssignTripDrawer: React.FC<AssignTripDrawerProps> = ({
         type: "success",
       });
 
-      // Auto dispatch the trip after creation
-      if (data?.id) {
-        dispatch({ id: data?.id }).then(() => {
-          onClose(); // Close drawer after dispatch
-          onSuccess?.(); // Trigger refresh in parent
-        });
-      } else {
-        onClose(); // Close drawer on success
-        onSuccess?.(); // Trigger refresh in parent
-      }
+      onClose();
+      onSuccess?.();
     }
   }, [createResult?.isSuccess, onClose, onSuccess, showToast, actionType]);
 

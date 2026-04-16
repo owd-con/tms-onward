@@ -99,18 +99,6 @@ export const tripApi = createApi({
     }),
 
     /**
-     * PUT /trips/:id/dispatch
-     * Dispatch trip (Assigned → Dispatched)
-     */
-    dispatchTrip: builder.mutation({
-      query: ({ id, ...payload }) => ({
-        url: `/trips/${id}/dispatch`,
-        method: "PUT",
-        body: payload,
-      }),
-    }),
-
-    /**
      * PUT /trips/:id/cancel
      * Cancel trip (any status → Cancelled)
      */
@@ -119,6 +107,18 @@ export const tripApi = createApi({
         url: `/trips/${id}/cancel`,
         method: "PUT",
         body: payload,
+      }),
+    }),
+
+    /**
+     * PUT /trips/:id/reassign-driver
+     * Reassign driver to a trip (before started)
+     */
+    reassignDriver: builder.mutation({
+      query: ({ id, driver_id }) => ({
+        url: `/trips/${id}/reassign-driver`,
+        method: "PUT",
+        body: { driver_id },
       }),
     }),
 
@@ -134,6 +134,6 @@ export const {
   useRemoveTripMutation,
   useStartTripMutation,
   useCompleteTripMutation,
-  useDispatchTripMutation,
   useCancelTripMutation,
+  useReassignDriverMutation,
 } = tripApi;

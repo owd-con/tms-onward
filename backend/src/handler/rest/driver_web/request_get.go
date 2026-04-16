@@ -70,9 +70,18 @@ func (r *getTripsRequest) getTripDetail(id string) (*rest.ResponseBody, error) {
 		return nil, err
 	}
 
-	// Validate trip belongs to this driver (by user_id)
-	if trip.Driver == nil || trip.Driver.UserID.String() != r.session.UserID {
-		return nil, errors.New("this trip is not assigned to you")
+	if trip.Driver != nil {
+		// Check if trip is assigned to this driver
+		if trip.Driver.UserID.String() != r.session.UserID {
+			return nil, errors.New("this trip is not assigned to you")
+		}
+	}
+
+	if trip.User != nil {
+		// Check if trip belongs to this driver by user_id
+		if trip.User.ID.String() != r.session.UserID {
+			return nil, errors.New("this trip is not assigned to you")
+		}
 	}
 
 	// Fetch shipments for all waypoints

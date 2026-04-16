@@ -18,6 +18,9 @@ const TripDetail = lazy(() =>
 const WaypointDetail = lazy(() =>
   import("./screen/trip/waypoint-detail").then((m) => ({ default: m.WaypointDetail }))
 );
+const ScanPage = lazy(() =>
+  import("./screen/scan").then((m) => ({ default: m.ScanPage }))
+);
 
 const AppRouter = () => {
   return (
@@ -37,6 +40,9 @@ const AppRouter = () => {
 
         {/* Waypoint Detail */}
         <Route path="trips/:id/waypoints/:waypointId" element={<WaypointDetail />} />
+
+        {/* Scan Order - Protected route */}
+        <Route path="scan" element={<ScanPage />} />
 
         {/* Fallback - redirect to active trips */}
         <Route path="*" element={<Navigate to="/" replace />} />

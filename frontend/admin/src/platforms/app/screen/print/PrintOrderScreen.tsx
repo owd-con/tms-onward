@@ -3,12 +3,25 @@
 import { useEffect, useState } from "react";
 import { renderToString } from "react-dom/server";
 
+import QRCode from "react-qr-code";
+
 import { useOrder } from "@/services/order/hooks";
 import type { Order, Shipment } from "@/services/types";
 
 import Logo from "@/assets/logo_dark.svg";
 import { dateFormat } from "@/utils/common";
 import Print from "@/utils/print";
+
+// Driver app URL for QR code scan
+const getDriverScanURL = (orderId: string) => {
+  const isLocal =
+    import.meta.env.VITE_API_URL?.includes("localhost") ||
+    import.meta.env.DEV === true;
+  const baseUrl = isLocal
+    ? "http://localhost:5173"
+    : "https://driver.onward.co.id";
+  return `${baseUrl}/scan?order_id=${orderId}`;
+};
 
 /**
  * TMS Onward - Print Order Screen
@@ -118,7 +131,13 @@ const PrintOrderScreen = () => {
                           </p>
                         </td>
 
-                        <td style={{ width: "50%", textAlign: "right" }}>
+                        <td
+                          style={{
+                            width: "50%",
+                            textAlign: "right",
+                            paddingTop: 30,
+                          }}
+                        >
                           <img src={Logo} alt='' height='50px' />
                         </td>
                       </tr>
@@ -446,6 +465,37 @@ const PrintOrderScreen = () => {
                         </td>
                       </tr>
                     </table>
+                    {data?.id && (
+                      <div style={{ marginTop: 10 }}>
+                        <table style={{ width: "100%" }}>
+                          <tr>
+                            <td style={{ width: "33%" }}></td>
+                            <td style={{ width: "34%", textAlign: "center" }}>
+                              <div
+                                style={{
+                                  padding: 5,
+                                  backgroundColor: "#fff",
+                                  display: "inline-block",
+                                }}
+                              >
+                                <QRCode
+                                  value={getDriverScanURL(data.id)}
+                                  size={100}
+                                  level={"M"}
+                                />
+                                <p
+                                  className='bold mb-0'
+                                  style={{ fontSize: 8, marginTop: 2 }}
+                                >
+                                  SCAN UNTUK DRIVER
+                                </p>
+                              </div>
+                            </td>
+                            <td style={{ width: "33%" }}></td>
+                          </tr>
+                        </table>
+                      </div>
+                    )}
                   </div>
                 )}
               </section>

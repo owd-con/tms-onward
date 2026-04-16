@@ -18,7 +18,7 @@ import (
 type loadingWaypointRequest struct {
 	TripWaypointID    string   `param:"id" valid:"required"`
 	LoadedShipmentIDs []string `json:"loaded_shipment_ids" valid:"required"` // Successfully loaded (others = cancelled)
-	LoadedBy          string   `json:"loaded_by" valid:"required"`            // Warehouse staff name who handed over items
+	LoadedBy          string   `json:"loaded_by" valid:"required"`           // Warehouse staff name who handed over items
 	Images            []string `json:"images" valid:"required"`              // Loading photos
 
 	tripWaypoint *entity.TripWaypoint
@@ -51,15 +51,17 @@ func (r *loadingWaypointRequest) Validate() *validate.Response {
 		} else {
 			r.tripWaypoint = tripWaypoint
 
-			// Validate trip and driver
-			if tripWaypoint.Trip == nil || tripWaypoint.Trip.Driver == nil {
-				v.SetError("id.invalid", "Trip or driver not found.")
-			}
-
 			// Validate trip belongs to this driver
 			if tripWaypoint.Trip != nil && tripWaypoint.Trip.Driver != nil {
 				if tripWaypoint.Trip.Driver.UserID.String() != r.session.UserID {
-					v.SetError("id.forbidden", "This trip is not assigned to you.")
+					v.SetError("id.invalid", "This trip is not assigned to you.")
+				}
+			}
+
+			// Validate trip belongs to this user
+			if tripWaypoint.Trip != nil && tripWaypoint.Trip.User != nil {
+				if tripWaypoint.Trip.UserID.String() != r.session.UserID {
+					v.SetError("id.invalid", "This trip is not assigned to you.")
 				}
 			}
 

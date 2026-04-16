@@ -36,9 +36,6 @@ func RegisterHandler(s *rest.RestServer) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /reports/counter [get]
 func (h *handler) getTripsCounter(ctx *rest.Context) (err error) {
 	var req getTripsCounterRequest
@@ -67,9 +64,6 @@ func (h *handler) getTripsCounter(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /reports/order-trip-waypoint [get]
 func (h *handler) getOrderTripWaypointReport(ctx *rest.Context) (err error) {
 	var req getOrderTripWaypointRequest
@@ -99,9 +93,6 @@ func (h *handler) getOrderTripWaypointReport(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /reports/driver-performance [get]
 func (h *handler) getDriverPerformance(ctx *rest.Context) (err error) {
 	var req getDriverPerformanceRequest
@@ -131,9 +122,6 @@ func (h *handler) getDriverPerformance(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /reports/customer [get]
 func (h *handler) getCustomerReport(ctx *rest.Context) (err error) {
 	var req getCustomerReportRequest

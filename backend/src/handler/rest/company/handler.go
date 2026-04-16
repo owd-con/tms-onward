@@ -22,7 +22,7 @@ type handler struct {
 // @Param page query int false "Page number for pagination (admin only)"
 // @Param limit query int false "Items per page (admin only)"
 // @Success 200 {object} rest.ResponseBody
-// @Failure 401 {object} rest.HTTPError
+// @Failure 400 {object} rest.HTTPError
 // @Router /companies [get]
 func (h *handler) get(ctx *rest.Context) (err error) {
 	var req getRequest

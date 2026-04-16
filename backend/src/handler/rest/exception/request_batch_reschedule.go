@@ -129,7 +129,7 @@ func (r *batchRescheduleShipmentsRequest) toEntity() *entity.Trip {
 		OrderID:    r.orderID,
 		DriverID:   r.driver.ID,
 		VehicleID:  r.vehicle.ID,
-		Status:     "planned",
+		Status:     "dispatched",
 		Notes:      notes,
 		CreatedAt:  time.Now(),
 	}

@@ -29,8 +29,6 @@ type handler struct {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /pricing-matrices [get]
 func (h *handler) get(ctx *rest.Context) (err error) {
 	var req getRequest
@@ -53,8 +51,6 @@ func (h *handler) get(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /pricing-matrices [post]
 func (h *handler) create(ctx *rest.Context) (err error) {
 	var req createRequest
@@ -77,9 +73,6 @@ func (h *handler) create(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /pricing-matrices/{id} [get]
 func (h *handler) show(ctx *rest.Context) (err error) {
 	var req getRequest
@@ -103,9 +96,6 @@ func (h *handler) show(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /pricing-matrices/{id} [put]
 func (h *handler) update(ctx *rest.Context) (err error) {
 	var req updateRequest
@@ -128,9 +118,6 @@ func (h *handler) update(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /pricing-matrices/{id} [delete]
 func (h *handler) delete(ctx *rest.Context) (err error) {
 	var req deleteRequest
@@ -153,9 +140,6 @@ func (h *handler) delete(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /pricing-matrices/{id}/activate [put]
 func (h *handler) activate(ctx *rest.Context) (err error) {
 	var req activateRequest
@@ -178,9 +162,6 @@ func (h *handler) activate(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /pricing-matrices/{id}/deactivate [put]
 func (h *handler) deactivate(ctx *rest.Context) (err error) {
 	var req deactivateRequest

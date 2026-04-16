@@ -24,6 +24,9 @@ func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 	s.GET("/driver/trips/{id}", h.getTripDetail, middleware.WithActiveCheck(s))
 	s.PUT("/driver/trips/{id}/start", h.startTrip, middleware.WithActiveCheck(s))
 
+	// Receive order endpoint (create trip and dispatch)
+	s.POST("/driver/receive-order", h.receiveOrder, middleware.WithActiveCheck(s))
+
 	// Waypoint-specific endpoints
 	s.PUT("/driver/trips/waypoint/{id}/start", h.startWaypoint, middleware.WithActiveCheck(s))
 	s.PUT("/driver/trips/waypoint/{id}/loading", h.loadingWaypoint, middleware.WithActiveCheck(s)) // Pickup complete
@@ -42,9 +45,6 @@ func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /driver/trips [get]
 func (h *handler) getMyTrips(ctx *rest.Context) (err error) {
 	var req getTripsRequest
@@ -68,9 +68,6 @@ func (h *handler) getMyTrips(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /driver/trips/history [get]
 func (h *handler) getTripHistory(ctx *rest.Context) (err error) {
 	var req getTripsRequest
@@ -92,9 +89,6 @@ func (h *handler) getTripHistory(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /driver/trips/{id} [get]
 func (h *handler) getTripDetail(ctx *rest.Context) (err error) {
 	var req getTripsRequest
@@ -118,9 +112,6 @@ func (h *handler) getTripDetail(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /driver/trips/{id}/start [put]
 func (h *handler) startTrip(ctx *rest.Context) (err error) {
 	var req startTripRequest
@@ -142,9 +133,6 @@ func (h *handler) startTrip(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /driver/trips/waypoint/{id}/start [put]
 func (h *handler) startWaypoint(ctx *rest.Context) (err error) {
 	var req startWaypointRequest
@@ -170,9 +158,6 @@ func (h *handler) startWaypoint(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /driver/trips/waypoint/{id}/loading [put]
 func (h *handler) loadingWaypoint(ctx *rest.Context) (err error) {
 	var req loadingWaypointRequest
@@ -198,9 +183,6 @@ func (h *handler) loadingWaypoint(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /driver/trips/waypoint/{id}/complete [put]
 func (h *handler) completeWaypoint(ctx *rest.Context) (err error) {
 	var req completeWaypointRequest
@@ -225,12 +207,31 @@ func (h *handler) completeWaypoint(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /driver/trips/waypoint/{id}/failed [put]
 func (h *handler) failWaypoint(ctx *rest.Context) (err error) {
 	var req failWaypointRequest
+	var res *rest.ResponseBody
+
+	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {
+		res, err = req.execute()
+	}
+	return ctx.Respond(res, err)
+}
+
+// receiveOrder handles POST /driver/receive-order
+// @Summary Receive order and create trip
+// @Description Driver receives an order via QR code scan and creates a trip with waypoints
+// @Tags driver_web
+// @Accept json
+// @Produce json
+// @Param order_id body string true "Order ID" Format(uuid)
+// @Param vehicle_id body string true "Vehicle ID" Format(uuid)
+// @Param authorization header string true "Bearer jwt-token..."
+// @Success 200 {object} rest.ResponseBody
+// @Failure 400 {object} rest.HTTPError
+// @Router /driver/receive-order [post]
+func (h *handler) receiveOrder(ctx *rest.Context) (err error) {
+	var req receiveOrderRequest
 	var res *rest.ResponseBody
 
 	if err = ctx.Bind(req.with(ctx, h.uc)); err == nil {

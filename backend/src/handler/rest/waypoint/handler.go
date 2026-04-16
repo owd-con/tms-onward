@@ -34,9 +34,6 @@ func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /waypoint/logs [get]
 func (h *handler) getLogs(ctx *rest.Context) (err error) {
 	var req getRequest
@@ -61,9 +58,6 @@ func (h *handler) getLogs(ctx *rest.Context) (err error) {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
-// @Failure 404 {object} rest.HTTPError
-// @Failure 500 {object} rest.HTTPError
 // @Router /waypoint/images [get]
 func (h *handler) getImages(ctx *rest.Context) (err error) {
 	var req getRequest

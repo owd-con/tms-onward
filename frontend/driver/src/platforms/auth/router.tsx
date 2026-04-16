@@ -18,7 +18,17 @@ const AuthRouter = () => {
   return (
     <Routes>
       {routes.map((r, i) => (
-        <Route key={i} path={r.path} element={<r.element />} />
+        <Route
+          key={i}
+          path={r.path}
+          element={
+            typeof r.element === "function" ? (
+              <r.element />
+            ) : (
+              r.element
+            )
+          }
+        />
       ))}
       <Route path="*" element={<Navigate to="/auth/login" replace />} />
     </Routes>

@@ -13,6 +13,7 @@ import (
 type loginRequest struct {
 	Identifier string `json:"identifier" valid:"required"`
 	Password   string `json:"password" valid:"required"`
+	Apps       string `json:"apps"`
 
 	uc   *usecase.AuthUsecase
 	ctx  context.Context
@@ -27,6 +28,14 @@ func (r *loginRequest) Validate() *validate.Response {
 		if r.uc != nil {
 			if r.user, err = r.uc.ValidLogin(r.Identifier, r.Password); err != nil {
 				v.SetError("identifier.invalid", "username or password is not valid.")
+			}
+		}
+	}
+
+	if r.user != nil {
+		if r.Apps == "driver" {
+			if r.user.Role != "driver" {
+				v.SetError("apps.invalid", "user is not a driver.")
 			}
 		}
 	}

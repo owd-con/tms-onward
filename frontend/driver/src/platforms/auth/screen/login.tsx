@@ -28,7 +28,16 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (loginResult?.isSuccess) {
-      navigate(redirectTo, { replace: true });
+      // Check if there's a pending order_id from scan URL
+      const pendingOrderId = localStorage.getItem("pending_order_id");
+      if (pendingOrderId) {
+        // Clear the stored order_id
+        localStorage.removeItem("pending_order_id");
+        // Redirect to scan page with the order_id
+        navigate(`/scan?order_id=${pendingOrderId}`, { replace: true });
+      } else {
+        navigate(redirectTo, { replace: true });
+      }
     }
   }, [loginResult, navigate, redirectTo]);
 
@@ -131,7 +140,11 @@ const LoginPage = () => {
           <p className='text-sm text-slate-500 mt-2'>
             New driver?{" "}
             <Link
-              to='/auth/signup'
+              to={
+                localStorage.getItem("pending_order_id")
+                  ? `/auth/signup?fallback=${encodeURIComponent(`/scan?order_id=${localStorage.getItem("pending_order_id")}`)}`
+                  : "/auth/signup"
+              }
               className='text-blue-600 font-semibold hover:underline'
             >
               Register here

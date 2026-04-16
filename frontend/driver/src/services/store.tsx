@@ -6,6 +6,7 @@ import rootReducer from "./reducer";
 import { authApi } from "./auth/api";
 import { driverApi } from "./driver/api";
 import { uploadApi } from "./upload/api";
+import { orderApi } from "./order/api";
 
 const persistConfig = {
   key: "root",
@@ -20,6 +21,7 @@ const apiMiddleware: Middleware[] = [
   authApi.middleware,
   driverApi.middleware,
   uploadApi.middleware,
+  orderApi.middleware,
 ];
 
 const store = configureStore({

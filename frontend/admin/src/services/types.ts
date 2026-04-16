@@ -136,14 +136,14 @@ export interface Driver {
 
 export interface Address {
   id: string;
-  company_id?: string;      // For inhouse company
-  customer_id?: string;    // For 3pl/carrier company
+  company_id?: string; // For inhouse company
+  customer_id?: string; // For 3pl/carrier company
   name: string;
   address: string;
   region_id: string; // Reference to region-id library's Region entity
   contact_name?: string;
   contact_phone?: string;
-  type?: "pickup_point" | "drop_point";  // For inhouse company
+  type?: "pickup_point" | "drop_point"; // For inhouse company
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -512,6 +512,7 @@ export interface Trip {
   updated_at: string;
   is_deleted: boolean;
   driver?: Driver;
+  user?: User;
   vehicle?: Vehicle;
   order?: Order;
   dispatch?: Dispatch;

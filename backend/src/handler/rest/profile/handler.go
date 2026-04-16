@@ -21,7 +21,6 @@ type handler struct {
 // @Param authorization header string true "Bearer jwt-token..."
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
 // @Router /me [get]
 func (h *handler) get(ctx *rest.Context) (err error) {
 	var req getRequest
@@ -44,7 +43,6 @@ func (h *handler) get(ctx *rest.Context) (err error) {
 // @Param request body updateRequest true "Update profile request"
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Failure 401 {object} rest.HTTPError
 // @Router /me [put]
 func (h *handler) update(ctx *rest.Context) (err error) {
 	var res *rest.ResponseBody

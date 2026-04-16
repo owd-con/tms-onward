@@ -43,15 +43,24 @@ func (r *startTripRequest) Validate() *validate.Response {
 		r.trip = trip
 	}
 
-	// Validate trip status
-	if r.trip != nil && r.trip.Status != "dispatched" {
-		v.SetError("id.invalid", "Trip must be in Dispatched status to be started.")
-	}
+	if r.trip != nil {
+		if r.trip.Status != "dispatched" {
+			v.SetError("id.invalid", "Trip must be in Dispatched status to be started.")
+		}
 
-	// Validate: trip must belong to the authenticated driver
-	// For driver web, session.UserID is the Driver's user_id
-	if r.trip != nil && r.session != nil && r.trip.Driver.UserID.String() != r.session.UserID {
-		v.SetError("id.forbidden", "This trip is not assigned to you.")
+		// Validate: trip must belong to the authenticated driver
+		// For driver web, session.UserID is the Driver's user_id
+		if r.trip.Driver != nil {
+			if r.trip.Driver.UserID.String() != r.session.UserID {
+				v.SetError("id.invalid", "This trip is not assigned to you.")
+			}
+		}
+
+		if r.trip.User != nil {
+			if r.trip.User.ID.String() != r.session.UserID {
+				v.SetError("id.invalid", "This trip is not assigned to you.")
+			}
+		}
 	}
 
 	return v

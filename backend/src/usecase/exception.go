@@ -215,7 +215,7 @@ func (u *ExceptionUsecase) BatchRescheduleShipments(newTrip *entity.Trip, shipme
 					ContactName:    firstShipment.DestContactName,
 					ContactPhone:   firstShipment.DestContactPhone,
 					SequenceNumber: seq,
-					Status:         "pending",
+					Status:         "dispatched", // First waypoint is dispatched
 				})
 				seq++
 			}

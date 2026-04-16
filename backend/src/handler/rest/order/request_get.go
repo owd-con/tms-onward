@@ -2,7 +2,6 @@ package order
 
 import (
 	"context"
-	"errors"
 
 	"github.com/logistics-id/onward-tms/entity"
 	"github.com/logistics-id/onward-tms/src/usecase"
@@ -47,11 +46,6 @@ func (r *getRequest) waypointPreview() (*rest.ResponseBody, error) {
 	order, err := r.uc.Order.GetByID(r.ID)
 	if err != nil {
 		return nil, err
-	}
-
-	// Validate tenant isolation
-	if r.session != nil && order.CompanyID.String() != r.session.CompanyID {
-		return nil, errors.New("order not found")
 	}
 
 	// Generate waypoint preview using usecase
