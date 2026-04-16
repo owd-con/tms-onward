@@ -13,7 +13,11 @@ export const authApi = createApi({
      * User login with identifier and password
      */
     login: builder.mutation({
-      query: (credentials: { identifier: string; password: string }) => ({
+      query: (credentials: {
+        identifier: string;
+        password: string;
+        apps: string;
+      }) => ({
         url: "/auth/login",
         method: "POST",
         body: credentials,

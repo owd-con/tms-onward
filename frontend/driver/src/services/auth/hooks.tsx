@@ -38,7 +38,11 @@ export const useAuth = () => {
    */
   const login = async (identifier: string, password: string) => {
     try {
-      const res = await loginMutation({ identifier, password }).unwrap();
+      const res = await loginMutation({
+        identifier,
+        password,
+        apps: "driver",
+      }).unwrap();
       if (res?.data?.access_token) {
         dispatch(signin(res.data));
       }
