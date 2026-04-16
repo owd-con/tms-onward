@@ -14,6 +14,9 @@ definitions:
         type: string
       region_id:
         type: string
+      type:
+        description: For inhouse company
+        type: string
     type: object
   address.updateRequest:
     properties:
@@ -32,6 +35,9 @@ definitions:
         type: string
       region_id:
         type: string
+      type:
+        description: For inhouse company
+        type: string
     type: object
   auth.changePasswordRequest:
     properties:
@@ -41,16 +47,22 @@ definitions:
         type: string
       old_password:
         type: string
+      password:
+        type: string
     type: object
   auth.loginRequest:
     properties:
-      email:
+      identifier:
         type: string
       password:
         type: string
     type: object
   auth.signupRequest:
     properties:
+      address:
+        type: string
+      brand_name:
+        type: string
       company_name:
         description: Company data
         type: string
@@ -58,11 +70,7 @@ definitions:
         type: string
       confirm_password:
         type: string
-      currency:
-        type: string
       email:
-        type: string
-      language:
         type: string
       name:
         description: User data
@@ -71,20 +79,22 @@ definitions:
         type: string
       phone:
         type: string
-      timezone:
+      role:
+        type: string
+      username:
         type: string
     type: object
   company.updateRequest:
     properties:
-      currency:
+      address:
         type: string
-      language:
+      brand_name:
+        type: string
+      company_name:
         type: string
       logo_url:
         type: string
-      name:
-        type: string
-      timezone:
+      phone:
         type: string
       type:
         type: string
@@ -119,8 +129,6 @@ definitions:
         type: string
       confirm_password:
         type: string
-      email:
-        type: string
       has_login:
         description: User creation fields (for has_login)
         type: boolean
@@ -138,14 +146,14 @@ definitions:
         type: string
       phone:
         type: string
+      username:
+        type: string
     type: object
   driver.updateRequest:
     properties:
       avatar_url:
         type: string
       confirm_password:
-        type: string
-      email:
         type: string
       has_login:
         description: 'Add login account fields (one-way: no login → has login)'
@@ -163,6 +171,8 @@ definitions:
       password:
         type: string
       phone:
+        type: string
+      username:
         type: string
     type: object
   exception.batchRescheduleShipmentsRequest:
@@ -213,13 +223,19 @@ definitions:
     type: object
   onboarding.step1Request:
     properties:
+      address:
+        type: string
+      brand_name:
+        type: string
       company_name:
         type: string
-      company_type:
+      phone:
+        type: string
+      type:
         type: string
     required:
     - company_name
-    - company_type
+    - type
     type: object
   onboarding.step2Request:
     properties:
@@ -324,6 +340,7 @@ definitions:
   order.createRequest:
     properties:
       customer_id:
+        description: Optional - not required for inhouse
         type: string
       manual_override_price:
         type: number
@@ -341,6 +358,7 @@ definitions:
   order.updateRequest:
     properties:
       customer_id:
+        description: Optional - not required for inhouse
         type: string
       id:
         type: string
@@ -383,7 +401,13 @@ definitions:
     properties:
       avatar_url:
         type: string
+      confirm_password:
+        type: string
       name:
+        type: string
+      password:
+        type: string
+      passwordHash:
         type: string
       phone:
         type: string
@@ -485,6 +509,13 @@ definitions:
           $ref: '#/definitions/trip.WaypointRequest'
         type: array
     type: object
+  trip.reassignDriverRequest:
+    properties:
+      driver_id:
+        type: string
+      id:
+        type: string
+    type: object
   trip.updateRequest:
     properties:
       driver_id:
@@ -511,8 +542,6 @@ definitions:
     type: object
   user.createRequest:
     properties:
-      company_id:
-        type: string
       confirm_password:
         type: string
       email:
@@ -525,11 +554,11 @@ definitions:
         type: string
       role:
         type: string
+      username:
+        type: string
     type: object
   user.updateRequest:
     properties:
-      company_id:
-        type: string
       confirm_password:
         type: string
       email:
@@ -543,6 +572,8 @@ definitions:
       phone:
         type: string
       role:
+        type: string
+      username:
         type: string
     type: object
   vehicle.createRequest:
@@ -961,8 +992,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/rest.ResponseBody'
-        "401":
-          description: Unauthorized
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/rest.HTTPError'
       summary: Get companies
@@ -1325,6 +1356,32 @@ paths:
       summary: Get dashboard
       tags:
       - dashboard
+  /dashboard/driver:
+    get:
+      consumes:
+      - application/json
+      description: Get dashboard data for driver including active trips count, completed
+        trips count, and active trips list
+      parameters:
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get driver dashboard
+      tags:
+      - dashboard
   /docs/info:
     get:
       description: Get basic information about the TMS Onward API
@@ -1343,6 +1400,46 @@ paths:
       summary: Get API documentation (Swagger JSON)
       tags:
       - docs
+  /driver/receive-order:
+    post:
+      consumes:
+      - application/json
+      description: Driver receives an order via QR code scan and creates a trip with
+        waypoints
+      parameters:
+      - description: Order ID
+        format: uuid
+        in: body
+        name: order_id
+        required: true
+        schema:
+          type: string
+      - description: Vehicle ID
+        format: uuid
+        in: body
+        name: vehicle_id
+        required: true
+        schema:
+          type: string
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Receive order and create trip
+      tags:
+      - driver_web
   /driver/trips:
     get:
       consumes:
@@ -1376,18 +1473,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
       summary: Get my active trips
       tags:
       - driver_web
@@ -1418,18 +1503,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
       summary: Get trip detail
       tags:
       - driver_web
@@ -1458,18 +1531,6 @@ paths:
             $ref: '#/definitions/rest.ResponseBody'
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.HTTPError'
       summary: Start trip
@@ -1509,18 +1570,6 @@ paths:
             $ref: '#/definitions/rest.ResponseBody'
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.HTTPError'
       summary: Get my trip history
@@ -1581,18 +1630,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
       summary: Complete delivery waypoint
       tags:
       - driver_web
@@ -1642,18 +1679,6 @@ paths:
             $ref: '#/definitions/rest.ResponseBody'
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.HTTPError'
       summary: Fail delivery waypoint
@@ -1716,18 +1741,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
       summary: Complete pickup waypoint
       tags:
       - driver_web
@@ -1756,18 +1769,6 @@ paths:
             $ref: '#/definitions/rest.ResponseBody'
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.HTTPError'
       summary: Start waypoint
@@ -2145,10 +2146,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
       summary: Get Current User Profile
       tags:
       - profile
@@ -2177,10 +2174,6 @@ paths:
             $ref: '#/definitions/rest.ResponseBody'
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
           schema:
             $ref: '#/definitions/rest.HTTPError'
       summary: Update Current User Profile
@@ -2652,14 +2645,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
       summary: Get list of pricing matrices
       tags:
       - pricing_matrix
@@ -2689,14 +2674,6 @@ paths:
             $ref: '#/definitions/rest.ResponseBody'
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.HTTPError'
       summary: Create a new pricing matrix
@@ -2730,18 +2707,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
       summary: Delete a pricing matrix
       tags:
       - pricing_matrix
@@ -2769,18 +2734,6 @@ paths:
             $ref: '#/definitions/rest.ResponseBody'
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.HTTPError'
       summary: Get pricing matrix details
@@ -2819,18 +2772,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
       summary: Update a pricing matrix
       tags:
       - pricing_matrix
@@ -2860,18 +2801,6 @@ paths:
             $ref: '#/definitions/rest.ResponseBody'
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.HTTPError'
       summary: Activate a pricing matrix
@@ -2905,18 +2834,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
       summary: Deactivate a pricing matrix
       tags:
       - pricing_matrix
@@ -2946,6 +2863,31 @@ paths:
       summary: Track order
       tags:
       - tracking
+  /reports/counter:
+    get:
+      consumes:
+      - application/json
+      description: Get order statistics counter (pending, on progress, history, exceptions)
+      parameters:
+      - description: Bearer jwt-token...
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPError'
+      summary: Get trips counter
+      tags:
+      - report
   /reports/customer:
     get:
       consumes:
@@ -2994,18 +2936,6 @@ paths:
             $ref: '#/definitions/rest.ResponseBody'
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.HTTPError'
       summary: Get customer report
@@ -3059,18 +2989,6 @@ paths:
             $ref: '#/definitions/rest.ResponseBody'
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.HTTPError'
       summary: Get driver performance report with sorting
@@ -3129,18 +3047,6 @@ paths:
             $ref: '#/definitions/rest.ResponseBody'
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.HTTPError'
       summary: Get trip waypoint report
@@ -3317,18 +3223,23 @@ paths:
       summary: Update trip
       tags:
       - trip
-  /trips/{id}/dispatch:
+  /trips/{id}/reassign-driver:
     put:
       consumes:
       - application/json
-      description: Dispatch a planned trip (Planned → Dispatched). Signals the driver
-        and updates order/waypoint status.
+      description: Reassign a driver to a planned trip
       parameters:
       - description: Trip ID
         in: path
         name: id
         required: true
         type: string
+      - description: Reassign driver request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/trip.reassignDriverRequest'
       - description: Bearer jwt-token...
         in: header
         name: authorization
@@ -3345,7 +3256,7 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/rest.HTTPError'
-      summary: Dispatch trip
+      summary: Reassign driver
       tags:
       - trip
   /upload/presigned-url:
@@ -3852,18 +3763,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
       summary: Get waypoint images
       tags:
       - waypoint
@@ -3905,18 +3804,6 @@ paths:
             $ref: '#/definitions/rest.ResponseBody'
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.HTTPError'
-        "500":
-          description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.HTTPError'
       summary: Get waypoint logs

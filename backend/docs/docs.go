@@ -571,8 +571,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/rest.ResponseBody"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
@@ -1114,6 +1114,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/dashboard/driver": {
+            "get": {
+                "description": "Get dashboard data for driver including active trips count, completed trips count, and active trips list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dashboard"
+                ],
+                "summary": "Get driver dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer jwt-token...",
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ResponseBody"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/rest.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/docs/info": {
             "get": {
                 "description": "Get basic information about the TMS Onward API",
@@ -1138,6 +1176,64 @@ const docTemplate = `{
                 ],
                 "summary": "Get API documentation (Swagger JSON)",
                 "responses": {}
+            }
+        },
+        "/driver/receive-order": {
+            "post": {
+                "description": "Driver receives an order via QR code scan and creates a trip with waypoints",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "driver_web"
+                ],
+                "summary": "Receive order and create trip",
+                "parameters": [
+                    {
+                        "format": "uuid",
+                        "description": "Order ID",
+                        "name": "order_id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "format": "uuid",
+                        "description": "Vehicle ID",
+                        "name": "vehicle_id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer jwt-token...",
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ResponseBody"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/rest.HTTPError"
+                        }
+                    }
+                }
             }
         },
         "/driver/trips": {
@@ -1185,24 +1281,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
@@ -1261,24 +1339,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
@@ -1367,24 +1427,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
                     }
                 }
             }
@@ -1457,24 +1499,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
@@ -1565,24 +1589,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
                     }
                 }
             }
@@ -1625,24 +1631,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
@@ -1691,24 +1679,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
                     }
                 }
             }
@@ -1751,24 +1721,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
@@ -2333,12 +2285,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
                     }
                 }
             },
@@ -2381,12 +2327,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
@@ -3090,18 +3030,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
                     }
                 }
             },
@@ -3147,18 +3075,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
                     }
                 }
             }
@@ -3201,24 +3117,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
@@ -3274,24 +3172,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
                     }
                 }
             },
@@ -3332,24 +3212,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
@@ -3398,24 +3260,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
                     }
                 }
             }
@@ -3461,24 +3305,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
                     }
                 }
             }
@@ -3502,6 +3328,44 @@ const docTemplate = `{
                         "description": "Order number",
                         "name": "orderNumber",
                         "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ResponseBody"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/rest.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/counter": {
+            "get": {
+                "description": "Get order statistics counter (pending, on progress, history, exceptions)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "report"
+                ],
+                "summary": "Get trips counter",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer jwt-token...",
+                        "name": "authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -3597,24 +3461,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
                     }
                 }
             }
@@ -3692,24 +3538,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
@@ -3796,24 +3624,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
@@ -4076,9 +3886,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/trips/{id}/dispatch": {
+        "/trips/{id}/reassign-driver": {
             "put": {
-                "description": "Dispatch a planned trip (Planned → Dispatched). Signals the driver and updates order/waypoint status.",
+                "description": "Reassign a driver to a planned trip",
                 "consumes": [
                     "application/json"
                 ],
@@ -4088,7 +3898,7 @@ const docTemplate = `{
                 "tags": [
                     "trip"
                 ],
-                "summary": "Dispatch trip",
+                "summary": "Reassign driver",
                 "parameters": [
                     {
                         "type": "string",
@@ -4096,6 +3906,15 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Reassign driver request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/trip.reassignDriverRequest"
+                        }
                     },
                     {
                         "type": "string",
@@ -4871,24 +4690,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
                     }
                 }
             }
@@ -4953,24 +4754,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/rest.HTTPError"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/rest.HTTPError"
-                        }
                     }
                 }
             }
@@ -4996,6 +4779,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "region_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "For inhouse company",
                     "type": "string"
                 }
             }
@@ -5024,6 +4811,10 @@ const docTemplate = `{
                 },
                 "region_id": {
                     "type": "string"
+                },
+                "type": {
+                    "description": "For inhouse company",
+                    "type": "string"
                 }
             }
         },
@@ -5038,13 +4829,16 @@ const docTemplate = `{
                 },
                 "old_password": {
                     "type": "string"
+                },
+                "password": {
+                    "type": "string"
                 }
             }
         },
         "auth.loginRequest": {
             "type": "object",
             "properties": {
-                "email": {
+                "identifier": {
                     "type": "string"
                 },
                 "password": {
@@ -5055,6 +4849,12 @@ const docTemplate = `{
         "auth.signupRequest": {
             "type": "object",
             "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "brand_name": {
+                    "type": "string"
+                },
                 "company_name": {
                     "description": "Company data",
                     "type": "string"
@@ -5065,13 +4865,7 @@ const docTemplate = `{
                 "confirm_password": {
                     "type": "string"
                 },
-                "currency": {
-                    "type": "string"
-                },
                 "email": {
-                    "type": "string"
-                },
-                "language": {
                     "type": "string"
                 },
                 "name": {
@@ -5084,7 +4878,10 @@ const docTemplate = `{
                 "phone": {
                     "type": "string"
                 },
-                "timezone": {
+                "role": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -5092,19 +4889,19 @@ const docTemplate = `{
         "company.updateRequest": {
             "type": "object",
             "properties": {
-                "currency": {
+                "address": {
                     "type": "string"
                 },
-                "language": {
+                "brand_name": {
+                    "type": "string"
+                },
+                "company_name": {
                     "type": "string"
                 },
                 "logo_url": {
                     "type": "string"
                 },
-                "name": {
-                    "type": "string"
-                },
-                "timezone": {
+                "phone": {
                     "type": "string"
                 },
                 "type": {
@@ -5158,9 +4955,6 @@ const docTemplate = `{
                 "confirm_password": {
                     "type": "string"
                 },
-                "email": {
-                    "type": "string"
-                },
                 "has_login": {
                     "description": "User creation fields (for has_login)",
                     "type": "boolean"
@@ -5185,6 +4979,9 @@ const docTemplate = `{
                 },
                 "phone": {
                     "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
@@ -5195,9 +4992,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "confirm_password": {
-                    "type": "string"
-                },
-                "email": {
                     "type": "string"
                 },
                 "has_login": {
@@ -5223,6 +5017,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "phone": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -5301,13 +5098,22 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "company_name",
-                "company_type"
+                "type"
             ],
             "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "brand_name": {
+                    "type": "string"
+                },
                 "company_name": {
                     "type": "string"
                 },
-                "company_type": {
+                "phone": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }
@@ -5468,6 +5274,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "customer_id": {
+                    "description": "Optional - not required for inhouse",
                     "type": "string"
                 },
                 "manual_override_price": {
@@ -5494,6 +5301,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "customer_id": {
+                    "description": "Optional - not required for inhouse",
                     "type": "string"
                 },
                 "id": {
@@ -5559,7 +5367,16 @@ const docTemplate = `{
                 "avatar_url": {
                     "type": "string"
                 },
+                "confirm_password": {
+                    "type": "string"
+                },
                 "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "passwordHash": {
                     "type": "string"
                 },
                 "phone": {
@@ -5699,6 +5516,17 @@ const docTemplate = `{
                 }
             }
         },
+        "trip.reassignDriverRequest": {
+            "type": "object",
+            "properties": {
+                "driver_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
         "trip.updateRequest": {
             "type": "object",
             "properties": {
@@ -5738,9 +5566,6 @@ const docTemplate = `{
         "user.createRequest": {
             "type": "object",
             "properties": {
-                "company_id": {
-                    "type": "string"
-                },
                 "confirm_password": {
                     "type": "string"
                 },
@@ -5758,15 +5583,15 @@ const docTemplate = `{
                 },
                 "role": {
                     "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
         "user.updateRequest": {
             "type": "object",
             "properties": {
-                "company_id": {
-                    "type": "string"
-                },
                 "confirm_password": {
                     "type": "string"
                 },
@@ -5786,6 +5611,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
