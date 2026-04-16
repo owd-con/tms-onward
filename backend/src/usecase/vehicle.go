@@ -25,6 +25,7 @@ type VehicleQueryOptions struct {
 	Session     *entity.TMSSessionClaims
 	Status      string `query:"status"`
 	VehicleType string `query:"vehicle_type"`
+	CompanyID   string `query:"company_id"`
 }
 
 func (o *VehicleQueryOptions) BuildQueryOption() *VehicleQueryOptions {
@@ -44,17 +45,17 @@ func (u *VehicleUsecase) Get(req *VehicleQueryOptions) ([]*entity.Vehicle, int64
 		return nil, 0, errors.New("session not found")
 	}
 
-	if req.Session.CompanyID == "" {
-		return nil, 0, errors.New("user is not a tenant")
-	}
-
 	if req.OrderBy == "" {
 		req.OrderBy = "-vehicles:created_at"
 	}
 
 	return u.Repo.FindAll(req.BuildOption(), func(q *bun.SelectQuery) *bun.SelectQuery {
-		if req.Session != nil {
+		if req.Session != nil && req.Session.CompanyID != "" {
 			q.Where("vehicles.company_id = ?", req.Session.CompanyID)
+		}
+
+		if req.CompanyID != "" {
+			q.Where("vehicles.company_id = ?", req.CompanyID)
 		}
 
 		if req.Status != "" {
