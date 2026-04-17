@@ -31,7 +31,8 @@
       "mcp__chrome-devtools__get_network_request",
       "Bash(curl:*)",
       "Bash(printf:*)",
-      "mcp__chrome-devtools__take_screenshot"
+      "mcp__chrome-devtools__take_screenshot",
+      "Bash(npm run build)"
     ]
   }
 }

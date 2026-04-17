@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { FaPrint } from "react-icons/fa";
 
 import { useEnigmaUI } from "@/components";
@@ -35,7 +34,6 @@ const ShipmentTimeline = ({
   onReturnSuccess,
 }: ShipmentTimelineProps) => {
   const { openModal, closeModal } = useEnigmaUI();
-  const navigate = useNavigate();
 
   const openReturnShipmentModal = (shipment: Shipment) => {
     openModal({

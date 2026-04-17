@@ -91,7 +91,6 @@ export const AssignTripDrawer: React.FC<AssignTripDrawerProps> = ({
   useEffect(() => {
     if (createResult?.isSuccess && !successHandledRef.current) {
       successHandledRef.current = true;
-      const data = (createResult?.data as any)?.data;
 
       showToast({
         message:
