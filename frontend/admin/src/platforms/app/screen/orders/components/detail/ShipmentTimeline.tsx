@@ -354,7 +354,7 @@ const ShipmentTimeline = ({
                     <Button
                       variant='secondary'
                       size='sm'
-                      onClick={() => navigate(`/a/print/resi/order/${orderId}/shipment/${shipment.id}`)}
+                      onClick={() => window.open(`/a/print/resi/order/${orderId}/shipment/${shipment.id}`, '_blank')}
                       className='flex-1 gap-2'
                     >
                       <FaPrint className='w-3 h-3' />

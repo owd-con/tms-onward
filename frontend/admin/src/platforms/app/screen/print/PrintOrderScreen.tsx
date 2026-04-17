@@ -2,15 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { renderToString } from "react-dom/server";
+import { useSelector } from "react-redux";
 
 import QRCode from "react-qr-code";
 
 import { useOrder } from "@/services/order/hooks";
 import type { Order, Shipment } from "@/services/types";
 
-import Logo from "@/assets/logo_dark.svg";
+import Logo from "@/assets/logo_light.svg";
 import { dateFormat } from "@/utils/common";
 import Print from "@/utils/print";
+import type { RootState } from "@/services/store";
 
 // Driver app URL for QR code scan
 const getDriverScanURL = (orderId: string) => {
@@ -38,6 +40,8 @@ const PrintOrderScreen = () => {
   const [limit] = useState(15);
 
   const { show: showOrder, showResult: showOrderResult } = useOrder();
+  const Profile = useSelector((state: RootState) => state.userProfile);
+  const companyLogo = Profile?.user?.company?.logo_url || Logo;
 
   const onLoad = () => {
     showOrder({ id: id as string });
@@ -138,7 +142,7 @@ const PrintOrderScreen = () => {
                             paddingTop: 30,
                           }}
                         >
-                          <img src={Logo} alt='' height='50px' />
+                          <img src={companyLogo} alt='' height='50px' />
                         </td>
                       </tr>
                     </table>

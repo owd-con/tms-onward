@@ -1,17 +1,19 @@
 /* eslint-disable react-hooks/exhaustive-de */
 
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import QRCode from "react-qr-code";
 import bwipjs from "bwip-js";
 
 import { useOrder } from "@/services/order/hooks";
 import type { Order, Shipment } from "@/services/types";
 
-import Logo from "@/assets/logo_dark.svg";
+import Logo from "@/assets/logo_light.svg";
 import { currencyFormat, dateFormat } from "@/utils/common";
 import Print from "@/utils/print";
 import { useParams } from "react-router-dom";
 import { renderToString } from "react-dom/server";
+import type { RootState } from "@/services/store";
 
 /**
  * Helper function untuk generate barcode SVG string
@@ -58,6 +60,8 @@ const PrintResiOrderScreen = () => {
   const [shipments, setShipments] = useState<Shipment[]>([]);
 
   const { show: showOrder, showResult: showOrderResult } = useOrder();
+  const Profile = useSelector((state: RootState) => state.userProfile);
+  const companyLogo = Profile?.user?.company?.logo_url || Logo;
 
   const onLoad = () => {
     showOrder({ id: orderId as string });
@@ -97,7 +101,7 @@ const PrintResiOrderScreen = () => {
                     <tr className='border'>
                       <td width={"35%"}>
                         <img
-                          src={Logo}
+                          src={companyLogo}
                           alt=''
                           style={{ maxHeight: 25, padding: 5 }}
                         />
@@ -323,7 +327,7 @@ const PrintResiOrderScreen = () => {
                         width='20%'
                       >
                         <img
-                          src={Logo}
+                          src={companyLogo}
                           alt=''
                           style={{ maxHeight: 18, padding: 5 }}
                         />

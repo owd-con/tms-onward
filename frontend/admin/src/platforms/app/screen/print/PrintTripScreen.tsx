@@ -1,16 +1,18 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import QRCode from "react-qr-code";
 
 import { useTrip } from "@/services/trip/hooks";
 import type { Trip, TripWaypoint } from "@/services/types";
 
-import Logo from "@/assets/logo_dark.svg";
+import Logo from "@/assets/logo_light.svg";
 import { currencyFormat, dateFormat } from "@/utils/common";
 import Print from "@/utils/print";
 import { useParams } from "react-router-dom";
 import { renderToString } from "react-dom/server";
+import type { RootState } from "@/services/store";
 
 /**
  * TMS Onward - Print Trip Screen (Manifest Style)
@@ -28,6 +30,8 @@ const PrintTripScreen = () => {
   const [waypoints, setWaypoints] = useState<TripWaypoint[]>([]);
 
   const { show: showTrip, showResult: showTripResult } = useTrip();
+  const Profile = useSelector((state: RootState) => state.userProfile);
+  const companyLogo = Profile?.user?.company?.logo_url || Logo;
 
   const onLoad = () => {
     showTrip({ id: tripId as string });
@@ -46,7 +50,7 @@ const PrintTripScreen = () => {
         // Sort waypoints by sequence_number
         const sortedWaypoints = [...tripData.trip_waypoints].sort(
           (a: TripWaypoint, b: TripWaypoint) =>
-            a.sequence_number - b.sequence_number
+            a.sequence_number - b.sequence_number,
         );
         setWaypoints(sortedWaypoints);
       }
@@ -79,17 +83,17 @@ const PrintTripScreen = () => {
     <div>
       <Print
         title={`Manifest - ${trip?.trip_number || ""}`}
-        size="A4"
+        size='A4'
         content={renderToString(
-          <section className="sheet" style={{ padding: "20px" }}>
+          <section className='sheet' style={{ padding: "20px" }}>
             {/* Header */}
             <div
-              className="d-flex flex-row justify-content-between"
+              className='d-flex flex-row justify-content-between'
               style={{ height: 132 }}
             >
               <div style={{ width: "85%" }}>
                 <div
-                  className="d-flex align-items-center border-bottom"
+                  className='d-flex align-items-center border-bottom'
                   style={{
                     paddingTop: 10,
                     paddingBottom: 10,
@@ -97,17 +101,15 @@ const PrintTripScreen = () => {
                 >
                   <div style={{ alignSelf: "initial", width: "30%" }}>
                     <img
-                      src={Logo}
-                      alt=""
+                      src={companyLogo}
+                      alt=''
                       style={{ maxHeight: 50, maxWidth: "100%" }}
                     />
                   </div>
                   <div style={{ paddingLeft: 20 }}>
-                    <h2 className="bold uppercase">Manifest Trip</h2>
-                    <p className="mb-0">
-                      Nomor Trip : {trip.trip_number}
-                    </p>
-                    <p className="mb-0">
+                    <h2 className='bold uppercase'>Manifest Trip</h2>
+                    <p className='mb-0'>Nomor Trip : {trip.trip_number}</p>
+                    <p className='mb-0'>
                       Tanggal :{" "}
                       {trip.started_at
                         ? dateFormat(trip.started_at, "DD-MM-YYYY")
@@ -117,14 +119,14 @@ const PrintTripScreen = () => {
                 </div>
               </div>
               <div style={{ width: "15%" }}>
-                <div className="d-flex flex-column justify-content-center text-center align-items-center">
+                <div className='d-flex flex-column justify-content-center text-center align-items-center'>
                   <QRCode
                     value={trip.id}
-                    bgColor="#fff"
-                    fgColor="#000"
+                    bgColor='#fff'
+                    fgColor='#000'
                     style={{ height: 120 }}
                   />
-                  <p className="mb-0" style={{ fontSize: 9 }}>
+                  <p className='mb-0' style={{ fontSize: 9 }}>
                     {trip.trip_number}
                   </p>
                 </div>
@@ -132,59 +134,61 @@ const PrintTripScreen = () => {
             </div>
 
             {/* Informasi Armada */}
-            <table className="body" style={{ marginTop: -50 }}>
+            <table className='body' style={{ marginTop: -50 }}>
               <tr style={{ verticalAlign: "top" }}>
                 <td style={{ width: "50%", paddingTop: "10px" }}>
-                  <h5 className="bold uppercase">Informasi Armada :</h5>
+                  <h5 className='bold uppercase'>Informasi Armada :</h5>
                   <table style={{ marginBottom: "15px" }}>
                     <tr style={{ textAlign: "left" }}>
                       <td style={{ width: "25%", textAlign: "left" }}>
-                        <p className="mb-0">Driver</p>
+                        <p className='mb-0'>Driver</p>
                       </td>
                       <td>
-                        <p className="mb-0">:</p>
+                        <p className='mb-0'>:</p>
                       </td>
                       <td style={{ width: "70%", textAlign: "left" }}>
-                        <p className="bold uppercase mb-0">
+                        <p className='bold uppercase mb-0'>
                           {trip.driver?.name || "-"}
                         </p>
                       </td>
                     </tr>
                     <tr style={{ textAlign: "left" }}>
                       <td>
-                        <p className="mb-0">Kendaraan</p>
+                        <p className='mb-0'>Kendaraan</p>
                       </td>
                       <td>
-                        <p className="mb-0">:</p>
+                        <p className='mb-0'>:</p>
                       </td>
                       <td>
-                        <p className="bold uppercase mb-0">
-                          {trip.vehicle?.plate_number || trip.vehicle?.type || "-"}
+                        <p className='bold uppercase mb-0'>
+                          {trip.vehicle?.plate_number ||
+                            trip.vehicle?.type ||
+                            "-"}
                         </p>
                       </td>
                     </tr>
                     <tr style={{ textAlign: "left" }}>
                       <td>
-                        <p className="mb-0">Status</p>
+                        <p className='mb-0'>Status</p>
                       </td>
                       <td>
-                        <p className="mb-0">:</p>
+                        <p className='mb-0'>:</p>
                       </td>
                       <td>
-                        <p className="bold uppercase mb-0">
+                        <p className='bold uppercase mb-0'>
                           {trip.status.replace("_", " ")}
                         </p>
                       </td>
                     </tr>
                     <tr style={{ textAlign: "left" }}>
                       <td>
-                        <p className="mb-0">Total Berat</p>
+                        <p className='mb-0'>Total Berat</p>
                       </td>
                       <td>
-                        <p className="mb-0">:</p>
+                        <p className='mb-0'>:</p>
                       </td>
                       <td>
-                        <p className="bold uppercase mb-0">
+                        <p className='bold uppercase mb-0'>
                           {currencyFormat(totalWeight)} (KG) -{" "}
                           {currencyFormat(totalKoli)} (Koli)
                         </p>
@@ -197,26 +201,26 @@ const PrintTripScreen = () => {
 
             {/* Table Waypoints */}
             <div style={{ marginTop: 20 }}>
-              <table className="bordered">
+              <table className='bordered'>
                 <thead>
-                  <tr className="bordered">
-                    <td className="bordered center" style={{ width: "3%" }}>
-                      <p className="bold mb-0">No.</p>
+                  <tr className='bordered'>
+                    <td className='bordered center' style={{ width: "3%" }}>
+                      <p className='bold mb-0'>No.</p>
                     </td>
-                    <td className="bordered left" style={{ width: "10%" }}>
-                      <p className="bold mb-0">Pickup/Drop</p>
+                    <td className='bordered left' style={{ width: "10%" }}>
+                      <p className='bold mb-0'>Pickup/Drop</p>
                     </td>
-                    <td className="bordered left" style={{ width: "30%" }}>
-                      <p className="bold mb-0">Lokasi</p>
+                    <td className='bordered left' style={{ width: "30%" }}>
+                      <p className='bold mb-0'>Lokasi</p>
                     </td>
-                    <td className="bordered left" style={{ width: "12%" }}>
-                      <p className="bold mb-0">Shipment</p>
+                    <td className='bordered left' style={{ width: "12%" }}>
+                      <p className='bold mb-0'>Shipment</p>
                     </td>
-                    <td className="bordered center" style={{ width: "30%" }}>
-                      <p className="bold mb-0">Shipment Detail</p>
+                    <td className='bordered center' style={{ width: "30%" }}>
+                      <p className='bold mb-0'>Shipment Detail</p>
                     </td>
-                    <td className="bordered center" style={{ width: "15%" }}>
-                      <p className="bold mb-0">Status</p>
+                    <td className='bordered center' style={{ width: "15%" }}>
+                      <p className='bold mb-0'>Status</p>
                     </td>
                   </tr>
                 </thead>
@@ -230,7 +234,7 @@ const PrintTripScreen = () => {
                     wp.shipments?.forEach((ship: any) => {
                       ship.items?.forEach((item: any) => {
                         const existing = commodityData.find(
-                          (c) => c.item_name === item.name
+                          (c) => c.item_name === item.name,
                         );
                         if (existing) {
                           existing.quantity += item.quantity || 0;
@@ -248,42 +252,42 @@ const PrintTripScreen = () => {
                     });
 
                     return (
-                      <tr key={wp.id} className="bordered">
-                        <td className="bordered center">
-                          <p className="mb-0">{index + 1}</p>
+                      <tr key={wp.id} className='bordered'>
+                        <td className='bordered center'>
+                          <p className='mb-0'>{index + 1}</p>
                         </td>
-                        <td className="bordered left">
-                          <p className="mb-0 text-capitalize">
+                        <td className='bordered left'>
+                          <p className='mb-0 text-capitalize'>
                             {wp.type === "pickup" ? "PICKUP" : "DROP"}
                           </p>
                         </td>
-                        <td className="bordered left">
-                          <div className="table-col">
-                            <p className="fs-8 mb-0 fw-semibold">
+                        <td className='bordered left'>
+                          <div className='table-col'>
+                            <p className='fs-8 mb-0 fw-semibold'>
                               {wp.location_name || "-"} -{" "}
                               {wp.contact_phone || "-"}
                             </p>
-                            <small className="info mb-0">
+                            <small className='info mb-0'>
                               {wp.address || "-"}
                             </small>
                           </div>
                         </td>
-                        <td className="bordered left">
-                          <div className="table-col">
+                        <td className='bordered left'>
+                          <div className='table-col'>
                             {wp.shipments?.map((ship: any, i: number) => (
-                              <p key={i} className="mb-0">
+                              <p key={i} className='mb-0'>
                                 {i + 1}. {ship.shipment_number || "-"}
                               </p>
                             ))}
                           </div>
                         </td>
-                        <td className="bordered">
-                          <div className="table-col">
-                            <p className="mb-0">
+                        <td className='bordered'>
+                          <div className='table-col'>
+                            <p className='mb-0'>
                               <b>Komoditas: </b>
                             </p>
                             {commodityData.map((item, i) => (
-                              <p key={i} className="mb-0">
+                              <p key={i} className='mb-0'>
                                 {i + 1}. {item.item_name || "-"} :{" "}
                                 {currencyFormat(item.weight || 0)} Kg (
                                 {currencyFormat(item.quantity || 0)} Koli)
@@ -296,23 +300,23 @@ const PrintTripScreen = () => {
                             </p>
                           </div>
                         </td>
-                        <td className="bordered left">
-                          <p className="mb-0" style={{ fontWeight: "bold" }}>
+                        <td className='bordered left'>
+                          <p className='mb-0' style={{ fontWeight: "bold" }}>
                             {wp.status.replace("_", " ").toUpperCase()}
                           </p>
                           {wp.completed_at && (
-                            <p className="mb-0" style={{ fontSize: 8 }}>
+                            <p className='mb-0' style={{ fontSize: 8 }}>
                               {dateFormat(wp.completed_at, "DD/MM HH:mm")}
                             </p>
                           )}
                           {wp.received_by && (
-                            <p className="mb-0" style={{ fontSize: 8 }}>
+                            <p className='mb-0' style={{ fontSize: 8 }}>
                               Diterima: {wp.received_by}
                             </p>
                           )}
                           {wp.failed_reason && (
                             <p
-                              className="mb-0"
+                              className='mb-0'
                               style={{ fontSize: 8, color: "red" }}
                             >
                               {wp.failed_reason}
@@ -331,7 +335,9 @@ const PrintTripScreen = () => {
               <table style={{ width: "100%" }}>
                 <tr>
                   <td style={{ width: "50%", textAlign: "center" }}>
-                    <div style={{ fontSize: 10, marginBottom: 60 }}>Driver,</div>
+                    <div style={{ fontSize: 10, marginBottom: 60 }}>
+                      Driver,
+                    </div>
                     <div style={{ fontSize: 10, fontWeight: "bold" }}>
                       ( {trip.driver?.name || "-"} )
                     </div>

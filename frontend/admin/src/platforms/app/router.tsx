@@ -26,6 +26,7 @@ import {
 
 import Logo from "@/assets/logo_light.svg";
 import { Avatar, Dropdown, FullPageLoading, Navbar } from "@/components";
+import { useMemo } from "react";
 import { signout } from "@/services/auth/slice";
 import { clearSSOCookies } from "@/services/auth/cookieUtils";
 import type { AppDispatch, RootState } from "@/services/store";
@@ -61,6 +62,11 @@ const AppRouter = () => {
   const Profile = useSelector((state: RootState) => state.userProfile);
 
   const { getMe } = useProfile();
+
+  // Dynamic company logo - use company logo_url if available, fallback to default
+  const companyLogo = useMemo(() => {
+    return Profile?.user?.company?.logo_url || Logo;
+  }, [Profile?.user?.company?.logo_url]);
 
   const handleLogout = () => {
     dispatch(signout());
@@ -256,7 +262,7 @@ const AppRouter = () => {
           <div className="flex items-center gap-4 w-full">
             <div className="w-12 h-12 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-center shrink-0 shadow-inner overflow-hidden p-2">
               <img
-                src={Logo}
+                src={companyLogo}
                 alt="Logo"
                 className="w-full h-full object-contain cursor-pointer"
                 onClick={() => navigate("/")}
@@ -361,7 +367,7 @@ const AppRouter = () => {
             <Navbar.MobileToggle items={menuOverview} />
             <Navbar.Brand>
               <div className="bg-primary shadow rounded-full p-2 h-10 w-10">
-                <img src={Logo} alt="Logo" className="object-center" />
+                <img src={companyLogo} alt="Logo" className="object-center" />
               </div>
             </Navbar.Brand>
             <Navbar.Actions className="gap-3">
