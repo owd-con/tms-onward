@@ -352,6 +352,7 @@ export interface Shipment {
   order_id: string;
   company_id: string;
   shipment_number: string;
+  reference_code?: string;
   sorting_id: number; // sequence within order
   // Route
   origin_address_id: string;

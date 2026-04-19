@@ -175,7 +175,8 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
               disabled={isEditMode}
             />
 
-            {/* Reference Code */}
+            {/* Reference Code (FTL only) */}
+            {orderType.value === "FTL" && (
             <Input
               label='Reference Code'
               placeholder="Customer's reference number"
@@ -183,6 +184,7 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
               onChange={(e) => setReferenceCode(e.target.value)}
               error={FormState?.errors?.reference_code as string}
             />
+            )}
 
             {/* Special Instructions */}
             <Input
@@ -194,8 +196,8 @@ export const FormGeneral = forwardRef<FormGeneralRef, FormGeneralProps>(
               error={FormState?.errors?.special_instructions as string}
             />
 
-            {/* Manual Price (FTL only) */}
-            {orderType.value === "FTL" && (
+            {/* Manual Price (FTL only) - Hide for inhouse company */}
+            {orderType.value === "FTL" && !isInhouseCompany && (
               <Input
                 label='Price'
                 placeholder='Enter price'

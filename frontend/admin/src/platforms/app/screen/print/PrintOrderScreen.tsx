@@ -369,6 +369,11 @@ const PrintOrderScreen = () => {
                             <p className='bold mb-0'>
                               {shipment?.shipment_number}
                             </p>
+                            {shipment?.reference_code && (
+                              <p className='mb-0' style={{ fontSize: 10 }}>
+                                Ref: {shipment.reference_code}
+                              </p>
+                            )}
                           </td>
                           <td className='bordered left'>
                             <p className='bold mb-0'>

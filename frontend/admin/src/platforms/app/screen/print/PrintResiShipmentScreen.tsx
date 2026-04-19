@@ -178,7 +178,7 @@ const PrintResiShipmentScreen = () => {
                         className='bold'
                         style={{ fontSize: 10, textTransform: "uppercase" }}
                       >
-                        Ref: {order.reference_code || "-"}
+                        Ref: {shipment.reference_code || order.reference_code || "-"}
                       </div>
                     </td>
                   </tr>

@@ -80,6 +80,11 @@ export const TripLoadCard: React.FC<TripLoadCardProps> = ({
             <span className='text-[11px] text-slate-500 font-medium'>
               {trip.trip_number}
             </span>
+            {trip?.order?.reference_code && (
+              <p className='text-[11px] text-slate-500 font-medium'>
+                {`Ref: ${trip?.order.reference_code}`}
+              </p>
+            )}
           </div>
         </div>
         <div

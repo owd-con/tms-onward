@@ -118,6 +118,7 @@ const OrderEditPage = () => {
                   ? items
                   : [{ name: "", quantity: 1, weight: 0 }],
               sorting_id: shp.sorting_id || index + 1,
+              reference_code: shp.reference_code || "",
             } as ShipmentFormData;
           },
         );
@@ -157,6 +158,7 @@ const OrderEditPage = () => {
           : undefined,
       shipments: currentShipments.map((shp) => ({
         id: shp.shipmentId, // Include ID for existing shipments
+        reference_code: shp.reference_code || undefined,
         origin_address_id: shp.origin_address_id!,
         destination_address_id: shp.destination_address_id!,
         pickup_scheduled_date: shp.pickup_scheduled_date,

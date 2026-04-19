@@ -21,7 +21,6 @@ import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
 
 import Logo from "@/assets/logo_light.svg";
 import { Avatar, Dropdown, FullPageLoading, Navbar } from "@/components";
-import { useMemo } from "react";
 import { signout } from "@/services/auth/slice";
 import { clearSSOCookies } from "@/services/auth/cookieUtils";
 import type { AppDispatch, RootState } from "@/services/store";

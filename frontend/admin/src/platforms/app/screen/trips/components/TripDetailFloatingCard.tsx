@@ -53,6 +53,11 @@ export const TripDetailFloatingCard: React.FC<TripDetailFloatingCardProps> = ({
             <span className='text-[11px] text-slate-500 font-medium'>
               {load.trip_number}
             </span>
+            {load?.order?.reference_code && (
+              <p className='text-[11px] text-slate-500 font-medium'>
+                {`Ref: ${load?.order.reference_code}`}
+              </p>
+            )}
             {(createdAt || createdBy) && (
               <span className='text-[10px] font-medium text-slate-400 tracking-wide'>
                 {createdAt

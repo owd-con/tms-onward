@@ -31,6 +31,8 @@ export interface ShipmentFormData {
   pickup_scheduled_time?: string;
   delivery_scheduled_date: string;
   delivery_scheduled_time?: string;
+  // Reference Number
+  reference_code?: string;
   // Pricing (LTL only)
   price?: number;
   // Items
@@ -519,8 +521,24 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
                   />
                 </div>
 
-                {/* Price for LTL */}
+                {/* Reference Code - LTL only */}
                 {orderType === "LTL" && (
+                <div className='mb-4'>
+                  <Input
+                    label='Reference Code'
+                    placeholder='Shipment reference code'
+                    value={shipment.reference_code || ""}
+                    onChange={(e) =>
+                      updateShipment(shipment.id, {
+                        reference_code: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                )}
+
+                {/* Price for LTL - Hide for inhouse company */}
+                {orderType === "LTL" && !isInhouseCompany && (
                   <div className='mb-4'>
                     <Input
                       label='Delivery Price'
@@ -579,7 +597,7 @@ export const FormShipment = forwardRef<FormShipmentRef, FormShipmentProps>(
                           </div>
                           <div className='w-20'>
                             <Input
-                              label='Qty'
+                              label='Colly'
                               type='number'
                               placeholder='1'
                               value={item.quantity}

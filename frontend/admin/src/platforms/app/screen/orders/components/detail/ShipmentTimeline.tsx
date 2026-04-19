@@ -2,14 +2,15 @@ import { FaPrint } from "react-icons/fa";
 
 import { useEnigmaUI } from "@/components";
 import type { Shipment } from "@/services/types";
-import { dateFormat, statusBadge, statusColors, statusIcon } from "@/shared/helper";
+import {
+  dateFormat,
+  statusBadge,
+  statusColors,
+  statusIcon,
+} from "@/shared/helper";
 import { formatCurrency } from "@/shared/utils/formatter";
 import { Button } from "@/components";
-import {
-  HiArrowUturnLeft,
-  HiOutlineCube,
-  HiMapPin,
-} from "react-icons/hi2";
+import { HiArrowUturnLeft, HiOutlineCube, HiMapPin } from "react-icons/hi2";
 import ReturnShipmentModal from "../modal/return.shipment";
 
 interface ShipmentTimelineProps {
@@ -242,8 +243,8 @@ const ShipmentTimeline = ({
                     Details
                   </div>
 
-                  {/* Price */}
-                  {shipment.price && shipment.price > 0 ? (
+                  {/* Price - LTL only */}
+                  {orderType === "LTL" && shipment.price && shipment.price > 0 ? (
                     <div className='bg-success/5 rounded-lg p-3 border border-success/20'>
                       <div className='text-xs text-base-content/60 mb-1'>
                         Price
@@ -252,10 +253,19 @@ const ShipmentTimeline = ({
                         {formatCurrency(shipment.price)}
                       </div>
                     </div>
-                  ) : (
+                  ) : orderType === "FTL" ? (
                     <div className='bg-base-50 rounded-lg p-3 border border-base-200'>
                       <div className='text-xs text-base-content/60'>
                         FTL - Included in order price
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {/* Reference Code - LTL only */}
+                  {shipment.reference_code && (
+                    <div className='bg-base-50 rounded-lg p-3 border border-base-200'>
+                      <div className='text-xs text-base-content/60'>
+                        Ref: {shipment.reference_code}
                       </div>
                     </div>
                   )}
@@ -352,7 +362,12 @@ const ShipmentTimeline = ({
                     <Button
                       variant='secondary'
                       size='sm'
-                      onClick={() => window.open(`/a/print/resi/order/${orderId}/shipment/${shipment.id}`, '_blank')}
+                      onClick={() =>
+                        window.open(
+                          `/a/print/resi/order/${orderId}/shipment/${shipment.id}`,
+                          "_blank",
+                        )
+                      }
                       className='flex-1 gap-2'
                     >
                       <FaPrint className='w-3 h-3' />

@@ -54,6 +54,7 @@ const OrderCreatePage = () => {
           ? parseFloat(values.manualOverridePrice)
           : undefined,
       shipments: currentShipments.map((shp) => ({
+        reference_code: shp.reference_code || undefined,
         origin_address_id: shp.origin_address_id!,
         destination_address_id: shp.destination_address_id!,
         pickup_scheduled_date: shp.pickup_scheduled_date,
