@@ -11,8 +11,9 @@ import (
 )
 
 type receiveOrderRequest struct {
-	OrderID   string `json:"order_id" valid:"required"`
-	VehicleID string `json:"vehicle_id" valid:"required"`
+	OrderID      string `json:"order_id" valid:"required"`
+	VehicleType string `json:"vehicle_type" valid:"required"`
+	PlateNumber  string `json:"plate_number" valid:"required"`
 
 	order   *entity.Order
 	vehicle *entity.Vehicle
@@ -55,16 +56,6 @@ func (r *receiveOrderRequest) Validate() *validate.Response {
 		}
 	}
 
-	// Fetch vehicle - only if vehicle_id is provided
-	if r.VehicleID != "" {
-		vehicle, err := r.uc.Vehicle.GetByID(r.VehicleID)
-		if err != nil {
-			v.SetError("vehicle_id.invalid", "Vehicle not found.")
-		} else {
-			r.vehicle = vehicle
-		}
-	}
-
 	return v
 }
 
@@ -73,9 +64,15 @@ func (r *receiveOrderRequest) Messages() map[string]string {
 }
 
 func (r *receiveOrderRequest) execute() (*rest.ResponseBody, error) {
+	// Build vehicle object from request fields
+	vehicle := &entity.Vehicle{
+		Type:        r.VehicleType,
+		PlateNumber: r.PlateNumber,
+	}
+
 	// Call usecase with order, driver (may be nil), vehicle, and session
 	// If driver is nil, usecase will use session.UserID
-	createdTrip, err := r.uc.Trip.ReceiveAndDispatch(r.order, r.driver, r.vehicle, r.session)
+	createdTrip, err := r.uc.Trip.ReceiveAndDispatch(r.order, r.driver, vehicle, r.session)
 	if err != nil {
 		return nil, err
 	}

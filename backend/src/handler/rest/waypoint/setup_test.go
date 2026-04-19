@@ -298,7 +298,6 @@ func createTestTrip(t *testing.T, companyID, orderID, driverID, vehicleID uuid.U
 		OrderID:    orderID,
 		TripNumber: fmt.Sprintf("TRP-%s", uuid.New().String()),
 		DriverID:   driverID,
-		VehicleID:  vehicleID,
 		Status:     "planned",
 	}
 	err := repository.NewTripRepository().WithContext(ctx).Insert(trip)

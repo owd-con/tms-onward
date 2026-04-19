@@ -103,7 +103,7 @@ func (r *createRequest) toEntity() *entity.Trip {
 		OrderID:    r.order.ID,
 		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   r.driver.ID,
-		VehicleID:  r.vehicle.ID,
+		Vehicle:    r.vehicle,
 		Status:     "dispatched",
 		Notes:      r.Notes,
 		CreatedBy:  r.session.DisplayName,

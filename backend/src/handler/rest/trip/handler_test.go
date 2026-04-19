@@ -78,10 +78,17 @@ func TestHandler_Create_Success(t *testing.T) {
 	order := createTestOrder(t, company.ID, customer.ID)
 
 	body := map[string]interface{}{
-		"order_id":   order.ID.String(),
-		"driver_id":  driver.ID.String(),
-		"vehicle_id": vehicle.ID.String(),
-		"notes":      "Test trip",
+		"order_id":  order.ID.String(),
+		"driver_id": driver.ID.String(),
+		"vehicle": map[string]interface{}{
+			"type":           vehicle.Type,
+			"plate_number":   vehicle.PlateNumber,
+			"capacity_weight": vehicle.CapacityWeight,
+			"capacity_volume": vehicle.CapacityVolume,
+			"make":           vehicle.Make,
+			"model":          vehicle.Model,
+		},
+		"notes": "Test trip",
 	}
 
 	bodyJSON, _ := json.Marshal(body)

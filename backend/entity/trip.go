@@ -14,9 +14,9 @@ type Trip struct {
 	CompanyID      uuid.UUID  `bun:"company_id,notnull" json:"company_id"`
 	OrderID        uuid.UUID  `bun:"order_id,notnull" json:"order_id"`
 	TripNumber     string     `bun:"trip_number,notnull,unique" json:"trip_number"`
+	Vehicle        *Vehicle   `bun:"vehicle,type:jsonb" json:"vehicle"`
 	DriverID       uuid.UUID  `bun:"driver_id,nullzero" json:"driver_id"`
 	UserID         uuid.UUID  `bun:"user_id,nullzero" json:"user_id"` // For driver without driver profile
-	VehicleID      uuid.UUID  `bun:"vehicle_id,notnull" json:"vehicle_id"`
 	Status         string     `bun:"status,notnull,default:'planned'" json:"status"`
 	StartedAt      *time.Time `bun:"started_at" json:"started_at"`
 	CompletedAt    *time.Time `bun:"completed_at" json:"completed_at"`
@@ -31,8 +31,7 @@ type Trip struct {
 
 	Company       *Company        `bun:"rel:belongs-to,join:company_id=id" json:"company,omitempty"`
 	Driver        *Driver         `bun:"rel:belongs-to,join:driver_id=id" json:"driver,omitempty"`
-	User         *User          `bun:"rel:belongs-to,join:user_id=id" json:"user,omitempty"`
-	Vehicle       *Vehicle        `bun:"rel:belongs-to,join:vehicle_id=id" json:"vehicle,omitempty"`
+	User          *User           `bun:"rel:belongs-to,join:user_id=id" json:"user,omitempty"`
 	Orders        *Order          `bun:"rel:belongs-to,join:order_id=id" json:"order,omitempty"`
 	TripWaypoints []*TripWaypoint `bun:"rel:has-many,join:id=trip_id" json:"trip_waypoints,omitempty"`
 }

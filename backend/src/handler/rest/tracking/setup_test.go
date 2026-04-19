@@ -202,7 +202,6 @@ func createTestTripForTracking(t *testing.T, companyID uuid.UUID, orderID uuid.U
 		CompanyID: companyID,
 		OrderID:   orderID,
 		DriverID:  driverID,
-		VehicleID: vehicleID,
 		Status:    "InTransit",
 		Notes:     "test trip",
 		CreatedBy: "test",

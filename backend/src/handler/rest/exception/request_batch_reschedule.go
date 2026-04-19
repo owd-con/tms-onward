@@ -125,13 +125,13 @@ func (r *batchRescheduleShipmentsRequest) toEntity() *entity.Trip {
 	notes := fmt.Sprintf("Rescheduled trip for shipments %v", shipmentInfos)
 
 	return &entity.Trip{
-		CompanyID:  r.driver.CompanyID,
-		OrderID:    r.orderID,
-		DriverID:   r.driver.ID,
-		VehicleID:  r.vehicle.ID,
-		Status:     "dispatched",
-		Notes:      notes,
-		CreatedAt:  time.Now(),
+		CompanyID: r.driver.CompanyID,
+		OrderID:   r.orderID,
+		DriverID:  r.driver.ID,
+		Vehicle:   r.vehicle,
+		Status:    "dispatched",
+		Notes:     notes,
+		CreatedAt: time.Now(),
 	}
 }
 

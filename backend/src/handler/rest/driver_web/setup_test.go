@@ -298,7 +298,6 @@ func createTestTripWithWaypoints(t *testing.T, companyID uuid.UUID, order *entit
 		OrderID:    order.ID,
 		TripNumber: fmt.Sprintf("TRP-%s", uuid.New().String()),
 		DriverID:   driverID,
-		VehicleID:  vehicleID,
 		Status:     "planned",
 	}
 	err := repository.NewTripRepository().WithContext(ctx).Insert(trip)

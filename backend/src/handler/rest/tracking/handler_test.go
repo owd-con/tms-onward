@@ -280,7 +280,7 @@ func TestHandler_TrackOrder_WithDriverAndVehicle(t *testing.T) {
 
 	// Verify vehicle info
 	vehicleInfo := data["vehicle"].(map[string]interface{})
-	assert.NotEmpty(t, vehicleInfo["vehicle_id"])
+	assert.NotEmpty(t, vehicleInfo["type"])
 	assert.Equal(t, "B 1234 ABC", vehicleInfo["plate_number"])
 }
 

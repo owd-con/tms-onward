@@ -114,7 +114,7 @@ func (r *updateRequest) Messages() map[string]string {
 func (r *updateRequest) toEntity() *entity.Trip {
 	// Update trip fields for update
 	r.trip.DriverID = r.driver.ID
-	r.trip.VehicleID = r.vehicle.ID
+	r.trip.Vehicle = r.vehicle
 	r.trip.Notes = r.Notes
 	r.trip.UpdatedBy = r.session.DisplayName
 	r.trip.UpdatedAt = time.Now()

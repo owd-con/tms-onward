@@ -33,9 +33,9 @@ type TripQueryOptions struct {
 
 	DriverID     string `query:"driver_id"`      // Filter by driver ID
 	DriverUserID string `query:"driver_user_id"` // Filter by driver's user_id (untuk driver web app session)
-	VehicleID    string `query:"vehicle_id"`
 	Status       string `query:"status"`
-	OrderID      string `query:"order_id"` // Filter by order ID
+	OrderID      string `query:"order_id"`     // Filter by order ID
+	VehicleType  string `query:"vehicle_type"` // Filter by vehicle type
 
 	Session *entity.TMSSessionClaims
 }
@@ -79,8 +79,8 @@ func (u *TripUsecase) Get(req *TripQueryOptions) ([]*entity.Trip, int64, error) 
 			q.Where("trips.user_id = ? or driver.user_id = ?", req.DriverUserID, req.DriverUserID)
 		}
 
-		if req.VehicleID != "" {
-			q.Where("trips.vehicle_id = ?", req.VehicleID)
+		if req.VehicleType != "" {
+			q.Where("trips.vehicle->>'type' = ?", req.VehicleType)
 		}
 
 		// Filter by order ID
@@ -426,9 +426,9 @@ func (u *TripUsecase) CreateWithWaypointsAutoDispatch(trip *entity.Trip, orderID
 // This allows frontend to update waypoints for planned trips
 func (u *TripUsecase) UpdateWithWaypoints(trip *entity.Trip, waypoints []*entity.TripWaypoint) error {
 	return u.Repo.RunInTx(u.Context, func(ctx context.Context, tx bun.Tx) error {
-		// 1. Update trip (notes, driver_id, vehicle_id, updated_by, updated_at)
+		// 1. Update trip (notes, driver_id, vehicle, updated_by, updated_at)
 		tripRepo := u.Repo.WithTx(ctx, tx)
-		if err := tripRepo.Update(trip, "notes", "driver_id", "vehicle_id", "updated_by", "updated_at"); err != nil {
+		if err := tripRepo.Update(trip, "notes", "driver_id", "vehicle", "updated_by", "updated_at"); err != nil {
 			return fmt.Errorf("failed to update trip: %w", err)
 		}
 
@@ -617,7 +617,7 @@ func (u *TripUsecase) ReceiveAndDispatch(order *entity.Order, driver *entity.Dri
 		CompanyID:      order.CompanyID,
 		OrderID:        order.ID,
 		TripNumber:     utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
-		VehicleID:      vehicle.ID,
+		Vehicle:        vehicle,
 		Status:         "dispatched",
 		TotalWaypoints: 0,
 		TotalCompleted: 0,

@@ -98,8 +98,7 @@ func TestTripUsecase_Create_Success(t *testing.T) {
 		OrderID:    order.ID,
 		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
-		VehicleID:  vehicle.ID,
-		Status:     "planned",
+				Status:     "planned",
 	}
 
 	err = uc.Create(trip)
@@ -156,8 +155,7 @@ func TestTripUsecase_Update_Success(t *testing.T) {
 		OrderID:    order.ID,
 		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
-		VehicleID:  vehicle.ID,
-		Status:     "planned",
+				Status:     "planned",
 		Notes:      "Original notes",
 	}
 	err = uc.Create(trip)
@@ -223,8 +221,7 @@ func TestTripUsecase_UpdateStatus_ValidTransitions(t *testing.T) {
 		OrderID:    order.ID,
 		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
-		VehicleID:  vehicle.ID,
-		Status:     "planned",
+				Status:     "planned",
 	}
 	err = uc.Create(trip)
 	require.NoError(t, err)
@@ -294,8 +291,7 @@ func TestTripUsecase_UpdateStatus_InvalidTransition(t *testing.T) {
 		OrderID:    order.ID,
 		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
-		VehicleID:  vehicle.ID,
-		Status:     "planned",
+				Status:     "planned",
 	}
 	err = uc.Create(trip)
 	require.NoError(t, err)
@@ -355,8 +351,7 @@ func TestTripUsecase_UpdateStatus_FromCompleted(t *testing.T) {
 		OrderID:    order.ID,
 		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
-		VehicleID:  vehicle.ID,
-		Status:     "completed",
+				Status:     "completed",
 	}
 	err = uc.Create(trip)
 	require.NoError(t, err)
@@ -415,8 +410,7 @@ func TestTripUsecase_Start_Success(t *testing.T) {
 		OrderID:    order.ID,
 		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
-		VehicleID:  vehicle.ID,
-		Status:     "dispatched",
+				Status:     "dispatched",
 	}
 	err = uc.Create(trip)
 	require.NoError(t, err)
@@ -477,8 +471,7 @@ func TestTripUsecase_Start_InvalidStatus(t *testing.T) {
 		OrderID:    order.ID,
 		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
-		VehicleID:  vehicle.ID,
-		Status:     "planned",
+				Status:     "planned",
 	}
 	err = uc.Create(trip)
 	require.NoError(t, err)
@@ -538,8 +531,7 @@ func TestTripUsecase_Complete_Success(t *testing.T) {
 		OrderID:    order.ID,
 		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
-		VehicleID:  vehicle.ID,
-		Status:     "in_transit",
+				Status:     "in_transit",
 	}
 	err = uc.Create(trip)
 	require.NoError(t, err)
@@ -599,8 +591,7 @@ func TestTripUsecase_Delete_Success(t *testing.T) {
 		OrderID:    order.ID,
 		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver.ID,
-		VehicleID:  vehicle.ID,
-		Status:     "planned",
+				Status:     "planned",
 	}
 	err = uc.Create(trip)
 	require.NoError(t, err)
@@ -707,7 +698,6 @@ func TestTripUsecase_Get_WithTenantIsolation(t *testing.T) {
 		OrderID:    order1.ID,
 		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver1.ID,
-		VehicleID:  vehicle1.ID,
 		Status:     "planned",
 	}
 	err = uc.Create(trip1)
@@ -719,7 +709,6 @@ func TestTripUsecase_Get_WithTenantIsolation(t *testing.T) {
 		OrderID:    order2.ID,
 		TripNumber: utility.GenerateNumberWithRandom(utility.NumberTypeTrip),
 		DriverID:   driver2.ID,
-		VehicleID:  vehicle2.ID,
 		Status:     "planned",
 	}
 	err = uc.Create(trip2)

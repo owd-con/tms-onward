@@ -17,8 +17,8 @@ type TripRepository struct {
 func NewTripRepository() *TripRepository {
 	base := postgres.NewBaseRepository[entity.Trip](postgres.GetDB(),
 		"trips",
-		[]string{"trip_number", "orders.order_number", "orders.reference_code"},
-		[]string{"Company", "Driver", "User", "Vehicle", "Orders.Customer"},
+		[]string{"trip_number", "orders.order_number", "orders.reference_code", "vehicle.plate_number"},
+		[]string{"Company", "Driver", "User", "Orders.Customer"},
 		true,
 	)
 
@@ -56,7 +56,6 @@ func (r *TripRepository) FindWithWaypoints(id string) (*entity.Trip, error) {
 		Relation("Orders.Customer").
 		Relation("Driver").
 		Relation("User").
-		Relation("Vehicle").
 		Relation("TripWaypoints.AddressRel.Region").
 		Where("trips.id = ?", id).
 		Where("trips.is_deleted = false").
