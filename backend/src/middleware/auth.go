@@ -41,8 +41,6 @@ func CheckUserActive() func(http.Handler) http.Handler {
 			// Get TMSSessionClaims from context (set by JWT middleware)
 			session := common.GetContextSessionGeneric[entity.TMSSessionClaims](ctx.Context)
 
-			fmt.Println("============1=================", session)
-
 			if session == nil || session.GetBase() == nil {
 				ctx.Error(http.StatusUnauthorized, rest.MsgUnauthorized, "User or company has been deactivated")
 				return
@@ -52,8 +50,6 @@ func CheckUserActive() func(http.Handler) http.Handler {
 			// UserID from TMSSessionClaims, JTI from SessionClaims.ID (via GetBase())
 			userID := session.UserID
 			jti := session.GetBase().ID
-
-			fmt.Println("============2=================", userID)
 
 			if userID == "" {
 				ctx.Error(http.StatusUnauthorized, rest.MsgUnauthorized, "User or company has been deactivated")
