@@ -37,6 +37,9 @@ type ShipmentRequest struct {
 	// Pricing (LTL only - FTL uses 0)
 	Price float64 `json:"price"`
 
+	// Reference Number (optional)
+	ReferenceCode string `json:"reference_code"`
+
 	shipment            *entity.Shipment
 	originAddress       *entity.Address
 	destAddress         *entity.Address

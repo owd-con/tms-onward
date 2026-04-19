@@ -31,6 +31,8 @@ type OrderQueryOptions struct {
 	CustomerID string `query:"customer_id"`
 	Status     string `query:"status"`
 	OrderType  string `query:"order_type"`
+	StartDate  string `query:"start_date"` // YYYY-MM-DD
+	EndDate    string `query:"end_date"`   // YYYY-MM-DD
 
 	Session *entity.TMSSessionClaims
 }
@@ -79,6 +81,16 @@ func (u *OrderUsecase) Get(req *OrderQueryOptions) ([]*entity.Order, int64, erro
 
 		if req.OrderType != "" {
 			q.Where("orders.order_type = ?", req.OrderType)
+		}
+
+		if req.StartDate != "" && req.EndDate != "" {
+			sst, _ := time.Parse("2006-01-02", req.StartDate)
+			sst = sst.Add(time.Duration(-7 * time.Hour))
+			est, _ := time.Parse("2006-01-02", req.EndDate)
+			est = est.AddDate(0, 0, 1)
+			est = est.Add(time.Duration(-7 * time.Hour))
+
+			q = q.Where("orders.created_at >= ? AND orders.created_at < ?", sst, est)
 		}
 
 		return q

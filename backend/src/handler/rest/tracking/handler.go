@@ -16,19 +16,19 @@ func RegisterHandler(s *rest.RestServer, factory *usecase.Factory) {
 	h := &handler{uc: factory}
 
 	// Public tracking routes (no auth required)
-	s.GET("/public/tracking/{orderNumber}", h.trackOrder, nil)
+	s.GET("/public/tracking/{code}", h.trackOrder, nil)
 }
 
-// trackOrder handles GET /public/tracking/{orderNumber}
-// @Summary Track order
-// @Description Public endpoint to track order status by order number (no authentication required)
+// trackOrder handles GET /public/tracking/{code}
+// @Summary Track order or shipment
+// @Description Public endpoint to track order/shipment by code - supports order_number, order.reference_code, shipment_number, shipment.reference_number
 // @Tags tracking
 // @Accept json
 // @Produce json
-// @Param orderNumber path string true "Order number"
+// @Param code path string true "Order or Shipment Code"
 // @Success 200 {object} rest.ResponseBody
 // @Failure 400 {object} rest.HTTPError
-// @Router /public/tracking/{orderNumber} [get]
+// @Router /public/tracking/{code} [get]
 func (h *handler) trackOrder(ctx *rest.Context) (err error) {
 	var req getRequest
 	var res *rest.ResponseBody

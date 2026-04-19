@@ -20,6 +20,7 @@ type TrackingUsecase struct {
 type TrackingResponse struct {
 	OrderNumber     string              `json:"order_number"`
 	ReferenceCode   string              `json:"reference_code"`
+	MatchedBy       string              `json:"matched_by"` // "order" or "shipment"
 	Status          string              `json:"status"`
 	OrderType       string              `json:"order_type"`
 	CustomerName    string              `json:"customer_name"`
@@ -35,6 +36,7 @@ type TrackingResponse struct {
 // ShipmentInfo represents shipment information for tracking
 type ShipmentInfo struct {
 	ShipmentNumber      string  `json:"shipment_number"`
+	ReferenceCode       string  `json:"reference_code,omitempty"`
 	Status              string  `json:"status"`
 	OriginLocationName  string  `json:"origin_location_name"`
 	OriginAddress       string  `json:"origin_address"`
@@ -96,36 +98,67 @@ func NewTrackingUsecase() *TrackingUsecase {
 	}
 }
 
-// TrackByOrderNumber retrieves tracking information by order number
-func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber string) (*TrackingResponse, error) {
-	if orderNumber == "" {
-		return nil, errors.New("order number is required")
+// TrackByCode retrieves tracking information by order/shipment code
+// Supports lookup by: order_number, order.reference_code, shipment_number, shipment.reference_code
+func (u *TrackingUsecase) TrackByCode(ctx context.Context, code string) (*TrackingResponse, error) {
+	if code == "" {
+		return nil, errors.New("order or shipment code is required")
 	}
 
-	// Get order by order number
+	// Try lookup in order by order_number or reference_code
 	order := &entity.Order{}
 	err := u.db.NewSelect().
 		Model(order).
 		Relation("Customer").
-		Where("order_number = ? OR reference_code = ?", orderNumber, orderNumber).
+		Where("order_number = ? OR reference_code = ?", code, code).
 		Where("orders.is_deleted = false").
 		Scan(ctx)
-	if err != nil {
-		return nil, errors.New("order not found")
+
+	if err == nil {
+		// Found by order_number or reference_code - return order + all shipments
+		return u.buildOrderResponse(ctx, order)
 	}
 
+	// Try lookup by shipment_number OR shipment.reference_code
+	shipment := &entity.Shipment{}
+	err = u.db.NewSelect().
+		Model(shipment).
+		Relation("Order").
+		Relation("Order.Customer").
+		Where("(shipments.shipment_number = ? OR shipments.reference_code = ?)", code, code).
+		Where("shipments.is_deleted = false").
+		Scan(ctx)
+
+	if err == nil {
+		// Found by shipment_number or reference_code - return shipment + order
+		if shipment.Order != nil {
+			order = shipment.Order
+		}
+		return u.buildShipmentResponse(ctx, order, shipment)
+	}
+
+	// Not found in any lookup
+	return nil, errors.New("order or shipment not found")
+}
+
+// buildOrderResponse builds tracking response for an order (returns all shipments)
+func (u *TrackingUsecase) buildOrderResponse(ctx context.Context, order *entity.Order) (*TrackingResponse, error) {
 	response := &TrackingResponse{
 		OrderNumber:   order.OrderNumber,
 		ReferenceCode: order.ReferenceCode,
+		MatchedBy:     "order",
 		Status:        order.Status,
 		OrderType:     order.OrderType,
-		CustomerName:  order.Customer.Name,
 		CreatedAt:     order.CreatedAt.UTC().Format(time.RFC3339),
+	}
+
+	if order.Customer != nil {
+		response.CustomerName = order.Customer.Name
 	}
 
 	// Get shipments for this order
 	var shipments []*entity.Shipment
-	err = u.db.NewSelect().
+	err := u.db.NewSelect().
 		Model(&shipments).
 		Where("order_id = ?", order.ID).
 		Where("shipments.is_deleted = false").
@@ -140,6 +173,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 	for _, s := range shipments {
 		si := ShipmentInfo{
 			ShipmentNumber:      s.ShipmentNumber,
+			ReferenceCode:       s.ReferenceCode,
 			Status:              s.Status,
 			OriginLocationName:  s.OriginLocationName,
 			OriginAddress:       s.OriginAddress,
@@ -168,7 +202,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 
 	// Get trip for this order (to get trip_waypoints)
 	trip := &entity.Trip{}
-	err = u.db.NewSelect().
+	_ = u.db.NewSelect().
 		Model(trip).
 		Relation("TripWaypoints", func(q *bun.SelectQuery) *bun.SelectQuery {
 			return q.Order("trip_waypoints.sequence_number ASC")
@@ -251,7 +285,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 		tripWaypoints = trip.TripWaypoints
 	} else {
 		// No trip found, try to get trip_waypoints directly
-		err = u.db.NewSelect().
+		_ = u.db.NewSelect().
 			Model(&tripWaypoints).
 			Where("trip_id IN (SELECT id FROM trips WHERE order_id = ? AND is_deleted = false)", order.ID).
 			Where("trip_waypoints.is_deleted = false").
@@ -267,7 +301,7 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 			tripWaypointIDs[i] = tw.ID.String()
 		}
 
-		err = u.db.NewSelect().
+		err := u.db.NewSelect().
 			Model(&waypointImages).
 			Where("trip_waypoint_id IN (?)", bun.In(tripWaypointIDs)).
 			Where("waypoint_images.is_deleted = false").
@@ -312,7 +346,173 @@ func (u *TrackingUsecase) TrackByOrderNumber(ctx context.Context, orderNumber st
 		err = u.db.NewSelect().
 			Model(trip).
 			Relation("Driver").
-			Relation("Vehicle").
+			Where("order_id = ?", order.ID).
+			Where("trips.is_deleted = false").
+			Scan(ctx)
+		if err == nil {
+			if trip.Driver != nil {
+				response.Driver = &DriverInfo{
+					DriverID: trip.Driver.ID.String(),
+					Name:     trip.Driver.Name,
+				}
+			}
+			if trip.Vehicle != nil {
+				response.Vehicle = &VehicleInfo{
+					VehicleID:   trip.Vehicle.ID.String(),
+					PlateNumber: trip.Vehicle.PlateNumber,
+				}
+			}
+		}
+	}
+
+	return response, nil
+}
+
+// buildShipmentResponse builds tracking response for a specific shipment (returns only that shipment)
+// Also used when lookup by shipment.reference_code
+func (u *TrackingUsecase) buildShipmentResponse(ctx context.Context, order *entity.Order, targetShipment *entity.Shipment) (*TrackingResponse, error) {
+	response := &TrackingResponse{
+		OrderNumber:   order.OrderNumber,
+		ReferenceCode: order.ReferenceCode,
+		MatchedBy:     "shipment",
+		Status:        order.Status,
+		OrderType:     order.OrderType,
+		CreatedAt:     order.CreatedAt.UTC().Format(time.RFC3339),
+	}
+
+	if order.Customer != nil {
+		response.CustomerName = order.Customer.Name
+	}
+
+	// Build shipment info - hanya target shipment
+	s := targetShipment
+	si := ShipmentInfo{
+		ShipmentNumber:      s.ShipmentNumber,
+		ReferenceCode:       s.ReferenceCode,
+		Status:              s.Status,
+		OriginLocationName:  s.OriginLocationName,
+		OriginAddress:       s.OriginAddress,
+		DestLocationName:    s.DestLocationName,
+		DestAddress:         s.DestAddress,
+		ScheduledPickupDate: s.ScheduledPickupDate.UTC().Format(time.RFC3339),
+		ScheduledPickupTime: s.ScheduledPickupTime,
+	}
+	if s.ActualPickupTime != nil {
+		formatted := s.ActualPickupTime.UTC().Format(time.RFC3339)
+		si.ActualPickupTime = &formatted
+	}
+	if s.ActualDeliveryTime != nil {
+		formatted := s.ActualDeliveryTime.UTC().Format(time.RFC3339)
+		si.ActualDeliveryTime = &formatted
+	}
+	si.ReceivedBy = s.ReceivedBy
+	si.FailedReason = s.FailedReason
+	if s.FailedAt != nil {
+		formatted := s.FailedAt.UTC().Format(time.RFC3339)
+		si.FailedAt = &formatted
+	}
+	response.Shipments = []ShipmentInfo{si}
+
+	// Get trip for this order (to get trip_waypoints)
+	trip := &entity.Trip{}
+	_ = u.db.NewSelect().
+		Model(trip).
+		Relation("TripWaypoints", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Order("trip_waypoints.sequence_number ASC")
+		}).
+		Where("order_id = ?", order.ID).
+		Where("trips.is_deleted = false").
+		Scan(ctx)
+
+	// Build waypoint history from waypoint_logs - filter by shipment_ids using @>
+	var waypointLogs []*entity.WaypointLog
+	shipmentID := targetShipment.ID.String()
+	err := u.db.NewSelect().
+		Model(&waypointLogs).
+		Relation("TripWaypoint").
+		Where("waypoint_logs.order_id = ?", order.ID).
+		Where("shipment_ids @> ?", bun.Safe(`"`+shipmentID+`"`)).
+		Order("created_at DESC").
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build waypoint history
+	history := make([]WaypointHistory, 0)
+	for _, log := range waypointLogs {
+		// Only include logs relevant to target shipment
+		if targetShipment != nil {
+			found := false
+			for _, shipmentID := range log.ShipmentIDs {
+				if shipmentID == targetShipment.ID.String() {
+					found = true
+					break
+				}
+			}
+			if !found && len(log.ShipmentIDs) > 0 {
+				continue // Skip if log has shipment_ids but not our target
+			}
+		}
+
+		h := &WaypointHistory{
+			Status:    log.NewStatus,
+			OldStatus: log.OldStatus,
+			Notes:     log.Message,
+			ChangedAt: log.CreatedAt.UTC().Format(time.RFC3339),
+		}
+
+		if log.TripWaypoint != nil {
+			h.WaypointID = log.TripWaypoint.ID.String()
+			h.LocationName = log.TripWaypoint.LocationName
+			h.Address = log.TripWaypoint.Address
+			h.Type = log.TripWaypoint.Type
+		}
+
+		history = append(history, *h)
+	}
+	response.WaypointHistory = history
+
+	// Build shipment history
+	shipmentMap := make(map[string]string)
+	if targetShipment != nil {
+		shipmentMap[targetShipment.ID.String()] = targetShipment.ShipmentNumber
+	}
+
+	shipmentHistory := make([]ShipmentHistory, 0)
+	for _, log := range waypointLogs {
+		for _, shipmentID := range log.ShipmentIDs {
+			// Skip if looking up by shipment and this isn't the target
+			if targetShipment != nil && shipmentID != targetShipment.ID.String() {
+				continue
+			}
+
+			shipmentNumber, ok := shipmentMap[shipmentID]
+			if !ok {
+				continue
+			}
+
+			sh := ShipmentHistory{
+				ShipmentNumber: shipmentNumber,
+				EventType:      log.EventType,
+				Message:        log.Message,
+				NewStatus:      log.NewStatus,
+				OldStatus:      log.OldStatus,
+				Notes:          log.Notes,
+				ChangedAt:      log.CreatedAt.UTC().Format(time.RFC3339),
+			}
+
+			shipmentHistory = append(shipmentHistory, sh)
+		}
+	}
+	response.ShipmentHistory = shipmentHistory
+
+	// Get trip info for driver and vehicle
+	if order.Status == "dispatched" || order.Status == "in_transit" || order.Status == "completed" {
+		trip = &entity.Trip{}
+		err = u.db.NewSelect().
+			Model(trip).
+			Relation("Driver").
 			Where("order_id = ?", order.ID).
 			Where("trips.is_deleted = false").
 			Scan(ctx)

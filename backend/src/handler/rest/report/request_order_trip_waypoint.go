@@ -68,17 +68,20 @@ func (r *getOrderTripWaypointRequest) getDownload(data any, c *rest.Context) err
 	// Create headers starting from row 1
 	headers := []string{
 		"Order Number",
+		"Order Ref",
 		"Customer Name",
 		"Trip Code",
 		"Driver Name",
 		"Vehicle Plate Number",
 		"Shipment Number",
+		"Shipment Ref",
 		"Waypoint Location",
 		"Waypoint Type",
 		"Waypoint Status",
 		"Received By",
 		"Failed Reason",
 		"Completed At",
+		"POD",
 	}
 	for i, h := range headers {
 		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
@@ -90,33 +93,45 @@ func (r *getOrderTripWaypointRequest) getDownload(data any, c *rest.Context) err
 	for i, item := range items {
 		row := i + 2
 		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), item.OrderNumber)
-		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), item.CustomerName)
-		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), item.TripCode)
-		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), item.DriverName)
-		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), item.VehiclePlateNumber)
-		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), item.ShipmentNumber)
+		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), item.OrderReferenceCode)
+		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), item.CustomerName)
+		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), item.TripCode)
+		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), item.DriverName)
+		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), item.VehiclePlateNumber)
+		f.SetCellValue(sheet, fmt.Sprintf("G%d", row), item.ShipmentNumber)
+		f.SetCellValue(sheet, fmt.Sprintf("H%d", row), item.ShipmentReferenceCode)
 
 		// Combine location_name and address for waypoint location
 		waypointLocation := fmt.Sprintf("%s, %s", item.LocationName, item.Address)
-		f.SetCellValue(sheet, fmt.Sprintf("G%d", row), waypointLocation)
+		f.SetCellValue(sheet, fmt.Sprintf("I%d", row), waypointLocation)
 
-		f.SetCellValue(sheet, fmt.Sprintf("H%d", row), item.WaypointType)
-		f.SetCellValue(sheet, fmt.Sprintf("I%d", row), item.ShipmentStatus)
+		f.SetCellValue(sheet, fmt.Sprintf("J%d", row), item.WaypointType)
+		f.SetCellValue(sheet, fmt.Sprintf("K%d", row), item.ShipmentStatus)
 
 		if item.ReceivedBy != nil {
-			f.SetCellValue(sheet, fmt.Sprintf("J%d", row), *item.ReceivedBy)
-		} else {
-			f.SetCellValue(sheet, fmt.Sprintf("J%d", row), "")
-		}
-		if item.FailedReason != nil {
-			f.SetCellValue(sheet, fmt.Sprintf("K%d", row), *item.FailedReason)
-		} else {
-			f.SetCellValue(sheet, fmt.Sprintf("K%d", row), "")
-		}
-		if item.CompletedAt != nil {
-			f.SetCellValue(sheet, fmt.Sprintf("L%d", row), item.CompletedAt.Add(7*time.Hour).Format("2006-01-02 15:04:05"))
+			f.SetCellValue(sheet, fmt.Sprintf("L%d", row), *item.ReceivedBy)
 		} else {
 			f.SetCellValue(sheet, fmt.Sprintf("L%d", row), "")
+		}
+		if item.FailedReason != nil {
+			f.SetCellValue(sheet, fmt.Sprintf("M%d", row), *item.FailedReason)
+		} else {
+			f.SetCellValue(sheet, fmt.Sprintf("M%d", row), "")
+		}
+		if item.CompletedAt != nil {
+			f.SetCellValue(sheet, fmt.Sprintf("N%d", row), item.CompletedAt.Add(7*time.Hour).Format("2006-01-02 15:04:05"))
+		} else {
+			f.SetCellValue(sheet, fmt.Sprintf("N%d", row), "")
+		}
+		// POD URLs as hyperlinks
+		if len(item.PODURL) > 0 {
+			for j, podURL := range item.PODURL {
+				cell := fmt.Sprintf("O%d", row)
+				if j > 0 {
+					cell = fmt.Sprintf("O%d,%d", row, j+1) // Not supported, join instead
+				}
+				f.SetCellHyperLink(sheet, cell, podURL, "URL")
+			}
 		}
 	}
 

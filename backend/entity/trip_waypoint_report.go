@@ -11,9 +11,10 @@ type TripWaypointReport struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 
 	// Order info
-	OrderNumber  string `bson:"order_number" json:"order_number"`
-	CustomerName string `bson:"customer_name" json:"customer_name"`
-	CustomerID   string `bson:"customer_id" json:"customer_id"`
+	OrderNumber        string `bson:"order_number" json:"order_number"`
+	OrderReferenceCode string `bson:"order_reference_code" json:"order_reference_code"`
+	CustomerName       string `bson:"customer_name" json:"customer_name"`
+	CustomerID         string `bson:"customer_id" json:"customer_id"`
 
 	// Trip info
 	TripCode           string `bson:"trip_code" json:"trip_code"`
@@ -24,8 +25,9 @@ type TripWaypointReport struct {
 	VehicleID          string `bson:"vehicle_id" json:"vehicle_id"`
 
 	// Shipment info
-	ShipmentNumber string `bson:"shipment_number" json:"shipment_number"`
-	ShipmentID     string `bson:"shipment_id" json:"shipment_id"`
+	ShipmentNumber        string `bson:"shipment_number" json:"shipment_number"`
+	ShipmentReferenceCode string `bson:"shipment_reference_code" json:"shipment_reference_code"`
+	ShipmentID            string `bson:"shipment_id" json:"shipment_id"`
 
 	// Waypoint info
 	WaypointType   string     `bson:"waypoint_type" json:"waypoint_type"`
@@ -35,6 +37,7 @@ type TripWaypointReport struct {
 	ReceivedBy     *string    `bson:"received_by,omitempty" json:"received_by,omitempty"`
 	FailedReason   *string    `bson:"failed_reason,omitempty" json:"failed_reason,omitempty"`
 	CompletedAt    *time.Time `bson:"completed_at,omitempty" json:"completed_at,omitempty"`
+	PODURL         []string   `bson:"pod_url,omitempty" json:"pod_url,omitempty"`
 
 	// Metadata
 	CompanyID string    `bson:"company_id" json:"company_id"`

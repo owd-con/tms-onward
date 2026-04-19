@@ -116,6 +116,7 @@ func (r *createRequest) toEntity() *entity.Order {
 	}
 
 	return &entity.Order{
+		OrderNumber:         utility.GenerateNumberWithRandom(utility.NumberTypeOrder),
 		CustomerID:          customerID,
 		OrderType:           r.OrderType,
 		ReferenceCode:       r.ReferenceCode,
@@ -130,7 +131,7 @@ func (r *createRequest) toEntity() *entity.Order {
 }
 
 // toShipmentEntity converts ShipmentRequest to Shipment entity with all required fields populated.
-func (r *createRequest) toShipmentEntity(sp *ShipmentRequest, orderID uuid.UUID, shipmentNumber string, companyID uuid.UUID) *entity.Shipment {
+func (r *createRequest) toShipmentEntity(sp *ShipmentRequest, orderID uuid.UUID, companyID uuid.UUID) *entity.Shipment {
 	// Calculate total weight from items
 	totalWeight := 0.0
 	for _, item := range sp.Items {
@@ -142,7 +143,8 @@ func (r *createRequest) toShipmentEntity(sp *ShipmentRequest, orderID uuid.UUID,
 		// IDs
 		OrderID:        orderID,
 		CompanyID:      companyID,
-		ShipmentNumber: shipmentNumber,
+		ShipmentNumber: utility.GenerateNumberWithRandom(utility.NumberTypeShipment),
+		ReferenceCode:  sp.ReferenceCode,
 		// Route
 		OriginAddressID:      sp.originAddress.ID,
 		DestinationAddressID: sp.destAddress.ID,
@@ -195,11 +197,8 @@ func (r *createRequest) toShipmentEntities() ([]*entity.Shipment, error) {
 	companyID, _ := uuid.Parse(r.session.CompanyID)
 
 	for _, sp := range r.Shipments {
-		// Generate shipment number
-		shipmentNumber := utility.GenerateNumberWithRandom(utility.NumberTypeShipment)
-
 		// Convert ShipmentRequest to Shipment entity
-		shipment := r.toShipmentEntity(sp, uuid.Nil, shipmentNumber, companyID)
+		shipment := r.toShipmentEntity(sp, uuid.Nil, companyID)
 
 		shipments = append(shipments, shipment)
 	}
@@ -208,12 +207,8 @@ func (r *createRequest) toShipmentEntities() ([]*entity.Shipment, error) {
 }
 
 func (r *createRequest) execute() (*rest.ResponseBody, error) {
-	// Generate order number
-	orderNumber := utility.GenerateNumberWithRandom(utility.NumberTypeOrder)
-
 	// Create order entity
 	order := r.toEntity()
-	order.OrderNumber = orderNumber
 
 	// Convert shipments to Shipment entities
 	shipments, err := r.toShipmentEntities()

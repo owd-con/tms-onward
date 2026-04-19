@@ -21,10 +21,11 @@ type ShipmentItem struct {
 type Shipment struct {
 	bun.BaseModel `bun:"table:shipments,alias:shipments"`
 
-	ID             uuid.UUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id"`
-	OrderID        uuid.UUID `bun:"order_id,notnull" json:"order_id"`
-	CompanyID      uuid.UUID `bun:"company_id,notnull" json:"company_id"`
-	ShipmentNumber string    `bun:"shipment_number,notnull" json:"shipment_number"`
+	ID              uuid.UUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id"`
+	OrderID         uuid.UUID `bun:"order_id,notnull" json:"order_id"`
+	CompanyID       uuid.UUID `bun:"company_id,notnull" json:"company_id"`
+	ShipmentNumber  string    `bun:"shipment_number,notnull" json:"shipment_number"`
+	ReferenceCode  string    `bun:"reference_code" json:"reference_code"`
 	// Format: SHP-YYYYMMDD-XXX (per company, auto-increment)
 
 	// Sorting - ORDER BY sorting_id when querying shipments by order_id

@@ -9,14 +9,14 @@ import (
 )
 
 type getRequest struct {
-	OrderNumber string `param:"orderNumber"`
+	Code string `param:"code"`
 
 	uc  *usecase.Factory
 	ctx context.Context
 }
 
 func (r *getRequest) get() (*rest.ResponseBody, error) {
-	result, err := r.uc.Tracking.TrackByOrderNumber(r.ctx, r.OrderNumber)
+	result, err := r.uc.Tracking.TrackByCode(r.ctx, r.Code)
 	if err != nil {
 		return nil, err
 	}

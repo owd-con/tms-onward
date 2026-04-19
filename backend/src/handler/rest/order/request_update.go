@@ -135,7 +135,7 @@ func (r *updateRequest) toEntity() *entity.Order {
 }
 
 // toShipmentEntity converts ShipmentRequest to Shipment entity with all required fields populated.
-func (r *updateRequest) toShipmentEntity(sp *ShipmentRequest, orderID uuid.UUID, shipmentNumber string, companyID uuid.UUID) *entity.Shipment {
+func (r *updateRequest) toShipmentEntity(sp *ShipmentRequest, orderID uuid.UUID, companyID uuid.UUID) *entity.Shipment {
 	// Calculate total weight from items
 	totalWeight := 0.0
 	for _, item := range sp.Items {
@@ -147,7 +147,8 @@ func (r *updateRequest) toShipmentEntity(sp *ShipmentRequest, orderID uuid.UUID,
 		// IDs - use existing ID if updating, otherwise leave empty for auto-generate
 		OrderID:        orderID,
 		CompanyID:      companyID,
-		ShipmentNumber: shipmentNumber,
+		ShipmentNumber: utility.GenerateNumberWithRandom(utility.NumberTypeShipment),
+		ReferenceCode:  sp.ReferenceCode,
 		// Route
 		OriginAddressID:      sp.originAddress.ID,
 		DestinationAddressID: sp.destAddress.ID,
@@ -208,11 +209,8 @@ func (r *updateRequest) toShipmentEntities() ([]*entity.Shipment, error) {
 	companyID, _ := uuid.Parse(r.session.CompanyID)
 
 	for _, sp := range r.Shipments {
-		// Generate shipment number
-		shipmentNumber := utility.GenerateNumberWithRandom(utility.NumberTypeShipment)
-
 		// Convert ShipmentRequest to Shipment entity
-		shipment := r.toShipmentEntity(sp, r.order.ID, shipmentNumber, companyID)
+		shipment := r.toShipmentEntity(sp, r.order.ID, companyID)
 
 		shipments = append(shipments, shipment)
 	}

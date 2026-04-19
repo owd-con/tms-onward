@@ -18,7 +18,7 @@ func NewTripWaypointReportRepository() *TripWaypointReportRepository {
 	// Create base repository (NO soft delete for reports)
 	base := mongo.NewBaseRepository[entity.TripWaypointReport](
 		mongo.NewCollection("trip_waypoint_reports"),
-		[]string{"order_number", "customer_name", "trip_code", "driver_name", "vehicle_plate_number", "shipment_number"},
+		[]string{"order_number", "order_reference_code", "customer_name", "trip_code", "driver_name", "vehicle_plate_number", "shipment_number", "shipment_reference_code"},
 		false, // No soft delete
 	)
 
