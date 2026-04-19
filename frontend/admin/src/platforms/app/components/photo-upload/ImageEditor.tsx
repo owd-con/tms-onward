@@ -1,9 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import ReactCrop, {
-  centerCrop,
-  makeAspectCrop,
+import ReactCrop, { centerCrop, makeAspectCrop } from "react-image-crop";
+import type {
+  Crop as CropType,
+  PixelCrop as PixelCropType,
 } from "react-image-crop";
-import type { Crop as CropType, PixelCrop as PixelCropType } from "react-image-crop";
 import { Button, Modal } from "@/components";
 import { FaRotateLeft, FaRotateRight } from "react-icons/fa6";
 import { HiMagnifyingGlassMinus, HiMagnifyingGlassPlus } from "react-icons/hi2";
@@ -11,20 +11,15 @@ import "react-image-crop/dist/ReactCrop.css";
 import "./ImageEditor.css";
 
 /**
- * Default aspect ratio for company logo
- */
-const LOGO_ASPECT = 1; // Square
-
-/**
  * Create a rectangle crop (no aspect ratio constraint)
  */
-function createRectangleCrop(mediaWidth: number, mediaHeight: number) {
+function createRectangleCrop(mediaWidth: number, mediaHeight: number): CropType {
   // Default to a small rectangle (50% of image size)
   const width = mediaWidth * 0.5;
   const height = mediaHeight * 0.4;
 
   return {
-    unit: "px",
+    unit: "px" as const,
     width: width,
     height: height,
     x: (mediaWidth - width) / 2,
@@ -39,7 +34,7 @@ function centerAspectCropCustom(
   mediaWidth: number,
   mediaHeight: number,
   aspect?: number,
-) {
+): CropType {
   // If no aspect ratio, create rectangle crop
   if (!aspect) {
     return createRectangleCrop(mediaWidth, mediaHeight);
@@ -57,7 +52,7 @@ function centerAspectCropCustom(
     ),
     mediaWidth,
     mediaHeight,
-  );
+  ) as CropType;
 }
 
 interface ImageEditorProps {
@@ -82,7 +77,6 @@ export const ImageEditor = ({
   const [completedCrop, setCompletedCrop] = useState<PixelCropType>();
   const [rotate, setRotate] = useState(0);
   const [zoom, setZoom] = useState(1);
-  const [imageLoaded, setImageLoaded] = useState(false);
 
   // Convert file to data URL using FileReader
   const [resolvedUrl, setResolvedUrl] = useState<string>("");
@@ -106,7 +100,11 @@ export const ImageEditor = ({
    * Get cropped image as Blob
    */
   const getCroppedImage = useCallback(
-    async (image: HTMLImageElement, cropData: PixelCropType, rotation: number): Promise<Blob> => {
+    async (
+      image: HTMLImageElement,
+      cropData: PixelCropType,
+      rotation: number,
+    ): Promise<Blob> => {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("No canvas context");
@@ -174,7 +172,6 @@ export const ImageEditor = ({
     const { offsetWidth: width, offsetHeight: height } = e.currentTarget;
 
     setCrop(centerAspectCropCustom(width, height, aspect));
-    setImageLoaded(true);
   };
 
   /**
@@ -209,20 +206,20 @@ export const ImageEditor = ({
       open
       onClose={onCancel}
       closeOnOutsideClick={false}
-      className="!max-w-2xl w-full mx-4"
+      className='!max-w-2xl w-full mx-4'
     >
       <Modal.Header>
-        <div className="text-secondary font-bold leading-7 text-lg">
+        <div className='text-secondary font-bold leading-7 text-lg'>
           Edit Image
         </div>
-        <div className="text-sm text-base-content/60 leading-5 font-normal">
+        <div className='text-sm text-base-content/60 leading-5 font-normal'>
           Crop and rotate your image before uploading
         </div>
       </Modal.Header>
 
-      <Modal.Body className="max-h-[70vh] overflow-y-auto p-4">
+      <Modal.Body className='max-h-[70vh] overflow-y-auto p-4'>
         {/* Cropper */}
-        <div className="flex justify-center bg-gray-100 rounded-lg p-4">
+        <div className='flex justify-center bg-gray-100 rounded-lg p-4'>
           <ReactCrop
             crop={crop}
             onChange={(_, percentCrop) => setCrop(percentCrop)}
@@ -232,7 +229,7 @@ export const ImageEditor = ({
             <img
               ref={imgRef}
               src={resolvedUrl}
-              alt="Edit"
+              alt='Edit'
               onLoad={onImageLoad}
               style={{
                 transform: `rotate(${rotate}deg) scale(${zoom})`,
@@ -245,43 +242,43 @@ export const ImageEditor = ({
         </div>
 
         {/* Toolbar below image */}
-        <div className="flex gap-2 mt-4 justify-center flex-wrap">
+        <div className='flex gap-2 mt-4 justify-center flex-wrap'>
           <Button
-            variant="secondary"
-            size="sm"
+            variant='secondary'
+            size='sm'
             onClick={() => handleZoom("out")}
-            className="gap-1"
+            className='gap-1'
             disabled={zoom <= 0.5}
           >
-            <HiMagnifyingGlassMinus className="w-4 h-4" />
+            <HiMagnifyingGlassMinus className='w-4 h-4' />
             Zoom Out
           </Button>
           <Button
-            variant="secondary"
-            size="sm"
+            variant='secondary'
+            size='sm'
             onClick={() => handleZoom("in")}
-            className="gap-1"
+            className='gap-1'
             disabled={zoom >= 3}
           >
-            <HiMagnifyingGlassPlus className="w-4 h-4" />
+            <HiMagnifyingGlassPlus className='w-4 h-4' />
             Zoom In
           </Button>
           <Button
-            variant="secondary"
-            size="sm"
+            variant='secondary'
+            size='sm'
             onClick={() => handleRotate("left")}
-            className="gap-1"
+            className='gap-1'
           >
-            <FaRotateLeft className="w-4 h-4" />
+            <FaRotateLeft className='w-4 h-4' />
             Rotate Left
           </Button>
           <Button
-            variant="secondary"
-            size="sm"
+            variant='secondary'
+            size='sm'
             onClick={() => handleRotate("right")}
-            className="gap-1"
+            className='gap-1'
           >
-            <FaRotateRight className="w-4 h-4" />
+            <FaRotateRight className='w-4 h-4' />
             Rotate Right
           </Button>
         </div>
@@ -289,16 +286,16 @@ export const ImageEditor = ({
 
       <Modal.Footer>
         <Button
-          className="flex-1 rounded-xl"
-          styleType="outline"
-          variant="secondary"
+          className='flex-1 rounded-xl'
+          styleType='outline'
+          variant='secondary'
           onClick={onCancel}
         >
           Cancel
         </Button>
         <Button
-          className="flex-1 rounded-xl"
-          variant="secondary"
+          className='flex-1 rounded-xl'
+          variant='secondary'
           onClick={handleConfirm}
         >
           Apply
