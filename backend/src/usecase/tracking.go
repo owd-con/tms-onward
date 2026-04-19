@@ -4,7 +4,6 @@ package usecase
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -432,7 +431,7 @@ func (u *TrackingUsecase) buildShipmentResponse(ctx context.Context, order *enti
 		Model(&waypointLogs).
 		Relation("TripWaypoint").
 		Where("waypoint_logs.order_id = ?", order.ID).
-		Where("waypoint_logs.shipment_ids @> ?", fmt.Sprintf("'{%s}'", shipmentID)).
+		Where("? = ANY(shipment_ids)", shipmentID).
 		Order("waypoint_logs.created_at DESC").
 		Scan(ctx)
 	if err != nil {
