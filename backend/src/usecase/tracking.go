@@ -431,7 +431,7 @@ func (u *TrackingUsecase) buildShipmentResponse(ctx context.Context, order *enti
 		Model(&waypointLogs).
 		Relation("TripWaypoint").
 		Where("waypoint_logs.order_id = ?", order.ID).
-		Where("? = ANY(shipment_ids)", shipmentID).
+		Where("? = ANY(waypoint_logs.shipment_ids)", shipmentID).
 		Order("waypoint_logs.created_at DESC").
 		Scan(ctx)
 	if err != nil {
