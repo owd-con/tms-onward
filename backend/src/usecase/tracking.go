@@ -512,7 +512,7 @@ func (u *TrackingUsecase) buildShipmentResponse(ctx context.Context, order *enti
 	err = u.db.NewSelect().
 		Model(&waypointImages).
 		Relation("TripWaypoint").
-		Where("? = ANY(trip_waypoints.shipment_ids)", shipmentID).
+		Where("? = ANY(waypoint_images.shipment_ids)", shipmentID).
 		Where("waypoint_images.is_deleted = false").
 		Order("waypoint_images.created_at ASC").
 		Scan(ctx)
