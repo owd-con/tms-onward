@@ -38,10 +38,10 @@ const TrackingForm = memo(({ initialOrderNumber = '' }: TrackingFormProps) => {
 
   const validateOrderNumber = (value: string): string | null => {
     if (!value.trim()) {
-      return 'Order number is required';
+      return 'Order or shipment number is required';
     }
     if (value.trim().length < 3) {
-      return 'Order number must be at least 3 characters';
+      return 'Order or shipment number must be at least 3 characters';
     }
     return null;
   };
@@ -75,7 +75,7 @@ const TrackingForm = memo(({ initialOrderNumber = '' }: TrackingFormProps) => {
         {/* Input Group */}
         <div>
           <label htmlFor="orderNumber" className="sr-only">
-            Order Number
+            Order / Shipment Number
           </label>
           <div className="relative">
             <input
@@ -84,7 +84,7 @@ const TrackingForm = memo(({ initialOrderNumber = '' }: TrackingFormProps) => {
               type="text"
               value={orderNumber}
               onChange={(e) => handleInputChange(e.target.value)}
-              placeholder="Enter your order number"
+              placeholder="Enter your order or shipment number"
               className={`
                 w-full pl-12 pr-4 py-4 text-lg
                 rounded-xl border-2
@@ -105,7 +105,7 @@ const TrackingForm = memo(({ initialOrderNumber = '' }: TrackingFormProps) => {
           {/* Helper Text */}
           {!error && (
             <p id="orderNumber-help" className="mt-2 text-sm text-gray-500">
-              Enter your order number (e.g., ORD-001)
+              Enter your order or shipment number (e.g., ORD-001 or TRK-12345)
             </p>
           )}
 
@@ -140,7 +140,7 @@ const TrackingForm = memo(({ initialOrderNumber = '' }: TrackingFormProps) => {
         {/* Examples */}
         <div className="pt-2">
           <p className="text-xs text-gray-400 text-center">
-            Try: <span className="font-mono text-gray-500">ORD-001</span> · <span className="font-mono text-gray-500">TRK-12345</span>
+            Try: <span className="font-mono text-gray-500">ORD-001</span> · <span className="font-mono text-gray-500">TRK-12345</span> · <span className="font-mono text-gray-500">REF-001</span>
           </p>
         </div>
       </div>

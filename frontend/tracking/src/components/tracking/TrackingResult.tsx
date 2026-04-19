@@ -110,16 +110,26 @@ const TrackingResult = memo(
     }
 
     const {
+      matched_by,
       order_number,
       reference_code,
       status,
+      order_type,
       customer_name,
       created_at,
+      shipments,
       waypoint_history,
       waypoint_images,
       driver,
       vehicle,
     } = data;
+
+    // Tentukan display code berdasarkan matched_by
+    // Jika matched_by = "shipment", gunakan shipment_number dari shipments[0]
+    const displayCode =
+      matched_by === "shipment" && shipments?.[0]?.shipment_number
+        ? shipments[0].shipment_number
+        : order_number;
 
     return (
       <div className='space-y-6'>
@@ -135,21 +145,30 @@ const TrackingResult = memo(
           </Link>
         </div>
 
-        {/* Order Info Card */}
+        {/* Main Info Card */}
         <div className='bg-white rounded-xl border border-gray-200 overflow-hidden'>
           <div className='p-6'>
             <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
               <div>
                 <div className='flex items-center space-x-3 mb-2'>
                   <h2 className='text-xl font-semibold text-gray-900'>
-                    {order_number}
+                    {displayCode}
                   </h2>
                   {statusBadge(status)}
                 </div>
-                {reference_code && (
+                {/* Reference code dari shipment jika matched_by = shipment */}
+                {matched_by === "shipment" && shipments?.[0]?.reference_code && (
+                  <p className='text-gray-600'>
+                    Reference Code: {shipments[0].reference_code}
+                  </p>
+                )}
+                {matched_by === "order" && reference_code && (
                   <p className='text-gray-600'>
                     Reference Code: {reference_code}
                   </p>
+                )}
+                {order_type && (
+                  <p className='text-gray-600'>Type: {order_type}</p>
                 )}
                 <p className='text-gray-600'>
                   Customer: {customer_name || "-"}

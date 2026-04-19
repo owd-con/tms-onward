@@ -10,6 +10,7 @@ interface OrderInfoProps {
  *
  * Displays:
  * - Order ID/number
+ * - Order Reference Code
  * - Shipment count
  */
 export const OrderInfo = ({ order, waypoint }: OrderInfoProps) => {
@@ -27,6 +28,16 @@ export const OrderInfo = ({ order, waypoint }: OrderInfoProps) => {
             {order?.order_number || "N/A"}
           </span>
         </div>
+        {order?.reference_code && (
+          <div className="flex items-center justify-between">
+            <span className="typo-small text-content-secondary">
+              Order Reference:
+            </span>
+            <span className="typo-small font-medium text-content-primary">
+              {order.reference_code}
+            </span>
+          </div>
+        )}
         {shipmentCount > 0 && (
           <div className="flex items-center justify-between">
             <span className="typo-small text-content-secondary">

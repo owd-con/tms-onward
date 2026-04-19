@@ -14,9 +14,9 @@ import { Helmet } from 'react-helmet-async';
  * - Canonical URL with order number
  */
 export function TrackingResultPage() {
-  const { orderNumber } = useParams<{ orderNumber: string }>();
+  const { code } = useParams<{ code: string }>();
 
-  if (!orderNumber) {
+  if (!code) {
     return (
       <MainLayout>
         <div className="text-center py-12 animate-fadeIn">
@@ -39,7 +39,7 @@ export function TrackingResultPage() {
             Invalid Request
           </h2>
           <p className="text-gray-600 mb-6">
-            Order number is required to track your shipment.
+            Order or shipment number is required to track your shipment.
           </p>
           <a
             href="/"
@@ -52,32 +52,32 @@ export function TrackingResultPage() {
     );
   }
 
-  const canonicalUrl = `${window.location.origin}/tracking/${orderNumber}`;
-  const displayOrderNumber = orderNumber.toUpperCase();
+  const canonicalUrl = `${window.location.origin}/tracking/${code}`;
+  const displayCode = code.toUpperCase();
 
   return (
     <>
       <Helmet>
         {/* Primary Meta Tags */}
-        <title>Track Order {displayOrderNumber} - TMS Onward</title>
+        <title>Track {displayCode} - TMS Onward</title>
         <meta
           name="description"
-          content={`Track order ${displayOrderNumber} status. View delivery timeline, proof of delivery, driver information, and trip details with TMS Onward.`}
+          content={`Track ${displayCode} status. View delivery timeline, proof of delivery, driver information, and trip details with TMS Onward.`}
         />
         <meta
           name="keywords"
-          content={`order ${displayOrderNumber}, shipment tracking, delivery status, ${displayOrderNumber} tracking`}
+          content={`order ${displayCode}, shipment tracking, delivery status, ${displayCode} tracking`}
         />
 
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
         <meta
           property="og:title"
-          content={`Tracking Order ${displayOrderNumber}`}
+          content={`Tracking ${displayCode}`}
         />
         <meta
           property="og:description"
-          content={`Track order ${displayOrderNumber} status with TMS Onward - View delivery timeline and proof of delivery.`}
+          content={`Track ${displayCode} status with TMS Onward - View delivery timeline and proof of delivery.`}
         />
         <meta property="og:url" content={canonicalUrl} />
         <meta
@@ -89,10 +89,10 @@ export function TrackingResultPage() {
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary" />
-        <meta name="twitter:title" content={`Tracking Order ${displayOrderNumber}`} />
+        <meta name="twitter:title" content={`Tracking ${displayCode}`} />
         <meta
           name="twitter:description"
-          content={`Track order ${displayOrderNumber} status with TMS Onward`}
+          content={`Track ${displayCode} status with TMS Onward`}
         />
         <meta
           name="twitter:image"
@@ -117,8 +117,8 @@ export function TrackingResultPage() {
             hasPart: [
               {
                 '@type': 'DeliveryEvent',
-                name: 'Order Tracking',
-                description: `Track order ${displayOrderNumber} with TMS Onward`,
+                name: 'Shipment Tracking',
+                description: `Track ${displayCode} with TMS Onward`,
               },
             ],
           })}
@@ -127,7 +127,7 @@ export function TrackingResultPage() {
 
       <MainLayout>
         <div className="animate-fadeIn">
-          <TrackingResult orderNumber={orderNumber} />
+          <TrackingResult orderNumber={code} />
         </div>
       </MainLayout>
     </>

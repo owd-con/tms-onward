@@ -34,7 +34,7 @@ export function PublicRouter() {
 
         {/* Tracking Result Page */}
         <Route
-          path="/tracking/:orderNumber"
+          path="/tracking/:code"
           element={
             <Suspense fallback={<FullPageLoading />}>
               <TrackingResultPage />

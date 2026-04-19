@@ -11,7 +11,7 @@ interface WaypointItemsProps {
  * Displays:
  * - Shipments to pick up (pickup waypoint)
  * - Shipments to deliver (delivery waypoint)
- * - Per shipment: shipment number, items, and weight
+ * - Per shipment: shipment number, reference code, items, and weight
  */
 export const WaypointItems = ({ shipments, isPickup }: WaypointItemsProps) => {
   if (!shipments || shipments.length === 0) {
@@ -31,9 +31,16 @@ export const WaypointItems = ({ shipments, isPickup }: WaypointItemsProps) => {
           >
             {/* Shipment Header */}
             <div className="flex items-center justify-between mb-2">
-              <span className="typo-small font-semibold text-primary">
-                {shipment.shipment_number}
-              </span>
+              <div className="flex flex-col">
+                <span className="typo-small font-semibold text-primary">
+                  {shipment.shipment_number}
+                </span>
+                {shipment.reference_code && (
+                  <span className="typo-tiny text-content-secondary">
+                    Ref: {shipment.reference_code}
+                  </span>
+                )}
+              </div>
               <span className="typo-tiny text-content-secondary">
                 #{index + 1}
               </span>

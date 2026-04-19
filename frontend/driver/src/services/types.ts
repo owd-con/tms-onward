@@ -81,6 +81,7 @@ export interface Order {
   id: string;
   company_id: string;
   order_number: string;
+  reference_code?: string;
   status: string;
   customer_id: string;
   customer: any;
@@ -99,6 +100,7 @@ export interface Order {
 export interface Shipment {
   id: string;
   shipment_number: string;
+  reference_code?: string;
   sorting_id: number;
   origin_address_id: string;
   origin_address?: Address;
@@ -164,6 +166,7 @@ export interface ShipmentItem {
 export interface DriverShipment {
   id: string;
   shipment_number: string;
+  reference_code?: string;
   sorting_id: number;
   origin_location_name: string;
   origin_address: string;
