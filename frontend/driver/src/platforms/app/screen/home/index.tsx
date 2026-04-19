@@ -1,67 +1,13 @@
 import { EmptyState, ErrorState } from "@/platforms/app/components";
 import { TripCardSkeleton } from "./components/TripCardSkeleton";
 import { useNavigate } from "react-router-dom";
-import { HiArrowPath, HiArrowRight, HiMapPin } from "react-icons/hi2";
+import { HiArrowPath } from "react-icons/hi2";
 import { useTrip } from "@/services/driver/hooks";
-import { formatStatus, getStatusColor } from "@/utils/status";
 import { Page } from "@/platforms/app/components/page";
 import type { Trip } from "@/services/types";
 import { useMemo, useEffect } from "react";
 import toast from "react-hot-toast";
 import TripCard from "./components/TripCard";
-
-/**
- * Calculate waypoint progress
- */
-const calculateProgress = (trip: Trip) => {
-  const totalWaypoints = trip.trip_waypoints?.length || 0;
-  const completedWaypoints =
-    trip.trip_waypoints?.filter((wp) => wp.status === "completed").length || 0;
-
-  return {
-    total: totalWaypoints,
-    completed: completedWaypoints,
-    percentage:
-      totalWaypoints > 0 ? (completedWaypoints / totalWaypoints) * 100 : 0,
-  };
-};
-
-/**
- * Get current waypoint (first non-completed waypoint or last completed)
- * Only shows waypoint status when trip is in_transit
- */
-const getCurrentWaypoint = (trip: Trip): string | null => {
-  if (!trip.trip_waypoints || trip.trip_waypoints.length === 0) {
-    return null;
-  }
-
-  // For planned/dispatched trips, don't show waypoint progress yet
-  if (trip.status === "planned" || trip.status === "dispatched") {
-    return null;
-  }
-
-  // Sort by sequence_number first
-  const sortedWaypoints = [...trip.trip_waypoints].sort(
-    (a, b) => (a.sequence_number || 0) - (b.sequence_number || 0),
-  );
-
-  // Find first non-completed waypoint (now in correct order)
-  const nextWaypoint = sortedWaypoints.find((wp) => wp.status !== "completed");
-
-  if (nextWaypoint) {
-    const type = nextWaypoint.type || "Waypoint";
-    return `${type} in progress`;
-  }
-
-  // If all completed, show last waypoint
-  const lastWaypoint = sortedWaypoints[sortedWaypoints.length - 1];
-  if (lastWaypoint) {
-    const type = lastWaypoint.type || "Waypoint";
-    return `${type} completed`;
-  }
-
-  return null;
-};
 
 /**
  * Active Trips Screen
@@ -168,11 +114,6 @@ export const ActiveTrips = () => {
           sortedTrips.length > 0 && (
             <div className='space-y-4'>
               {sortedTrips.map((trip) => {
-                const progress = calculateProgress(trip);
-                const currentWaypoint = getCurrentWaypoint(trip);
-                const vehiclePlate =
-                  trip.vehicle?.plate_number || "Vehicle not assigned";
-
                 return (
                   <div key={trip.id} onClick={() => handleTripClick(trip.id)}>
                     <TripCard trip={trip} />

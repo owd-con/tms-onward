@@ -1,8 +1,6 @@
 import type { MouseEvent } from "react";
 import { FiMapPin, FiTruck, FiChevronRight } from "react-icons/fi";
 import type { Trip } from "@/services/types";
-import { Badge } from "@/components/ui/badge";
-import { formatStatus, getStatusVariant } from "@/utils/status";
 import { statusBadge } from "@/shared/helper";
 
 export interface TripCardProps {
