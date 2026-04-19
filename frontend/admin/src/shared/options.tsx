@@ -34,6 +34,7 @@ export const vehicleTypeOptions = [
   { label: "Pickup", value: "Pickup" },
   { label: "Container Truck", value: "Container Truck" },
   { label: "Trailer", value: "Trailer" },
+  { label: "Motor", value: "Motor" },
 ];
 
 /**

@@ -2,12 +2,13 @@ import { useEffect, useState, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Page } from "@/platforms/app/components/page";
 import { ErrorState } from "@/platforms/app/components/ErrorState";
-import { Button } from "@/components/ui/button";
+import { Button, Select, Input } from "@/components/ui";
 import { HiArrowRight, HiTruck } from "react-icons/hi2";
 import { FiPackage } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { useOrder } from "@/services/order/hooks";
-import type { Order, WaypointPreview, Vehicle } from "@/services/types";
+import type { Order, WaypointPreview } from "@/services/types";
+import { vehicleTypeOptions } from "@/shared/options";
 import { ScanWaypointList } from "./components";
 
 /**
@@ -30,13 +31,12 @@ export const ScanPage = () => {
     showResult,
     getWaypointPreview,
     getWaypointPreviewResult,
-    getVehicles,
-    getVehiclesResult,
     receiveOrder,
     receiveOrderResult,
   } = useOrder();
 
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string>("");
+  const [selectedVehicleType, setSelectedVehicleType] = useState<string>("");
+  const [plateNumber, setPlateNumber] = useState<string>("");
 
   // Fetch order details on mount
   useEffect(() => {
@@ -46,15 +46,14 @@ export const ScanPage = () => {
     }
   }, [orderId]);
 
-  // Fetch vehicles list when order loads
+  // Store order data when loaded
   useEffect(() => {
-    if (showResult?.isSuccess && orderId) {
+    if (showResult?.isSuccess) {
       const data = showResult.data?.data as Order;
       setOrder(data);
-      getVehicles({ company_id: data?.company_id });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showResult?.isSuccess, orderId]);
+  }, [showResult?.isSuccess]);
 
   // Waypoints from getWaypointPreview - calculate weight & quantity from items
   const waypoints = useMemo(() => {
@@ -83,10 +82,6 @@ export const ScanPage = () => {
     });
   }, [getWaypointPreviewResult, order]);
 
-  const vehicles = useMemo(() => {
-    return (getVehiclesResult?.data?.data as Vehicle[]) || [];
-  }, [getVehiclesResult]);
-
   // Calculate totals from order.shipments -> items
   const totals = useMemo(() => {
     const shipments = order?.shipments || [];
@@ -112,7 +107,8 @@ export const ScanPage = () => {
   const handleReceiveOrder = async () => {
     await receiveOrder({
       order_id: orderId,
-      vehicle_id: selectedVehicleId,
+      vehicle_type: selectedVehicleType,
+      plate_number: plateNumber,
     });
   };
 
@@ -230,53 +226,29 @@ export const ScanPage = () => {
             <div className='bg-white rounded-xl p-5 shadow-sm border border-slate-200'>
               <h4 className='font-semibold text-content-primary mb-4 flex items-center gap-2'>
                 <HiTruck size={18} />
-                Select Vehicle
+                Vehicle Information
               </h4>
 
-              <div className='space-y-2'>
-                {vehicles.map((vehicle) => (
-                  <label
-                    key={vehicle.id}
-                    className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                      selectedVehicleId === vehicle.id
-                        ? "border-blue-600 bg-blue-50"
-                        : "border-slate-200 hover:border-slate-300"
-                    }`}
-                  >
-                    <input
-                      type='radio'
-                      name='vehicle'
-                      value={vehicle.id}
-                      checked={selectedVehicleId === vehicle.id}
-                      onChange={(e) => setSelectedVehicleId(e.target.value)}
-                      className='w-4 h-4 text-blue-600'
-                    />
-                    <div className='flex-1'>
-                      <p className='font-medium text-content-primary'>
-                        {vehicle.plate_number}
-                      </p>
-                      <p className='text-xs text-content-secondary'>
-                        {vehicle.vehicle_type} - {vehicle.brand} {vehicle.model}
-                      </p>
-                    </div>
-                    <div className='text-right text-xs text-content-tertiary'>
-                      <p>{vehicle.capacity_weight} kg</p>
-                    </div>
-                  </label>
-                ))}
+              {/* Vehicle Type Dropdown */}
+              <div className="mb-4">
+                <Select
+                  label="Vehicle Type"
+                  options={vehicleTypeOptions.slice(1)}
+                  value={selectedVehicleType}
+                  onChange={(e) => setSelectedVehicleType(e.target.value)}
+                  required
+                />
+              </div>
 
-                {vehicles.length === 0 && !getVehiclesResult.isLoading && (
-                  <div className='text-center py-4 text-slate-500'>
-                    <p>No vehicles available</p>
-                  </div>
-                )}
-
-                {getVehiclesResult.isLoading && (
-                  <div className='text-center py-4 text-slate-500'>
-                    <div className='w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto' />
-                    <p className='mt-2'>Loading vehicles...</p>
-                  </div>
-                )}
+              {/* Plate Number Input */}
+              <div className="mb-4">
+                <Input
+                  label="Plate Number"
+                  value={plateNumber}
+                  onChange={(e) => setPlateNumber(e.target.value)}
+                  placeholder="e.g., B 1234 XYZ"
+                  required
+                />
               </div>
             </div>
           </div>
@@ -298,7 +270,7 @@ export const ScanPage = () => {
               variant='primary'
               onClick={handleReceiveOrder}
               isLoading={receiveOrderResult.isLoading}
-              disabled={!selectedVehicleId}
+              disabled={!selectedVehicleType || !plateNumber}
               className='flex-1 flex items-center justify-center gap-2'
             >
               <HiArrowRight size={20} />

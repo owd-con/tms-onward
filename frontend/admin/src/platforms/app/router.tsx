@@ -17,12 +17,7 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  Route,
-  Routes,
-  useNavigate,
-  useLocation,
-} from "react-router-dom";
+import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
 
 import Logo from "@/assets/logo_light.svg";
 import { Avatar, Dropdown, FullPageLoading, Navbar } from "@/components";
@@ -62,11 +57,6 @@ const AppRouter = () => {
   const Profile = useSelector((state: RootState) => state.userProfile);
 
   const { getMe } = useProfile();
-
-  // Dynamic company logo - use company logo_url if available, fallback to default
-  const companyLogo = useMemo(() => {
-    return Profile?.user?.company?.logo_url || Logo;
-  }, [Profile?.user?.company?.logo_url]);
 
   const handleLogout = () => {
     dispatch(signout());
@@ -110,7 +100,7 @@ const AppRouter = () => {
   // Show loading while checking onboarding status
   if (isCheckingOnboarding) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className='flex items-center justify-center min-h-screen'>
         <FullPageLoading />
       </div>
     );
@@ -233,7 +223,7 @@ const AppRouter = () => {
   // Jika onboarding, render tanpa sidebar
   if (needsOnboarding && isOnboardingPage) {
     return (
-      <div className="w-full min-h-screen">
+      <div className='w-full min-h-screen'>
         <Routes>
           {routes.map((r, i) => (
             <Route
@@ -255,35 +245,35 @@ const AppRouter = () => {
   return (
     <div
       ref={containerRef}
-      className="flex w-full min-h-screen h-auto lg:h-screen lg:overflow-hidden bg-[#f8fafc]"
+      className='flex w-full min-h-screen h-auto lg:h-screen lg:overflow-hidden bg-[#f8fafc]'
     >
-      <aside className="w-[280px] bg-[#022c22] border-r border-white/5 hidden lg:flex flex-col z-30 shadow-2xl transition-all duration-300">
-        <div className="h-28 flex flex-col justify-center px-6">
-          <div className="flex items-center gap-4 w-full">
-            <div className="w-12 h-12 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-center shrink-0 shadow-inner overflow-hidden p-2">
+      <aside className='w-[280px] bg-[#022c22] border-r border-white/5 hidden lg:flex flex-col z-30 shadow-2xl transition-all duration-300'>
+        <div className='h-28 flex flex-col justify-center px-6'>
+          <div className='flex items-center gap-4 w-full'>
+            <div className='w-12 h-12 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-center shrink-0 shadow-inner overflow-hidden p-2'>
               <img
-                src={companyLogo}
-                alt="Logo"
-                className="w-full h-full object-contain cursor-pointer"
+                src={Logo}
+                alt='Logo'
+                className='w-full h-full object-contain cursor-pointer'
                 onClick={() => navigate("/")}
               />
             </div>
-            <div className="flex flex-col overflow-hidden">
-              <span className="font-black text-white tracking-widest leading-none uppercase text-2xl">
+            <div className='flex flex-col overflow-hidden'>
+              <span className='font-black text-white tracking-widest leading-none uppercase text-2xl'>
                 ONWARD
               </span>
-              <span className="text-[10px] text-white/40 font-bold tracking-[0.4em] leading-none mt-1.5 ">
+              <span className='text-[10px] text-white/40 font-bold tracking-[0.4em] leading-none mt-1.5 '>
                 TRANSPORTATION
               </span>
             </div>
           </div>
         </div>
 
-        <div className="px-6 mb-6">
-          <div className="h-[1px] bg-white/5 w-full" />
+        <div className='px-6 mb-6'>
+          <div className='h-[1px] bg-white/5 w-full' />
         </div>
 
-        <div className="flex flex-col flex-1 overflow-auto scrollbar-hide px-4 gap-1 pb-4">
+        <div className='flex flex-col flex-1 overflow-auto scrollbar-hide px-4 gap-1 pb-4'>
           {menuOverview.map((item, i) => {
             const isActive = item.active;
 
@@ -291,7 +281,7 @@ const AppRouter = () => {
               return (
                 <div
                   key={i}
-                  className="pt-6 pb-2 px-4 text-[10px] font-semibold text-white/40 uppercase tracking-widest"
+                  className='pt-6 pb-2 px-4 text-[10px] font-semibold text-white/40 uppercase tracking-widest'
                 >
                   {item.label}
                 </div>
@@ -299,7 +289,7 @@ const AppRouter = () => {
             }
 
             return (
-              <div key={i} className="flex flex-col gap-1">
+              <div key={i} className='flex flex-col gap-1'>
                 <div
                   onClick={item.onClick}
                   className={clsx(
@@ -319,11 +309,11 @@ const AppRouter = () => {
                   >
                     {item.icon}
                   </div>
-                  <span className="text-[14px] font-semibold tracking-wide flex-1">
+                  <span className='text-[14px] font-semibold tracking-wide flex-1'>
                     {item.label}
                   </span>
                   {isActive && (
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-emerald-500 rounded-l-full shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+                    <div className='absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-emerald-500 rounded-l-full shadow-[0_0_15px_rgba(16,185,129,0.5)]' />
                   )}
                 </div>
               </div>
@@ -331,26 +321,26 @@ const AppRouter = () => {
           })}
         </div>
 
-        <div className="p-3">
-          <div className="flex items-center gap-3 p-3 bg-white/[0.03] hover:bg-white/[0.06] rounded-2xl transition-all border border-white/[0.05]">
-            <div className="h-10 w-10 rounded-xl border border-white/10 shrink-0 bg-orange-600 flex items-center justify-center text-white text-xs font-black ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-[#022c22] overflow-hidden">
+        <div className='p-3'>
+          <div className='flex items-center gap-3 p-3 bg-white/[0.03] hover:bg-white/[0.06] rounded-2xl transition-all border border-white/[0.05]'>
+            <div className='h-10 w-10 rounded-xl border border-white/10 shrink-0 bg-orange-600 flex items-center justify-center text-white text-xs font-black ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-[#022c22] overflow-hidden'>
               {Profile?.user?.name?.[0]?.toUpperCase()}
             </div>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-bold text-white/90 leading-tight">
+            <div className='grid flex-1 text-left text-sm leading-tight'>
+              <span className='truncate font-bold text-white/90 leading-tight'>
                 {Profile?.user?.name}
               </span>
-              <span className="truncate text-[11px] text-white/30 font-medium leading-tight">
+              <span className='truncate text-[11px] text-white/30 font-medium leading-tight'>
                 {Profile?.user?.email}
               </span>
             </div>
-            <div className="bg-emerald-500/20 text-emerald-400 border-none text-[9px] font-black px-1.5 h-5 flex items-center rounded-md tracking-tighter">
+            <div className='bg-emerald-500/20 text-emerald-400 border-none text-[9px] font-black px-1.5 h-5 flex items-center rounded-md tracking-tighter'>
               {Profile?.user?.role?.toUpperCase()}
             </div>
             <button
               onClick={handleLogout}
-              className="shrink-0 h-8 w-8 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 flex items-center justify-center text-red-400 transition-all"
-              title="Logout"
+              className='shrink-0 h-8 w-8 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 flex items-center justify-center text-red-400 transition-all'
+              title='Logout'
             >
               <Power size={14} />
             </button>
@@ -360,39 +350,39 @@ const AppRouter = () => {
 
       <main
         ref={mainRef}
-        className="bg-base-200 w-full flex-1 min-h-screen h-auto lg:h-screen relative"
+        className='bg-base-200 w-full flex-1 min-h-screen h-auto lg:h-screen relative'
       >
-        <Navbar className="flex lg:hidden bg-secondary ">
-          <div className="flex w-full items-center text-base-100!">
+        <Navbar className='flex lg:hidden bg-secondary '>
+          <div className='flex w-full items-center text-base-100!'>
             <Navbar.MobileToggle items={menuOverview} />
             <Navbar.Brand>
-              <div className="bg-primary shadow rounded-full p-2 h-10 w-10">
-                <img src={companyLogo} alt="Logo" className="object-center" />
+              <div className='bg-primary shadow rounded-full p-2 h-10 w-10'>
+                <img src={Logo} alt='Logo' className='object-center' />
               </div>
             </Navbar.Brand>
-            <Navbar.Actions className="gap-3">
+            <Navbar.Actions className='gap-3'>
               <Dropdown
-                position="end"
+                position='end'
                 trigger={
                   <Avatar
-                    status="online"
-                    className="uppercase"
+                    status='online'
+                    className='uppercase'
                     placeholder={!Profile?.user?.avatar_url}
-                    size="xs"
-                    mask="circle"
-                    variant="primary"
+                    size='xs'
+                    mask='circle'
+                    variant='primary'
                     src={Profile?.user?.avatar_url}
                   >
                     {Profile?.user?.name?.[0] ?? ""}
                   </Avatar>
                 }
-                contentClassName="min-w-46 !p-0"
+                contentClassName='min-w-46 !p-0'
               >
                 <div
-                  className="py-3 px-4 flex place-items-center place-content-between text-base-content! hover:bg-base-200 cursor-pointer"
+                  className='py-3 px-4 flex place-items-center place-content-between text-base-content! hover:bg-base-200 cursor-pointer'
                   onClick={handleLogout}
                 >
-                  <div className="flex gap-2 place-items-center text-sm text-error">
+                  <div className='flex gap-2 place-items-center text-sm text-error'>
                     <Power size={18} />
                     Log Out
                   </div>
@@ -415,7 +405,7 @@ const AppRouter = () => {
             />
           ))}
           <Route
-            path="*"
+            path='*'
             element={
               <Suspense fallback={<div>Loading Dashboard...</div>}>
                 <DashboardScreen />

@@ -99,6 +99,16 @@ export const warehouseTypeOptions = [
   { label: "Logistic", value: "logistic" },
 ];
 
+export const vehicleTypeOptions = [
+  { label: "Select Vehicle Type", value: "" },
+  { label: "Truck", value: "Truck" },
+  { label: "Van", value: "Van" },
+  { label: "Pickup", value: "Pickup" },
+  { label: "Container Truck", value: "Container Truck" },
+  { label: "Trailer", value: "Trailer" },
+  { label: "Motor", value: "Motor" },
+];
+
 export const entitiesOptions = [
   { label: "PT", value: "PT" },
   { label: "CV", value: "CV" },

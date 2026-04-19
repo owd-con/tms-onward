@@ -56,12 +56,12 @@ const createTableConfig = ({
       headerClass: "capitalize",
       class: "p-4",
       component: (row: { order_number: string; reference_code?: string }) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[13px] font-semibold text-gray-900">
+        <div className='flex flex-col gap-0.5'>
+          <span className='text-[13px] font-semibold text-gray-900'>
             {row?.order_number || "-"}
           </span>
           {row?.reference_code && (
-            <span className="text-[12px] text-gray-500">
+            <span className='text-[12px] text-gray-500'>
               Ref: {row.reference_code}
             </span>
           )}
@@ -74,7 +74,7 @@ const createTableConfig = ({
       headerClass: "capitalize",
       class: "p-4",
       component: (row: { customer: any }) => (
-        <div className="text-[13px] font-medium text-gray-700">
+        <div className='text-[13px] font-medium text-gray-700'>
           {row?.customer?.name || "-"}
         </div>
       ),
@@ -110,7 +110,7 @@ const createTableConfig = ({
       headerClass: "capitalize w-[150px]",
       class: "p-4 w-[100px]",
       component: (row: { status: string }) => (
-        <div className="flex items-center py-1">
+        <div className='flex items-center py-1'>
           <OrderTableStatusBadge status={row.status} />
         </div>
       ),
@@ -127,16 +127,16 @@ const createTableConfig = ({
           total > 0 ? Math.round((delivered / total) * 100) : 0;
 
         return (
-          <div className="flex flex-col gap-1.5 min-w-[120px]">
-            <div className="flex items-center justify-between text-[12px]">
-              <span className="text-gray-500 font-medium">Delivered</span>
-              <span className="font-semibold text-gray-900">
+          <div className='flex flex-col gap-1.5 min-w-[120px]'>
+            <div className='flex items-center justify-between text-[12px]'>
+              <span className='text-gray-500 font-medium'>Delivered</span>
+              <span className='font-semibold text-gray-900'>
                 {delivered}/{total}
               </span>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+            <div className='w-full bg-gray-100 rounded-full h-1.5 overflow-hidden'>
               <div
-                className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500"
+                className='bg-emerald-500 h-1.5 rounded-full transition-all duration-500'
                 style={{ width: `${percentage}%` }}
               />
             </div>
@@ -150,7 +150,7 @@ const createTableConfig = ({
       headerClass: "capitalize w-[200px]",
       class: "p-4",
       component: (row: { total_price: number }) => (
-        <div className="text-[13px] font-semibold text-gray-900">
+        <div className='text-[13px] font-semibold text-gray-900'>
           {row?.total_price
             ? `Rp ${new Intl.NumberFormat("id-ID").format(row.total_price)}`
             : "-"}
@@ -163,12 +163,12 @@ const createTableConfig = ({
       headerClass: "capitalize  w-[200px]",
       class: "p-4",
       component: (row: { created_at: string; created_by?: string }) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[13px] font-medium text-gray-700">
+        <div className='flex flex-col gap-0.5'>
+          <span className='text-[13px] font-medium text-gray-700'>
             {dateFormat(row?.created_at)}
           </span>
           {row?.created_by && (
-            <span className="text-[12px] text-gray-500">
+            <span className='text-[12px] text-gray-500'>
               by {row.created_by}
             </span>
           )}
@@ -185,106 +185,118 @@ const createTableConfig = ({
         const canCancel = row.status === "pending";
 
         return (
-        <div className="flex justify-end">
-          <div className="dropdown dropdown-end md:dropdown-click" onClick={(e) => e.stopPropagation()}>
-            <button
-              tabIndex={0}
-              className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all duration-200"
+          <div className='flex justify-end'>
+            <div
+              className='dropdown dropdown-end md:dropdown-click'
+              onClick={(e) => e.stopPropagation()}
             >
-              <FiMoreVertical className="w-5 h-5" />
-            </button>
-            <ul
-              tabIndex={0}
-              className="dropdown-content z-[100] menu p-2 shadow-2xl bg-white rounded-2xl w-56 border border-slate-100 mt-2"
-            >
-              <li>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onClick(row);
-                  }}
-                  className="flex items-center gap-3 hover:bg-slate-50 hover:text-indigo-600 text-slate-700 py-3 rounded-xl transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
-                    <FiEye className="w-4 h-4" />
-                  </div>
-                  <div className="flex flex-col items-start leading-tight">
-                    <span className="font-bold text-[13px]">View Detail</span>
-                    <span className="text-[11px] text-slate-400">Manage orders & docs</span>
-                  </div>
-                </button>
-              </li>
-
-              {/* Print Context Actions */}
-              {type === "FTL" && navigate && (
+              <button
+                tabIndex={0}
+                className='w-9 h-9 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all duration-200'
+              >
+                <FiMoreVertical className='w-5 h-5' />
+              </button>
+              <ul
+                tabIndex={0}
+                className='dropdown-content z-[100] menu p-2 shadow-2xl bg-white rounded-2xl w-56 border border-slate-100 mt-2'
+              >
                 <li>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      window.open(
-                        `/a/print/delivery-order/order/${row.id}`,
-                        "_blank",
-                      );
+                      onClick(row);
                     }}
-                    className="flex items-center gap-3 hover:bg-slate-50 hover:text-indigo-600 text-slate-700 py-3 rounded-xl transition-colors"
+                    className='flex items-center gap-3 hover:bg-slate-50 hover:text-indigo-600 text-slate-700 py-3 rounded-xl transition-colors'
                   >
-                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
-                      <FiPrinter className="w-4 h-4" />
+                    <div className='w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500'>
+                      <FiEye className='w-4 h-4' />
                     </div>
-                    <div className="flex flex-col items-start leading-tight">
-                      <span className="font-bold text-[13px]">Print DO</span>
-                      <span className="text-[11px] text-slate-400">Export delivery order</span>
+                    <div className='flex flex-col items-start leading-tight'>
+                      <span className='font-bold text-[13px]'>View Detail</span>
+                      <span className='text-[11px] text-slate-400'>
+                        Manage orders & docs
+                      </span>
                     </div>
                   </button>
                 </li>
-              )}
 
-              {type === "LTL" && navigate && row.shipments?.length > 0 && (
-                <li>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open(`/a/print/resi/order/${row.id}`, "_blank");
-                    }}
-                    className="flex items-center gap-3 hover:bg-slate-50 hover:text-indigo-600 text-slate-700 py-3 rounded-xl transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
-                      <FiPrinter className="w-4 h-4" />
-                    </div>
-                    <div className="flex flex-col items-start leading-tight">
-                      <span className="font-bold text-[13px]">Print Resi</span>
-                      <span className="text-[11px] text-slate-400">Export receipt documents</span>
-                    </div>
-                  </button>
-                </li>
-              )}
-
-              {/* Cancel Action */}
-              {canCancel && onCancel && (
-                <>
-                  <div className="my-1 border-t border-slate-50"></div>
+                {/* Print Context Actions */}
+                {type === "FTL" && navigate && (
                   <li>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onCancel(row);
+                        window.open(`/a/print/order/${row.id}`, "_blank");
                       }}
-                      className="flex items-center gap-3 hover:bg-rose-50 hover:text-rose-600 text-rose-600 py-3 rounded-xl transition-colors"
+                      className='flex items-center gap-3 hover:bg-slate-50 hover:text-indigo-600 text-slate-700 py-3 rounded-xl transition-colors'
                     >
-                      <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
-                        <FiXCircle className="w-4 h-4" />
+                      <div className='w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400'>
+                        <FiPrinter className='w-4 h-4' />
                       </div>
-                      <div className="flex flex-col items-start leading-tight">
-                        <span className="font-bold text-[13px]">Cancel Order</span>
-                        <span className="text-[11px] text-rose-300">Stop processing</span>
+                      <div className='flex flex-col items-start leading-tight'>
+                        <span className='font-bold text-[13px]'>Print DO</span>
+                        <span className='text-[11px] text-slate-400'>
+                          Export delivery order
+                        </span>
                       </div>
                     </button>
                   </li>
-                </>
-              )}
-            </ul>
+                )}
+
+                {type === "LTL" && navigate && row.shipments?.length > 0 && (
+                  <li>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(`/a/print/resi/order/${row.id}`, "_blank");
+                      }}
+                      className='flex items-center gap-3 hover:bg-slate-50 hover:text-indigo-600 text-slate-700 py-3 rounded-xl transition-colors'
+                    >
+                      <div className='w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400'>
+                        <FiPrinter className='w-4 h-4' />
+                      </div>
+                      <div className='flex flex-col items-start leading-tight'>
+                        <span className='font-bold text-[13px]'>
+                          Print Resi
+                        </span>
+                        <span className='text-[11px] text-slate-400'>
+                          Export receipt documents
+                        </span>
+                      </div>
+                    </button>
+                  </li>
+                )}
+
+                {/* Cancel Action */}
+                {canCancel && onCancel && (
+                  <>
+                    <div className='my-1 border-t border-slate-50'></div>
+                    <li>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCancel(row);
+                        }}
+                        className='flex items-center gap-3 hover:bg-rose-50 hover:text-rose-600 text-rose-600 py-3 rounded-xl transition-colors'
+                      >
+                        <div className='w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center'>
+                          <FiXCircle className='w-4 h-4' />
+                        </div>
+                        <div className='flex flex-col items-start leading-tight'>
+                          <span className='font-bold text-[13px]'>
+                            Cancel Order
+                          </span>
+                          <span className='text-[11px] text-rose-300'>
+                            Stop processing
+                          </span>
+                        </div>
+                      </button>
+                    </li>
+                  </>
+                )}
+              </ul>
+            </div>
           </div>
-        </div>
         );
       },
     },

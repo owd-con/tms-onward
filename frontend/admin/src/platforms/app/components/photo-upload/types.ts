@@ -11,4 +11,12 @@ export interface PhotoUploadProps {
   label?: string;
   /** Optional label text */
   optionalLabel?: string;
+  /** Maximum width for resize (optional) */
+  maxWidth?: number;
+  /** Maximum height for resize (optional) */
+  maxHeight?: number;
+  /** Image quality for compression (0-1, default: 0.9) */
+  quality?: number;
+  /** Enable image editor (crop/rotate) - default: false */
+  enableEdit?: boolean;
 }

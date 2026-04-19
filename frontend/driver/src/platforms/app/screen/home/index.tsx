@@ -8,6 +8,7 @@ import { Page } from "@/platforms/app/components/page";
 import type { Trip } from "@/services/types";
 import { useMemo, useEffect } from "react";
 import toast from "react-hot-toast";
+import TripCard from "./components/TripCard";
 
 /**
  * Calculate waypoint progress
@@ -45,9 +46,7 @@ const getCurrentWaypoint = (trip: Trip): string | null => {
   );
 
   // Find first non-completed waypoint (now in correct order)
-  const nextWaypoint = sortedWaypoints.find(
-    (wp) => wp.status !== "completed",
-  );
+  const nextWaypoint = sortedWaypoints.find((wp) => wp.status !== "completed");
 
   if (nextWaypoint) {
     const type = nextWaypoint.type || "Waypoint";
@@ -175,70 +174,8 @@ export const ActiveTrips = () => {
                   trip.vehicle?.plate_number || "Vehicle not assigned";
 
                 return (
-                  <div
-                    key={trip.id}
-                    onClick={() => handleTripClick(trip.id)}
-                    className='bg-white rounded-xl p-5 shadow-sm border border-slate-200 cursor-pointer hover:shadow-md transition-all active:scale-[0.98] flex-1'
-                  >
-                    {/* Trip Header */}
-                    <div className='flex items-start justify-between mb-4'>
-                      <div className='flex-1'>
-                        <div className='flex items-center gap-2 mb-1'>
-                          <h3 className='typo-card-title font-semibold text-content-primary'>
-                            {trip.trip_number}
-                          </h3>
-                          <span
-                            className={`px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(trip.status)}`}
-                          >
-                            {formatStatus(trip.status)}
-                          </span>
-                        </div>
-                        <p className='typo-small text-content-secondary'>
-                          {vehiclePlate}
-                        </p>
-                      </div>
-                      <HiArrowRight
-                        size={20}
-                        className='text-content-tertiary flex-shrink-0'
-                      />
-                    </div>
-
-                    {/* Current Waypoint */}
-                    {currentWaypoint && (
-                      <div className='flex items-start gap-2 mb-4'>
-                        <HiMapPin
-                          size={18}
-                          className='text-blue-600 mt-0.5 flex-shrink-0'
-                        />
-                        <div className='flex-1 min-w-0'>
-                          <p className='typo-tiny text-content-secondary mb-0.5'>
-                            Current Status
-                          </p>
-                          <p className='typo-small font-medium text-content-primary truncate capitalize'>
-                            {currentWaypoint}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Progress Bar */}
-                    <div>
-                      <div className='flex items-center justify-between mb-1.5'>
-                        <span className='typo-tiny text-content-secondary'>
-                          Progress
-                        </span>
-                        <span className='typo-tiny font-semibold text-content-primary'>
-                          {progress.completed}/{progress.total} stop
-                          {progress.total !== 1 ? "s" : ""}
-                        </span>
-                      </div>
-                      <div className='w-full bg-slate-200 rounded-full h-2'>
-                        <div
-                          className='bg-blue-600 h-2 rounded-full transition-all duration-300'
-                          style={{ width: `${progress.percentage}%` }}
-                        />
-                      </div>
-                    </div>
+                  <div key={trip.id} onClick={() => handleTripClick(trip.id)}>
+                    <TripCard trip={trip} />
                   </div>
                 );
               })}

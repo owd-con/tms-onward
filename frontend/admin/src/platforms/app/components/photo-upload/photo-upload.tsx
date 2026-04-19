@@ -3,6 +3,64 @@ import { FiCamera, FiUpload, FiX } from "react-icons/fi";
 import { useUpload, uploadFileToS3 } from "@/services/upload/hooks";
 import { logger } from "@/utils/logger";
 import type { PhotoUploadProps } from "./types";
+import { ImageEditor } from "./ImageEditor";
+
+/**
+ * Resize image using Canvas API
+ * Returns resized image as Blob
+ */
+const resizeImage = async (
+  file: File,
+  maxWidth: number = 800,
+  maxHeight: number = 800,
+  quality: number = 0.9,
+): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let width = img.width;
+      let height = img.height;
+
+      // Calculate new dimensions while maintaining aspect ratio
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+      if (height > maxHeight) {
+        width = (width * maxHeight) / height;
+        height = maxHeight;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Failed to get canvas context"));
+        return;
+      }
+
+      // Draw resized image
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Compress and convert to blob
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Failed to create blob"));
+          }
+        },
+        file.type,
+        quality,
+      );
+    };
+    img.onerror = () => reject(new Error("Failed to load image"));
+    img.src = URL.createObjectURL(file);
+  });
+};
 
 /**
  * PhotoUpload - Component for uploading and managing photo attachments
@@ -31,10 +89,15 @@ export const PhotoUpload = ({
   onPhotosChange,
   label = "Photos",
   optionalLabel = "(Optional)",
+  maxWidth = 800,
+  maxHeight = 800,
+  quality = 0.9,
+  enableEdit = false,
 }: PhotoUploadProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [editingFile, setEditingFile] = useState<File | null>(null);
 
   // Upload hook
   const { getPresignedURL, getPresignedURLResult } = useUpload();
@@ -78,21 +141,46 @@ export const PhotoUpload = ({
 
   /**
    * Upload files using presigned URL pattern
+   * With resize using Canvas API
    */
   const uploadFiles = async (files: File[]): Promise<void> => {
     // Upload files one by one (sequential)
     for (const file of files) {
       setIsUploading(true);
-      setPendingFile(file);
 
-      // Request presigned URL
-      await getPresignedURL({
-        filename: file.name,
-        contentType: file.type,
-      });
+      try {
+        // Resize image before upload if maxWidth or maxHeight is specified
+        let fileToUpload = file;
+        if (maxWidth || maxHeight) {
+          const resizedBlob = await resizeImage(
+            file,
+            maxWidth || 800,
+            maxHeight || 800,
+            quality,
+          );
+          // Create new File from resized blob
+          fileToUpload = new File([resizedBlob], file.name, {
+            type: file.type,
+          });
+        }
 
-      // Wait for useEffect to handle the upload
-      // This will process one file at a time
+        setPendingFile(fileToUpload);
+
+        // Request presigned URL
+        await getPresignedURL({
+          filename: fileToUpload.name,
+          contentType: fileToUpload.type,
+        });
+      } catch (error) {
+        logger.error("Failed to resize image", error);
+        setIsUploading(false);
+        // Continue with original file if resize fails
+        setPendingFile(file);
+        await getPresignedURL({
+          filename: file.name,
+          contentType: file.type,
+        });
+      }
     }
   };
 
@@ -111,7 +199,14 @@ export const PhotoUpload = ({
       return;
     }
 
-    uploadFiles(Array.from(files));
+    const file = files[0];
+
+    // Open editor if enabled
+    if (enableEdit) {
+      setEditingFile(file);
+    } else {
+      uploadFiles([file]);
+    }
 
     // Reset file input
     if (fileInputRef.current) {
@@ -204,6 +299,24 @@ export const PhotoUpload = ({
         className='hidden'
         disabled={disabled || isUploading || photos.length >= maxPhotos}
       />
+
+      {/* Image Editor Modal */}
+      {editingFile && (
+        <ImageEditor
+          imageFile={editingFile}
+          onConfirm={(editedFile) => {
+            setEditingFile(null);
+            uploadFiles([editedFile]);
+          }}
+          onCancel={() => {
+            setEditingFile(null);
+            // Reset file input
+            if (fileInputRef.current) {
+              fileInputRef.current.value = "";
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

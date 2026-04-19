@@ -30,7 +30,12 @@ export function statusBadge(status: string): ReactNode {
   const label = normalized.replace(/_/g, " ");
 
   return (
-    <Badge variant={variant} size="sm" className="capitalize!">
+    <Badge
+      variant={variant}
+      size='sm'
+      appearance='soft'
+      className='capitalize!'
+    >
       {label}
     </Badge>
   );
@@ -70,14 +75,14 @@ export const layoutColorLegend: Record<string, string> = {
 
 export function getOptionByValue<T extends { value: unknown }>(
   options: T[],
-  value: unknown
+  value: unknown,
 ): T | null {
   return options.find((o) => o.value === value) || null;
 }
 
 export function debounce<T extends (...args: unknown[]) => void>(
   fn: T,
-  delay = 250
+  delay = 250,
 ): (...args: Parameters<T>) => void {
   let timer: ReturnType<typeof setTimeout> | undefined;
   return (...args: Parameters<T>) => {

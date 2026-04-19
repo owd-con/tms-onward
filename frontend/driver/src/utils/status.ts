@@ -1,38 +1,4 @@
 /**
- * Status utilities for converting between snake_case (API) and Title Case (display)
- */
-
-/**
- * Convert snake_case status to Title Case for display
- * @example "in_transit" → "In Transit"
- */
-export function formatStatus(status: string): string {
-  if (!status) return "";
-
-  return status
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
-}
-
-/**
- * Get color variant for status badge
- */
-export function getStatusVariant(status: string): "primary" | "info" | "success" | "warning" | "error" {
-  const statusMap: Record<string, "primary" | "info" | "success" | "warning" | "error"> = {
-    pending: "primary",
-    planned: "primary",
-    dispatched: "warning",
-    in_transit: "info",
-    completed: "success",
-    failed: "error",
-    cancelled: "error",
-  };
-
-  return statusMap[status] || "primary";
-}
-
-/**
  * Get background color class for status badge
  */
 export function getStatusColor(status: string): string {

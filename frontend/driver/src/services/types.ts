@@ -51,7 +51,14 @@ export interface Trip {
   order_id: string;
   trip_number: string;
   driver_id: string;
-  vehicle_id: string;
+  vehicle: {
+    type: string;
+    plate_number: string;
+    capacity_weight?: number;
+    capacity_volume?: number;
+    make?: string;
+    model?: string;
+  } | null;
   status: string;
   started_at?: string;
   completed_at?: string;
@@ -63,7 +70,6 @@ export interface Trip {
 
   company?: Company;
   driver?: Driver;
-  vehicle?: Vehicle;
   order?: Order;
   trip_waypoints?: TripWaypoint[];
 }

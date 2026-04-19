@@ -109,6 +109,7 @@ const CompanyEditModal = ({
                   maxPhotos={1}
                   label='Company Logo'
                   optionalLabel='(Optional)'
+                  enableEdit
                 />
               </div>
               <Input
