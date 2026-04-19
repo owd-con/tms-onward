@@ -297,8 +297,10 @@ func (u *WaypointUsecase) saveTripWaypointReport(waypoint *entity.TripWaypoint, 
 
 	// Get POD URLs from waypoint images - only for delivery waypoints
 	var podURLs []string
-	if waypoint.Type == "delivery" {
+	if fetchedWaypoint.Type == "delivery" {
 		waypointImages, err := waypointImageRepo.GetByTripWaypointID(waypoint.ID.String())
+
+		fmt.Println("===========waypointImages==========")
 		if err == nil {
 			for _, wi := range waypointImages {
 				if len(wi.Images) > 0 {
@@ -317,29 +319,29 @@ func (u *WaypointUsecase) saveTripWaypointReport(waypoint *entity.TripWaypoint, 
 		}
 
 		doc := &entity.TripWaypointReport{
-			OrderNumber:             shipment.Order.OrderNumber,
-			OrderReferenceCode:      shipment.Order.ReferenceCode,
-			CustomerName:            shipment.Order.Customer.Name,
-			CustomerID:              shipment.Order.Customer.ID.String(),
-			TripCode:                trip.TripNumber,
-			TripID:                  trip.ID.String(),
-			DriverName:              trip.Driver.Name,
-			DriverID:                trip.Driver.ID.String(),
-			VehiclePlateNumber:      trip.Vehicle.PlateNumber,
-			VehicleID:               trip.Vehicle.ID.String(),
-			ShipmentNumber:          shipment.ShipmentNumber,
+			OrderNumber:           shipment.Order.OrderNumber,
+			OrderReferenceCode:    shipment.Order.ReferenceCode,
+			CustomerName:          shipment.Order.Customer.Name,
+			CustomerID:            shipment.Order.Customer.ID.String(),
+			TripCode:              trip.TripNumber,
+			TripID:                trip.ID.String(),
+			DriverName:            trip.Driver.Name,
+			DriverID:              trip.Driver.ID.String(),
+			VehiclePlateNumber:    trip.Vehicle.PlateNumber,
+			VehicleID:             trip.Vehicle.ID.String(),
+			ShipmentNumber:        shipment.ShipmentNumber,
 			ShipmentReferenceCode: shipment.ReferenceCode,
-			ShipmentID:              shipment.ID.String(),
-			WaypointType:            fetchedWaypoint.Type,
-			ShipmentStatus:          shipment.Status,
-			LocationName:            fetchedWaypoint.LocationName,
-			Address:                 fetchedWaypoint.Address,
-			ReceivedBy:              fetchedWaypoint.ReceivedBy,
-			FailedReason:            fetchedWaypoint.FailedReason,
-			CompletedAt:             fetchedWaypoint.ActualCompletionTime,
-			PODURL:                  podURLs,
-			CompanyID:               trip.CompanyID.String(),
-			UpdatedAt:               time.Now(),
+			ShipmentID:            shipment.ID.String(),
+			WaypointType:          fetchedWaypoint.Type,
+			ShipmentStatus:        shipment.Status,
+			LocationName:          fetchedWaypoint.LocationName,
+			Address:               fetchedWaypoint.Address,
+			ReceivedBy:            fetchedWaypoint.ReceivedBy,
+			FailedReason:          fetchedWaypoint.FailedReason,
+			CompletedAt:           fetchedWaypoint.ActualCompletionTime,
+			PODURL:                podURLs,
+			CompanyID:             trip.CompanyID.String(),
+			UpdatedAt:             time.Now(),
 		}
 
 		docs = append(docs, doc)

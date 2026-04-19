@@ -160,7 +160,7 @@ func (u *TrackingUsecase) buildOrderResponse(ctx context.Context, order *entity.
 	var shipments []*entity.Shipment
 	err := u.db.NewSelect().
 		Model(&shipments).
-		Where("order_id = ?", order.ID).
+		Where("shipments.order_id = ?", order.ID).
 		Where("shipments.is_deleted = false").
 		Order("sorting_id ASC").
 		Scan(ctx)
@@ -207,7 +207,7 @@ func (u *TrackingUsecase) buildOrderResponse(ctx context.Context, order *entity.
 		Relation("TripWaypoints", func(q *bun.SelectQuery) *bun.SelectQuery {
 			return q.Order("trip_waypoints.sequence_number ASC")
 		}).
-		Where("order_id = ?", order.ID).
+		Where("trips.order_id = ?", order.ID).
 		Where("trips.is_deleted = false").
 		Scan(ctx)
 
@@ -217,7 +217,7 @@ func (u *TrackingUsecase) buildOrderResponse(ctx context.Context, order *entity.
 		Model(&waypointLogs).
 		Relation("TripWaypoint").
 		Where("waypoint_logs.order_id = ?", order.ID).
-		Order("created_at DESC").
+		Order("waypoint_logs.created_at DESC").
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -289,7 +289,7 @@ func (u *TrackingUsecase) buildOrderResponse(ctx context.Context, order *entity.
 			Model(&tripWaypoints).
 			Where("trip_id IN (SELECT id FROM trips WHERE order_id = ? AND is_deleted = false)", order.ID).
 			Where("trip_waypoints.is_deleted = false").
-			Order("sequence_number ASC").
+			Order("trip_waypoints.sequence_number ASC").
 			Scan(ctx)
 	}
 
@@ -305,7 +305,7 @@ func (u *TrackingUsecase) buildOrderResponse(ctx context.Context, order *entity.
 			Model(&waypointImages).
 			Where("trip_waypoint_id IN (?)", bun.In(tripWaypointIDs)).
 			Where("waypoint_images.is_deleted = false").
-			Order("created_at ASC").
+			Order("waypoint_images.created_at ASC").
 			Scan(ctx)
 		if err == nil {
 			images := make([]WaypointImageInfo, 0)
@@ -346,7 +346,7 @@ func (u *TrackingUsecase) buildOrderResponse(ctx context.Context, order *entity.
 		err = u.db.NewSelect().
 			Model(trip).
 			Relation("Driver").
-			Where("order_id = ?", order.ID).
+			Where("trips.order_id = ?", order.ID).
 			Where("trips.is_deleted = false").
 			Scan(ctx)
 		if err == nil {
@@ -420,7 +420,7 @@ func (u *TrackingUsecase) buildShipmentResponse(ctx context.Context, order *enti
 		Relation("TripWaypoints", func(q *bun.SelectQuery) *bun.SelectQuery {
 			return q.Order("trip_waypoints.sequence_number ASC")
 		}).
-		Where("order_id = ?", order.ID).
+		Where("trips.order_id = ?", order.ID).
 		Where("trips.is_deleted = false").
 		Scan(ctx)
 
@@ -431,8 +431,8 @@ func (u *TrackingUsecase) buildShipmentResponse(ctx context.Context, order *enti
 		Model(&waypointLogs).
 		Relation("TripWaypoint").
 		Where("waypoint_logs.order_id = ?", order.ID).
-		Where("shipment_ids @> ?", bun.Safe(`"`+shipmentID+`"`)).
-		Order("created_at DESC").
+		Where("waypoint_logs.shipment_ids @> ?", bun.Safe(`"`+shipmentID+`"`)).
+		Order("waypoint_logs.created_at DESC").
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -513,7 +513,7 @@ func (u *TrackingUsecase) buildShipmentResponse(ctx context.Context, order *enti
 		err = u.db.NewSelect().
 			Model(trip).
 			Relation("Driver").
-			Where("order_id = ?", order.ID).
+			Where("trips.order_id = ?", order.ID).
 			Where("trips.is_deleted = false").
 			Scan(ctx)
 		if err == nil {

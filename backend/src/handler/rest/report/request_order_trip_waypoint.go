@@ -125,13 +125,19 @@ func (r *getOrderTripWaypointRequest) getDownload(data any, c *rest.Context) err
 		}
 		// POD URLs as hyperlinks
 		if len(item.PODURL) > 0 {
-			for j, podURL := range item.PODURL {
-				cell := fmt.Sprintf("O%d", row)
-				if j > 0 {
-					cell = fmt.Sprintf("O%d,%d", row, j+1) // Not supported, join instead
-				}
-				f.SetCellHyperLink(sheet, cell, podURL, "URL")
+			// Set display text first
+			if len(item.PODURL) == 1 {
+				f.SetCellValue(sheet, fmt.Sprintf("O%d", row), "View POD")
+			} else {
+				f.SetCellValue(sheet, fmt.Sprintf("O%d", row), fmt.Sprintf("View PODs (%d)", len(item.PODURL)))
 			}
+			// Set hyperlink
+			for _, podURL := range item.PODURL {
+				f.SetCellHyperLink(sheet, fmt.Sprintf("O%d", row), podURL, "External")
+				break // Only first URL can be hyperlink per cell
+			}
+		} else {
+			f.SetCellValue(sheet, fmt.Sprintf("O%d", row), "")
 		}
 	}
 
