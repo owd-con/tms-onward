@@ -507,6 +507,41 @@ func (u *TrackingUsecase) buildShipmentResponse(ctx context.Context, order *enti
 	}
 	response.ShipmentHistory = shipmentHistory
 
+	// Get waypoint images (POD/failed) for this shipment using shipment_ids
+	var waypointImages []*entity.WaypointImage
+	err = u.db.NewSelect().
+		Model(&waypointImages).
+		Relation("TripWaypoint").
+		Where("? = ANY(trip_waypoints.shipment_ids)", shipmentID).
+		Where("waypoint_images.is_deleted = false").
+		Order("waypoint_images.created_at ASC").
+		Scan(ctx)
+
+	if err == nil && len(waypointImages) > 0 {
+		images := make([]WaypointImageInfo, 0)
+		for _, wi := range waypointImages {
+			imageInfo := WaypointImageInfo{
+				WaypointImageID: wi.ID.String(),
+				Type:            wi.Type,
+				Photos:          wi.Images,
+				SubmittedAt:     wi.CreatedAt.UTC().Format(time.RFC3339),
+			}
+			if wi.SignatureURL != nil {
+				imageInfo.SignatureURL = *wi.SignatureURL
+			}
+			if wi.TripWaypoint != nil {
+				if wi.TripWaypoint.ReceivedBy != nil {
+					imageInfo.Note = *wi.TripWaypoint.ReceivedBy
+				}
+				if wi.TripWaypoint.FailedReason != nil {
+					imageInfo.Note = *wi.TripWaypoint.FailedReason
+				}
+			}
+			images = append(images, imageInfo)
+		}
+		response.WaypointImages = images
+	}
+
 	// Get trip info for driver and vehicle
 	if order.Status == "dispatched" || order.Status == "in_transit" || order.Status == "completed" {
 		trip = &entity.Trip{}
