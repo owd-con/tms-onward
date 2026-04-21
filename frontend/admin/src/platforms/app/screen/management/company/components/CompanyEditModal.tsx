@@ -134,7 +134,7 @@ const CompanyEditModal = ({
                   data={companyTypeOptions}
                   getLabel={(item) => item?.label ?? ""}
                   renderItem={(item) => item?.label}
-                  error={FormState?.errors?.company_type as string}
+                  error={FormState?.errors?.type as string}
                   required
                   className='h-11 rounded-lg border-gray-200 bg-white'
                 />
