@@ -39,7 +39,9 @@
       "Bash(ss:*)",
       "Bash(npm run dev)",
       "Bash(git -C /home/naufal/Workspaces/tms-onward diff backend/src/usecase/trip.go)",
-      "Bash(xxd:*)"
+      "Bash(xxd:*)",
+      "Bash(echo:*)",
+      "Bash(git restore:*)"
     ]
   }
 }

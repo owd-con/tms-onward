@@ -3,6 +3,7 @@ import { Button, Divider, Input } from "@/components";
 import { useAuth } from "@/services/auth/hooks";
 import type { RootState } from "@/services/store";
 import { useEffect, useState } from "react";
+import logoDark from "@/assets/logo_dark.svg";
 
 import { useSelector } from "react-redux";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -48,7 +49,7 @@ const LoginPage = () => {
         <div className='text-center mb-6'>
           <div className='inline-flex items-center justify-center w-20 h-20 bg-secondary rounded-xl shadow-md mb-4 overflow-hidden p-2'>
             <img
-              src='/logo_dark.svg'
+              src={logoDark}
               alt='TMS Logo'
               className='w-full h-full object-contain'
             />
