@@ -10,14 +10,14 @@ export const toNum = (val: string | number | null | undefined) => {
 };
 
 const statusVariant: Record<string, BadgeVariant> = {
-  active: "success",
-  inactive: "error",
   // Trip/Order statuses (snake_case from backend)
-  pending: "warning",
-  planned: "secondary",
-  dispatched: "primary",
+  pending: "default",
+  planned: "default",
+  dispatched: "info",
   in_transit: "info",
+  active: "success",
   completed: "success",
+  inactive: "error",
   failed: "error",
   cancelled: "error",
 };
@@ -34,7 +34,7 @@ export function statusBadge(status: string): ReactNode {
       variant={variant}
       size='sm'
       appearance='soft'
-      className='capitalize!'
+      className='capitalize! font-semibold!'
     >
       {label}
     </Badge>

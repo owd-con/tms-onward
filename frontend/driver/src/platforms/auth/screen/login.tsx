@@ -45,31 +45,19 @@ const LoginPage = () => {
     <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-4'>
       <div className='w-full max-w-md'>
         {/* Logo and Branding */}
-        <div className='text-center mb-3'>
-          <div className='inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl shadow-lg mb-4'>
-            <svg
-              className='w-12 h-12 text-white'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z'
-              />
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v9a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0'
-              />
-            </svg>
+        <div className='text-center mb-6'>
+          <div className='inline-flex items-center justify-center w-20 h-20 bg-secondary rounded-xl shadow-md mb-4 overflow-hidden p-2'>
+            <img
+              src='/logo_dark.svg'
+              alt='TMS Logo'
+              className='w-full h-full object-contain'
+            />
           </div>
-          <h1 className='text-3xl font-bold text-slate-900 mb-2'>TMS Driver</h1>
-          <p className='text-slate-600 text-base'>
-            Sign in to access your deliveries
+          <h1 className='text-xl font-bold text-base-content tracking-tight mb-1'>
+            TMS Driver
+          </h1>
+          <p className='text-slate-500 text-xs font-medium'>
+            Sign in to manage your active delivery routes
           </p>
         </div>
 
@@ -145,7 +133,7 @@ const LoginPage = () => {
                   ? `/auth/signup?fallback=${encodeURIComponent(`/scan?order_id=${localStorage.getItem("pending_order_id")}`)}`
                   : "/auth/signup"
               }
-              className='text-blue-600 font-semibold hover:underline'
+              className='text-primary font-semibold hover:underline'
             >
               Register here
             </Link>

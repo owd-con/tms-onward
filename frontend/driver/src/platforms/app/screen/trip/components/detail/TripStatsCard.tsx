@@ -20,7 +20,7 @@ export const TripStatsCard = ({ trip }: TripStatsCardProps) => {
   const totalWaypoints = waypoints.length;
 
   return (
-    <div className='bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl p-4 mb-5 shadow-sm'>
+    <div className='bg-primary text-white rounded-xl p-4 mb-5 shadow-sm'>
       <div className='grid grid-cols-3 gap-2 text-center'>
         {/* Total */}
         <div className='bg-white/10 rounded-lg p-2'>
