@@ -53,7 +53,7 @@ export const Profile = () => {
           {/* User Info Card */}
           <div className='bg-white rounded-xl p-5 shadow-sm border border-slate-200 mb-5'>
             <div className='flex items-center gap-4 mb-5'>
-              <div className='w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0'>
+              <div className='w-16 h-16 bg-primary rounded-full flex items-center justify-center flex-shrink-0'>
                 <HiUser size={32} className='text-white' />
               </div>
               <div className='flex-1 min-w-0'>
@@ -61,7 +61,7 @@ export const Profile = () => {
                   {user.name}
                 </h2>
                 <div className='mt-1'>
-                  <span className='inline-block px-2 py-0.5 bg-blue-100 text-blue-700 typo-tiny font-medium rounded-full'>
+                  <span className='inline-block px-2 py-0.5 bg-secondary text-white typo-tiny font-medium rounded-full'>
                     Driver
                   </span>
                 </div>
